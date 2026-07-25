@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Downloaded / cached market data
+src/data/
+src/cache/
+*.parquet
+*.csv
+*.zip
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
