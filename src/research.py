@@ -2,6 +2,7 @@
 import os
 import random
 import re
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 
 # Third-party
@@ -61,6 +62,40 @@ def sharpe_to_annualized_rate(interval: str,
         raise ValueError(f"Unsupported unit: {unit}")
     
     return np.sqrt(periods)
+
+
+def add_lags(df: pl.DataFrame, col: str, max_no_lags: int, forecast_step: int) -> pl.DataFrame:
+    return df.with_columns([pl.col(col).shift(i * forecast_step).alias(f'{col}_lag_{i}') for i in range(1, max_no_lags + 1)])
+
+
+# --------------------------------------------------------------------------
+# Modeling
+# --------------------------------------------------------------------------
+
+def timeseries_train_test_split(
+    df: pl.DataFrame,
+    features: Sequence[str],
+    target: str,
+    test_size: float = 0.25,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    df = df.drop_nulls()
+    x = _to_tensor(df[features])
+    y = _to_tensor(df[target]).reshape(-1, 1)
+    x_train, x_test = _timeseries_split(x, test_size)
+    y_train, y_test = _timeseries_split(y, test_size)
+    return x_train, x_test, y_train, y_test
+
+
+def _to_tensor(x: pl.DataFrame | pl.Series, dtype: torch.dtype | None = None) -> torch.Tensor:
+    return torch.tensor(x.to_numpy(), dtype=torch.float32 if dtype is None else dtype)
+
+
+def _timeseries_split(t: torch.Tensor, test_size: float = 0.25) -> tuple[torch.Tensor, torch.Tensor]:
+    if not (0 < test_size < 1):
+        raise ValueError(f"test_size must be between 0 and 1 (got {test_size})")
+
+    split_idx = int(len(t) * (1 - test_size))
+    return t[:split_idx], t[split_idx:]
 
 
 # --------------------------------------------------------------------------
@@ -203,5 +238,22 @@ def plot_timeseries(
 
     raise ValueError(f"Unsupported mode: {mode!r}. Expected 'static' or 'dynamic'.")
 
-def add_lags(df: pl.DataFrame, col: str, max_no_lags: int, forecast_step: int) -> pl.DataFrame:
-    return df.with_columns([pl.col(col).shift(i * forecast_step).alias(f'{col}_lag_{i}') for i in range(1, max_no_lags + 1)])
+def plot_distribution(data: pl.DataFrame, col: str, label: str | None = None, no_bins: int = 100) -> altair.Chart:
+    return altair.Chart(data).mark_bar().encode(
+        altair.X(f'{col}:Q', bin=altair.Bin(maxbins=no_bins)),
+        y='count()'
+    ).properties(
+        width=600,
+        height=400,
+        title=f'Distribution of {label if label else col}'
+    ).configure_scale(zero=False).add_params(
+        altair.selection_interval(bind='scales')
+)    
+
+def plot_line(df, col_name):
+    chart = df[col_name].plot.line()
+    return chart.properties(
+        width=800,
+        height=400,
+        title=col_name
+)
