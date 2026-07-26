@@ -202,3 +202,6 @@ def plot_timeseries(
         )
 
     raise ValueError(f"Unsupported mode: {mode!r}. Expected 'static' or 'dynamic'.")
+
+def add_lags(df: pl.DataFrame, col: str, max_no_lags: int, forecast_step: int) -> pl.DataFrame:
+    return df.with_columns([pl.col(col).shift(i * forecast_step).alias(f'{col}_lag_{i}') for i in range(1, max_no_lags + 1)])
