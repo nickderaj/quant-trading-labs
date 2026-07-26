@@ -70,6 +70,14 @@ def add_lags(df: pl.DataFrame, col: str, max_no_lags: int, forecast_step: int) -
     return df.with_columns([pl.col(col).shift(i * forecast_step).alias(f'{col}_lag_{i}') for i in range(1, max_no_lags + 1)])
 
 
+def lag_col_names(col: str, n: int) -> list[str]:
+    return [f'{col}_lag_{i}' for i in range(1, n + 1)]
+
+
+def auto_reg_corr_matrx(df: pl.DataFrame, target: str, max_no_lags: int) -> pl.DataFrame:
+    return df.drop_nulls().select([target] + lag_col_names(target, max_no_lags)).corr()
+
+
 # --------------------------------------------------------------------------
 # Modeling
 # --------------------------------------------------------------------------
@@ -259,6 +267,116 @@ def benchmark_model_performance(
         print_model_performance(metrics)
 
     return metrics
+
+
+def batch_train_reg(
+    model: nn.Module,
+    x_train: torch.Tensor,
+    x_test: torch.Tensor,
+    y_train: torch.Tensor,
+    y_test: torch.Tensor,
+    no_epochs: int,
+    criterion: nn.Module | None = None,
+    optimizer: torch.optim.Optimizer | None = None,
+    lr: float | None = None,
+    log: bool = False,
+) -> torch.Tensor:
+    """Train model on (x_train, y_train) full-batch, evaluate on (x_test, y_test), return test predictions."""
+    if criterion is None:
+        criterion = nn.L1Loss()
+    if lr is None:
+        lr = 2e-4
+    if optimizer is None:
+        # strong_wolfe line search is more stable than plain LBFGS for small regression models
+        optimizer = torch.optim.LBFGS(
+            model.parameters(),
+            lr=1,
+            line_search_fn='strong_wolfe',
+            tolerance_grad=1e-7,
+            tolerance_change=1e-9,
+        )
+
+    if log:
+        print(f"\nModel parameters: {sum(p.numel() for p in model.parameters())}")
+        print("Model architecture:")
+        for name, param in model.named_parameters():
+            print(f"  {name}: {param.shape} ({param.numel()} params)")
+        print("\nTraining model...")
+
+    train_loss = 0.0
+    log_tick_size = max(no_epochs // 10, 1)
+
+    model.train()
+    if isinstance(optimizer, torch.optim.LBFGS):
+        for epoch in range(no_epochs):
+            def closure() -> torch.Tensor:
+                optimizer.zero_grad()
+                loss = criterion(model(x_train), y_train)
+                loss.backward()
+                return loss
+
+            optimizer.step(closure)
+            with torch.no_grad():
+                train_loss = criterion(model(x_train), y_train).item()
+            if log and (epoch + 1) % log_tick_size == 0:
+                print(f"Epoch [{epoch + 1}/{no_epochs}], Loss: {train_loss:.6f}")
+    else:
+        for epoch in range(no_epochs):
+            optimizer.zero_grad()
+            loss = criterion(model(x_train), y_train)
+            loss.backward()
+            optimizer.step()
+            train_loss = loss.item()
+            if log and (epoch + 1) % log_tick_size == 0:
+                print(f"Epoch [{epoch + 1}/{no_epochs}], Loss: {train_loss:.6f}")
+
+    if log:
+        print("\nLearned parameters:")
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                print(f"{name}:\n{param.data.numpy()}")
+
+    model.eval()
+    with torch.no_grad():
+        y_hat = model(x_test)
+        if log:
+            test_loss = criterion(y_hat, y_test)
+            print(f"\nTest Loss: {test_loss.item():.6f}, Train Loss: {train_loss:.6f}")
+
+    return y_hat
+
+
+def learn_model_trades(
+    df: pl.DataFrame,
+    features: Sequence[str],
+    target: str,
+    model: nn.Module,
+    test_size: float = 0.25,
+    criterion: nn.Module | None = None,
+    optimizer: torch.optim.Optimizer | None = None,
+    no_epochs: int = 6000,
+    lr: float | None = None,
+    log: bool = False,
+) -> pl.DataFrame:
+    """Train model on df via batch_train_reg and return its model_trade_results()."""
+    x_train, x_test, y_train, y_test = timeseries_train_test_split(df, features, target, test_size)
+    y_hat = batch_train_reg(model, x_train, x_test, y_train, y_test, no_epochs, criterion, optimizer, lr, log)
+    return model_trade_results(y_test, y_hat)
+
+
+def learn_model_trade_pnl(
+    df: pl.DataFrame,
+    features: Sequence[str],
+    target: str,
+    model: nn.Module,
+    test_size: float = 0.25,
+    criterion: nn.Module | None = None,
+    optimizer: torch.optim.Optimizer | None = None,
+    no_epochs: int = 6000,
+    lr: float | None = None,
+    log: bool = False,
+) -> pl.DataFrame:
+    return learn_model_trades(df, features, target, model, test_size, criterion, optimizer, no_epochs, lr, log)
 
 
 # --------------------------------------------------------------------------
