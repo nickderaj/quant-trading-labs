@@ -29,6 +29,7 @@ OHLC_AGGS = [
 # Reproducibility
 # --------------------------------------------------------------------------
 
+
 def set_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -43,44 +44,86 @@ def set_seed(seed: int) -> None:
 # Statistics
 # --------------------------------------------------------------------------
 
-def sharpe_to_annualized_rate(interval: str,
-                                trading_days_per_year: int = 365,
-                                trading_hours_per_day: float = 24) -> float:
+
+def sharpe_to_annualized_rate(
+    interval: str, trading_days_per_year: int = 365, trading_hours_per_day: float = 24
+) -> float:
     match = re.match(r"(\d+)([dhms])", interval.lower())
     if not match:
         raise ValueError("Interval must match the format '1d', '2h', '15m', '30s'")
-    
+
     value, unit = int(match.group(1)), match.group(2)
-    
-    if unit == 'd':
+
+    if unit == "d":
         periods = trading_days_per_year / value
-    elif unit == 'h':
+    elif unit == "h":
         periods = trading_days_per_year * (trading_hours_per_day / value)
-    elif unit == 'm':
+    elif unit == "m":
         periods = trading_days_per_year * (trading_hours_per_day * 60 / value)
-    elif unit == 's':
+    elif unit == "s":
         periods = trading_days_per_year * (trading_hours_per_day * 3600 / value)
     else:
         raise ValueError(f"Unsupported unit: {unit}")
-    
+
     return np.sqrt(periods)
 
 
-def add_lags(df: pl.DataFrame, col: str, max_no_lags: int, forecast_step: int) -> pl.DataFrame:
-    return df.with_columns([pl.col(col).shift(i * forecast_step).alias(f'{col}_lag_{i}') for i in range(1, max_no_lags + 1)])
+def log_return_col(col: str) -> str:
+    return f"{col}_log_return"
+
+
+def log_return(col: str, shift_size: int = 1) -> pl.Expr:
+    return (
+        (pl.col(col) / pl.col(col).shift(shift_size)).log().alias(log_return_col(col))
+    )
+
+
+def lag_cols(col: str, forecast_horizon: int, no_lags: int) -> list[pl.Expr]:
+    return [
+        pl.col(col).shift(forecast_horizon * i).alias(f"{col}_lag_{i}")
+        for i in range(1, no_lags + 1)
+    ]
+
+
+def add_lags(
+    df: pl.DataFrame, col: str, max_no_lags: int, forecast_step: int
+) -> pl.DataFrame:
+    return df.with_columns(
+        [
+            pl.col(col).shift(i * forecast_step).alias(f"{col}_lag_{i}")
+            for i in range(1, max_no_lags + 1)
+        ]
+    )
 
 
 def lag_col_names(col: str, n: int) -> list[str]:
-    return [f'{col}_lag_{i}' for i in range(1, n + 1)]
+    return [f"{col}_lag_{i}" for i in range(1, n + 1)]
 
 
-def auto_reg_corr_matrx(df: pl.DataFrame, target: str, max_no_lags: int) -> pl.DataFrame:
+def auto_reg_corr_matrx(
+    df: pl.DataFrame, target: str, max_no_lags: int
+) -> pl.DataFrame:
     return df.drop_nulls().select([target] + lag_col_names(target, max_no_lags)).corr()
+
+
+def add_log_return_features(
+    df: pl.DataFrame,
+    col: str,
+    forecast_horizon: int,
+    max_no_lags: int | None = None,
+) -> pl.DataFrame:
+    if max_no_lags is None:
+        max_no_lags = 0
+    df = df.with_columns(log_return(col, forecast_horizon))
+    if max_no_lags > 0:
+        df = add_lags(df, log_return_col(col), max_no_lags, forecast_horizon)
+    return df
 
 
 # --------------------------------------------------------------------------
 # Modeling
 # --------------------------------------------------------------------------
+
 
 def timeseries_train_test_split(
     df: pl.DataFrame,
@@ -96,11 +139,15 @@ def timeseries_train_test_split(
     return x_train, x_test, y_train, y_test
 
 
-def _to_tensor(x: pl.DataFrame | pl.Series, dtype: torch.dtype | None = None) -> torch.Tensor:
+def _to_tensor(
+    x: pl.DataFrame | pl.Series, dtype: torch.dtype | None = None
+) -> torch.Tensor:
     return torch.tensor(x.to_numpy(), dtype=torch.float32 if dtype is None else dtype)
 
 
-def _timeseries_split(t: torch.Tensor, test_size: float = 0.25) -> tuple[torch.Tensor, torch.Tensor]:
+def _timeseries_split(
+    t: torch.Tensor, test_size: float = 0.25
+) -> tuple[torch.Tensor, torch.Tensor]:
     if not (0 < test_size < 1):
         raise ValueError(f"test_size must be between 0 and 1 (got {test_size})")
 
@@ -123,21 +170,42 @@ def _as_float(x: object) -> float:
 # Trading evaluation
 # --------------------------------------------------------------------------
 
-def model_trade_results(y_true: torch.Tensor | np.ndarray, y_pred: torch.Tensor | np.ndarray) -> pl.DataFrame:
+
+def model_trade_results(
+    y_true: torch.Tensor | np.ndarray, y_pred: torch.Tensor | np.ndarray
+) -> pl.DataFrame:
     """Generate trade-level results from model predictions."""
-    return pl.DataFrame({
-        'y_pred': _to_flat_array(y_pred),
-        'y_true': _to_flat_array(y_true),
-    }).with_columns([
-        (pl.col('y_pred').sign() == pl.col('y_true').sign()).alias('is_won'),
-        pl.col('y_pred').sign().alias('position'),
-    ]).with_columns([
-        (pl.col('position') * pl.col('y_true')).alias('trade_log_return'),
-    ]).with_columns([
-        pl.col('trade_log_return').cum_sum().alias('equity_curve'),
-    ]).with_columns([
-        (pl.col('equity_curve') - pl.col('equity_curve').cum_max()).alias('drawdown_log_return'),
-    ])
+    return (
+        pl.DataFrame(
+            {
+                "y_pred": _to_flat_array(y_pred),
+                "y_true": _to_flat_array(y_true),
+            }
+        )
+        .with_columns(
+            [
+                (pl.col("y_pred").sign() == pl.col("y_true").sign()).alias("is_won"),
+                pl.col("y_pred").sign().alias("position"),
+            ]
+        )
+        .with_columns(
+            [
+                (pl.col("position") * pl.col("y_true")).alias("trade_log_return"),
+            ]
+        )
+        .with_columns(
+            [
+                pl.col("trade_log_return").cum_sum().alias("equity_curve"),
+            ]
+        )
+        .with_columns(
+            [
+                (pl.col("equity_curve") - pl.col("equity_curve").cum_max()).alias(
+                    "drawdown_log_return"
+                ),
+            ]
+        )
+    )
 
 
 def eval_model_performance(
@@ -151,33 +219,37 @@ def eval_model_performance(
     """Calculate performance metrics for the trading model."""
     trade_results = model_trade_results(y_true, y_pred)
 
-    win_rate = _as_float(trade_results['is_won'].mean())
-    avg_win = _as_float(trade_results.filter(pl.col('is_won'))['trade_log_return'].mean())
-    avg_loss = _as_float(trade_results.filter(~pl.col('is_won'))['trade_log_return'].mean())
+    win_rate = _as_float(trade_results["is_won"].mean())
+    avg_win = _as_float(
+        trade_results.filter(pl.col("is_won"))["trade_log_return"].mean()
+    )
+    avg_loss = _as_float(
+        trade_results.filter(~pl.col("is_won"))["trade_log_return"].mean()
+    )
     ev = win_rate * avg_win + (1 - win_rate) * avg_loss
 
-    trade_log_return = trade_results['trade_log_return']
+    trade_log_return = trade_results["trade_log_return"]
     std = _as_float(trade_log_return.std())
     sharpe = _as_float(trade_log_return.mean()) / std if std else 0
     total_log_return = _as_float(trade_log_return.sum())
 
     metrics = {
-        'features': ','.join(feature_names),
-        'target': target_name,
-        'no_trades': len(trade_results),
-        'win_rate': win_rate,
-        'avg_win': avg_win,
-        'avg_loss': avg_loss,
-        'best_trade': _as_float(trade_log_return.max()),
-        'worst_trade': _as_float(trade_log_return.min()),
-        'ev': ev,
-        'std': std,
-        'total_log_return': total_log_return,
-        'compound_return': float(np.exp(total_log_return) - 1),
-        'max_drawdown': _as_float(trade_results['drawdown_log_return'].min()),
-        'equity_trough': _as_float(trade_results['equity_curve'].min()),
-        'equity_peak': _as_float(trade_results['equity_curve'].max()),
-        'sharpe': float(sharpe * annualized_rate),
+        "features": ",".join(feature_names),
+        "target": target_name,
+        "no_trades": len(trade_results),
+        "win_rate": win_rate,
+        "avg_win": avg_win,
+        "avg_loss": avg_loss,
+        "best_trade": _as_float(trade_log_return.max()),
+        "worst_trade": _as_float(trade_log_return.min()),
+        "ev": ev,
+        "std": std,
+        "total_log_return": total_log_return,
+        "compound_return": float(np.exp(total_log_return) - 1),
+        "max_drawdown": _as_float(trade_results["drawdown_log_return"].min()),
+        "equity_trough": _as_float(trade_results["equity_curve"].min()),
+        "equity_peak": _as_float(trade_results["equity_curve"].max()),
+        "sharpe": float(sharpe * annualized_rate),
     }
 
     if log:
@@ -204,15 +276,15 @@ def print_model_performance(metrics: dict[str, Any]) -> None:
     print(f"Equity Trough:    {metrics['equity_trough']:.4f}")
     print(f"Equity Peak:      {metrics['equity_peak']:.4f}")
     print(f"Sharpe Ratio:     {metrics['sharpe']:.4f}")
-    if 'weights' in metrics:
+    if "weights" in metrics:
         print(f"Weights:          {metrics['weights']}")
-    if 'biases' in metrics:
+    if "biases" in metrics:
         print(f"Biases:           {metrics['biases']}")
 
 
 def get_linear_params(model: nn.Module) -> tuple[np.ndarray, float] | None:
     """Extract (weight, bias) from a model's `linear` submodule, if it has one."""
-    linear = getattr(model, 'linear', None)
+    linear = getattr(model, "linear", None)
     if not isinstance(linear, nn.Linear):
         return None
 
@@ -235,7 +307,9 @@ def benchmark_model_performance(
     log: bool = False,
 ) -> dict[str, Any]:
     """Train a model on df and return its eval_model_performance() metrics."""
-    x_train, x_test, y_train, y_test = timeseries_train_test_split(df, features, target, test_size)
+    x_train, x_test, y_train, y_test = timeseries_train_test_split(
+        df, features, target, test_size
+    )
 
     if criterion is None:
         criterion = nn.MSELoss()
@@ -260,8 +334,8 @@ def benchmark_model_performance(
     linear_params = get_linear_params(model)
     if linear_params is not None:
         weight, bias = linear_params
-        metrics['weights'] = str(weight)
-        metrics['biases'] = str(bias)
+        metrics["weights"] = str(weight)
+        metrics["biases"] = str(bias)
 
     if log:
         print_model_performance(metrics)
@@ -291,7 +365,7 @@ def batch_train_reg(
         optimizer = torch.optim.LBFGS(
             model.parameters(),
             lr=1,
-            line_search_fn='strong_wolfe',
+            line_search_fn="strong_wolfe",
             tolerance_grad=1e-7,
             tolerance_change=1e-9,
         )
@@ -309,6 +383,7 @@ def batch_train_reg(
     model.train()
     if isinstance(optimizer, torch.optim.LBFGS):
         for epoch in range(no_epochs):
+
             def closure() -> torch.Tensor:
                 optimizer.zero_grad()
                 loss = criterion(model(x_train), y_train)
@@ -359,8 +434,21 @@ def learn_model_trades(
     log: bool = False,
 ) -> pl.DataFrame:
     """Train model on df via batch_train_reg and return its model_trade_results()."""
-    x_train, x_test, y_train, y_test = timeseries_train_test_split(df, features, target, test_size)
-    y_hat = batch_train_reg(model, x_train, x_test, y_train, y_test, no_epochs, criterion, optimizer, lr, log)
+    x_train, x_test, y_train, y_test = timeseries_train_test_split(
+        df, features, target, test_size
+    )
+    y_hat = batch_train_reg(
+        model,
+        x_train,
+        x_test,
+        y_train,
+        y_test,
+        no_epochs,
+        criterion,
+        optimizer,
+        lr,
+        log,
+    )
     return model_trade_results(y_test, y_hat)
 
 
@@ -376,37 +464,49 @@ def learn_model_trade_pnl(
     lr: float | None = None,
     log: bool = False,
 ) -> pl.DataFrame:
-    return learn_model_trades(df, features, target, model, test_size, criterion, optimizer, no_epochs, lr, log)
+    return learn_model_trades(
+        df, features, target, model, test_size, criterion, optimizer, no_epochs, lr, log
+    )
+
 
 def add_tx_fee(trades: pl.DataFrame, tx_fee: float, name: str):
-    tx_fee_col = (pl.col('exit_trade_value') * tx_fee + pl.col('entry_trade_value') * tx_fee).alias(f"tx_fee_{name}")
+    tx_fee_col = (
+        pl.col("exit_trade_value") * tx_fee + pl.col("entry_trade_value") * tx_fee
+    ).alias(f"tx_fee_{name}")
     return trades.with_columns(tx_fee_col)
 
 
 def add_tx_fees(trades: pl.DataFrame, maker_fee: float, taker_fee: float):
-    trades = add_tx_fee(trades, maker_fee, 'maker')
-    trades = add_tx_fee(trades, taker_fee, 'taker')
-    return trades  
+    trades = add_tx_fee(trades, maker_fee, "maker")
+    trades = add_tx_fee(trades, taker_fee, "taker")
+    return trades
+
 
 def add_tx_fees_log(trades: pl.DataFrame, maker_fee, taker_fee):
     return trades.with_columns(
-        (pl.col('trade_log_return') + np.log(maker_fee)).alias('trade_log_return_net_maker'),
-        (pl.col('trade_log_return') + np.log(taker_fee)).alias('trade_log_return_net_taker'),
+        (pl.col("trade_log_return") + np.log(maker_fee)).alias(
+            "trade_log_return_net_maker"
+        ),
+        (pl.col("trade_log_return") + np.log(taker_fee)).alias(
+            "trade_log_return_net_taker"
+        ),
     ).with_columns(
-        pl.col('trade_log_return_net_maker').cum_sum().alias('equity_curve_net_maker'),
-        pl.col('trade_log_return_net_taker').cum_sum().alias('equity_curve_net_taker'),
+        pl.col("trade_log_return_net_maker").cum_sum().alias("equity_curve_net_maker"),
+        pl.col("trade_log_return_net_taker").cum_sum().alias("equity_curve_net_taker"),
     )
+
 
 # --------------------------------------------------------------------------
 # Data loading
 # --------------------------------------------------------------------------
+
 
 def load_ohlc_timeseries_range(
     sym: str,
     time_interval: str,
     start_date: datetime,
     end_date: datetime,
-    data_path: str | None = None
+    data_path: str | None = None,
 ) -> pl.DataFrame:
     if data_path is None:
         data_path = "./cache"
@@ -434,14 +534,18 @@ def load_ohlc_timeseries_range(
 
             trades = trades.with_columns(pl.col("datetime").cast(pl.Datetime))
 
-            ts = trades.group_by_dynamic("datetime", every=time_interval, offset="0m").agg(OHLC_AGGS)
+            ts = trades.group_by_dynamic(
+                "datetime", every=time_interval, offset="0m"
+            ).agg(OHLC_AGGS)
             ts_list.append(ts)
 
         except Exception as e:  # noqa: BLE001 - one bad file shouldn't stop the whole range load
             tqdm.write(f"[ERROR] {file_name}: {e}")
 
     if not ts_list:
-        raise ValueError(f"No trade data found for {sym} in range {start_date} to {end_date}")
+        raise ValueError(
+            f"No trade data found for {sym} in range {start_date} to {end_date}"
+        )
 
     result = pl.concat(ts_list).sort("datetime").unique(subset=["datetime"])
     return result
@@ -453,7 +557,7 @@ def load_timeseries_range(
     start_date: datetime,
     end_date: datetime,
     agg_cols: pl.Expr | list[pl.Expr],
-    data_path: str | None = None
+    data_path: str | None = None,
 ) -> pl.DataFrame:
     # Default to the same cache dir the downloader writes to
     if data_path is None:
@@ -485,14 +589,18 @@ def load_timeseries_range(
             trades = trades.with_columns(pl.col("datetime").cast(pl.Datetime))
 
             # Bucket raw trades into time_interval windows using the caller's aggregations
-            ts = trades.group_by_dynamic("datetime", every=time_interval, offset="0m").agg(agg_cols)
+            ts = trades.group_by_dynamic(
+                "datetime", every=time_interval, offset="0m"
+            ).agg(agg_cols)
             ts_list.append(ts)
 
         except Exception as e:  # noqa: BLE001 - one bad file shouldn't stop the whole range load
             tqdm.write(f"[ERROR] {file_name}: {e}")
 
     if not ts_list:
-        raise ValueError(f"No trade data found for {sym} in range {start_date} to {end_date}")
+        raise ValueError(
+            f"No trade data found for {sym} in range {start_date} to {end_date}"
+        )
 
     # Combine all days and drop any duplicate timestamps from overlapping buckets
     result = pl.concat(ts_list).sort("datetime").unique(subset=["datetime"])
@@ -502,6 +610,7 @@ def load_timeseries_range(
 # --------------------------------------------------------------------------
 # Plotting
 # --------------------------------------------------------------------------
+
 
 def plot_timeseries(
     ts: pl.DataFrame,
@@ -523,36 +632,40 @@ def plot_timeseries(
         return None
 
     if mode == "dynamic":
-        return altair.Chart(ts).mark_line(tooltip=True).encode(
-            x="datetime",
-            y=col
-        ).properties(
-            width=800,
-            height=400,
-            title=f"{sym} {interval_size} {col}"
-        ).configure_scale(zero=False).add_params(
-            altair.selection_interval(bind="scales", encodings=["x"]),  # Only zoom x-axis
-            altair.selection_interval(bind="scales", encodings=["y"]),  # Only zoom y-axis
+        return (
+            altair.Chart(ts)
+            .mark_line(tooltip=True)
+            .encode(x="datetime", y=col)
+            .properties(width=800, height=400, title=f"{sym} {interval_size} {col}")
+            .configure_scale(zero=False)
+            .add_params(
+                altair.selection_interval(
+                    bind="scales", encodings=["x"]
+                ),  # Only zoom x-axis
+                altair.selection_interval(
+                    bind="scales", encodings=["y"]
+                ),  # Only zoom y-axis
+            )
         )
 
     raise ValueError(f"Unsupported mode: {mode!r}. Expected 'static' or 'dynamic'.")
 
-def plot_distribution(data: pl.DataFrame, col: str, label: str | None = None, no_bins: int = 100) -> altair.Chart:
-    return altair.Chart(data).mark_bar().encode(
-        altair.X(f'{col}:Q', bin=altair.Bin(maxbins=no_bins)),
-        y='count()'
-    ).properties(
-        width=600,
-        height=400,
-        title=f'Distribution of {label if label else col}'
-    ).configure_scale(zero=False).add_params(
-        altair.selection_interval(bind='scales')
-)    
+
+def plot_distribution(
+    data: pl.DataFrame, col: str, label: str | None = None, no_bins: int = 100
+) -> altair.Chart:
+    return (
+        altair.Chart(data)
+        .mark_bar()
+        .encode(altair.X(f"{col}:Q", bin=altair.Bin(maxbins=no_bins)), y="count()")
+        .properties(
+            width=600, height=400, title=f"Distribution of {label if label else col}"
+        )
+        .configure_scale(zero=False)
+        .add_params(altair.selection_interval(bind="scales"))
+    )
+
 
 def plot_line(df, col_name):
     chart = df[col_name].plot.line()
-    return chart.properties(
-        width=800,
-        height=400,
-        title=col_name
-)
+    return chart.properties(width=800, height=400, title=col_name)
