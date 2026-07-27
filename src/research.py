@@ -378,6 +378,24 @@ def learn_model_trade_pnl(
 ) -> pl.DataFrame:
     return learn_model_trades(df, features, target, model, test_size, criterion, optimizer, no_epochs, lr, log)
 
+def add_tx_fee(trades: pl.DataFrame, tx_fee: float, name: str):
+    tx_fee_col = (pl.col('exit_trade_value') * tx_fee + pl.col('entry_trade_value') * tx_fee).alias(f"tx_fee_{name}")
+    return trades.with_columns(tx_fee_col)
+
+
+def add_tx_fees(trades: pl.DataFrame, maker_fee: float, taker_fee: float):
+    trades = add_tx_fee(trades, maker_fee, 'maker')
+    trades = add_tx_fee(trades, taker_fee, 'taker')
+    return trades  
+
+def add_tx_fees_log(trades: pl.DataFrame, maker_fee, taker_fee):
+    return trades.with_columns(
+        (pl.col('trade_log_return') + np.log(maker_fee)).alias('trade_log_return_net_maker'),
+        (pl.col('trade_log_return') + np.log(taker_fee)).alias('trade_log_return_net_taker'),
+    ).with_columns(
+        pl.col('trade_log_return_net_maker').cum_sum().alias('equity_curve_net_maker'),
+        pl.col('trade_log_return_net_taker').cum_sum().alias('equity_curve_net_taker'),
+    )
 
 # --------------------------------------------------------------------------
 # Data loading
