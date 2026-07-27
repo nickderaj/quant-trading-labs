@@ -366,7 +366,7 @@ def benchmark_linear_models(
     across different feature combos.
     """
     if model_factory is None:
-        model_factory = lambda n: nn.Linear(n, 1)  # noqa: E731
+        model_factory = lambda n: nn.Linear(n, 1)
 
     df = df.drop_nulls()
 
