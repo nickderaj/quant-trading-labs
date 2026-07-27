@@ -1,8 +1,9 @@
 # Standard library
+import itertools
 import os
 import random
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -300,7 +301,7 @@ def benchmark_model_performance(
     model: nn.Module,
     annualized_rate: float,
     test_size: float = 0.25,
-    criterion: nn.Module | None = None,
+    loss: nn.Module | None = None,
     optimizer: torch.optim.Optimizer | None = None,
     no_epochs: int = 2000,
     lr: float = 5e-4,
@@ -311,18 +312,18 @@ def benchmark_model_performance(
         df, features, target, test_size
     )
 
-    if criterion is None:
-        criterion = nn.MSELoss()
+    if loss is None:
+        loss = nn.MSELoss()
     if optimizer is None:
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     model.train()
     for _ in range(no_epochs):
         y_hat_train = model(x_train)
-        loss = criterion(y_hat_train, y_train)
+        loss_value = loss(y_hat_train, y_train)
 
         optimizer.zero_grad()
-        loss.backward()
+        loss_value.backward()
         optimizer.step()
 
     model.eval()
@@ -343,6 +344,54 @@ def benchmark_model_performance(
     return metrics
 
 
+def benchmark_linear_models(
+    df: pl.DataFrame,
+    target: str,
+    feature_pool: Sequence[str],
+    annualized_rate: float,
+    model_factory: Callable[[int], nn.Module] | None = None,
+    max_no_features: int = 1,
+    no_epochs: int = 2000,
+    lr: float = 5e-4,
+    loss: nn.Module | None = None,
+    test_size: float = 0.25,
+) -> pl.DataFrame:
+    """Benchmark model_factory over every combination of up to max_no_features features from feature_pool, sorted by sharpe.
+
+    model_factory defaults to a plain nn.Linear(n, 1) if not given.
+
+    no_epochs defaults to 2000 (was 200) because these features have near-zero
+    autocorrelation: at 200 epochs / lr=5e-4 the linear weight barely moves off init,
+    so sign(y_pred) is governed by the bias term alone, producing identical trades
+    across different feature combos.
+    """
+    if model_factory is None:
+        model_factory = lambda n: nn.Linear(n, 1)  # noqa: E731
+
+    df = df.drop_nulls()
+
+    feature_combos: list[tuple[str, ...]] = []
+    for n in range(1, max_no_features + 1):
+        feature_combos += list(itertools.combinations(feature_pool, n))
+
+    benchmarks = [
+        benchmark_model_performance(
+            df,
+            list(features),
+            target,
+            model_factory(len(features)),
+            annualized_rate,
+            test_size=test_size,
+            loss=loss,
+            no_epochs=no_epochs,
+            lr=lr,
+        )
+        for features in feature_combos
+    ]
+
+    return pl.DataFrame(benchmarks).sort("sharpe", descending=True)
+
+
 def batch_train_reg(
     model: nn.Module,
     x_train: torch.Tensor,
@@ -350,14 +399,14 @@ def batch_train_reg(
     y_train: torch.Tensor,
     y_test: torch.Tensor,
     no_epochs: int,
-    criterion: nn.Module | None = None,
+    loss: nn.Module | None = None,
     optimizer: torch.optim.Optimizer | None = None,
     lr: float | None = None,
     log: bool = False,
 ) -> torch.Tensor:
     """Train model on (x_train, y_train) full-batch, evaluate on (x_test, y_test), return test predictions."""
-    if criterion is None:
-        criterion = nn.L1Loss()
+    if loss is None:
+        loss = nn.L1Loss()
     if lr is None:
         lr = 2e-4
     if optimizer is None:
@@ -386,22 +435,22 @@ def batch_train_reg(
 
             def closure() -> torch.Tensor:
                 optimizer.zero_grad()
-                loss = criterion(model(x_train), y_train)
-                loss.backward()
-                return loss
+                loss_value = loss(model(x_train), y_train)
+                loss_value.backward()
+                return loss_value
 
             optimizer.step(closure)
             with torch.no_grad():
-                train_loss = criterion(model(x_train), y_train).item()
+                train_loss = loss(model(x_train), y_train).item()
             if log and (epoch + 1) % log_tick_size == 0:
                 print(f"Epoch [{epoch + 1}/{no_epochs}], Loss: {train_loss:.6f}")
     else:
         for epoch in range(no_epochs):
             optimizer.zero_grad()
-            loss = criterion(model(x_train), y_train)
-            loss.backward()
+            loss_value = loss(model(x_train), y_train)
+            loss_value.backward()
             optimizer.step()
-            train_loss = loss.item()
+            train_loss = loss_value.item()
             if log and (epoch + 1) % log_tick_size == 0:
                 print(f"Epoch [{epoch + 1}/{no_epochs}], Loss: {train_loss:.6f}")
 
@@ -415,7 +464,7 @@ def batch_train_reg(
     with torch.no_grad():
         y_hat = model(x_test)
         if log:
-            test_loss = criterion(y_hat, y_test)
+            test_loss = loss(y_hat, y_test)
             print(f"\nTest Loss: {test_loss.item():.6f}, Train Loss: {train_loss:.6f}")
 
     return y_hat
@@ -427,7 +476,7 @@ def learn_model_trades(
     target: str,
     model: nn.Module,
     test_size: float = 0.25,
-    criterion: nn.Module | None = None,
+    loss: nn.Module | None = None,
     optimizer: torch.optim.Optimizer | None = None,
     no_epochs: int = 6000,
     lr: float | None = None,
@@ -444,7 +493,7 @@ def learn_model_trades(
         y_train,
         y_test,
         no_epochs,
-        criterion,
+        loss,
         optimizer,
         lr,
         log,
@@ -458,14 +507,14 @@ def learn_model_trade_pnl(
     target: str,
     model: nn.Module,
     test_size: float = 0.25,
-    criterion: nn.Module | None = None,
+    loss: nn.Module | None = None,
     optimizer: torch.optim.Optimizer | None = None,
     no_epochs: int = 6000,
     lr: float | None = None,
     log: bool = False,
 ) -> pl.DataFrame:
     return learn_model_trades(
-        df, features, target, model, test_size, criterion, optimizer, no_epochs, lr, log
+        df, features, target, model, test_size, loss, optimizer, no_epochs, lr, log
     )
 
 
@@ -514,6 +563,17 @@ def load_ohlc_timeseries_range(
     if start_date > end_date:
         raise ValueError("start_date must be before or equal to end_date")
 
+    # Aggregating raw ticks into bars is expensive (minutes per call), so cache
+    # the result per symbol/interval/date-range alongside the raw tick cache.
+    ohlc_cache_name = (
+        f"{sym}-ohlc-{time_interval}-"
+        f"{start_date.strftime('%Y-%m-%d')}-{end_date.strftime('%Y-%m-%d')}.parquet"
+    )
+    ohlc_cache_path = os.path.join(data_path, ohlc_cache_name)
+
+    if os.path.exists(ohlc_cache_path):
+        return pl.read_parquet(ohlc_cache_path)
+
     ts_list = []
     total_days = (end_date - start_date).days + 1
 
@@ -548,6 +608,7 @@ def load_ohlc_timeseries_range(
         )
 
     result = pl.concat(ts_list).sort("datetime").unique(subset=["datetime"])
+    result.write_parquet(ohlc_cache_path)
     return result
 
 

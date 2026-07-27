@@ -8,10 +8,14 @@ from tqdm import tqdm
 
 
 def download_and_unzip(symbol: str, date: str | datetime,
-                       download_dir: str = "data", cache_dir: str = "cache") -> pl.DataFrame:
+                       download_dir: str = "data", cache_dir: str = "cache",
+                       read_cache: bool = True) -> pl.DataFrame | None:
     """
     Download and unzip Binance futures trade data for a given symbol and date.
     Caches results as parquet files to avoid repeated downloads.
+
+    read_cache=False skips reading an existing cache file into memory when the
+    caller only needs the download/cache side effect, not the data itself.
     """
     # Normalize date to string
     date_str = date.strftime('%Y-%m-%d') if isinstance(date, datetime) else date
@@ -22,7 +26,7 @@ def download_and_unzip(symbol: str, date: str | datetime,
     cache_path = cache_path_dir / f"{symbol}-trades-{date_str}.parquet"
 
     if cache_path.exists():
-        return pl.read_parquet(cache_path)
+        return pl.read_parquet(cache_path) if read_cache else None
 
     url = f"https://data.binance.vision/data/futures/um/daily/trades/{symbol}/{symbol}-trades-{date_str}.zip"
 
@@ -83,7 +87,7 @@ def download_trades(symbol: str, no_days: int,
             if return_trades:
                 dfs.append(download_and_unzip(symbol, current_date, download_dir, cache_dir))
             else:
-                download_and_unzip(symbol, current_date, download_dir, cache_dir)
+                download_and_unzip(symbol, current_date, download_dir, cache_dir, read_cache=False)
         except Exception as e:  # noqa: BLE001 - one bad day shouldn't stop the whole batch
             tqdm.write(f"[ERROR] {symbol} {current_date.date()}: {e}")
 
@@ -105,6 +109,6 @@ def download_date_range(symbol: str, start_date: str | datetime, end_date: str |
     for i in tqdm(range(num_days), desc=f"Downloading {symbol}"):
         current_date = start_date + timedelta(days=i)
         try:
-            download_and_unzip(symbol, current_date, download_dir, cache_dir)
+            download_and_unzip(symbol, current_date, download_dir, cache_dir, read_cache=False)
         except Exception as e:
             tqdm.write(f"[ERROR] {symbol} {current_date.date()}: {e}")
