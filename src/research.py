@@ -575,6 +575,66 @@ def add_tx_fees(trades: pl.DataFrame, maker_fee: float, taker_fee: float):
     return trades
 
 
+def add_trading_costs(
+    trades: pl.DataFrame, taker_fee: float, slippage: float = 1e-4
+) -> pl.DataFrame:
+    """Charge turnover-based trading costs: taker_fee + slippage per unit of
+    position turned over each bar (generalizes add_tx_fees_log with a
+    slippage term, and is the version wired into walk_forward_run /
+    stitched_metrics for Phase 0 onward).
+
+    turnover_t = |position_t - position_{t-1}|, with position_{-1} treated as
+    0 so the very first entry into a position is charged too. cost_t =
+    turnover_t * (taker_fee + slippage) is a fraction of capital, expressed
+    as a log-return drag via log(1 - cost_t) to match add_tx_fees_log's
+    convention (additive on top of trade_log_return, so it composes under
+    cum_sum).
+
+    Adds: turnover, cost_log_return, trade_log_return_net, equity_curve_net,
+    drawdown_log_return_net.
+    """
+    turnover = pl.col("position").diff().fill_null(pl.col("position")).abs()
+    cost_frac = taker_fee + slippage
+    return (
+        trades.with_columns(turnover.alias("turnover"))
+        .with_columns(
+            (1 - cost_frac * pl.col("turnover")).log().alias("cost_log_return")
+        )
+        .with_columns(
+            (pl.col("trade_log_return") + pl.col("cost_log_return")).alias(
+                "trade_log_return_net"
+            )
+        )
+        .with_columns(
+            pl.col("trade_log_return_net").cum_sum().alias("equity_curve_net")
+        )
+        .with_columns(
+            (pl.col("equity_curve_net") - pl.col("equity_curve_net").cum_max()).alias(
+                "drawdown_log_return_net"
+            )
+        )
+    )
+
+
+def cost_summary(trades: pl.DataFrame, annualized_rate: float) -> dict[str, Any]:
+    """Turnover and fee-drag summary from a trades frame with add_trading_costs applied.
+
+    annualized_rate is sharpe_to_annualized_rate's sqrt(periods_per_year), so
+    squaring it recovers periods_per_year for scaling per-bar quantities to
+    an annual rate.
+    """
+    periods_per_year = annualized_rate**2
+    mean_turnover = _as_float(trades["turnover"].mean()) if len(trades) else 0.0
+    mean_cost = _as_float(trades["cost_log_return"].mean()) if len(trades) else 0.0
+    annual_fee_drag_log = -mean_cost * periods_per_year
+    return {
+        "mean_turnover_per_bar": mean_turnover,
+        "turnover_per_year": mean_turnover * periods_per_year,
+        "annual_fee_drag_log": annual_fee_drag_log,
+        "annual_fee_drag_pct": float(np.expm1(annual_fee_drag_log)),
+    }
+
+
 def add_tx_fees_log(trades: pl.DataFrame, maker_fee, taker_fee):
     """Charge fees only on the position actually turned over each bar.
 
@@ -756,6 +816,8 @@ def walk_forward_run(
     lr: float = 5e-4,
     no_epochs: int = 2000,
     threshold: float = 0.0,
+    taker_fee: float | None = None,
+    slippage: float = 1e-4,
 ) -> dict[str, pl.DataFrame]:
     """Run one walk-forward configuration end to end.
 
@@ -764,6 +826,12 @@ def walk_forward_run(
     its test data), predicts the fold's test window, and stitches every
     fold's out-of-sample predictions into one continuous series so the whole
     run can be treated like a single long backtest.
+
+    taker_fee, if given, charges add_trading_costs on both the per-fold and
+    stitched trade frames, so every returned frame carries gross (columns
+    from model_trade_results) and net (trade_log_return_net,
+    equity_curve_net, drawdown_log_return_net, turnover) variants side by
+    side. Leave None to skip cost accounting (gross only).
 
     Returns {"folds": per-fold metrics/weights/verdict, "stitched_trades":
     the concatenated OOS trade frame with equity/drawdown recomputed across
@@ -821,8 +889,6 @@ def walk_forward_run(
                 describe_linear_model(weight, bias, x_test.numpy(), features)
             )
 
-        fold_records.append(fold_metrics)
-
         fold_trades = model_trade_results(y_test, y_hat_test, threshold).with_columns(
             pl.lit(fold_id).alias("fold")
         )
@@ -830,6 +896,19 @@ def walk_forward_run(
             fold_trades = fold_trades.with_columns(
                 pl.Series("datetime", datetimes[test_idx])
             )
+
+        if taker_fee is not None:
+            fold_trades = add_trading_costs(fold_trades, taker_fee, slippage)
+            net_fold_metrics = _series_metrics(
+                fold_trades["trade_log_return_net"], annualized_rate, "fold_net"
+            )
+            fold_metrics["sharpe_net"] = net_fold_metrics["sharpe"]
+            fold_metrics["total_log_return_net"] = net_fold_metrics["total_log_return"]
+            fold_metrics["compound_return_net"] = net_fold_metrics["compound_return"]
+            fold_metrics["max_drawdown_net"] = net_fold_metrics["max_drawdown"]
+            fold_metrics.update(cost_summary(fold_trades, annualized_rate))
+
+        fold_records.append(fold_metrics)
         stitched.append(fold_trades)
 
     stitched_df = (
@@ -846,6 +925,22 @@ def walk_forward_run(
                 "drawdown_log_return"
             )
         )
+        if taker_fee is not None:
+            # Recompute cost/net columns on the full stitched series (not
+            # just concatenated per-fold ones) so equity_curve_net is one
+            # continuous net-of-cost curve across fold boundaries, matching
+            # how the gross equity_curve above is stitched.
+            stitched_df = add_trading_costs(
+                stitched_df.drop(
+                    "turnover",
+                    "cost_log_return",
+                    "trade_log_return_net",
+                    "equity_curve_net",
+                    "drawdown_log_return_net",
+                ),
+                taker_fee,
+                slippage,
+            )
 
     return {
         "folds": pl.DataFrame(fold_records) if fold_records else pl.DataFrame(),
@@ -856,7 +951,13 @@ def walk_forward_run(
 def stitched_metrics(
     stitched_trades: pl.DataFrame, annualized_rate: float, label: str = "strategy"
 ) -> dict[str, Any]:
-    """Summary metrics for a walk_forward_run's stitched OOS trade series."""
+    """Summary metrics for a walk_forward_run's stitched OOS trade series.
+
+    If stitched_trades carries add_trading_costs' net columns (i.e.
+    walk_forward_run was called with taker_fee), also reports net sharpe/
+    return/drawdown alongside the gross ones, plus turnover and annualized
+    fee drag from cost_summary.
+    """
     if len(stitched_trades) == 0:
         return {"label": label, "no_bars": 0}
     traded = stitched_trades.filter(pl.col("position") != 0)
@@ -868,6 +969,17 @@ def stitched_metrics(
         len(traded) / len(stitched_trades) if len(stitched_trades) else 0.0
     )
     metrics["win_rate"] = _as_float(traded["is_won"].mean()) if len(traded) else 0.0
+
+    if "trade_log_return_net" in stitched_trades.columns:
+        net_metrics = _series_metrics(
+            stitched_trades["trade_log_return_net"], annualized_rate, f"{label}_net"
+        )
+        metrics["sharpe_net"] = net_metrics["sharpe"]
+        metrics["total_log_return_net"] = net_metrics["total_log_return"]
+        metrics["compound_return_net"] = net_metrics["compound_return"]
+        metrics["max_drawdown_net"] = net_metrics["max_drawdown"]
+        metrics.update(cost_summary(stitched_trades, annualized_rate))
+
     return metrics
 
 
