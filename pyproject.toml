@@ -10,6 +10,7 @@ dependencies = [
     "pandas",
     "polars>=1.43.0",
     "python-binance",
+    "scipy>=1.17.1",
     "torch>=2.13.0",
     "tqdm>=4.69.1",
     "vegafusion[embed]>=2.0.3",

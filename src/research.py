@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import torch
+from scipy.stats import norm
 from torch import nn
 from tqdm import tqdm
 
@@ -235,17 +236,15 @@ def eval_model_performance(
     trade_results = model_trade_results(y_true, y_pred, threshold)
     traded = trade_results.filter(pl.col("position") != 0)
 
+    won = traded.filter(pl.col("is_won"))
+    lost = traded.filter(~pl.col("is_won"))
+
     win_rate = _as_float(traded["is_won"].mean()) if len(traded) else 0.0
-    avg_win = (
-        _as_float(traded.filter(pl.col("is_won"))["trade_log_return"].mean())
-        if len(traded)
-        else 0.0
-    )
-    avg_loss = (
-        _as_float(traded.filter(~pl.col("is_won"))["trade_log_return"].mean())
-        if len(traded)
-        else 0.0
-    )
+    # A fold can easily have zero losing (or zero winning) trades, e.g. a
+    # near-empty fold or a lopsided one; .mean() on an empty column is None,
+    # not 0.0, so guard on length rather than trusting _as_float to coerce it.
+    avg_win = _as_float(won["trade_log_return"].mean()) if len(won) else 0.0
+    avg_loss = _as_float(lost["trade_log_return"].mean()) if len(lost) else 0.0
     ev = win_rate * avg_win + (1 - win_rate) * avg_loss
 
     trade_log_return = trade_results["trade_log_return"]
@@ -607,6 +606,404 @@ def add_tx_fees_log(trades: pl.DataFrame, maker_fee, taker_fee):
             .alias("equity_curve_net_taker"),
         )
     )
+
+
+# --------------------------------------------------------------------------
+# Walk-forward validation
+# --------------------------------------------------------------------------
+
+
+def walk_forward_splits(
+    n: int,
+    train_bars: int,
+    test_bars: int,
+    step_bars: int | None = None,
+    mode: str = "rolling",
+    embargo_bars: int = 0,
+    origin_offset: int = 0,
+) -> list[tuple[np.ndarray, np.ndarray]]:
+    """Generate walk-forward (train_idx, test_idx) index pairs over a length-n series.
+
+    mode="rolling": train window has fixed length train_bars and slides forward.
+    mode="anchored": train window always starts at 0 and grows (expanding window).
+
+    embargo_bars is a gap dropped between train end and test start, so a
+    lagged/rolling feature computed at the start of a test fold can't reach
+    back across the boundary into train data.
+
+    origin_offset shifts where the first fold's train window begins, without
+    changing train_bars/test_bars/step_bars. Re-running with different
+    origin_offset values checks whether a result depends on where the
+    walk-forward grid happens to be anchored in time.
+
+    step_bars defaults to test_bars (non-overlapping test folds).
+    """
+    if step_bars is None:
+        step_bars = test_bars
+
+    splits: list[tuple[np.ndarray, np.ndarray]] = []
+    if mode == "rolling":
+        train_start = origin_offset
+        while True:
+            train_end = train_start + train_bars
+            test_start = train_end + embargo_bars
+            test_end = test_start + test_bars
+            if test_end > n:
+                break
+            splits.append(
+                (np.arange(train_start, train_end), np.arange(test_start, test_end))
+            )
+            train_start += step_bars
+    elif mode == "anchored":
+        train_end = origin_offset + train_bars
+        while True:
+            test_start = train_end + embargo_bars
+            test_end = test_start + test_bars
+            if test_end > n:
+                break
+            splits.append((np.arange(0, train_end), np.arange(test_start, test_end)))
+            train_end += step_bars
+    else:
+        raise ValueError(f"Unsupported mode: {mode!r}. Expected 'rolling' or 'anchored'.")
+
+    return splits
+
+
+def _standardize_fit(x_train: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    """Per-feature mean/std from a train fold, for standardizing train and test alike.
+
+    Fit on train only: using test-fold statistics would leak information from
+    the future into a model that's supposed to be blind to it.
+    """
+    mean = x_train.mean(dim=0, keepdim=True)
+    std = x_train.std(dim=0, keepdim=True)
+    std = torch.where(std < 1e-12, torch.ones_like(std), std)
+    return mean, std
+
+
+def _standardize_apply(
+    x: torch.Tensor, mean: torch.Tensor, std: torch.Tensor
+) -> torch.Tensor:
+    return (x - mean) / std
+
+
+def describe_linear_model(
+    weight: np.ndarray,
+    bias: float,
+    x_test_scaled: np.ndarray,
+    feature_names: Sequence[str],
+) -> dict[str, Any]:
+    """Tell a real fitted signal apart from a constant directional bet.
+
+    linear_contrib = x @ weight varies bar to bar; bias is fixed. If |bias|
+    exceeds the max magnitude linear_contrib reaches anywhere in the test
+    fold, no observed feature value can flip sign(y_pred): the position is
+    the same on every bar regardless of x. That's a constant long/short bet,
+    not a fitted relationship, however good its Sharpe looks.
+
+    weight/bias are expected in standardized-feature space (see
+    _standardize_fit) so their scales are comparable to x_test_scaled and to
+    each other.
+    """
+    linear_contrib = x_test_scaled @ weight
+    max_abs_contrib = float(np.abs(linear_contrib).max()) if len(linear_contrib) else 0.0
+    is_degenerate = abs(bias) > max_abs_contrib
+
+    y_pred = linear_contrib + bias
+    sign = np.sign(y_pred)
+    frac_long = float((sign > 0).mean()) if len(sign) else 0.0
+    frac_short = float((sign < 0).mean()) if len(sign) else 0.0
+    frac_flat = float((sign == 0).mean()) if len(sign) else 0.0
+    no_sign_flips = int((np.diff(sign) != 0).sum()) if len(sign) > 1 else 0
+
+    if is_degenerate:
+        direction = "SHORT" if bias < 0 else "LONG"
+        verdict = (
+            f"constant {direction} (|bias|={abs(bias):.4g} > "
+            f"max|w.x|={max_abs_contrib:.4g}, {no_sign_flips} sign flips)"
+        )
+    else:
+        verdict = (
+            f"responsive (|bias|={abs(bias):.4g} <= "
+            f"max|w.x|={max_abs_contrib:.4g}, {no_sign_flips} sign flips)"
+        )
+
+    return {
+        "lm_weights": str(weight),
+        "lm_bias": float(bias),
+        "lm_max_abs_linear_contrib": max_abs_contrib,
+        "lm_is_degenerate": is_degenerate,
+        "lm_frac_long": frac_long,
+        "lm_frac_short": frac_short,
+        "lm_frac_flat": frac_flat,
+        "lm_no_sign_flips": no_sign_flips,
+        "lm_verdict": verdict,
+    }
+
+
+def walk_forward_run(
+    df: pl.DataFrame,
+    features: Sequence[str],
+    target: str,
+    model_factory: Callable[[int], nn.Module],
+    splits: Sequence[tuple[np.ndarray, np.ndarray]],
+    annualized_rate: float,
+    loss: nn.Module | None = None,
+    lr: float = 5e-4,
+    no_epochs: int = 2000,
+    threshold: float = 0.0,
+) -> dict[str, pl.DataFrame]:
+    """Run one walk-forward configuration end to end.
+
+    Trains a fresh model_factory() instance on each fold's train window
+    (features standardized on that fold's train data only, then applied to
+    its test data), predicts the fold's test window, and stitches every
+    fold's out-of-sample predictions into one continuous series so the whole
+    run can be treated like a single long backtest.
+
+    Returns {"folds": per-fold metrics/weights/verdict, "stitched_trades":
+    the concatenated OOS trade frame with equity/drawdown recomputed across
+    fold boundaries}.
+    """
+    df = df.drop_nulls()
+    if loss is None:
+        loss = nn.MSELoss()
+
+    x_all = _to_tensor(df[list(features)])
+    y_all = _to_tensor(df[target]).reshape(-1, 1)
+    datetimes = df["datetime"].to_numpy() if "datetime" in df.columns else None
+
+    fold_records: list[dict[str, Any]] = []
+    stitched: list[pl.DataFrame] = []
+
+    for fold_id, (train_idx, test_idx) in enumerate(splits):
+        x_train_raw, x_test_raw = x_all[train_idx], x_all[test_idx]
+        y_train, y_test = y_all[train_idx], y_all[test_idx]
+
+        mean, std = _standardize_fit(x_train_raw)
+        x_train = _standardize_apply(x_train_raw, mean, std)
+        x_test = _standardize_apply(x_test_raw, mean, std)
+
+        model = model_factory(len(features))
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+        model.train()
+        for _ in range(no_epochs):
+            y_hat_train = model(x_train)
+            loss_value = loss(y_hat_train, y_train)
+            optimizer.zero_grad()
+            loss_value.backward()
+            optimizer.step()
+
+        model.eval()
+        with torch.no_grad():
+            y_hat_test = model(x_test)
+
+        fold_metrics = eval_model_performance(
+            y_test, y_hat_test, features, target, annualized_rate, threshold
+        )
+        fold_metrics["fold"] = fold_id
+        fold_metrics["no_train_bars"] = len(train_idx)
+        fold_metrics["test_start_idx"] = int(test_idx[0])
+        fold_metrics["test_end_idx"] = int(test_idx[-1])
+        if datetimes is not None:
+            fold_metrics["test_start_date"] = str(datetimes[test_idx[0]])
+            fold_metrics["test_end_date"] = str(datetimes[test_idx[-1]])
+
+        linear_params = get_linear_params(model)
+        if linear_params is not None:
+            weight, bias = linear_params
+            fold_metrics.update(
+                describe_linear_model(weight, bias, x_test.numpy(), features)
+            )
+
+        fold_records.append(fold_metrics)
+
+        fold_trades = model_trade_results(y_test, y_hat_test, threshold).with_columns(
+            pl.lit(fold_id).alias("fold")
+        )
+        if datetimes is not None:
+            fold_trades = fold_trades.with_columns(
+                pl.Series("datetime", datetimes[test_idx])
+            )
+        stitched.append(fold_trades)
+
+    stitched_df = (
+        pl.concat(stitched, how="diagonal_relaxed") if stitched else pl.DataFrame()
+    )
+    if len(stitched_df):
+        # model_trade_results computed equity/drawdown per fold in isolation;
+        # redo both across the stitched series so they reflect one continuous
+        # out-of-sample run rather than resetting to zero at each fold.
+        stitched_df = stitched_df.with_columns(
+            pl.col("trade_log_return").cum_sum().alias("equity_curve")
+        ).with_columns(
+            (pl.col("equity_curve") - pl.col("equity_curve").cum_max()).alias(
+                "drawdown_log_return"
+            )
+        )
+
+    return {
+        "folds": pl.DataFrame(fold_records) if fold_records else pl.DataFrame(),
+        "stitched_trades": stitched_df,
+    }
+
+
+def stitched_metrics(
+    stitched_trades: pl.DataFrame, annualized_rate: float, label: str = "strategy"
+) -> dict[str, Any]:
+    """Summary metrics for a walk_forward_run's stitched OOS trade series."""
+    if len(stitched_trades) == 0:
+        return {"label": label, "no_bars": 0}
+    traded = stitched_trades.filter(pl.col("position") != 0)
+    metrics = _series_metrics(
+        stitched_trades["trade_log_return"], annualized_rate, label
+    )
+    metrics["no_trades"] = len(traded)
+    metrics["frac_time_in_market"] = (
+        len(traded) / len(stitched_trades) if len(stitched_trades) else 0.0
+    )
+    metrics["win_rate"] = (
+        _as_float(traded["is_won"].mean()) if len(traded) else 0.0
+    )
+    return metrics
+
+
+# --------------------------------------------------------------------------
+# Baselines
+# --------------------------------------------------------------------------
+
+
+def _series_metrics(
+    trade_log_return: pl.Series, annualized_rate: float, label: str
+) -> dict[str, Any]:
+    std = _as_float(trade_log_return.std()) if len(trade_log_return) else 0.0
+    mean = _as_float(trade_log_return.mean()) if len(trade_log_return) else 0.0
+    total = _as_float(trade_log_return.sum()) if len(trade_log_return) else 0.0
+    cum = trade_log_return.cum_sum()
+    dd = cum - cum.cum_max()
+    return {
+        "label": label,
+        "no_bars": len(trade_log_return),
+        "total_log_return": total,
+        "compound_return": float(np.exp(total) - 1),
+        "std": std,
+        "sharpe": float((mean / std) * annualized_rate) if std else 0.0,
+        "max_drawdown": _as_float(dd.min()) if len(dd) else 0.0,
+    }
+
+
+def buy_and_hold_returns(df: pl.DataFrame, price_col: str = "close") -> pl.DataFrame:
+    """Buy-and-hold log-return series over df, one row per bar."""
+    return (
+        df.select("datetime", log_return(price_col).alias("trade_log_return"))
+        .with_columns(pl.col("trade_log_return").fill_null(0.0))
+        .with_columns(pl.col("trade_log_return").cum_sum().alias("equity_curve"))
+        .with_columns(
+            (pl.col("equity_curve") - pl.col("equity_curve").cum_max()).alias(
+                "drawdown_log_return"
+            )
+        )
+    )
+
+
+def buy_and_hold_metrics(
+    df: pl.DataFrame, annualized_rate: float, price_col: str = "close"
+) -> dict[str, Any]:
+    bh = buy_and_hold_returns(df, price_col)
+    return _series_metrics(bh["trade_log_return"], annualized_rate, "buy_and_hold")
+
+
+def constant_position_metrics(
+    df: pl.DataFrame,
+    position: float,
+    annualized_rate: float,
+    price_col: str = "close",
+    label: str | None = None,
+) -> dict[str, Any]:
+    """Metrics for holding a fixed position the whole series: +1 always long,
+    -1 always short, 0 always flat."""
+    lr = df.select(log_return(price_col)).to_series().fill_null(0.0)
+    trade_lr = lr * position
+    return _series_metrics(trade_lr, annualized_rate, label or f"constant_{position:+.0f}")
+
+
+def random_position_metrics(
+    df: pl.DataFrame,
+    annualized_rate: float,
+    no_seeds: int = 200,
+    price_col: str = "close",
+    seed: int = 0,
+) -> pl.DataFrame:
+    """Sharpe/return distribution from no_seeds random +-1 position series of
+    the same length as df, as a null baseline for what luck alone can produce."""
+    lr = df.select(log_return(price_col)).to_series().fill_null(0.0).to_numpy()
+    rng = np.random.default_rng(seed)
+    rows = []
+    for s in range(no_seeds):
+        pos = rng.choice([-1.0, 1.0], size=len(lr))
+        trade_lr = pos * lr
+        std = trade_lr.std()
+        sharpe = float((trade_lr.mean() / std) * annualized_rate) if std else 0.0
+        rows.append(
+            {
+                "seed": s,
+                "sharpe": sharpe,
+                "total_log_return": float(trade_lr.sum()),
+                "compound_return": float(np.exp(trade_lr.sum()) - 1),
+            }
+        )
+    return pl.DataFrame(rows)
+
+
+# --------------------------------------------------------------------------
+# Multiple-testing correction
+# --------------------------------------------------------------------------
+
+
+def deflated_sharpe_prob(
+    sharpe: float,
+    n_trials: int,
+    n_obs: int,
+    skew: float = 0.0,
+    kurtosis: float = 3.0,
+) -> float:
+    """Probabilistic Sharpe Ratio deflated for how many configs were tried
+    (Bailey & Lopez de Prado's Deflated Sharpe Ratio).
+
+    Picking the best of many backtested configs inflates the winner's Sharpe
+    even if every config was pure noise, because you're implicitly reporting
+    max() over n_trials draws rather than one draw. This estimates
+    P(true Sharpe > 0 | observed max Sharpe over n_trials attempts) by first
+    estimating the Sharpe a noise process would be expected to produce as its
+    best of n_trials tries, then asking how much the observed Sharpe clears
+    that bar relative to its own estimation uncertainty.
+
+    sharpe: observed (best) per-period Sharpe ratio (not annualized).
+    n_trials: number of configurations tried before selecting this one.
+    n_obs: number of return observations behind the Sharpe estimate.
+    skew, kurtosis: of the per-period return distribution (kurtosis=3 is the
+    normal/no-excess-kurtosis case).
+    """
+    if n_obs <= 1:
+        return float("nan")
+
+    sr_std = np.sqrt(
+        (1 - skew * sharpe + (kurtosis - 1) / 4 * sharpe**2) / (n_obs - 1)
+    )
+    if sr_std == 0:
+        return 1.0
+
+    euler_mascheroni = 0.5772156649
+    if n_trials > 1:
+        expected_max_sharpe = sr_std * (
+            (1 - euler_mascheroni) * norm.ppf(1 - 1 / n_trials)
+            + euler_mascheroni * norm.ppf(1 - 1 / (n_trials * np.e))
+        )
+    else:
+        expected_max_sharpe = 0.0
+
+    return float(norm.cdf((sharpe - expected_max_sharpe) / sr_std))
 
 
 # --------------------------------------------------------------------------
