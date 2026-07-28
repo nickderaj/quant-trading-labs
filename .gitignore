@@ -16,3 +16,6 @@ src/tmp/
 # Tooling caches
 .mypy_cache/
 .ruff_cache/
+
+# Scratch prompts (local only)
+NEXT_RUN_PROMPT.md
