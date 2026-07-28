@@ -1,0 +1,74 @@
+{
+  "config_id": "cfg2_12h_holdout",
+  "n_folds": 3,
+  "vol_target": 0.028704638618733264,
+  "holdout_metrics": {
+    "label": "portfolio",
+    "no_bars": 546,
+    "total_log_return": 0.17221715063927737,
+    "compound_return": 0.18793576621878882,
+    "std": 0.011456817025628197,
+    "sharpe": 0.7438428789308505,
+    "max_drawdown": -0.2307626996561547,
+    "sharpe_net": -0.47118614718878443,
+    "total_log_return_net": -0.10911068979228555,
+    "compound_return_net": -0.10336883591214252,
+    "max_drawdown_net": -0.31577709161836015,
+    "mean_turnover_per_bar": 1.0301646055728721,
+    "turnover_per_year": 752.0201620681967,
+    "annual_fee_drag_log": 0.37613429215208966,
+    "annual_fee_drag_pct": 0.45664273632473495
+  },
+  "basket_metrics": {
+    "label": "holdout_basket",
+    "no_bars": 546,
+    "total_log_return": -0.9172078940812204,
+    "compound_return": -0.6003666966969452,
+    "std": 0.02541156212046193,
+    "sharpe": -1.786097687033223,
+    "max_drawdown": -1.062842670096173
+  },
+  "random_metrics_summary": {
+    "mean_sharpe": -4.169284713095841,
+    "p90_sharpe": -2.7500998314114127
+  },
+  "degenerate_frac": 0.0,
+  "win_rate_vs_basket": 0.6666666666666666,
+  "bootstrap_ci_excess_return": [
+    -0.16917166683700235,
+    0.49514667156766534
+  ],
+  "fold_summaries": [
+    {
+      "fold": 12,
+      "test_start": "2025-08-17T12:00:00.000000",
+      "test_end": "2025-11-16T00:00:00.000000",
+      "n_test_bars": 4550,
+      "sharpe_net": 0.7790885841444601,
+      "is_degenerate": false,
+      "excess_return_net": 0.49514667156766534,
+      "beats_basket": true
+    },
+    {
+      "fold": 13,
+      "test_start": "2025-11-16T12:00:00.000000",
+      "test_end": "2026-02-15T00:00:00.000000",
+      "n_test_bars": 4550,
+      "sharpe_net": 0.02850763149865119,
+      "is_degenerate": false,
+      "excess_return_net": 0.48212219955827185,
+      "beats_basket": true
+    },
+    {
+      "fold": 14,
+      "test_start": "2026-02-15T12:00:00.000000",
+      "test_end": "2026-05-17T00:00:00.000000",
+      "n_test_bars": 4550,
+      "sharpe_net": -3.5582396583023854,
+      "is_degenerate": false,
+      "excess_return_net": -0.16917166683700235,
+      "beats_basket": false
+    }
+  ],
+  "n_oos_bars": 546
+}

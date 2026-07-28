@@ -447,7 +447,87 @@ under a one-week origin shift, its bootstrap CI on excess return includes zero, 
 its deflated Sharpe of 3.4% means the best of 95 trials still isn't distinguishable
 from what noise produces at that search width.
 
-## What's next
+## Phase 7 - Holdout, spent once
 
-Phase 7: run the single best config (cfg2_12h, unchanged) once on the frozen holdout
-(2025-07-01 to 2026-07-01). No retuning - report whatever comes out.
+Ran cfg2_12h (highest headline net Sharpe in Phase 6) completely unchanged - same
+features, same hyperparameters, same `panel_walk_forward_splits(train_bars=730,
+test_bars=182, origin_offset=0)` grid, same 300 training epochs - on a panel extended
+through 2026-07-01 (`load_universe_panel(..., allow_holdout=True)`, the only place in
+this run that flag is ever passed). Reusing the exact origin_offset=0 fold grid means
+the walk-forward boundaries already established in Phase 6 for the pre-holdout period
+simply continue forward; only the folds whose *entire* test window falls at or after
+2025-07-01 were evaluated.
+
+That grid produces **3 folds fully inside the holdout**, covering 2025-08-17 through
+2026-05-17 (546 bars). The grid's fixed 91-day step doesn't tile the holdout year
+exactly, so 2025-07-01 to 2025-08-17 and 2026-05-17 to 2026-07-01 fall outside any
+complete fold and aren't included - reported as-is, not stretched or re-gridded to
+force full-year coverage.
+
+One caught-and-fixed bug in this phase: the vol-normalization divisor had the same
+zero-realized-vol issue as Phase 6 (3,682 rows dropped here, a larger fraction than
+Phase 6 since the extended range includes more of LUNA's frozen post-collapse tail);
+same fix (drop rows with `realized_vol_24 <= 1e-12`).
+
+| metric | value |
+|---|---|
+| Sharpe, net of costs | **-0.47** |
+| Sharpe, gross | +0.74 |
+| basket buy-hold Sharpe (same window) | -1.79 |
+| random-ranking baseline (200 seeds), mean / p90 | -4.17 / -2.75 |
+| win rate vs basket (folds) | 2/3 |
+| degenerate-bet fraction | 0/3 |
+| bootstrap 95% CI, excess return vs basket | [-0.17, +0.50] |
+
+The holdout year net Sharpe is **negative**, consistent with the Phase 6 conclusion
+that this config's positive headline result doesn't hold up. Gross is positive again
+(+0.74) - the same "signal is real pre-cost, costs erase it" pattern as every other
+result in this run. The basket itself had a rough year (Sharpe -1.79, crypto broadly
+down over this window) and the random-ranking baseline was worse still (-4.17 mean),
+so the strategy did beat both naive alternatives on a relative basis (2 of 3 folds
+beat the basket, and comfortably beat the random null) - it just didn't clear zero
+net of its own costs. The bootstrap CI on excess return includes zero, same as every
+other result in this run: can't reject "no real edge" here either, even though the
+point estimate happens to be positive this time (a reminder of how wide these
+intervals are with only 3 holdout folds).
+
+## Bottom line
+
+**No validated edge**, holdout included. Every stage of this run
+told the same story: an IC-screened, statistically real (if modest) mean-reversion /
+realized-vol signal exists in the cross-sectional panel and is gross-profitable at
+every interval and in the holdout year, but transaction costs consistently erase it,
+the one config that looked good net of costs at its headline setting didn't survive
+an origin shift of a single week, and the holdout - spent once, unchanged, no
+retuning - came back Sharpe -0.47. This matches `2_walk_forward_multi_asset.md`'s
+conclusion and extends it: the fix for single-asset noise (more breadth via a
+cross-sectional book) and the fix for gross-return blindness (Phase 0's cost model)
+were both real improvements to the methodology, and neither one turned up a tradeable
+edge.
+
+## What to test next
+
+- **Funding rate at scale.** Only weakly and narrowly survived screening here (4h
+  only, |t|=4.4, best-effort implementation). Carry is historically the most robust
+  crypto signal; a dedicated notebook using the full futures funding history (not
+  just what happened to be time-boxed here) with proper carry construction (e.g.
+  funding-rate-weighted basis trades) might do better than treating it as one more
+  cross-sectional feature among many.
+- **Slower rebalancing / lower turnover.** cfg1_4h and cfg3_1d were gross-positive but
+  lost to costs; cfg2_12h (middling turnover) is the one that came closest net. Worth
+  trying deliberately lower-turnover variants (e.g. rebalance every N bars instead of
+  every bar, or a wider no-trade band) rather than more intervals.
+- **Seasonality, properly.** Documented in Phase 4 that hour-of-day/day-of-week are
+  structurally invisible to cross-sectional IC (identical across symbols at a given
+  bar) - if seasonality is real in crypto, it needs a directional/beta-exposed
+  backtest to even be measurable, which is a fundamentally different validation
+  path than everything else in this run.
+- **Regime-conditioning the mean-reversion/vol signals.** Both surviving families are
+  vol-related (mean reversion at short horizons, negative realized vol). Worth
+  testing whether they're specifically a high-vol-regime phenomenon (e.g. only fit
+  during the 2022 drawdown) rather than a stable year-round effect - the per-year IC
+  breakdown in `config_log.jsonl` would answer this directly and wasn't fully
+  exploited here.
+- **A genuinely lower-cost venue or maker-only execution.** All costs here assumed
+  taker fees; if maker fills are realistic for this turnover profile, cfg2_12h's
+  economics could look different - worth quantifying rather than assuming.
