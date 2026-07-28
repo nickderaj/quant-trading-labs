@@ -1,6 +1,7 @@
 import zipfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 import requests
@@ -280,6 +281,85 @@ def download_klines_range(
         )
     )
     result.write_parquet(range_cache_path)
+    return result
+
+
+def download_funding_rate_range(
+    symbol: str,
+    start_date: str | datetime,
+    end_date: str | datetime,
+    cache_dir: str = "cache",
+) -> pl.DataFrame:
+    """
+    Download (or load from cache) one symbol's funding rate history from
+    Binance's live fapi endpoint (/fapi/v1/fundingRate), unlike klines/trades
+    which come from the static data.binance.vision archive - there is no bulk
+    historical file for funding rates, so this paginates the live API by
+    fundingTime instead.
+
+    Funding events happen roughly every 8h, so a multi-year range needs
+    several hundred rows; the API caps each response at 1000 rows, so this
+    loops, advancing startTime past the last row's fundingTime each call,
+    until a response comes back with fewer than the requested limit.
+    """
+    if isinstance(start_date, str):
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=UTC)
+    if isinstance(end_date, str):
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=UTC)
+
+    cache_path_dir = Path(cache_dir)
+    cache_path_dir.mkdir(parents=True, exist_ok=True)
+    cache_path = (
+        cache_path_dir / f"{symbol}-funding-"
+        f"{start_date.strftime('%Y-%m-%d')}-{end_date.strftime('%Y-%m-%d')}.parquet"
+    )
+    if cache_path.exists():
+        return pl.read_parquet(cache_path)
+
+    start_ms = int(start_date.timestamp() * 1000)
+    end_ms = int(end_date.timestamp() * 1000)
+    limit = 1000
+
+    rows: list[dict[str, Any]] = []
+    cursor = start_ms
+    while cursor < end_ms:
+        params: dict[str, str | int] = {
+            "symbol": symbol,
+            "startTime": cursor,
+            "endTime": end_ms,
+            "limit": limit,
+        }
+        response = requests.get(
+            "https://fapi.binance.com/fapi/v1/fundingRate",
+            params=params,
+            timeout=30,
+        )
+        response.raise_for_status()
+        page = response.json()
+        if not page:
+            break
+        rows.extend(page)
+        cursor = page[-1]["fundingTime"] + 1
+        if len(page) < limit:
+            break
+
+    if not rows:
+        raise ValueError(
+            f"No funding rate data found for {symbol} in range {start_date} to {end_date}"
+        )
+
+    result = (
+        pl.DataFrame(rows)
+        .with_columns(
+            pl.from_epoch("fundingTime", time_unit="ms").alias("datetime"),
+            pl.col("fundingRate").cast(pl.Float64),
+        )
+        .select("datetime", "fundingRate")
+        .rename({"fundingRate": "funding_rate"})
+        .sort("datetime")
+        .unique(subset=["datetime"])
+    )
+    result.write_parquet(cache_path)
     return result
 
 

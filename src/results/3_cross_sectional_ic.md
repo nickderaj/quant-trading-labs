@@ -123,8 +123,60 @@ ranking is unaffected; it would matter if the panel were much smaller.
 At 4h: 252,053 panel rows across 30 symbols, 2021-07-01 to 2025-07-01 (holdout excluded).
 At 12h: 84,036 rows. At 1d: 42,033 rows.
 
+## Phase 2 - Feature library
+
+New `src/features.py`. Every raw feature is per-symbol and strictly causal (rolling
+windows computed with polars' trailing `rolling_mean`/`rolling_std`, momentum via
+`shift()` only); `apply_per_symbol` partitions the panel by symbol before applying any
+of them so a rolling window can never cross a symbol boundary (BTC's vol window
+picking up ETH's trailing bars, say). `forward_return` (the target, `shift(-horizon)`)
+is the one function in the module that's deliberately *not* causal and is documented
+as such - it must never appear on the feature side of a model.
+
+Built, in the priority order from the guardrails:
+
+1. **Order flow** - `taker_buy_ratio`, `order_flow_imbalance` (signed, in [-1, 1]),
+   `avg_trade_size` (volume/count), plus rolling z-scores (20/60 bar windows) of
+   imbalance, avg trade size, and trade count. All from columns already in the
+   cached klines (`taker_buy_volume`, `count`) that notebooks 1/2 never touched.
+2. **Seasonality** - hour-of-day and day-of-week, cyclically (sin/cos) encoded so a
+   linear model doesn't see hour 23 and hour 0 as far apart. Noted in the docstring
+   that hour-of-day degenerates at 12h/1d bars - screening (Phase 4) will show that
+   directly rather than hardcoding it away here.
+3. **Realized vol** - rolling std of log returns at three windows (8/24/96 bars),
+   vol-of-vol (rolling std of the short-window vol), and a vol-regime ratio
+   (short-window vol / long-window vol).
+4. **Momentum / mean-reversion** - cumulative log return over 1/4/12 bars and its
+   negation, carried over as the notebook-2 baseline to beat.
+5. **Funding rate** - not skipped. Added `data.download_funding_rate_range`
+   (Binance's live `/fapi/v1/fundingRate`, paginated by `fundingTime` since there's
+   no bulk historical archive for it like klines have) and
+   `features.add_funding_rate_feature`, which joins it onto bars via a **backward
+   asof join** so a bar only ever sees funding published at or before its own close.
+   Downloaded successfully for all 30 symbols, 2021-07 to 2025-07 (4,383 rows/symbol
+   for the continuously-listed ones; ragged for LUNA/FTT matching their klines
+   coverage) - well inside the 30-minute time-box.
+
+Cross-sectional variants (`_cs_demean`, `_cs_z`) computed per-timestamp across the
+whole panel - what the pooled ranking model in Phase 5 actually consumes, so a fitted
+weight means the same thing regardless of a symbol's own scale.
+
+### Tests (`tests/test_features.py`, 9 passing)
+
+- **Causality under truncation**: every raw feature, recomputed on a truncated
+  history, must produce identical values for every row that still exists - if
+  truncating the future changed a past value, that feature was using the future.
+  This is the concrete form of "assert no lookahead with an explicit shift test."
+- **Lookahead magnitude tripwire**: on synthetic random-walk data with no implanted
+  signal, every raw feature's correlation with next-bar return must stay under 0.10
+  - the guardrail's own example (notebook 1b's Sharpe 8.89) was exactly a `shift()`
+  bug producing a similarly implausible bar-level correlation.
+- Formula checks (order-flow-imbalance bounds and formula, momentum vs. manual log
+  return, mean-reversion as momentum's negation), a cross-sectional z-score check
+  (zero mean / unit std per bar), a funding-rate backward-asof-join causality check,
+  and an end-to-end `build_feature_panel` smoke test.
+
 ## What's next
 
-Phase 2: build the causal feature library (order flow, seasonality, realized vol,
-momentum/mean-reversion, funding rate best-effort), including cross-sectionally
-demeaned/z-scored variants for the ranking model to consume.
+Phase 3: build the IC harness (cross-sectional and panel IC, Newey-West / clustered
+standard errors, stability diagnostics) in `research.py`.
