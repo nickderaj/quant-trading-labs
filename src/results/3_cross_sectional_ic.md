@@ -72,7 +72,59 @@ didn't.
   this change - `add_trading_costs` is additive on top of existing gross columns, not
   a replacement.
 
+## Phase 1 - Universe expansion
+
+Added `research.load_universe_panel(symbols, interval, start_date, end_date,
+min_cross_section=10, allow_holdout=False)`: downloads each symbol's klines via
+`data.download_klines_range` (skipping symbols/months with no archive file rather
+than raising - a partial history is not an error), concatenates into one ragged
+panel with a `symbol` column, then drops any bar where fewer than
+`min_cross_section` symbols have data, so no cross-sectional rank/z-score is ever
+computed from a near-empty cross-section. `HOLDOUT_START = 2025-07-01` is a module
+constant; any call reaching past it raises `ValueError` unless `allow_holdout=True`,
+which only the Phase 7 holdout run should ever pass. This is the "enforce in the
+loader, not discipline" guardrail - verified with a unit test that the guard fires
+before any data is touched.
+
+### Universe construction rule (and its bias)
+
+30 USDT-M perpetual futures symbols, chosen to include several 2021-era coins that
+later died or were delisted, specifically to avoid picking today's top-30-by-liquidity
+and backtesting it from 2021 (survivorship bias): BTC, ETH, BNB, SOL, XRP, ADA, DOGE,
+DOT, AVAX, MATIC, LINK, LTC, ATOM, UNI, ETC, XLM, ALGO, VET, FIL, TRX, EOS, AAVE, SAND,
+MANA, AXS, THETA, NEAR, FTM, LUNA, FTT.
+
+This list was still chosen by hindsight ("which coins do I remember mattering and
+dying"), not by reconstructing Binance's actual listed-symbols history at each past
+date - a real backtester in 2021 wouldn't have known FTM would survive and LUNA
+wouldn't. That residual bias is real and unresolved; it's smaller than "top-30-today"
+survivorship bias but not zero. Noted, not corrected for.
+
+No forward/back-fill across a listing or delisting boundary - each symbol's series is
+whatever Binance's archive actually has, so the panel is ragged by construction.
+Downloading all 30 x 3 intervals (4h/12h/1d; 1h dropped per Phase 0) for 2021-07 to
+2026-07 confirmed real ragged coverage, not just a hypothetical:
+
+| symbol | first bar | last bar | note |
+|---|---|---|---|
+| LUNA | 2021-07-01 | 2022-05-13 | Terra/UST collapse - died as intended, this is the canonical example the universe was built to catch |
+| MATIC | 2021-07-01 | 2024-09-11 | Binance delisted the MATIC perpetual around the POL migration |
+| EOS | 2021-07-01 | 2025-05-21 | Binance delisted the EOS perpetual |
+| FTT | 2022-04-15 | 2026-06-30 | listed ~9 months after the panel start, not delisted (FTT stayed listed through the FTX collapse, just collapsed in price) - a late-listing example rather than a died-mid-series one |
+| all other 26 | 2021-07-01 | 2026-06-30 | full coverage |
+
+Confirms notebook 2's known archive gap still applies at klines granularity: SOL and
+XRP are both missing 2022-03-01 to 2022-04-03 (~128h combined across two gap segments,
+not the continuous 120h window notebook 2 described from the tick-aggregated feed, but
+the same underlying Binance archive hole). `min_cross_section=10` absorbs this cleanly
+- 28 of 30 symbols are still available at every bar in that window, so cross-sectional
+ranking is unaffected; it would matter if the panel were much smaller.
+
+At 4h: 252,053 panel rows across 30 symbols, 2021-07-01 to 2025-07-01 (holdout excluded).
+At 12h: 84,036 rows. At 1d: 42,033 rows.
+
 ## What's next
 
-Phase 1: expand the universe to ~30 symbols with explicit survivorship-bias handling,
-covering 2021-07 through 2026-07 at 4h/12h/1d.
+Phase 2: build the causal feature library (order flow, seasonality, realized vol,
+momentum/mean-reversion, funding rate best-effort), including cross-sectionally
+demeaned/z-scored variants for the ranking model to consume.

@@ -4,7 +4,7 @@ import os
 import random
 import re
 from collections.abc import Callable, Sequence
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 # Third-party
@@ -16,6 +16,13 @@ import torch
 from scipy.stats import norm
 from torch import nn
 from tqdm import tqdm
+
+# First-party
+import data
+
+# Frozen holdout period (2025-07-01 -> 2026-07-01, see Phase 7). Nothing prior
+# to Phase 7 should read past this date; load_universe_panel enforces it.
+HOLDOUT_START = datetime(2025, 7, 1, tzinfo=UTC)
 
 # Aggregations applied per bucket to build OHLC bars from raw trades
 OHLC_AGGS = [
@@ -1241,6 +1248,69 @@ def load_timeseries_range(
     # Combine all days and drop any duplicate timestamps from overlapping buckets
     result = pl.concat(ts_list).sort("datetime").unique(subset=["datetime"])
     return result
+
+
+def load_universe_panel(
+    symbols: Sequence[str],
+    interval: str,
+    start_date: datetime,
+    end_date: datetime,
+    min_cross_section: int = 10,
+    download_dir: str = "tmp",
+    cache_dir: str = "cache",
+    allow_holdout: bool = False,
+) -> pl.DataFrame:
+    """Load a ragged cross-sectional panel of OHLCV klines for symbols over [start_date, end_date].
+
+    HOLDOUT_START (2025-07-01) is frozen: any end_date reaching into it raises
+    unless allow_holdout=True, so the boundary is enforced here structurally
+    rather than left to notebook discipline. Only the Phase 7 holdout run
+    should ever pass allow_holdout=True.
+
+    Symbols not yet listed at start_date, or delisted before end_date, simply
+    contribute fewer rows (data.download_klines_range skips months with no
+    archive file rather than raising) - no forward/back-fill is applied, so
+    the panel is ragged by construction and each symbol's first/last valid
+    bar reflects its real listing/delisting history. A symbol with zero data
+    anywhere in the range is dropped with a warning rather than failing the
+    whole load.
+
+    A bar (timestamp) is kept only if at least min_cross_section symbols have
+    data there, so no cross-sectional rank/z-score is ever computed from a
+    near-empty cross-section early in a symbol's history.
+
+    Adds a "symbol" column; result is sorted by (datetime, symbol).
+    """
+    if end_date > HOLDOUT_START and not allow_holdout:
+        raise ValueError(
+            f"end_date {end_date} reaches into the frozen holdout period "
+            f"(>= {HOLDOUT_START:%Y-%m-%d}). Pass allow_holdout=True only for "
+            "the Phase 7 holdout run."
+        )
+
+    frames = []
+    for sym in symbols:
+        try:
+            df = data.download_klines_range(
+                sym, interval, start_date, end_date, download_dir, cache_dir
+            )
+        except ValueError as e:
+            tqdm.write(f"[WARNING] {sym}: no data in range, skipped ({e})")
+            continue
+        frames.append(df.with_columns(pl.lit(sym).alias("symbol")))
+
+    if not frames:
+        raise ValueError(f"No data found for any symbol in {start_date} to {end_date}")
+
+    panel = pl.concat(frames, how="diagonal_relaxed").sort(["datetime", "symbol"])
+
+    cross_section_width = panel.group_by("datetime").agg(pl.len().alias("n_symbols"))
+    valid_datetimes = cross_section_width.filter(
+        pl.col("n_symbols") >= min_cross_section
+    )["datetime"]
+    panel = panel.filter(pl.col("datetime").is_in(valid_datetimes))
+
+    return panel
 
 
 # --------------------------------------------------------------------------

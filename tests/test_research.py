@@ -118,6 +118,18 @@ def test_walk_forward_run_reports_gross_and_net_when_fee_given():
     assert metrics["total_log_return_net"] <= metrics["total_log_return"] + 1e-9
 
 
+def test_load_universe_panel_rejects_reads_into_holdout():
+    import pytest
+
+    with pytest.raises(ValueError, match="holdout"):
+        research.load_universe_panel(
+            ["BTCUSDT"],
+            "1d",
+            research.HOLDOUT_START - research.timedelta(days=1),
+            research.HOLDOUT_START + research.timedelta(days=1),
+        )
+
+
 def test_stitched_metrics_gross_only_without_fee():
     trades = research.model_trade_results(
         y_true=np.array([0.01, -0.02, 0.03, -0.01]),
