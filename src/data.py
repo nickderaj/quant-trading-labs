@@ -10,7 +10,7 @@ from tqdm import tqdm
 def download_and_unzip(
     symbol: str,
     date: str | datetime,
-    download_dir: str = "data",
+    download_dir: str = "tmp",
     cache_dir: str = "cache",
     read_cache: bool = True,
 ) -> pl.DataFrame | None:
@@ -77,7 +77,7 @@ def download_and_unzip(
 def download_trades(
     symbol: str,
     no_days: int,
-    download_dir: str = "data",
+    download_dir: str = "tmp",
     cache_dir: str = "cache",
     return_trades: bool = False,
 ) -> pl.DataFrame | None:
@@ -111,7 +111,7 @@ def download_date_range(
     symbol: str,
     start_date: str | datetime,
     end_date: str | datetime,
-    download_dir: str = "data",
+    download_dir: str = "tmp",
     cache_dir: str = "cache",
 ) -> None:
     """
