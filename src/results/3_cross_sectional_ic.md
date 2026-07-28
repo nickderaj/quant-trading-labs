@@ -176,7 +176,46 @@ weight means the same thing regardless of a symbol's own scale.
   (zero mean / unit std per bar), a funding-rate backward-asof-join causality check,
   and an end-to-end `build_feature_panel` smoke test.
 
+## Phase 3 - IC harness
+
+Added to `research.py`:
+
+- **`cross_sectional_ic`** - per-timestamp Spearman IC of a prediction against forward
+  return, across symbols. This is the right metric for a dollar-neutral book: it never
+  compares different timestamps to each other, so BTC and ETH moving together within
+  one bar is absorbed inside that bar's single IC_t rather than counted as two
+  independent data points. `cross_sectional_ic_stats` then summarizes the resulting
+  IC_t series with `newey_west_tstat` (Bartlett-kernel HAC), because a feature built
+  from a W-bar rolling window makes IC_t itself autocorrelated out to about W lags -
+  the naive i.i.d. standard error of the mean would understate that.
+- **`panel_ic`** - Spearman IC stacked over every (symbol, bar) row, with a
+  Driscoll-Kraay-style standard error: average the rank-product within each timestamp
+  first (so a heavily-populated bar doesn't outweigh a thin one and symbols within a
+  bar aren't treated as independent), then apply the same Newey-West machinery across
+  that per-timestamp series. `naive_tstat` (assuming all `n_obs` rows are i.i.d.) is
+  reported alongside for contrast - it's the number that would be badly overstated if
+  reported on its own, which is exactly the guardrail's warning about panel IC.
+- **`ic_stability`** - rolling mean IC, per-year IC breakdown, and fraction of months
+  with positive mean IC, since stability outranks magnitude for deciding what to trust.
+
+### Tests (`tests/test_ic_harness.py`, 7 passing)
+
+- `newey_west_tstat` matches a plain t-test at lag=0 on i.i.d. data, and produces a
+  visibly smaller |t-stat| than the naive calculation on a strongly autocorrelated
+  (AR(1), rho=0.9) series with the same marginal variance - confirming the HAC
+  correction actually does something, not just that it runs.
+- Synthetic panels with a known implanted IC (target = true_ic * pred + orthogonal
+  noise): both `cross_sectional_ic` and `panel_ic` recover a mean IC within a
+  reasonable band of the true value with a clearly significant t-stat (>5), while a
+  true_ic=0 panel comes back with |IC| < 0.1 and |t-stat| < 3.
+- `panel_ic`'s clustered+HAC t-stat is asserted to not exceed the naive i.i.d. one by
+  more than a small margin on data with real cross-sectional/temporal structure - the
+  whole point of the correction is that it should be equal or smaller, never larger.
+- `ic_stability` on a strong, constant-sign synthetic signal reports >90% positive
+  months, and an empty-panel edge case returns NaN stats rather than raising.
+
 ## What's next
 
-Phase 3: build the IC harness (cross-sectional and panel IC, Newey-West / clustered
-standard errors, stability diagnostics) in `research.py`.
+Phase 4: screen the full feature library across intervals using this harness -
+expected to replace backtest-driven search entirely - and log every evaluation to
+`src/research/tmp/config_log.jsonl`.

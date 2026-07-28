@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import torch
-from scipy.stats import norm
+from scipy.stats import norm, rankdata
 from torch import nn
 from tqdm import tqdm
 
@@ -1077,6 +1077,208 @@ def random_position_metrics(
             }
         )
     return pl.DataFrame(rows)
+
+
+# --------------------------------------------------------------------------
+# IC (information coefficient) harness
+# --------------------------------------------------------------------------
+
+
+def newey_west_tstat(x: np.ndarray, lag: int) -> tuple[float, float]:
+    """Newey-West (HAC, Bartlett kernel) t-stat for the mean of a possibly
+    autocorrelated series.
+
+    A feature built from a W-bar rolling window induces autocorrelation in
+    any per-period statistic derived from it (like IC_t below) out to about
+    W lags; the naive i.i.d. standard error of the mean understates
+    uncertainty unless those lags are accounted for. Set lag to roughly the
+    feature's own lookback window.
+
+    Returns (mean, tstat). NaN input rows are dropped first.
+    """
+    x = np.asarray(x, dtype=float)
+    x = x[~np.isnan(x)]
+    n = len(x)
+    if n < 2:
+        return float("nan"), float("nan")
+
+    mean = float(x.mean())
+    demeaned = x - mean
+    variance = float(np.sum(demeaned**2) / n)
+    for k in range(1, min(lag, n - 1) + 1):
+        gamma_k = float(np.sum(demeaned[k:] * demeaned[:-k]) / n)
+        weight = 1 - k / (lag + 1)  # Bartlett kernel
+        variance += 2 * weight * gamma_k
+    variance = max(variance, 0.0)
+
+    se_mean = np.sqrt(variance / n)
+    tstat = mean / se_mean if se_mean > 0 else float("nan")
+    return mean, float(tstat)
+
+
+def cross_sectional_ic(
+    panel: pl.DataFrame,
+    pred_col: str,
+    target_col: str,
+    datetime_col: str = "datetime",
+    min_symbols: int = 5,
+) -> pl.DataFrame:
+    """Per-timestamp Spearman IC of pred_col vs target_col across symbols.
+
+    The right IC for a dollar-neutral book: it only ever compares symbols at
+    the same instant, so contemporaneous cross-symbol correlation (BTC and
+    ETH moving together) is absorbed inside each IC_t rather than treated as
+    independent information. Statistical safety instead comes from applying
+    Newey-West (see newey_west_tstat) to the resulting IC_t series, since a
+    slow feature makes IC_t itself autocorrelated across time.
+
+    Returns one row per timestamp with at least min_symbols non-null
+    (pred, target) pairs: [datetime_col, "ic", "n"].
+    """
+    valid = panel.select(datetime_col, pred_col, target_col).drop_nulls()
+    rows: list[dict[str, Any]] = []
+    for key, group in valid.group_by(datetime_col, maintain_order=True):
+        if len(group) < min_symbols:
+            continue
+        x = group[pred_col].to_numpy()
+        y = group[target_col].to_numpy()
+        if np.std(x) == 0 or np.std(y) == 0:
+            continue
+        rho = float(np.corrcoef(rankdata(x), rankdata(y))[0, 1])
+        rows.append({datetime_col: key[0], "ic": rho, "n": len(group)})
+
+    return (
+        pl.DataFrame(rows).sort(datetime_col)
+        if rows
+        else pl.DataFrame(
+            schema={
+                datetime_col: valid[datetime_col].dtype,
+                "ic": pl.Float64,
+                "n": pl.Int64,
+            }
+        )
+    )
+
+
+def cross_sectional_ic_stats(ic_df: pl.DataFrame, nw_lag: int) -> dict[str, Any]:
+    """Summary stats for a cross_sectional_ic result: mean IC and its
+    Newey-West t-stat over the IC_t time series."""
+    if len(ic_df) == 0:
+        return {"mean_ic": float("nan"), "nw_tstat": float("nan"), "n_periods": 0}
+    mean, tstat = newey_west_tstat(ic_df["ic"].to_numpy(), nw_lag)
+    return {"mean_ic": mean, "nw_tstat": tstat, "n_periods": len(ic_df)}
+
+
+def panel_ic(
+    panel: pl.DataFrame,
+    pred_col: str,
+    target_col: str,
+    nw_lag: int,
+    datetime_col: str = "datetime",
+) -> dict[str, Any]:
+    """Spearman IC stacked over the whole (symbol, bar) panel, with a
+    Driscoll-Kraay-style standard error: cluster by timestamp (so BTC/ETH at
+    the same bar aren't counted as independent draws) and then apply
+    Newey-West across time (so a slow feature's autocorrelated signal
+    doesn't inflate significance either). naive_tstat (assuming n_obs i.i.d.
+    draws) is reported alongside for contrast - it is badly overstated,
+    since the real information content is closer to n_timestamps than
+    n_obs.
+
+    Ranks are computed over the whole stacked panel and standardized so the
+    mean of rank_x * rank_y equals the panel's Spearman correlation; the
+    reported panel_ic is the equal-weighted-by-timestamp mean of that
+    product (i.e. each time period counts once regardless of how many
+    symbols were in the cross-section then), which is what the clustered SE
+    is computed on, so point estimate and SE stay internally consistent.
+    """
+    df = panel.select(datetime_col, pred_col, target_col).drop_nulls()
+    n_obs = len(df)
+    if n_obs < 2:
+        return {
+            "panel_ic": float("nan"),
+            "clustered_nw_tstat": float("nan"),
+            "naive_tstat": float("nan"),
+            "n_obs": n_obs,
+            "n_timestamps": 0,
+        }
+
+    rank_x = rankdata(df[pred_col].to_numpy())
+    rank_y = rankdata(df[target_col].to_numpy())
+    rx = (rank_x - rank_x.mean()) / rank_x.std()
+    ry = (rank_y - rank_y.mean()) / rank_y.std()
+    products = rx * ry
+
+    per_timestamp = (
+        df.select(datetime_col)
+        .with_columns(pl.Series("product", products))
+        .group_by(datetime_col, maintain_order=True)
+        .agg(pl.col("product").mean().alias("mean_product"))
+        .sort(datetime_col)
+    )
+
+    panel_ic_value, clustered_tstat = newey_west_tstat(
+        per_timestamp["mean_product"].to_numpy(), nw_lag
+    )
+    # Standard t-test for a correlation coefficient under i.i.d. sampling:
+    # t = r * sqrt((n-2) / (1-r^2)), df = n-2. Deliberately treats every
+    # (symbol, bar) row as independent, which is the assumption this
+    # function exists to show is wrong - compare against clustered_tstat.
+    pooled_ic = float(products.mean())
+    naive_tstat = (
+        pooled_ic * np.sqrt((n_obs - 2) / max(1 - pooled_ic**2, 1e-12))
+        if n_obs > 2
+        else float("nan")
+    )
+
+    return {
+        "panel_ic": panel_ic_value,
+        "clustered_nw_tstat": clustered_tstat,
+        "naive_tstat": float(naive_tstat),
+        "n_obs": n_obs,
+        "n_timestamps": len(per_timestamp),
+    }
+
+
+def ic_stability(
+    ic_df: pl.DataFrame, datetime_col: str = "datetime", rolling_window: int = 30
+) -> dict[str, Any]:
+    """Stability diagnostics for a cross_sectional_ic result: rolling mean
+    IC, per-year mean IC, and the fraction of months with positive mean IC.
+
+    Stability outranks magnitude: an IC of 0.03 that's positive in 55% of
+    months is more trustworthy than an IC of 0.06 that came entirely from
+    one quarter.
+    """
+    if len(ic_df) == 0:
+        return {
+            "rolling_ic": pl.DataFrame(),
+            "per_year_ic": pl.DataFrame(),
+            "frac_positive_months": float("nan"),
+        }
+
+    ic_df = ic_df.sort(datetime_col)
+    rolling_ic = ic_df.with_columns(
+        pl.col("ic").rolling_mean(rolling_window).alias("rolling_mean_ic")
+    )
+    per_year_ic = (
+        ic_df.with_columns(pl.col(datetime_col).dt.year().alias("year"))
+        .group_by("year")
+        .agg(pl.col("ic").mean().alias("mean_ic"), pl.len().alias("n_periods"))
+        .sort("year")
+    )
+    per_month = (
+        ic_df.with_columns(pl.col(datetime_col).dt.truncate("1mo").alias("month"))
+        .group_by("month")
+        .agg(pl.col("ic").mean().alias("mean_ic"))
+    )
+    frac_positive_months = _as_float((per_month["mean_ic"] > 0).mean())
+
+    return {
+        "rolling_ic": rolling_ic,
+        "per_year_ic": per_year_ic,
+        "frac_positive_months": frac_positive_months,
+    }
 
 
 # --------------------------------------------------------------------------
