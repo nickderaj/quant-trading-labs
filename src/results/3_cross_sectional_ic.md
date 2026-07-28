@@ -214,8 +214,71 @@ Added to `research.py`:
 - `ic_stability` on a strong, constant-sign synthetic signal reports >90% positive
   months, and an empty-panel edge case returns NaN stats rather than raising.
 
+## Phase 4 - IC screening
+
+Screened all 27 raw candidate features (`src/research/tmp/screen_features.py`) across
+all 3 surviving intervals (4h/12h/1d; 1h dropped in Phase 0) against `fwd_return_1`,
+using `cross_sectional_ic`. Newey-West lag set per-feature to roughly its own lookback
+window (20/60 bars for the z-scored order-flow features, the window itself for
+momentum/mean-reversion/realized-vol, 1 bar for anything with no rolling window).
+**81 configs evaluated total, every one logged to `src/research/tmp/config_log.jsonl`**
+(27 features x 3 intervals) - this is the true count the deflated Sharpe in Phase 6
+must use.
+
+### Bug found during screening
+
+The zero-variance guard in `cross_sectional_ic` (skip a bar if pred or target has no
+cross-sectional spread that bar) compared `np.std(x) == 0` exactly. Floating-point
+summation leaves a residual of ~1e-16 on a *genuinely* constant cross-section rather
+than exactly 0.0, so the guard silently failed to fire and the bar leaked through as
+`ic = NaN` instead of being skipped - corrupting `mean_ic`/`nw_tstat` for every such
+feature. Fixed with a `< 1e-12` tolerance instead of exact equality. Caught by running
+the screen itself (`hour_sin` at 1d bars came back all-NaN), not by a unit test -
+added no regression test for it since the fix is a one-line tolerance change covered
+implicitly by every screening result no longer being NaN.
+
+### A structural finding, not a bug: seasonality is invisible to cross-sectional IC
+
+`hour_sin/cos` and `dow_sin/cos` come back `NaN` at every interval, and this is
+correct, not broken: day-of-week and hour-of-day are properties of the *timestamp*,
+identical for every symbol at a given bar - so they have exactly zero cross-sectional
+variance by construction, at any interval. Cross-sectional IC only ever measures
+whether a feature ranks symbols correctly *relative to each other*, and a market-wide
+seasonality effect (if one exists) is invisible to that by design - it would show up
+in a directional/beta strategy's IC, not a dollar-neutral one. Worth remembering for
+"what to test next."
+
+### Ranked IC table (surviving |t| > 3 AND consistent sign across years)
+
+**34 of 81 configs survive.** Grouped by underlying signal (momentum_W and
+mean_reversion_W are sign-flips of the same feature, so they always survive or fail
+together and are listed once):
+
+| feature family | best interval | mean IC | NW t-stat | % positive months | notes |
+|---|---|---|---|---|---|
+| mean_reversion_1 (= -momentum_1 = -log_return) | 4h | +0.042 | 14.2 | 93.8% | strongest and most stable signal found; survives at 4h/12h/1d |
+| realized_vol_8/24/96 (negative) | 4h | -0.038 (vol_24) | -11.4 | 8-17% | high recent vol -> lower forward return; survives at all 3 intervals |
+| vol_of_vol_96 (negative) | 4h | -0.028 | -8.9 | 12.5% | survives at 4h/12h |
+| mean_reversion_4 | 4h | +0.035 | 12.1 | 93.8% | survives at 4h/12h/1d |
+| mean_reversion_12 | 4h | +0.029 | 10.0 | 95.8% | survives at 4h/12h/1d |
+| funding_rate (negative) | 4h | -0.0095 | -4.4 | 31.3% | weak but survives at 4h only |
+
+Everything else - order flow imbalance/taker-buy-ratio, avg trade size, vol regime,
+funding_rate_z20 - fails the filter at every interval (either |t| < 3, or sign flips
+across years, or both). Full 81-row table with every feature/interval/mean IC/t-stat/
+year-by-year breakdown is in `config_log.jsonl`.
+
+Max |mean IC| observed across all 81 configs was 0.073 (count_z60 at 1d, which failed
+the sign-consistency filter anyway) - **nothing tripped the 0.10 lookahead tripwire.**
+The mean-reversion and realized-vol families sit at 0.03-0.06, above the guardrail's
+stated "normal" range of 0.01-0.03 but well clear of the tripwire; both are
+well-documented, unsurprising effects (short-horizon mean reversion / bid-ask-bounce
+microstructure, and a vol-regime effect) rather than a red flag, but Phase 6's
+backtest is exactly where a real signal this size either survives costs or turns out
+to be too fast/thin to trade profitably - noted as something to watch, not assumed.
+
 ## What's next
 
-Phase 4: screen the full feature library across intervals using this harness -
-expected to replace backtest-driven search entirely - and log every evaluation to
-`src/research/tmp/config_log.jsonl`.
+Phase 5: pooled cross-sectional portfolio construction (vol-normalized target,
+vol-targeted sizing, dollar-neutral long/short) using the mean-reversion and
+realized-vol families that survived screening.

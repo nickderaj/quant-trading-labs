@@ -1142,7 +1142,12 @@ def cross_sectional_ic(
             continue
         x = group[pred_col].to_numpy()
         y = group[target_col].to_numpy()
-        if np.std(x) == 0 or np.std(y) == 0:
+        # A near-zero (not exactly zero) std here is a floating-point
+        # summation artifact of a genuinely-constant cross-section (e.g. a
+        # seasonality feature like dow_sin, identical for every symbol at a
+        # given bar since it only depends on datetime) - exact equality
+        # against 0.0 misses that and lets a spurious corrcoef NaN through.
+        if np.std(x) < 1e-12 or np.std(y) < 1e-12:
             continue
         rho = float(np.corrcoef(rankdata(x), rankdata(y))[0, 1])
         rows.append({datetime_col: key[0], "ic": rho, "n": len(group)})
