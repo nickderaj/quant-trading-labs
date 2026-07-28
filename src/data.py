@@ -246,8 +246,7 @@ def download_klines_range(
         raise ValueError("start_date must be before or equal to end_date")
 
     range_cache_path = (
-        Path(cache_dir)
-        / f"{symbol}-klines-{interval}-"
+        Path(cache_dir) / f"{symbol}-klines-{interval}-"
         f"{start_date.strftime('%Y-%m-%d')}-{end_date.strftime('%Y-%m-%d')}.parquet"
     )
     if range_cache_path.exists():

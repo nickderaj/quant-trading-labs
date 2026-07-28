@@ -664,7 +664,9 @@ def walk_forward_splits(
             splits.append((np.arange(0, train_end), np.arange(test_start, test_end)))
             train_end += step_bars
     else:
-        raise ValueError(f"Unsupported mode: {mode!r}. Expected 'rolling' or 'anchored'.")
+        raise ValueError(
+            f"Unsupported mode: {mode!r}. Expected 'rolling' or 'anchored'."
+        )
 
     return splits
 
@@ -706,7 +708,9 @@ def describe_linear_model(
     each other.
     """
     linear_contrib = x_test_scaled @ weight
-    max_abs_contrib = float(np.abs(linear_contrib).max()) if len(linear_contrib) else 0.0
+    max_abs_contrib = (
+        float(np.abs(linear_contrib).max()) if len(linear_contrib) else 0.0
+    )
     is_degenerate = abs(bias) > max_abs_contrib
 
     y_pred = linear_contrib + bias
@@ -863,9 +867,7 @@ def stitched_metrics(
     metrics["frac_time_in_market"] = (
         len(traded) / len(stitched_trades) if len(stitched_trades) else 0.0
     )
-    metrics["win_rate"] = (
-        _as_float(traded["is_won"].mean()) if len(traded) else 0.0
-    )
+    metrics["win_rate"] = _as_float(traded["is_won"].mean()) if len(traded) else 0.0
     return metrics
 
 
@@ -925,7 +927,9 @@ def constant_position_metrics(
     -1 always short, 0 always flat."""
     lr = df.select(log_return(price_col)).to_series().fill_null(0.0)
     trade_lr = lr * position
-    return _series_metrics(trade_lr, annualized_rate, label or f"constant_{position:+.0f}")
+    return _series_metrics(
+        trade_lr, annualized_rate, label or f"constant_{position:+.0f}"
+    )
 
 
 def random_position_metrics(
@@ -988,9 +992,7 @@ def deflated_sharpe_prob(
     if n_obs <= 1:
         return float("nan")
 
-    sr_std = np.sqrt(
-        (1 - skew * sharpe + (kurtosis - 1) / 4 * sharpe**2) / (n_obs - 1)
-    )
+    sr_std = np.sqrt((1 - skew * sharpe + (kurtosis - 1) / 4 * sharpe**2) / (n_obs - 1))
     if sr_std == 0:
         return 1.0
 
