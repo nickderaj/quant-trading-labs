@@ -91,8 +91,9 @@ def test_portfolio_turnover_charges_entry_and_exit():
     weights = pl.DataFrame(
         {
             "datetime": [
-                datetime(2022, 1, 1) + timedelta(hours=4 * i) for i in range(3)
-            ],  # noqa: DTZ001
+                datetime(2022, 1, 1) + timedelta(hours=4 * i)  # noqa: DTZ001
+                for i in range(3)
+            ],
             "symbol": ["A", "A", "A"],
             "weight": [0.5, 0.5, 0.0],
         }

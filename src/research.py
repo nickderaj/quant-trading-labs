@@ -1079,6 +1079,99 @@ def random_position_metrics(
     return pl.DataFrame(rows)
 
 
+def equal_weight_basket_returns(
+    panel: pl.DataFrame,
+    target_col: str = "fwd_return_1",
+    datetime_col: str = "datetime",
+) -> pl.DataFrame:
+    """Equal-weight, long-only basket return per bar: mean of target_col
+    across every symbol present that bar.
+
+    The buy-and-hold baseline for a cross-sectional book: since the
+    strategy itself is dollar-neutral (see dollar_neutral_weights) and
+    holds no net crypto beta, the fair passive comparison is "what if you
+    just held the whole universe equally" rather than any single symbol.
+    always-long/short/flat baselines fall out of this same series: long is
+    this series itself, short is its negation, flat is a zero series -
+    feed the returned column into constant_position_metrics-style handling
+    by treating it as a synthetic single asset's returns.
+    """
+    return (
+        panel.group_by(datetime_col)
+        .agg(pl.col(target_col).mean().alias("trade_log_return"))
+        .sort(datetime_col)
+    )
+
+
+def random_dollar_neutral_metrics(
+    panel: pl.DataFrame,
+    annualized_rate: float,
+    datetime_col: str = "datetime",
+    symbol_col: str = "symbol",
+    target_col: str = "fwd_return_1",
+    top_frac: float = 0.2,
+    gross_exposure: float = 1.0,
+    max_position_per_symbol: float = 0.25,
+    taker_fee: float | None = None,
+    slippage: float = 1e-4,
+    no_seeds: int = 200,
+    seed: int = 0,
+) -> pl.DataFrame:
+    """Sharpe/return distribution from no_seeds random-ranking dollar-neutral
+    portfolios, as a null baseline for what a strategy with zero real skill
+    but the exact same portfolio construction (same top_frac, gross
+    exposure, per-symbol cap, and - if taker_fee is given - the same cost
+    model) would produce by chance. Stronger than a simple +-1 coin-flip
+    baseline since it goes through the identical dollar_neutral_weights /
+    portfolio_trade_frame pipeline the real strategy uses, not a simplified
+    stand-in for it.
+    """
+    rng = np.random.default_rng(seed)
+    symbols_per_bar = panel.select(datetime_col, symbol_col).unique()
+    rows = []
+    for s in range(no_seeds):
+        random_pred = symbols_per_bar.with_columns(
+            pl.Series("__rand_pred__", rng.normal(size=len(symbols_per_bar)))
+        )
+        scored = panel.join(random_pred, on=[datetime_col, symbol_col])
+        weights = dollar_neutral_weights(
+            scored,
+            "__rand_pred__",
+            datetime_col=datetime_col,
+            symbol_col=symbol_col,
+            top_frac=top_frac,
+            gross_exposure=gross_exposure,
+            max_position_per_symbol=max_position_per_symbol,
+        )
+        trade_frame = portfolio_trade_frame(
+            weights,
+            panel,
+            target_col=target_col,
+            datetime_col=datetime_col,
+            symbol_col=symbol_col,
+        )
+        metrics = portfolio_metrics(
+            trade_frame,
+            annualized_rate,
+            taker_fee=taker_fee,
+            slippage=slippage,
+            label="random",
+        )
+        rows.append(
+            {
+                "seed": s,
+                "sharpe": metrics.get("sharpe_net", metrics.get("sharpe")),
+                "total_log_return": metrics.get(
+                    "total_log_return_net", metrics.get("total_log_return")
+                ),
+                "compound_return": metrics.get(
+                    "compound_return_net", metrics.get("compound_return")
+                ),
+            }
+        )
+    return pl.DataFrame(rows)
+
+
 # --------------------------------------------------------------------------
 # IC (information coefficient) harness
 # --------------------------------------------------------------------------
@@ -1332,6 +1425,34 @@ def deflated_sharpe_prob(
         expected_max_sharpe = 0.0
 
     return float(norm.cdf((sharpe - expected_max_sharpe) / sr_std))
+
+
+def bootstrap_ci(
+    values: np.ndarray, n_boot: int = 2000, ci: float = 0.95, seed: int = 0
+) -> tuple[float, float]:
+    """Percentile bootstrap confidence interval for the mean of values.
+
+    Resamples values with replacement n_boot times, takes the mean of each
+    resample, and returns the [ (1-ci)/2, 1-(1-ci)/2 ] percentiles of that
+    distribution - e.g. a fold-level excess-return series that includes
+    zero in its 95% CI can't reject "no real edge" no matter how good the
+    point estimate looks.
+    """
+    values = np.asarray(values, dtype=float)
+    values = values[~np.isnan(values)]
+    if len(values) == 0:
+        return float("nan"), float("nan")
+
+    rng = np.random.default_rng(seed)
+    n = len(values)
+    boot_means = np.empty(n_boot)
+    for i in range(n_boot):
+        sample = rng.choice(values, size=n, replace=True)
+        boot_means[i] = sample.mean()
+
+    alpha = (1 - ci) / 2
+    lo, hi = np.quantile(boot_means, [alpha, 1 - alpha])
+    return float(lo), float(hi)
 
 
 # --------------------------------------------------------------------------

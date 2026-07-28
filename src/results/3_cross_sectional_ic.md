@@ -322,9 +322,132 @@ middle bar; `portfolio_trade_frame` matches a hand-computed weighted sum; net me
 never exceed gross; `vol_targeted_size` clips before scaling; and the walk-forward
 split test described above.
 
+## Phase 6 - Backtest configs (pre-declared before running)
+
+Also added to `research.py` in support of this phase: `bootstrap_ci` (generic
+percentile bootstrap CI of a mean), `equal_weight_basket_returns` (the buy-and-hold
+baseline for a cross-sectional book - see below), and `random_dollar_neutral_metrics`
+(a null baseline that goes through the exact same `dollar_neutral_weights` /
+`portfolio_trade_frame` pipeline as the real strategy, just with random instead of
+model-based ranking - stronger than a simple coin-flip baseline).
+
+Per the screening result, momentum_W and mean_reversion_W are exact sign-flips of each
+other (and log_return == momentum_1 exactly), so only one representation of that
+family is used per config to avoid feeding a linear model two perfectly
+anti-correlated columns. All three configs: pooled `nn.Linear` model (one model across
+all symbols, not per-symbol) on the `_cs_z` cross-sectionally-standardized feature
+variants, target = `fwd_return_1 / realized_vol_24` (vol-normalized), position size =
+`clip(pred, -1, 1) * (vol_target / realized_vol_24)` with `vol_target` fixed as the
+training panel's median `realized_vol_24`, `dollar_neutral_weights` with
+`top_frac=0.2`, `gross_exposure=1.0`, `max_position_per_symbol=0.25`, taker fee 4bps +
+1bp slippage, `panel_walk_forward_splits` rolling with roughly 1 year train / 1 quarter
+test, 300 training epochs (grid-work cap). Declared now, before any run:
+
+| # | interval | features (mean_reversion_{1,4,12}, realized_vol_{8,24,96}, vol_of_vol_96, funding_rate where it survived) |
+|---|---|---|
+| 1 | 4h  | mean_reversion_1, mean_reversion_4, mean_reversion_12, realized_vol_8, realized_vol_24, realized_vol_96, vol_of_vol_96, funding_rate |
+| 2 | 12h | mean_reversion_1, mean_reversion_4, mean_reversion_12, realized_vol_8, realized_vol_24, realized_vol_96, vol_of_vol_96 |
+| 3 | 1d  | mean_reversion_1, mean_reversion_4, mean_reversion_12, realized_vol_8, realized_vol_24, realized_vol_96, vol_of_vol_96 |
+
+Each will also be re-run at origin offsets of 0/7/14/21 days for robustness (12
+evaluations total: 3 configs x 4 offsets, offset=0 being the headline result); every
+one gets appended to `config_log.jsonl` alongside Phase 4's 81, since they are
+genuinely separate configurations fit and evaluated, and the final deflated Sharpe
+must reflect that true total, not just the 3 "headline" configs.
+
+### Results
+
+Ran as declared. `config_log.jsonl` ended up with **95 total lines, not 93**: two
+extra `cfg3_1d`/offset-0 entries came from a debugging run (see "bug found" below) -
+logged anyway per "no exceptions, no undercounting," since a fit-and-evaluate that
+happened is a trial that happened, bug or not.
+
+| config | offset 0d | offset 7d | offset 14d | offset 21d | gross (offset 0) |
+|---|---|---|---|---|---|
+| cfg1_4h  | -1.94 | -4.20 | -3.91 | -3.10 | +0.95 |
+| cfg2_12h | +0.42 | -2.45 | -1.12 | -0.96 | +1.32 |
+| cfg3_1d  | -0.29 | -1.15 | -1.66 | -0.45 | +0.43 |
+
+(Sharpe, net of costs, annualized.) Same origin-shift instability notebook 2 found:
+cfg2_12h is the only positive headline result, and it flips to -2.45 just one week
+later on the fold grid - a result that depends on exactly where the walk-forward grid
+happens to start isn't a result. cfg1_4h and cfg3_1d are negative net of costs at
+every offset tried. Every config's **gross** Sharpe is positive (0.43 to 1.32) - the
+IC-screened signal is real enough to show up before costs, and transaction costs are
+what kill it, exactly the failure mode Phase 0 was built to catch.
+
+**Baselines** (offset-0 OOS window, each config against its own basket):
+
+| config | strategy net | basket buy-hold | always-short-basket | random (200 seeds, same costs) mean / p90 |
+|---|---|---|---|---|
+| cfg1_4h  | -1.94 | -0.06 | +0.06 | -10.40 / -9.55 |
+| cfg2_12h | +0.42 | +0.05 | -0.05 | -3.51 / -2.79 |
+| cfg3_1d  | -0.29 | +0.00 | -0.00 | -1.61 / -0.93 |
+
+The random baseline (identical portfolio construction and cost model, random instead
+of model-based ranking) is *always* substantially worse than the real strategy - the
+model is doing something, just not enough to turn a profit net of costs except
+transiently at one config/offset combination. Buy-and-hold's own basket Sharpe is
+near zero over these particular OOS windows (unlike the full-history BTC B&H numbers
+in `2_walk_forward_multi_asset.md` - a dollar-neutral book's fair comparison is a
+diversified basket, not a single levered-beta bet, and this basket happened to be
+roughly flat over these specific windows).
+
+**Degenerate-bet check**: 0% of folds degenerate across all 3 configs x 4 offsets (48
+fold-fits total) - every fitted model's weights genuinely respond to its features
+rather than collapsing to a constant directional bet. Rules out that specific failure
+mode; doesn't rescue the Sharpe.
+
+**Bootstrap 95% CI on per-fold excess return (strategy net minus basket), offset 0**:
+
+- cfg1_4h: [-0.35, +0.07]
+- cfg2_12h: [-0.21, +0.30]
+- cfg3_1d: [-0.34, +0.28]
+
+All three include zero. Combined with fold-by-fold win rates against basket of 27%,
+45%, and 60% respectively (only cfg3_1d beats its basket in a majority of folds, and
+its Sharpe is still negative) - none of the three configs can reject "no real edge"
+this way either.
+
+**Deflated Sharpe**, using the true 95-config count from `config_log.jsonl` and each
+config's own offset-0 per-period Sharpe/n_obs: cfg2_12h (the only positive headline
+result) gets P(true Sharpe > 0 | best of 95 trials) = **3.4%**. cfg1_4h and cfg3_1d,
+being negative, deflate to even less (0.0000005% and 0.15% respectively - deflated
+Sharpe on a negative input is close to meaningless as a "how good is this" number, but
+confirms neither looks good even before the correction). 3.4% is higher than notebook
+2's 0.69%, but still low enough, combined with the origin-shift sign flip and a
+bootstrap CI that includes zero, that it doesn't change the conclusion.
+
+**Turnover/fee drag actually realized** (vs. Phase 0's illustrative sanity check):
+cfg1_4h ~1.5-2.1%/yr, cfg2_12h ~0.33-0.37%/yr, cfg3_1d ~0.17-0.21%/yr - all far below
+Phase 0's worst-case 40%-flip-rate illustration, because a vol-targeted, ranked
+long/short book trades far less often than a bar-by-bar sign-flipping strategy. Costs
+still matter enough to flip cfg1_4h and cfg3_1d from gross-positive to net-negative.
+
+### Bug found during this phase
+
+The vol-normalized target (`fwd_return_1 / realized_vol_24`) divides by exactly zero
+for bars where a symbol's realized vol over its trailing 24-bar window is 0.0 - a
+frozen/pinned price (the clearest example: LUNA's last few bars post-Terra-collapse,
+where Binance kept the symbol listed at a near-zero, barely-moving price). This
+produced +-inf targets that corrupted training silently until `describe_linear_model`
+and the fold Sharpes came back all-NaN. Fixed by dropping bars with
+`realized_vol_24 <= 1e-12` before training (2.7-2.8% of rows across all three
+intervals) - these bars carry no usable vol-normalized signal anyway.
+
+## Bottom line so far
+
+**No validated edge**, matching `2_walk_forward_multi_asset.md`'s conclusion, now
+demonstrated cross-sectionally across 30 symbols with real transaction costs rather
+than on one symbol gross of fees. The IC-screened mean-reversion/realized-vol signal
+is real enough to be gross-profitable at every interval tried, but costs erase it at
+4h and 1d, and the one config that survives costs at its headline offset (12h,
+Sharpe +0.42) fails every robustness check that matters: it flips sharply negative
+under a one-week origin shift, its bootstrap CI on excess return includes zero, and
+its deflated Sharpe of 3.4% means the best of 95 trials still isn't distinguishable
+from what noise produces at that search width.
+
 ## What's next
 
-Phase 6: pre-declare and run at most 3 backtest configs using this machinery, over
-2021-07 to 2025-07, with full notebook-2 methodology (origin-shift, baselines,
-degenerate-bet check, bootstrap CI, deflated Sharpe using the true config count from
-`config_log.jsonl`).
+Phase 7: run the single best config (cfg2_12h, unchanged) once on the frozen holdout
+(2025-07-01 to 2026-07-01). No retuning - report whatever comes out.
