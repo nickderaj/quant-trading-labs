@@ -277,8 +277,54 @@ microstructure, and a vol-regime effect) rather than a red flag, but Phase 6's
 backtest is exactly where a real signal this size either survives costs or turns out
 to be too fast/thin to trade profitably - noted as something to watch, not assumed.
 
+## Phase 5 - Portfolio construction
+
+Added to `research.py`:
+
+- **`panel_walk_forward_splits`** - the multi-symbol analogue of `walk_forward_splits`,
+  built by delegating to it (folds computed over unique timestamps, not raw row
+  position) so the fold-boundary logic isn't duplicated. This is what makes a pooled
+  model possible without leaking: splitting a stacked (symbol, bar) panel by row
+  position would let some symbols' bar-t rows land in train while others at the same
+  bar land in test, even though they're the same instant. Verified by test that every
+  timestamp's rows are entirely on one side of the boundary.
+- **`vol_normalized_target`** - `fwd_return_1 / realized_vol_t` as the regression
+  target instead of raw return, so training loss stops being dominated by high-vol
+  bars/eras (2022) at the expense of everything else.
+- **`vol_targeted_size`** - `clip(pred, -1, 1) * (vol_target / vol_t)`: continuous
+  position size instead of `sign(pred)`. Since the model predicts the vol-normalized
+  target, `pred` is already in "predicted move per unit of that bar's own vol" units,
+  so clipping to [-1, 1] is a natural risk cap (never bet bigger than a 1-sigma-
+  equivalent move) and the `vol_target/vol_t` scaling keeps realized vol roughly
+  constant across symbols/regimes - a risk-management effect, applied once and left
+  alone, not something to tune per backtest.
+- **`dollar_neutral_weights`** - per-bar: rank symbols by prediction, take the top/
+  bottom `top_frac` as long/short legs (stripping whatever's common to the whole
+  cross-section that bar, i.e. crypto beta, since both legs only ever bet on relative
+  ranking), weight *within* each leg proportionally to `vol_targeted_size` (or equally
+  if no size given), normalize so long sums to `+gross/2` and short to `-gross/2`, then
+  clip each symbol to `max_position_per_symbol`. Clipping can only shrink gross
+  exposure, never breach the target, so no separate total-gross-cap step was needed.
+- **`portfolio_turnover`** / **`portfolio_trade_frame`** / **`add_portfolio_costs`** /
+  **`portfolio_metrics`** - the multi-symbol analogues of Phase 0's
+  `add_trading_costs`/`stitched_metrics`, reusing the same cost math and
+  `_series_metrics`/`cost_summary` helpers rather than duplicating them. Turns a
+  weights panel + forward returns into one portfolio-level bar return series with
+  gross and net (fee-charged) variants, ready for the same reporting Phase 6 uses.
+
+### Tests (`tests/test_portfolio.py`, 9 passing)
+
+Dollar-neutral weights are net-zero and within the gross cap every bar; only the
+top/bottom `top_frac` symbols get nonzero weight and the split is on the right side of
+the ranking; `max_position_per_symbol` actually caps; leg weights scale proportionally
+to a given size column; turnover charges a symbol's entry and exit but not the held
+middle bar; `portfolio_trade_frame` matches a hand-computed weighted sum; net metrics
+never exceed gross; `vol_targeted_size` clips before scaling; and the walk-forward
+split test described above.
+
 ## What's next
 
-Phase 5: pooled cross-sectional portfolio construction (vol-normalized target,
-vol-targeted sizing, dollar-neutral long/short) using the mean-reversion and
-realized-vol families that survived screening.
+Phase 6: pre-declare and run at most 3 backtest configs using this machinery, over
+2021-07 to 2025-07, with full notebook-2 methodology (origin-shift, baselines,
+degenerate-bet check, bootstrap CI, deflated Sharpe using the true config count from
+`config_log.jsonl`).

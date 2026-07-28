@@ -1335,6 +1335,261 @@ def deflated_sharpe_prob(
 
 
 # --------------------------------------------------------------------------
+# Cross-sectional portfolio construction
+# --------------------------------------------------------------------------
+
+
+def panel_walk_forward_splits(
+    panel: pl.DataFrame,
+    train_bars: int,
+    test_bars: int,
+    step_bars: int | None = None,
+    mode: str = "rolling",
+    embargo_bars: int = 0,
+    origin_offset: int = 0,
+    datetime_col: str = "datetime",
+) -> list[tuple[np.ndarray, np.ndarray]]:
+    """walk_forward_splits, but for a stacked multi-symbol panel.
+
+    Folds are computed over unique timestamps (delegating to
+    walk_forward_splits so the fold-boundary logic isn't duplicated), then
+    each timestamp index is expanded to every row sharing that timestamp.
+    This guarantees every symbol at a given bar stays on the same side of
+    the train/test boundary - splitting by raw row position instead would
+    let some symbols' bar-t rows leak into train while others land in test,
+    even though they're the same instant.
+
+    Returned indices are row positions into panel as passed in - the caller
+    must index the same (unsorted) panel with them.
+    """
+    datetimes = panel[datetime_col].to_numpy()
+    unique_times, inverse = np.unique(datetimes, return_inverse=True)
+
+    time_splits = walk_forward_splits(
+        len(unique_times),
+        train_bars,
+        test_bars,
+        step_bars,
+        mode,
+        embargo_bars,
+        origin_offset,
+    )
+
+    row_splits = []
+    for train_time_idx, test_time_idx in time_splits:
+        train_mask = np.isin(inverse, train_time_idx)
+        test_mask = np.isin(inverse, test_time_idx)
+        row_splits.append((np.flatnonzero(train_mask), np.flatnonzero(test_mask)))
+    return row_splits
+
+
+def vol_normalized_target(target_col: str, vol_col: str) -> pl.Expr:
+    """target_col / vol_col as the regression target instead of target_col
+    directly, so training loss stops being dominated by high-vol bars/eras
+    (e.g. 2022) at the expense of fitting low-vol ones. vol_col should be a
+    causal, already-computed realized vol column (see features.realized_vol)
+    known as of the same bar as the prediction.
+    """
+    return (pl.col(target_col) / pl.col(vol_col)).alias(f"{target_col}_vol_norm")
+
+
+def vol_targeted_size(pred_col: str, vol_col: str, vol_target: float) -> pl.Expr:
+    """clip(pred, -1, 1) * (vol_target / vol_t): continuous position size
+    instead of sign(pred).
+
+    Since the model is trained on vol_normalized_target, pred is already in
+    "predicted return per unit of that bar's vol" units, so clipping to
+    [-1, 1] is a natural cap (don't bet bigger than a 1-sigma-equivalent
+    move) rather than an arbitrary threshold. Scaling by vol_target / vol_t
+    then converts that into an actual position size that keeps realized
+    portfolio vol roughly constant across symbols and regimes - a
+    risk-management effect, not a parameter to tune per backtest.
+    """
+    return (pl.col(pred_col).clip(-1, 1) * (vol_target / pl.col(vol_col))).alias(
+        "vol_targeted_size"
+    )
+
+
+def dollar_neutral_weights(
+    panel: pl.DataFrame,
+    pred_col: str,
+    datetime_col: str = "datetime",
+    symbol_col: str = "symbol",
+    top_frac: float = 0.2,
+    size_col: str | None = None,
+    gross_exposure: float = 1.0,
+    max_position_per_symbol: float = 0.25,
+) -> pl.DataFrame:
+    """Per-bar, dollar-neutral long/short portfolio weights.
+
+    Each bar: rank symbols by pred_col, take the top top_frac as the long
+    leg and the bottom top_frac as the short leg (everything else gets
+    weight 0). This strips whatever's common to the whole cross-section
+    that bar (crypto beta) since both legs only ever bet on relative
+    ranking, never on direction. Within a leg, weight is proportional to
+    |size_col| if given (e.g. vol_targeted_size - a more confident/higher
+    vol-adjusted prediction gets more capital) or equal if size_col is None.
+
+    Long leg weights sum to +gross_exposure / 2, short leg to
+    -gross_exposure / 2 (net = 0, gross = sum(abs(weight)) = gross_exposure
+    before any capping). max_position_per_symbol then clips each symbol's
+    weight - this can only shrink gross exposure further, never breach the
+    target, so no separate total-gross-cap step is needed on top of it.
+
+    Returns one row per (datetime, symbol) with a "weight" column (0 for
+    symbols in neither leg that bar).
+    """
+    cols = [datetime_col, symbol_col, pred_col] + ([size_col] if size_col else [])
+    df = panel.select(cols).drop_nulls()
+
+    rows: list[dict[str, Any]] = []
+    for key, group in df.group_by(datetime_col, maintain_order=True):
+        n = len(group)
+        k = max(1, int(np.floor(n * top_frac)))
+        preds = group[pred_col].to_numpy()
+        symbols = group[symbol_col].to_list()
+        size = np.abs(group[size_col].to_numpy()) if size_col else np.ones(n)
+        order = np.argsort(preds)
+        short_idx, long_idx = order[:k], order[-k:]
+
+        weight = np.zeros(n)
+        long_size, short_size = size[long_idx], size[short_idx]
+        if long_size.sum() > 0:
+            weight[long_idx] = (gross_exposure / 2) * long_size / long_size.sum()
+        if short_size.sum() > 0:
+            weight[short_idx] = -(gross_exposure / 2) * short_size / short_size.sum()
+        weight = np.clip(weight, -max_position_per_symbol, max_position_per_symbol)
+
+        for sym, w in zip(symbols, weight, strict=True):
+            rows.append({datetime_col: key[0], symbol_col: sym, "weight": float(w)})
+
+    return (
+        pl.DataFrame(rows)
+        if rows
+        else pl.DataFrame(
+            schema={
+                datetime_col: df[datetime_col].dtype,
+                symbol_col: pl.Utf8,
+                "weight": pl.Float64,
+            }
+        )
+    )
+
+
+def portfolio_turnover(
+    weights: pl.DataFrame, datetime_col: str = "datetime", symbol_col: str = "symbol"
+) -> pl.DataFrame:
+    """Per-bar total turnover of a multi-symbol weights panel: sum over
+    symbols of |weight_t - weight_{t-1}| (each symbol's own weight history;
+    a symbol's first appearance is charged its full entry weight, matching
+    add_trading_costs' treatment of position_{-1} = 0).
+    """
+    w = weights.sort([symbol_col, datetime_col])
+    w = w.with_columns(
+        pl.col("weight")
+        .diff()
+        .fill_null(pl.col("weight"))
+        .abs()
+        .over(symbol_col)
+        .alias("symbol_turnover")
+    )
+    return (
+        w.group_by(datetime_col)
+        .agg(pl.col("symbol_turnover").sum().alias("turnover"))
+        .sort(datetime_col)
+    )
+
+
+def portfolio_trade_frame(
+    weights: pl.DataFrame,
+    returns: pl.DataFrame,
+    target_col: str = "fwd_return_1",
+    datetime_col: str = "datetime",
+    symbol_col: str = "symbol",
+) -> pl.DataFrame:
+    """Combine per-symbol weights with forward returns into one row per bar:
+    "trade_log_return" (the portfolio's gross bar return, sum_i weight_i *
+    return_i) and "turnover" (see portfolio_turnover). Shaped to match what
+    add_portfolio_costs / _series_metrics / cost_summary expect, the same
+    summary functions the single-asset walk_forward_run path uses.
+    """
+    joined = weights.join(
+        returns.select(datetime_col, symbol_col, target_col),
+        on=[datetime_col, symbol_col],
+        how="inner",
+    )
+    port_return = (
+        joined.with_columns(
+            (pl.col("weight") * pl.col(target_col)).alias("weighted_return")
+        )
+        .group_by(datetime_col)
+        .agg(pl.col("weighted_return").sum().alias("trade_log_return"))
+    )
+    turnover = portfolio_turnover(weights, datetime_col, symbol_col)
+    return port_return.join(turnover, on=datetime_col).sort(datetime_col)
+
+
+def add_portfolio_costs(
+    trade_frame: pl.DataFrame, taker_fee: float, slippage: float = 1e-4
+) -> pl.DataFrame:
+    """add_trading_costs' cost math, applied to a portfolio_trade_frame
+    result where "turnover" is already the summed per-symbol turnover for
+    that bar (see portfolio_turnover) rather than a diff of one position
+    column - the rest of the accounting (cost_log_return, _net variants) is
+    identical.
+    """
+    cost_frac = taker_fee + slippage
+    return (
+        trade_frame.with_columns(
+            (1 - cost_frac * pl.col("turnover")).log().alias("cost_log_return")
+        )
+        .with_columns(
+            (pl.col("trade_log_return") + pl.col("cost_log_return")).alias(
+                "trade_log_return_net"
+            )
+        )
+        .with_columns(
+            pl.col("trade_log_return_net").cum_sum().alias("equity_curve_net")
+        )
+        .with_columns(
+            (pl.col("equity_curve_net") - pl.col("equity_curve_net").cum_max()).alias(
+                "drawdown_log_return_net"
+            )
+        )
+    )
+
+
+def portfolio_metrics(
+    trade_frame: pl.DataFrame,
+    annualized_rate: float,
+    taker_fee: float | None = None,
+    slippage: float = 1e-4,
+    label: str = "portfolio",
+) -> dict[str, Any]:
+    """Summary metrics for a portfolio_trade_frame result - the multi-symbol
+    analogue of stitched_metrics. Reports gross always, and net/cost fields
+    (via add_portfolio_costs + cost_summary) whenever taker_fee is given.
+    """
+    if len(trade_frame) == 0:
+        return {"label": label, "no_bars": 0}
+
+    metrics = _series_metrics(trade_frame["trade_log_return"], annualized_rate, label)
+
+    if taker_fee is not None:
+        costed = add_portfolio_costs(trade_frame, taker_fee, slippage)
+        net_metrics = _series_metrics(
+            costed["trade_log_return_net"], annualized_rate, f"{label}_net"
+        )
+        metrics["sharpe_net"] = net_metrics["sharpe"]
+        metrics["total_log_return_net"] = net_metrics["total_log_return"]
+        metrics["compound_return_net"] = net_metrics["compound_return"]
+        metrics["max_drawdown_net"] = net_metrics["max_drawdown"]
+        metrics.update(cost_summary(costed, annualized_rate))
+
+    return metrics
+
+
+# --------------------------------------------------------------------------
 # Data loading
 # --------------------------------------------------------------------------
 
