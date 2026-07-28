@@ -173,9 +173,19 @@ def _as_float(x: object) -> float:
 
 
 def model_trade_results(
-    y_true: torch.Tensor | np.ndarray, y_pred: torch.Tensor | np.ndarray
+    y_true: torch.Tensor | np.ndarray,
+    y_pred: torch.Tensor | np.ndarray,
+    threshold: float = 0.0,
 ) -> pl.DataFrame:
-    """Generate trade-level results from model predictions."""
+    """Generate trade-level results from model predictions.
+
+    threshold is a no-trade band on |y_pred|: predictions inside it are too
+    small to trust over noise, so position is flat (0) rather than forced to
+    sign(y_pred). is_won is null on flat bars so it doesn't distort win_rate.
+    """
+    in_market = pl.col("y_pred").abs() > threshold
+    position = pl.when(in_market).then(pl.col("y_pred").sign()).otherwise(0.0)
+
     return (
         pl.DataFrame(
             {
@@ -185,8 +195,11 @@ def model_trade_results(
         )
         .with_columns(
             [
-                (pl.col("y_pred").sign() == pl.col("y_true").sign()).alias("is_won"),
-                pl.col("y_pred").sign().alias("position"),
+                pl.when(in_market)
+                .then(pl.col("y_pred").sign() == pl.col("y_true").sign())
+                .otherwise(None)
+                .alias("is_won"),
+                position.alias("position"),
             ]
         )
         .with_columns(
@@ -215,17 +228,23 @@ def eval_model_performance(
     feature_names: Sequence[str],
     target_name: str,
     annualized_rate: float,
+    threshold: float = 0.0,
     log: bool = False,
 ) -> dict[str, Any]:
     """Calculate performance metrics for the trading model."""
-    trade_results = model_trade_results(y_true, y_pred)
+    trade_results = model_trade_results(y_true, y_pred, threshold)
+    traded = trade_results.filter(pl.col("position") != 0)
 
-    win_rate = _as_float(trade_results["is_won"].mean())
-    avg_win = _as_float(
-        trade_results.filter(pl.col("is_won"))["trade_log_return"].mean()
+    win_rate = _as_float(traded["is_won"].mean()) if len(traded) else 0.0
+    avg_win = (
+        _as_float(traded.filter(pl.col("is_won"))["trade_log_return"].mean())
+        if len(traded)
+        else 0.0
     )
-    avg_loss = _as_float(
-        trade_results.filter(~pl.col("is_won"))["trade_log_return"].mean()
+    avg_loss = (
+        _as_float(traded.filter(~pl.col("is_won"))["trade_log_return"].mean())
+        if len(traded)
+        else 0.0
     )
     ev = win_rate * avg_win + (1 - win_rate) * avg_loss
 
@@ -237,7 +256,11 @@ def eval_model_performance(
     metrics = {
         "features": ",".join(feature_names),
         "target": target_name,
-        "no_trades": len(trade_results),
+        "no_bars": len(trade_results),
+        "no_trades": len(traded),
+        "frac_time_in_market": len(traded) / len(trade_results)
+        if len(trade_results)
+        else 0.0,
         "win_rate": win_rate,
         "avg_win": avg_win,
         "avg_loss": avg_loss,
@@ -263,7 +286,9 @@ def print_model_performance(metrics: dict[str, Any]) -> None:
     """Print eval_model_performance() output as human-readable lines."""
     print(f"Features:         {metrics['features']}")
     print(f"Target:           {metrics['target']}")
+    print(f"No. Bars:         {metrics['no_bars']}")
     print(f"No. Trades:       {metrics['no_trades']}")
+    print(f"Time In Market:   {metrics['frac_time_in_market']:.2%}")
     print(f"Win Rate:         {metrics['win_rate']:.2%}")
     print(f"Average Win:      {metrics['avg_win']:.4f}")
     print(f"Average Loss:     {metrics['avg_loss']:.4f}")
@@ -305,6 +330,7 @@ def benchmark_model_performance(
     optimizer: torch.optim.Optimizer | None = None,
     no_epochs: int = 2000,
     lr: float = 5e-4,
+    threshold: float = 0.0,
     log: bool = False,
 ) -> dict[str, Any]:
     """Train a model on df and return its eval_model_performance() metrics."""
@@ -330,7 +356,9 @@ def benchmark_model_performance(
     with torch.no_grad():
         y_hat = model(x_test)
 
-    metrics = eval_model_performance(y_test, y_hat, features, target, annualized_rate)
+    metrics = eval_model_performance(
+        y_test, y_hat, features, target, annualized_rate, threshold
+    )
 
     linear_params = get_linear_params(model)
     if linear_params is not None:
@@ -355,6 +383,7 @@ def benchmark_linear_models(
     lr: float = 5e-4,
     loss: nn.Module | None = None,
     test_size: float = 0.25,
+    threshold: float = 0.0,
 ) -> pl.DataFrame:
     """Benchmark model_factory over every combination of up to max_no_features features from feature_pool, sorted by sharpe.
 
@@ -364,6 +393,9 @@ def benchmark_linear_models(
     autocorrelation: at 200 epochs / lr=5e-4 the linear weight barely moves off init,
     so sign(y_pred) is governed by the bias term alone, producing identical trades
     across different feature combos.
+
+    threshold sets a no-trade band on |y_pred| (see model_trade_results) so a
+    model can sit flat instead of being forced into a bet every bar.
     """
     if model_factory is None:
         model_factory = lambda n: nn.Linear(n, 1)
@@ -385,6 +417,7 @@ def benchmark_linear_models(
             loss=loss,
             no_epochs=no_epochs,
             lr=lr,
+            threshold=threshold,
         )
         for features in feature_combos
     ]
@@ -480,6 +513,7 @@ def learn_model_trades(
     optimizer: torch.optim.Optimizer | None = None,
     no_epochs: int = 6000,
     lr: float | None = None,
+    threshold: float = 0.0,
     log: bool = False,
 ) -> pl.DataFrame:
     """Train model on df via batch_train_reg and return its model_trade_results()."""
@@ -498,7 +532,7 @@ def learn_model_trades(
         lr,
         log,
     )
-    return model_trade_results(y_test, y_hat)
+    return model_trade_results(y_test, y_hat, threshold)
 
 
 def learn_model_trade_pnl(
@@ -511,10 +545,21 @@ def learn_model_trade_pnl(
     optimizer: torch.optim.Optimizer | None = None,
     no_epochs: int = 6000,
     lr: float | None = None,
+    threshold: float = 0.0,
     log: bool = False,
 ) -> pl.DataFrame:
     return learn_model_trades(
-        df, features, target, model, test_size, loss, optimizer, no_epochs, lr, log
+        df,
+        features,
+        target,
+        model,
+        test_size,
+        loss,
+        optimizer,
+        no_epochs,
+        lr,
+        threshold,
+        log,
     )
 
 
@@ -532,16 +577,35 @@ def add_tx_fees(trades: pl.DataFrame, maker_fee: float, taker_fee: float):
 
 
 def add_tx_fees_log(trades: pl.DataFrame, maker_fee, taker_fee):
-    return trades.with_columns(
-        (pl.col("trade_log_return") + np.log(maker_fee)).alias(
-            "trade_log_return_net_maker"
-        ),
-        (pl.col("trade_log_return") + np.log(taker_fee)).alias(
-            "trade_log_return_net_taker"
-        ),
-    ).with_columns(
-        pl.col("trade_log_return_net_maker").cum_sum().alias("equity_curve_net_maker"),
-        pl.col("trade_log_return_net_taker").cum_sum().alias("equity_curve_net_taker"),
+    """Charge fees only on the position actually turned over each bar.
+
+    Flat -> +-1 turns over 1 unit (one side). -1 -> +1 turns over 2 units
+    (close + open), i.e. a full round trip. A held position (no change)
+    turns over 0 and pays nothing. fee is a fraction per unit turned over,
+    so cost is log(1 - fee * turnover), not log(fee).
+    """
+    turnover = pl.col("position").diff().fill_null(pl.col("position")).abs()
+    return (
+        trades.with_columns(
+            (1 - maker_fee * turnover).log().alias("tx_fee_log_maker"),
+            (1 - taker_fee * turnover).log().alias("tx_fee_log_taker"),
+        )
+        .with_columns(
+            (pl.col("trade_log_return") + pl.col("tx_fee_log_maker")).alias(
+                "trade_log_return_net_maker"
+            ),
+            (pl.col("trade_log_return") + pl.col("tx_fee_log_taker")).alias(
+                "trade_log_return_net_taker"
+            ),
+        )
+        .with_columns(
+            pl.col("trade_log_return_net_maker")
+            .cum_sum()
+            .alias("equity_curve_net_maker"),
+            pl.col("trade_log_return_net_taker")
+            .cum_sum()
+            .alias("equity_curve_net_taker"),
+        )
     )
 
 
