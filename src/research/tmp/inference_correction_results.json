@@ -1,0 +1,65 @@
+{
+  "cfg1_4h": {
+    "config_id": "cfg1_4h",
+    "interval": "4h",
+    "n_obs": 6006,
+    "n_folds": 11,
+    "sharpe_net_annualized": -2.3210588952306397,
+    "per_period_sharpe": -0.049597993014011514,
+    "skew": 6.245890670953693,
+    "kurtosis_fisher_false": 189.29280278366642,
+    "dsr_normal_pct": 1.0517618247472406e-08,
+    "dsr_real_moments_pct": 4.976453031288344e-07,
+    "bootstrap_ci_iid": [
+      -0.3016349419831543,
+      -0.025528761777818425
+    ],
+    "bootstrap_ci_block": [
+      -0.3016349419831543,
+      -0.025528761777818425
+    ],
+    "block_length": 1
+  },
+  "cfg2_12h": {
+    "config_id": "cfg2_12h",
+    "interval": "12h",
+    "n_obs": 2002,
+    "n_folds": 11,
+    "sharpe_net_annualized": -1.2180548695833353,
+    "per_period_sharpe": -0.04508223331542489,
+    "skew": 0.25678146927350476,
+    "kurtosis_fisher_false": 11.74944068109797,
+    "dsr_normal_pct": 0.00029755110430709563,
+    "dsr_real_moments_pct": 0.0003208197500053421,
+    "bootstrap_ci_iid": [
+      -0.2785940462932705,
+      0.1181956579629183
+    ],
+    "bootstrap_ci_block": [
+      -0.2785940462932705,
+      0.1181956579629183
+    ],
+    "block_length": 1
+  },
+  "cfg3_1d": {
+    "config_id": "cfg3_1d",
+    "interval": "1d",
+    "n_obs": 910,
+    "n_folds": 10,
+    "sharpe_net_annualized": -1.1592370909859568,
+    "per_period_sharpe": -0.0606772425375938,
+    "skew": -0.4409112595782246,
+    "kurtosis_fisher_false": 10.136389951381972,
+    "dsr_normal_pct": 0.0007117076374380326,
+    "dsr_real_moments_pct": 0.0006535506337264691,
+    "bootstrap_ci_iid": [
+      -0.33305385780116303,
+      0.1666348382486775
+    ],
+    "bootstrap_ci_block": [
+      -0.33305385780116303,
+      0.1666348382486775
+    ],
+    "block_length": 1
+  }
+}

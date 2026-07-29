@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import polars as pl
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -139,3 +140,49 @@ def test_stitched_metrics_gross_only_without_fee():
         trades, research.sharpe_to_annualized_rate("1d")
     )
     assert "sharpe_net" not in metrics
+
+
+def test_block_bootstrap_block_length_1_recovers_iid_bootstrap():
+    rng = np.random.default_rng(1)
+    values = rng.normal(loc=0.001, scale=0.02, size=200)
+
+    iid_lo, iid_hi = research.bootstrap_ci(values, n_boot=2000, seed=0)
+    block_lo, block_hi = research.block_bootstrap_ci(
+        values, block_length=1, n_boot=2000, seed=0
+    )
+
+    assert block_lo == pytest.approx(iid_lo, abs=1e-9)
+    assert block_hi == pytest.approx(iid_hi, abs=1e-9)
+
+
+def test_block_bootstrap_wider_than_iid_on_autocorrelated_series():
+    rng = np.random.default_rng(2)
+    n = 500
+    phi = 0.95  # strong persistence
+    noise = rng.normal(scale=1.0, size=n)
+    ar1 = np.empty(n)
+    ar1[0] = noise[0]
+    for i in range(1, n):
+        ar1[i] = phi * ar1[i - 1] + noise[i]
+
+    iid_lo, iid_hi = research.bootstrap_ci(ar1, n_boot=2000, seed=0)
+    block_lo, block_hi = research.block_bootstrap_ci(
+        ar1, block_length=20, n_boot=2000, seed=0
+    )
+
+    iid_width = iid_hi - iid_lo
+    block_width = block_hi - block_lo
+    assert block_width > iid_width
+
+
+def test_deflated_sharpe_negative_skew_excess_kurtosis_lowers_probability():
+    sharpe = 0.15
+    n_trials = 50
+    n_obs = 300
+
+    normal_prob = research.deflated_sharpe_prob(sharpe, n_trials, n_obs)
+    fat_tailed_prob = research.deflated_sharpe_prob(
+        sharpe, n_trials, n_obs, skew=-1.5, kurtosis=6.0
+    )
+
+    assert fat_tailed_prob < normal_prob

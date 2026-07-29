@@ -531,3 +531,81 @@ edge.
 - **A genuinely lower-cost venue or maker-only execution.** All costs here assumed
   taker fees; if maker fills are realistic for this turnover profile, cfg2_12h's
   economics could look different - worth quantifying rather than assuming.
+
+## Inference correction
+
+Same two fixes as `2_walk_forward_multi_asset.md`: real skew/kurtosis instead of the
+normal-distribution default in `deflated_sharpe_prob`, and a block bootstrap
+alongside the i.i.d. one for the excess-return CIs.
+
+**Bug found reproducing this phase**: `backtest_configs.py`'s `run_config` never
+called `deflated_sharpe_prob` at all - the 3.4%/0.0000005%/0.15% figures above were
+computed by hand from `config_log.jsonl`'s logged `sharpe_net` and the offset-0
+`n_obs`, and the per-bar net return series the moments need was never persisted
+(`backtest_results.json` explicitly strips `stitched_trade_frame` before writing).
+Also, `train_predict_fold`'s `nn.Linear` is never seeded (`backtest_configs.py` calls
+`research.set_seed` nowhere), so re-running the identical config is methodologically
+identical but not a bit-exact replay - unlike notebook 2, which reproduced exactly.
+Recomputed by re-running each of the 3 pre-declared configs at origin_offset=0 only
+(`src/research/tmp/inference_correction.py`, same features/model/splits/cost model as
+`backtest_configs.py`) to recover a real per-bar net return series per config.
+
+**The rerun's own headline Sharpe moved** (unseeded training, not a methodology
+change - same code, same data, same splits, different random init):
+
+| config | original sharpe_net (offset 0) | rerun sharpe_net (offset 0) |
+|---|---|---|
+| cfg1_4h | -1.94 | -2.32 |
+| cfg2_12h | **+0.42** | **-1.22** |
+| cfg3_1d | -0.29 | -1.16 |
+
+cfg2_12h - the only config that was ever net-positive at its headline offset - flips
+negative on a fresh run of the exact same config. It already failed every robustness
+check in this doc (origin shift, bootstrap CI, deflated Sharpe); it now also fails to
+reproduce its own headline number. That's a second, independent way of reaching the
+same "no real edge" conclusion, not a change to it.
+
+**Deflated Sharpe, old (normal, original sharpe) vs new (real moments, rerun sharpe)**,
+n_trials=95 throughout:
+
+| config | skew | kurtosis | old: normal / original sharpe | new: real moments / rerun sharpe |
+|---|---|---|---|---|
+| cfg1_4h | +6.25 | 189.3 | 0.0000005% | 0.00000050% |
+| cfg2_12h | +0.26 | 11.7 | 3.4% | 0.00032% |
+| cfg3_1d | -0.44 | 10.1 | 0.15% | 0.00065% |
+
+cfg1_4h's kurtosis (189) reflects a handful of extreme fold-level blowups in a
+vol-targeted book rebalanced every 4h; nothing here is normal, and the deflated
+probability is unmeasurably small under either assumption. Because the rerun's own
+Sharpes are all more negative than the originally logged ones, the real-moment
+deflated Sharpe is computed on top of a worse starting point (cfg2_12h moved from
+"the one config with a real number to talk about" to a fourth decimal-place
+rounding error) - the two effects (real moments, and the rerun's own more negative
+Sharpe) aren't separable in the table above, so also isolating just the moment
+correction, holding the rerun's own Sharpe fixed: cfg1_4h 0.0000000105% -> 0.0000005%,
+cfg2_12h 0.00030% -> 0.00032%, cfg3_1d 0.00071% -> 0.00065%. Real moments move the
+number by less than an order of magnitude in every case - never material - and the
+direction isn't consistent (it depends on the sign of skew relative to the sign of
+the Sharpe, not a uniform "fat tails always look worse").
+
+**Bootstrap 95% CI on excess return, old (i.i.d., as originally reported) vs new
+(i.i.d. and block from the rerun - `research._auto_block_length` picked block length
+1 for all three, same finding as notebook 2: these 10-11-point fold-level series don't
+show enough autocorrelation for the heuristic to pick a longer block, so i.i.d. and
+block agree)**:
+
+| config | original (i.i.d.) | rerun (i.i.d. = block, length 1) |
+|---|---|---|
+| cfg1_4h | [-0.35, +0.07] | [-0.30, -0.03] |
+| cfg2_12h | [-0.21, +0.30] | [-0.28, +0.12] |
+| cfg3_1d | [-0.34, +0.28] | [-0.33, +0.17] |
+
+cfg1_4h's rerun CI no longer includes zero - but it's entirely negative, i.e. this
+rerun is confident cfg1_4h *underperforms* its basket, the opposite of an edge. cfg2
+and cfg3 both still include zero.
+
+**Conclusion unchanged, and if anything more overwhelming.** Every deflated-Sharpe
+number stays far below any credible threshold under both the old and new moment
+assumption, and the one config that ever cleared costs at its headline setting
+(cfg2_12h, +0.42) does not survive being run a second time with unchanged code. "No
+validated edge" stands.

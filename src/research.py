@@ -1455,6 +1455,87 @@ def bootstrap_ci(
     return float(lo), float(hi)
 
 
+def _auto_block_length(values: np.ndarray, max_lag: int = 50) -> int:
+    """Pick a block length from the series' own autocorrelation.
+
+    Rule used (a simple, documented heuristic in the spirit of Politis-White,
+    not their full plug-in estimator): compute the sample ACF up to
+    `max_lag`, and take the smallest lag at which the ACF first drops inside
+    its approximate 95% white-noise confidence band (+-1.96/sqrt(n)) and
+    stays inside it for the following lag too (avoids stopping on a single
+    lag that crosses zero by chance). That lag is treated as the point past
+    which the series looks memoryless, and becomes the block length, floored
+    at 1 (i.i.d. case) and capped at n // 2 so blocks can't exceed half the
+    sample.
+    """
+    n = len(values)
+    if n < 4:
+        return 1
+    x = values - values.mean()
+    denom = np.sum(x**2)
+    if denom == 0:
+        return 1
+    max_lag = min(max_lag, n - 2)
+    band = 1.96 / np.sqrt(n)
+    block_length = max_lag  # default: never dropped inside the band
+    for lag in range(1, max_lag):
+        acf_lag = np.sum(x[:-lag] * x[lag:]) / denom
+        acf_next = np.sum(x[: -(lag + 1)] * x[lag + 1 :]) / denom if lag + 1 <= max_lag else 0.0
+        if abs(acf_lag) < band and abs(acf_next) < band:
+            block_length = lag
+            break
+    return int(np.clip(block_length, 1, max(1, n // 2)))
+
+
+def block_bootstrap_ci(
+    values: np.ndarray,
+    block_length: int | None = None,
+    n_boot: int = 2000,
+    ci: float = 0.95,
+    seed: int = 0,
+) -> tuple[float, float]:
+    """Stationary/moving-block bootstrap CI for the mean of an autocorrelated series.
+
+    Fold-level and bar-level return series are not i.i.d. - adjacent folds
+    overlap in market regime, adjacent bars are autocorrelated - so resampling
+    single observations independently (`bootstrap_ci`) understates the true
+    sampling variance and produces CIs that are too narrow. This resamples
+    contiguous blocks of `block_length` consecutive observations (wrapping
+    around the end of the series, i.e. the "circular"/stationary block
+    bootstrap) with replacement until the resample has >= n original
+    observations, then takes the mean, repeated n_boot times.
+
+    block_length: if None, chosen automatically from the series' own
+    autocorrelation via `_auto_block_length` (see its docstring for the
+    rule). Pass an explicit value to override, e.g. block_length=1 to
+    recover the i.i.d. bootstrap exactly.
+    n_boot, ci, seed: as in `bootstrap_ci`.
+    """
+    values = np.asarray(values, dtype=float)
+    values = values[~np.isnan(values)]
+    n = len(values)
+    if n == 0:
+        return float("nan"), float("nan")
+
+    if block_length is None:
+        block_length = _auto_block_length(values)
+    block_length = max(1, min(block_length, n))
+
+    rng = np.random.default_rng(seed)
+    n_blocks = int(np.ceil(n / block_length))
+    boot_means = np.empty(n_boot)
+    for i in range(n_boot):
+        start_idx = rng.integers(0, n, size=n_blocks)
+        sample = np.concatenate(
+            [values[np.arange(s, s + block_length) % n] for s in start_idx]
+        )[:n]
+        boot_means[i] = sample.mean()
+
+    alpha = (1 - ci) / 2
+    lo, hi = np.quantile(boot_means, [alpha, 1 - alpha])
+    return float(lo), float(hi)
+
+
 # --------------------------------------------------------------------------
 # Cross-sectional portfolio construction
 # --------------------------------------------------------------------------

@@ -82,3 +82,29 @@ Cross-symbol correlation of fold returns mostly weak (|r| < 0.5, BTC-ETH 0.01, B
 No validated edge found. Same conclusion as notebook 1, now with the tools to show it quantitatively instead of asserting it: a result that looks good by raw sharpe or beating a directional baseline falls apart under origin-shift robustness, deflated sharpe, bootstrap CI on excess return, fold-by-fold comparison, cross-asset generalization, and a fair per-month comparison against just holding the asset.
 
 The walk-forward machinery (research.walk_forward_splits, walk_forward_run, describe_linear_model, deflated_sharpe_prob, the buy-and-hold/constant/random baselines) is reusable for whatever gets tried next. The bar it needs to clear is all of the above, not a good headline sharpe.
+
+## Inference correction
+
+`deflated_sharpe_prob` and the fold-excess-return bootstrap CI above both used unexamined assumptions: normal returns (skew=0, kurtosis=3) for the former, i.i.d. resampling for the latter. Neither holds for crypto strategy returns. Re-ran both with real inputs, notebook re-executed end to end (fully reproducible - the retrained winning config's Sharpe, 0.07, and every downstream number matched the prior run bit-for-bit, confirming `research.set_seed(123)` plus `torch.use_deterministic_algorithms` actually pins this notebook down).
+
+**Real moments of the winning config's own per-period return series**: skew = **+0.059** (essentially symmetric), kurtosis = **8.56** (fisher=False; excess kurtosis +5.56 over the normal's 3 - heavily fat-tailed, as expected for crypto).
+
+**Deflated Sharpe, old vs new** (same sharpe=0.07, n_trials=122, n_obs=3060):
+
+| | skew | kurtosis | P(true Sharpe > 0) |
+|---|---|---|---|
+| old (normal assumption) | 0 | 3 | 0.69% |
+| new (real moments) | +0.059 | 8.56 | 0.69% |
+
+Unchanged at this precision. The near-zero skew means the skew term in `deflated_sharpe_prob`'s standard-error correction contributes almost nothing, and at a per-period Sharpe this close to zero the kurtosis term's effect on the deflation is too small to move the headline number. The correction matters more when skew is large or the raw Sharpe is larger - see notebook 3's cfg1_4h below for a case where it does.
+
+**Bootstrap CI, old (i.i.d.) vs new (block)**, fold-level excess return (strategy − buy&hold), same 17 folds, same seed/n_boot:
+
+| | block length | 95% CI |
+|---|---|---|
+| old (`bootstrap_ci`, i.i.d.) | 1 (n/a) | [-0.190, +0.135] |
+| new (`block_bootstrap_ci`, auto block length) | 1 | [-0.190, +0.135] |
+
+Identical. `research._auto_block_length`'s ACF-based rule picked block length 1 for this 17-observation fold-excess-return series - no significant autocorrelation was detected at the fold level, so the block bootstrap degenerates to the i.i.d. case here. This doesn't mean autocorrelation isn't a real concern in general (bar-level returns are visibly autocorrelated via volatility clustering); it means this particular fold-level summary series, with only 17 points, doesn't show it strongly enough for the heuristic to pick a longer block.
+
+**Conclusion unchanged.** Both the normal-assumption and real-moment deflated Sharpe sit at 0.69% - indistinguishable from noise's best-of-122 either way - and the bootstrap CI still includes zero either way. "No validated edge" stands.
