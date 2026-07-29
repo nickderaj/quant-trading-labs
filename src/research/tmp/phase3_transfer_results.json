@@ -1,0 +1,85 @@
+{
+ "interval": "1d",
+ "symbols": {
+  "ETHUSDT": {
+   "n_obs": 1462,
+   "qlike_by_rung": {
+    "rung0": 0.5117463533435684,
+    "rung1": 1.177770823435245,
+    "rung2": 0.41588463965500627,
+    "rung3": 0.4977625576370439,
+    "rung4": 0.609340383433116,
+    "rung5": 0.5243450333339015,
+    "rung6": 0.5855100944911377
+   },
+   "best_rung": "rung2",
+   "best_rep": "rung2_har_rv",
+   "beats_every_other_rung_significantly": true,
+   "elapsed_sec": 32.53178405761719
+  },
+  "SOLUSDT": {
+   "n_obs": 1457,
+   "qlike_by_rung": {
+    "rung0": 0.5080203693565614,
+    "rung1": 0.6481049316821808,
+    "rung2": 0.34101379333824733,
+    "rung3": 0.46209554092797084,
+    "rung4": 0.5288611340482967,
+    "rung5": 0.39510519149832174,
+    "rung6": 0.5093699585304284
+   },
+   "best_rung": "rung2",
+   "best_rep": "rung2_har_rv",
+   "beats_every_other_rung_significantly": true,
+   "elapsed_sec": 43.354352712631226
+  },
+  "DOGEUSDT": {
+   "n_obs": 1462,
+   "qlike_by_rung": {
+    "rung0": 0.7070755015869955,
+    "rung1": 0.7758204253873796,
+    "rung2": 0.5305362242763406,
+    "rung3": 0.6185578172384023,
+    "rung4": 0.7301703665718696,
+    "rung5": 0.5281362825908654,
+    "rung6": 0.6570338351502791
+   },
+   "best_rung": "rung5",
+   "best_rep": "rung5_garch_normal",
+   "beats_every_other_rung_significantly": false,
+   "elapsed_sec": 48.3005166053772
+  },
+  "BNBUSDT": {
+   "n_obs": 1462,
+   "qlike_by_rung": {
+    "rung0": 0.654790542526588,
+    "rung1": 1.548330587707193,
+    "rung2": 0.48312752516974394,
+    "rung3": 0.5938465217714035,
+    "rung4": 0.641968392667713,
+    "rung5": 0.5461555109594151,
+    "rung6": 0.6477901299698654
+   },
+   "best_rung": "rung2",
+   "best_rep": "rung2_har_rv",
+   "beats_every_other_rung_significantly": false,
+   "elapsed_sec": 25.712668895721436
+  },
+  "XRPUSDT": {
+   "n_obs": 1457,
+   "qlike_by_rung": {
+    "rung0": 0.8797371572524134,
+    "rung1": 0.9348360209015056,
+    "rung2": 0.6140601019551278,
+    "rung3": 0.7230087368243151,
+    "rung4": 0.7728665700969665,
+    "rung5": 0.6578453479924441,
+    "rung6": 0.7177952274342465
+   },
+   "best_rung": "rung2",
+   "best_rep": "rung2_har_rv",
+   "beats_every_other_rung_significantly": false,
+   "elapsed_sec": 34.49482774734497
+  }
+ }
+}

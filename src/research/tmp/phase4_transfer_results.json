@@ -1,0 +1,200 @@
+{
+ "interval": "1d",
+ "symbols": {
+  "ETHUSDT": {
+   "n_obs": 1462,
+   "baseline_threshold": {
+    "geometric_duration": {
+     "n_runs": 517,
+     "mean_duration": 2.7408123791102517,
+     "ks_pvalue": 3.4125141658216812e-62
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 67.30421603505692,
+      "pvalue": 2.3268327328474105e-16
+     },
+     "direction_anova": {
+      "f_stat": 0.9395713738153835,
+      "pvalue": 0.33255386576831697
+     }
+    }
+   },
+   "hmm_gaussian": {
+    "n_refits": 46,
+    "geometric_duration": {
+     "n_runs": 295,
+     "mean_duration": 4.650847457627119,
+     "ks_pvalue": 1.8890632750489918e-12
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 160.0757908763353,
+      "pvalue": 1.0891531876876869e-36
+     },
+     "direction_anova": {
+      "f_stat": 2.448221129857167,
+      "pvalue": 0.11788924988845705
+     }
+    }
+   },
+   "elapsed_sec": 6.503216505050659
+  },
+  "SOLUSDT": {
+   "n_obs": 1457,
+   "baseline_threshold": {
+    "geometric_duration": {
+     "n_runs": 454,
+     "mean_duration": 3.1101321585903086,
+     "ks_pvalue": 2.927509357836704e-42
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 201.72457015226792,
+      "pvalue": 8.780110145526043e-46
+     },
+     "direction_anova": {
+      "f_stat": 2.7017771184034896,
+      "pvalue": 0.10045955743717275
+     }
+    }
+   },
+   "hmm_gaussian": {
+    "n_refits": 46,
+    "geometric_duration": {
+     "n_runs": 149,
+     "mean_duration": 9.174496644295303,
+     "ks_pvalue": 4.218821518395206e-08
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 74.16034300698811,
+      "pvalue": 7.202273040688609e-18
+     },
+     "direction_anova": {
+      "f_stat": 2.5186760468058624,
+      "pvalue": 0.11273677899889363
+     }
+    }
+   },
+   "elapsed_sec": 6.511722803115845
+  },
+  "DOGEUSDT": {
+   "n_obs": 1462,
+   "baseline_threshold": {
+    "geometric_duration": {
+     "n_runs": 462,
+     "mean_duration": 3.067099567099567,
+     "ks_pvalue": 3.1466741508407957e-44
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 191.91444937102824,
+      "pvalue": 1.2146714780573096e-43
+     },
+     "direction_anova": {
+      "f_stat": 7.783821035341252,
+      "pvalue": 0.0053423889069214095
+     }
+    }
+   },
+   "hmm_gaussian": {
+    "n_refits": 46,
+    "geometric_duration": {
+     "n_runs": 201,
+     "mean_duration": 6.825870646766169,
+     "ks_pvalue": 1.0713546631552291e-05
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 163.27986563329887,
+      "pvalue": 2.17310718643694e-37
+     },
+     "direction_anova": {
+      "f_stat": 0.944767232666337,
+      "pvalue": 0.33122654148711655
+     }
+    }
+   },
+   "elapsed_sec": 6.524489879608154
+  },
+  "BNBUSDT": {
+   "n_obs": 1462,
+   "baseline_threshold": {
+    "geometric_duration": {
+     "n_runs": 439,
+     "mean_duration": 3.2277904328018225,
+     "ks_pvalue": 6.394921081841405e-38
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 177.0784749551667,
+      "pvalue": 2.1054069411827042e-40
+     },
+     "direction_anova": {
+      "f_stat": 6.531336938853473,
+      "pvalue": 0.010702872881972544
+     }
+    }
+   },
+   "hmm_gaussian": {
+    "n_refits": 46,
+    "geometric_duration": {
+     "n_runs": 234,
+     "mean_duration": 5.863247863247863,
+     "ks_pvalue": 1.9635698864035184e-11
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 153.53364205897378,
+      "pvalue": 2.928515340734953e-35
+     },
+     "direction_anova": {
+      "f_stat": 1.4746804673817522,
+      "pvalue": 0.22481809973907863
+     }
+    }
+   },
+   "elapsed_sec": 6.38121485710144
+  },
+  "XRPUSDT": {
+   "n_obs": 1457,
+   "baseline_threshold": {
+    "geometric_duration": {
+     "n_runs": 468,
+     "mean_duration": 3.017094017094017,
+     "ks_pvalue": 2.5626747698453708e-46
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 168.4256113727488,
+      "pvalue": 1.6331941845451597e-38
+     },
+     "direction_anova": {
+      "f_stat": 0.3822330187614806,
+      "pvalue": 0.5365105005303206
+     }
+    }
+   },
+   "hmm_gaussian": {
+    "n_refits": 46,
+    "geometric_duration": {
+     "n_runs": 167,
+     "mean_duration": 8.18562874251497,
+     "ks_pvalue": 9.38910702959363e-14
+    },
+    "predicts": {
+     "vol_kruskal": {
+      "kruskal_h": 175.97792933746405,
+      "pvalue": 3.6614689780582643e-40
+     },
+     "direction_anova": {
+      "f_stat": 3.525095765639513,
+      "pvalue": 0.06065958052402938
+     }
+    }
+   },
+   "elapsed_sec": 6.381133317947388
+  }
+ }
+}
