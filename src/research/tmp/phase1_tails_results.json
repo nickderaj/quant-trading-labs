@@ -1,0 +1,275 @@
+{
+ "symbol": "BTCUSDT",
+ "intervals": {
+  "1h": {
+   "hill": {
+    "upper": {
+     "k_grid_min": 20,
+     "k_grid_max": 3506,
+     "plateau": {
+      "found": true,
+      "k_lo": 143,
+      "k_hi": 3506,
+      "alpha_median": 2.220100725147572,
+      "alpha_min": 1.9057125787239608,
+      "alpha_max": 3.7039966618929747,
+      "k_chosen": 1824
+     },
+     "k_chosen": 1824,
+     "alpha_point": 2.220223107658743,
+     "ci_95": [
+      2.133941153012294,
+      2.314787072081942
+     ]
+    },
+    "lower": {
+     "k_grid_min": 20,
+     "k_grid_max": 3506,
+     "plateau": {
+      "found": true,
+      "k_lo": 158,
+      "k_hi": 3506,
+      "alpha_median": 2.187303086353101,
+      "alpha_min": 1.7993095932138587,
+      "alpha_max": 3.472129071148913,
+      "k_chosen": 1832
+     },
+     "k_chosen": 1832,
+     "alpha_point": 2.187385274511673,
+     "ci_95": [
+      2.1058061571923123,
+      2.2861255558372906
+     ]
+    }
+   },
+   "gate_e_fires_here": false,
+   "dm_validity": {
+    "pair": [
+     "rung3_fc_gk",
+     "rung5_garch_normal"
+    ],
+    "n": 32892,
+    "tstat": 0.08019549833807892,
+    "normal_pvalue": 0.936081770437835,
+    "bootstrap_pvalue": 0.955,
+    "materially_disagree": false,
+    "loss_diff_hill_alpha_upper": 1.4993040463547362,
+    "loss_diff_hill_alpha_lower": 1.420540477010261
+   },
+   "log_rv_vs_rv": {
+    "log_rv_ks_pvalue": {
+     "normal": 1.3844909825855838e-88,
+     "t": 2.4657220333432305e-88,
+     "skewt": null
+    },
+    "rv_ks_pvalue": {
+     "normal": 0.0,
+     "t": 0.0,
+     "skewt": 2.9508639105437842e-292
+    }
+   },
+   "elapsed_sec": 414.4561586380005
+  },
+  "4h": {
+   "hill": {
+    "upper": {
+     "k_grid_min": 20,
+     "k_grid_max": 876,
+     "plateau": {
+      "found": true,
+      "k_lo": 176,
+      "k_hi": 876,
+      "alpha_median": 2.3669313070921096,
+      "alpha_min": 1.9377612441501646,
+      "alpha_max": 2.966533919818558,
+      "k_chosen": 526
+     },
+     "k_chosen": 526,
+     "alpha_point": 2.3558579285421892,
+     "ci_95": [
+      2.188523663258257,
+      2.5444792193077426
+     ]
+    },
+    "lower": {
+     "k_grid_min": 20,
+     "k_grid_max": 876,
+     "plateau": {
+      "found": true,
+      "k_lo": 88,
+      "k_hi": 876,
+      "alpha_median": 2.3931005838213686,
+      "alpha_min": 1.9281237100853796,
+      "alpha_max": 3.2773478770783533,
+      "k_chosen": 482
+     },
+     "k_chosen": 482,
+     "alpha_point": 2.3805865808732682,
+     "ci_95": [
+      2.232223656440262,
+      2.594492619899961
+     ]
+    }
+   },
+   "gate_e_fires_here": false,
+   "dm_validity": {
+    "pair": [
+     "rung3_fc_gk",
+     "rung5_garch_normal"
+    ],
+    "n": 8227,
+    "tstat": 0.15418135376594547,
+    "normal_pvalue": 0.8774667439247237,
+    "bootstrap_pvalue": 0.887,
+    "materially_disagree": false,
+    "loss_diff_hill_alpha_upper": 1.2479995344205939,
+    "loss_diff_hill_alpha_lower": 1.8038827957336758
+   },
+   "log_rv_vs_rv": {
+    "log_rv_ks_pvalue": {
+     "normal": 0.3765866518829618,
+     "t": 0.3828192121701157,
+     "skewt": 0.9799091348695018
+    },
+    "rv_ks_pvalue": {
+     "normal": 0.0,
+     "t": 0.0,
+     "skewt": 7.527225450400782e-29
+    }
+   },
+   "elapsed_sec": 99.9728000164032
+  },
+  "12h": {
+   "hill": {
+    "upper": {
+     "k_grid_min": 20,
+     "k_grid_max": 292,
+     "plateau": {
+      "found": true,
+      "k_lo": 106,
+      "k_hi": 198,
+      "alpha_median": 2.6789120843572323,
+      "alpha_min": 2.467152438379655,
+      "alpha_max": 2.9071886104432276,
+      "k_chosen": 152
+     },
+     "k_chosen": 152,
+     "alpha_point": 2.7155049646689378,
+     "ci_95": [
+      2.351518961018524,
+      3.091683685139303
+     ]
+    },
+    "lower": {
+     "k_grid_min": 20,
+     "k_grid_max": 292,
+     "plateau": {
+      "found": true,
+      "k_lo": 151,
+      "k_hi": 272,
+      "alpha_median": 2.219854710439005,
+      "alpha_min": 2.0321209527177575,
+      "alpha_max": 2.349519554842777,
+      "k_chosen": 211
+     },
+     "k_chosen": 211,
+     "alpha_point": 2.203458277107664,
+     "ci_95": [
+      1.9701749071562207,
+      2.4948579326882085
+     ]
+    }
+   },
+   "gate_e_fires_here": false,
+   "dm_validity": {
+    "pair": [
+     "rung1_ewma",
+     "rung3_fc_gk"
+    ],
+    "n": 2921,
+    "tstat": 0.041301600760808584,
+    "normal_pvalue": 0.9670554569383009,
+    "bootstrap_pvalue": 0.851,
+    "materially_disagree": true,
+    "loss_diff_hill_alpha_upper": 1.50462446372072,
+    "loss_diff_hill_alpha_lower": 1.3755724193933787
+   },
+   "log_rv_vs_rv": {
+    "log_rv_ks_pvalue": {
+     "normal": 0.06793513377792071,
+     "t": 0.06932959203589195,
+     "skewt": 0.7991584987174978
+    },
+    "rv_ks_pvalue": {
+     "normal": 1.3663840427802984e-191,
+     "t": 6.55886388045405e-92,
+     "skewt": 4.541412413325582e-09
+    }
+   },
+   "elapsed_sec": 15.518808603286743
+  },
+  "1d": {
+   "hill": {
+    "upper": {
+     "k_grid_min": 20,
+     "k_grid_max": 146,
+     "plateau": {
+      "found": false,
+      "reason": "no 50-wide window has relative spread < 0.1"
+     }
+    },
+    "lower": {
+     "k_grid_min": 20,
+     "k_grid_max": 146,
+     "plateau": {
+      "found": true,
+      "k_lo": 79,
+      "k_hi": 146,
+      "alpha_median": 2.2697543275602117,
+      "alpha_min": 2.188657179997237,
+      "alpha_max": 2.4298342958725554,
+      "k_chosen": 112
+     },
+     "k_chosen": 112,
+     "alpha_point": 2.2777874193192953,
+     "ci_95": [
+      1.9791299027864135,
+      2.6712302147783706
+     ]
+    }
+   },
+   "gate_e_fires_here": false,
+   "dm_validity": {
+    "pair": [
+     "rung0_trailing_96",
+     "rung3_fc_parkinson"
+    ],
+    "n": 1412,
+    "tstat": -0.04321954553518904,
+    "normal_pvalue": 0.9655265245612653,
+    "bootstrap_pvalue": 0.943,
+    "materially_disagree": false,
+    "loss_diff_hill_alpha_upper": 1.9956256247218616,
+    "loss_diff_hill_alpha_lower": 1.8952897404543014
+   },
+   "log_rv_vs_rv": {
+    "log_rv_ks_pvalue": {
+     "normal": 0.0035219844701766096,
+     "t": 0.05393375928113431,
+     "skewt": 0.15784441403181326
+    },
+    "rv_ks_pvalue": {
+     "normal": 1.0499019670412632e-69,
+     "t": 1.4816222373720664e-32,
+     "skewt": 3.45424205224571e-05
+    }
+   },
+   "elapsed_sec": 9.752073764801025
+  }
+ },
+ "gate_e_verdict": {
+  "n_intervals_firing": 0,
+  "n_intervals_total": 4,
+  "fires_at_most_intervals": false
+ }
+}

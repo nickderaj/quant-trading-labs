@@ -526,9 +526,15 @@ variant — random with a chosen mean length); build each resample by concatenat
 randomly-chosen blocks of that (roughly) length until reaching the original sample size.
 
 **Why it is here.** `research.block_bootstrap_ci`, used throughout notebook 5 (Hill
-confidence intervals, the DM-validity check, GPD sensitivity checks) specifically because
-returns are autocorrelated *in magnitude* even when not autocorrelated in sign — per
+confidence intervals, GPD sensitivity checks) specifically because returns are
+autocorrelated *in magnitude* even when not autocorrelated in sign — per
 `NEXT_RUN_PROMPT.md`'s own framing of exactly why this matters here.
+`research.block_bootstrap_pvalue` is the same block-resampling machinery aimed at a
+hypothesis test instead of a CI: shift the data so its mean is exactly the null value,
+resample, and see how extreme the *actual* observed mean is against that null
+resampling distribution — this is exactly Phase 1b's DM-validity check, comparing
+this bootstrap p-value against Diebold-Mariano's own normal-approximation p-value on
+the same QLIKE loss-differential series.
 
 **Worked example.** Return magnitudes cluster in time (volatility clustering) — an
 ordinary bootstrap that shuffles individual return values independently would understate

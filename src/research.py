@@ -1487,14 +1487,43 @@ def _auto_block_length(values: np.ndarray, max_lag: int = 50) -> int:
     return int(np.clip(block_length, 1, max(1, n // 2)))
 
 
+def _block_resample(
+    values: np.ndarray, block_length: int | None, n_boot: int, seed: int,
+    statistic,
+) -> np.ndarray:
+    """Shared block-resampling loop behind `block_bootstrap_ci` and
+    `block_bootstrap_pvalue`: resample n_boot times (contiguous, wrapping
+    blocks of `block_length`, chosen via `_auto_block_length` if None) and
+    apply `statistic` to each resample, returning the array of n_boot
+    statistic values. Factored out so both functions share one
+    implementation of the resampling itself rather than drifting apart.
+    """
+    n = len(values)
+    if block_length is None:
+        block_length = _auto_block_length(values)
+    block_length = max(1, min(block_length, n))
+    rng = np.random.default_rng(seed)
+    n_blocks = int(np.ceil(n / block_length))
+    out = np.empty(n_boot)
+    for i in range(n_boot):
+        start_idx = rng.integers(0, n, size=n_blocks)
+        sample = np.concatenate(
+            [values[np.arange(s, s + block_length) % n] for s in start_idx]
+        )[:n]
+        out[i] = statistic(sample)
+    return out
+
+
 def block_bootstrap_ci(
     values: np.ndarray,
     block_length: int | None = None,
     n_boot: int = 2000,
     ci: float = 0.95,
     seed: int = 0,
+    statistic=None,
 ) -> tuple[float, float]:
-    """Stationary/moving-block bootstrap CI for the mean of an autocorrelated series.
+    """Stationary/moving-block bootstrap CI for a statistic of an
+    autocorrelated series (the mean, by default).
 
     Fold-level and bar-level return series are not i.i.d. - adjacent folds
     overlap in market regime, adjacent bars are autocorrelated - so resampling
@@ -1503,37 +1532,60 @@ def block_bootstrap_ci(
     contiguous blocks of `block_length` consecutive observations (wrapping
     around the end of the series, i.e. the "circular"/stationary block
     bootstrap) with replacement until the resample has >= n original
-    observations, then takes the mean, repeated n_boot times.
+    observations, then applies `statistic` (default: the mean), repeated
+    n_boot times.
 
     block_length: if None, chosen automatically from the series' own
     autocorrelation via `_auto_block_length` (see its docstring for the
     rule). Pass an explicit value to override, e.g. block_length=1 to
     recover the i.i.d. bootstrap exactly.
-    n_boot, ci, seed: as in `bootstrap_ci`.
+    statistic: a callable array -> float, applied to each resample. Defaults
+    to np.mean, preserving this function's original mean-only behavior for
+    every existing caller. Pass e.g. `lambda x: hill_estimator(x, k=200)` to
+    bootstrap a nonlinear statistic like a tail-index estimate instead.
+    n_boot, ci, seed: as before.
+    """
+    values = np.asarray(values, dtype=float)
+    values = values[~np.isnan(values)]
+    if len(values) == 0:
+        return float("nan"), float("nan")
+    stat_fn = np.mean if statistic is None else statistic
+    boot_stats = _block_resample(values, block_length, n_boot, seed, stat_fn)
+    alpha = (1 - ci) / 2
+    lo, hi = np.quantile(boot_stats, [alpha, 1 - alpha])
+    return float(lo), float(hi)
+
+
+def block_bootstrap_pvalue(
+    values: np.ndarray,
+    null_value: float = 0.0,
+    block_length: int | None = None,
+    n_boot: int = 2000,
+    seed: int = 0,
+) -> float:
+    """Two-sided block-bootstrap p-value for H0: mean(values) == null_value,
+    valid for autocorrelated/heavy-tailed series where a normal-approximation
+    t-test's own CLT may not hold (see
+    docs/03-statistical-inference.md#central-limit-theorem-and-when-it-fails-under-heavy-tails).
+
+    Standard shift-and-resample construction: recenter the data to have
+    exactly `null_value` as its mean (subtract the observed mean, add back
+    null_value), so resampling from it simulates the null hypothesis being
+    exactly true, then see how extreme the *actual* observed mean is relative
+    to that null resampling distribution. This does not require the mean's
+    own sampling distribution to be normal, unlike a t-stat's p-value.
     """
     values = np.asarray(values, dtype=float)
     values = values[~np.isnan(values)]
     n = len(values)
     if n == 0:
-        return float("nan"), float("nan")
-
-    if block_length is None:
-        block_length = _auto_block_length(values)
-    block_length = max(1, min(block_length, n))
-
-    rng = np.random.default_rng(seed)
-    n_blocks = int(np.ceil(n / block_length))
-    boot_means = np.empty(n_boot)
-    for i in range(n_boot):
-        start_idx = rng.integers(0, n, size=n_blocks)
-        sample = np.concatenate(
-            [values[np.arange(s, s + block_length) % n] for s in start_idx]
-        )[:n]
-        boot_means[i] = sample.mean()
-
-    alpha = (1 - ci) / 2
-    lo, hi = np.quantile(boot_means, [alpha, 1 - alpha])
-    return float(lo), float(hi)
+        return float("nan")
+    observed_mean = float(values.mean())
+    shifted = values - observed_mean + null_value
+    boot_means = _block_resample(shifted, block_length, n_boot, seed, np.mean)
+    p_lo = float(np.mean(boot_means <= observed_mean))
+    p_hi = float(np.mean(boot_means >= observed_mean))
+    return float(min(1.0, 2.0 * min(p_lo, p_hi)))
 
 
 # --------------------------------------------------------------------------
