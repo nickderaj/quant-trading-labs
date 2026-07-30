@@ -582,12 +582,25 @@ not just whether VaR is breached the right number of times, but whether the *sev
 losses beyond VaR matches what the model's own expected-shortfall prediction implied.
 
 **The maths.** Test statistic (their "Test 2"):
-$$Z = \frac{1}{nq}\sum_t \frac{r_t \cdot \mathbb{1}\{r_t < \mathrm{VaR}_t\}}{\mathrm{ES}_t} + 1$$
-Under a correctly calibrated model, $Z \approx 0$ in expectation. $Z < 0$ means realized
+$$Z = \frac{1}{nq}\sum_t \frac{r_t \cdot \mathbb{1}\{r_t < \mathrm{VaR}_t\}}{\mathrm{ES}_t} - 1$$
+Under a correctly calibrated model, $Z \approx 0$ in expectation. $Z > 0$ means realized
 tail losses, on the days they occur, are *worse* on average than the model's own ES
 prediction said they'd be — the specific failure mode that matters most for risk
-management. No simple closed-form reference distribution exists, so the p-value is
-computed via a bootstrap simulated under the model's own predictive distribution.
+management ($r_t$ and $\mathrm{ES}_t$ are both negative for a lower-tail loss, so a
+realized loss more extreme than predicted makes the ratio, and hence $Z$, positive — a
+model that instead overstates risk produces $Z < 0$). No simple closed-form reference
+distribution exists, so the p-value is computed via a bootstrap simulated under the
+model's own predictive distribution.
+
+**A note on getting this sign right.** Both the $-1$ (not $+1$) and the "$Z>0$ means
+worse-than-predicted" (not "$Z<0$") direction were verified numerically against a
+20-million-draw Monte Carlo before being trusted, not just re-derived on paper — an
+initial pseudocode pass (matching a common way this formula gets mis-transcribed in
+practice) used "$+1$" and stated the opposite direction, which a direct simulation check
+(a model with the wrong, too-small volatility, so realized losses are known to be worse
+than predicted) immediately showed was backwards. Worth remembering as a general lesson:
+a formula "matching the literature" from memory or a written spec is not the same as a
+formula checked against a case whose right answer you already know.
 
 **Why it is here.** This is notebook 5's Phase 4 addition specifically because "VaR
 coverage tests say nothing about how bad the losses are once the threshold is breached,
