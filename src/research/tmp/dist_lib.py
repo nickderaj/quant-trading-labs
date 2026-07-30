@@ -542,11 +542,40 @@ def mincer_zarnowitz(actual: np.ndarray, forecast: np.ndarray) -> dict:
     return {"intercept": float(beta[0]), "slope": float(beta[1]), "r2": float(r2)}
 
 
+def nu_path_from_fits(fits: list[dict], n: int, param_index: int = 3) -> np.ndarray:
+    """Causal, forward-filled path of a fitted shape parameter.
+
+    `rolling_garch_forecast` already returns fit records carrying `t` (the bar
+    index the refit happened at) and `params`. The shape parameter in force at
+    bar t is the one from the most recent refit at or before t - exactly the
+    same forward-fill the variance forecast uses. Anything else (in particular
+    fits[-1], the single last refit in the whole sample) is lookahead: using it
+    to score bar t would mean bar t's score depends on data from after t.
+    NaN before the first refit (no fitted value is in force yet).
+    """
+    path = np.full(n, np.nan)
+    for f in fits:
+        path[f["t"]:] = f["params"][param_index]
+    return path
+
+
 def density_scores(actual_returns: np.ndarray, variance_forecast: np.ndarray, family: str = "normal", extra_params=None) -> dict:
     """CRPS/log score of the return itself under N(0, forecast_var) (or a
     scaled-t if extra_params=(df,) given), plus 5%/95% quantile coverage
-    (Kupiec + Christoffersen independence)."""
+    (Kupiec + Christoffersen independence).
+
+    For family="t", extra_params=(nu,) accepts either a scalar (one shape
+    parameter applied to every bar - only valid for descriptive, non-causal
+    reporting) or an array the same length as actual_returns/variance_forecast
+    (a per-bar shape-parameter path, e.g. from nu_path_from_fits - required
+    for a causal score, since bar t must only ever be scored under a shape
+    parameter estimable from data strictly before t).
+    """
     mask = np.isfinite(actual_returns) & np.isfinite(variance_forecast) & (variance_forecast > 0)
+    nu_arr = None
+    if family != "normal":
+        nu_arr = np.broadcast_to(np.asarray(extra_params[0], dtype=float), actual_returns.shape)
+        mask = mask & np.isfinite(nu_arr) & (nu_arr > 2)
     a, v = actual_returns[mask], variance_forecast[mask]
     if len(a) < 20:
         return {"log_score": np.nan, "crps": np.nan, "kupiec_p": np.nan, "christoffersen_p": np.nan}
@@ -554,9 +583,9 @@ def density_scores(actual_returns: np.ndarray, variance_forecast: np.ndarray, fa
         dists = [st.norm(loc=0, scale=np.sqrt(vi)) for vi in v]
         q05 = st.norm(loc=0, scale=np.sqrt(v)).ppf(0.05)
     else:
-        nu = extra_params[0]
+        nu = nu_arr[mask]
         c = np.sqrt(nu / (nu - 2))
-        dists = [st.t(df=nu, loc=0, scale=np.sqrt(vi) / c) for vi in v]
+        dists = [st.t(df=nu_i, loc=0, scale=np.sqrt(vi) / ci) for nu_i, vi, ci in zip(nu, v, c)]
         q05 = st.t(df=nu, loc=0, scale=np.sqrt(v) / c).ppf(0.05)
     ls = dist.log_score(dists, a)
     cr = dist.crps(dists, a, n_points=400)

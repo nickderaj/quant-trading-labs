@@ -90,15 +90,22 @@ for interval in INTERVALS:
 
     # rung 5: GARCH(1,1), normal / t / skewt innovations, rolling refit
     garch_fits_summary = {}
+    t_fits = []
     for innov in ["normal", "t", "skewt"]:
         fc, fits = L.rolling_garch_forecast(
             ret, refit_every=mle_refit_every, min_train=min_train, innovation=innov,
             max_train=MLE_MAX_TRAIN,
         )
         forecasts[f"rung5_garch_{innov}"] = fc
+        if innov == "t":
+            t_fits = fits
         garch_fits_summary[innov] = {
             "n_refits": len(fits),
             "last_params": {k: v for k, v in fits[-1].items() if k != "params"} if fits else None,
+            # descriptive only ("what did the final fit look like") - NEVER used
+            # for scoring below, since fits[-1] is only estimable from data at
+            # the end of the sample and using it to score earlier bars would be
+            # lookahead. See L.nu_path_from_fits for the causal path used to score.
             "last_nu": (fits[-1]["params"][3] if innov == "t" and fits else None),
         }
 
@@ -118,11 +125,17 @@ for interval in INTERVALS:
     density = {}
     for name, fc in forecasts.items():
         density[name] = L.density_scores(ret, fc, family="normal")
-    # GARCH-t under its own (approx, last-refit) df
-    if garch_fits_summary["t"]["last_nu"] is not None:
-        nu_val = garch_fits_summary["t"]["last_nu"]
+    # GARCH-t under its own distribution, scored with a causal, forward-filled
+    # df path (the df in force at bar t is whatever was last fit at or before
+    # t - the same forward-fill the variance forecast already uses). Using
+    # fits[-1]'s single final-window df to score the whole evaluation period
+    # would be lookahead (bar 500 scored under a shape parameter estimated
+    # from data through the end of the sample) - this is what nu_path_from_fits
+    # fixes; see docs/02-estimation-and-fitting.md#forward-filling-parameters.
+    if t_fits:
+        nu_path = L.nu_path_from_fits(t_fits, n)
         density["rung5_garch_t_own_dist"] = L.density_scores(
-            ret, forecasts["rung5_garch_t"], family="t", extra_params=(nu_val,)
+            ret, forecasts["rung5_garch_t"], family="t", extra_params=(nu_path,)
         )
 
     # ---- ladder ordering: pick the single best-QLIKE representative of
