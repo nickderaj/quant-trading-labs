@@ -322,7 +322,10 @@ with slope well under 1). R² is low everywhere (0.004-0.19) - variance is inher
 to forecast precisely at these horizons even for the best-performing rungs, consistent
 with NEW_PROMPT's own warning that vol-forecasting gains are real but modest.
 
-**Density scoring is where a real, if narrow, distributional-modelling result shows up.**
+**Density scoring is where a real, if narrow, distributional-modelling result shows up -
+and this section was amended after a lookahead bug in the original scoring was found
+and fixed; see "Correction" below before trusting the table.**
+
 Comparing normal-density log scores across all rungs' variance forecasts is close
 (within ~5% of each other at every interval, same near-tie as the point forecasts), but
 scoring GARCH-t under its **own fitted Student-t innovation distribution** (rather than
@@ -330,23 +333,64 @@ forcing every rung through a normal density for comparability) changes the pictu
 
 | interval | GARCH-t log score (own dist) | best other rung's log score (normal density) | Kupiec 5% VaR coverage p-value, GARCH-t |
 |---|---|---|---|
-| 1h  | **3.979** | 3.848 (GARCH-normal) | 0.42 |
-| 4h  | **3.194** | 3.139 (HAR-RV) | 0.18 |
-| 12h | **2.614** | 2.543 (HAR-RV) | 0.39 |
-| 1d  | **2.187** | 2.191 (HAR-RV, marginally higher) | 0.84 |
+| 1h  | **4.000** | 3.848 (GARCH-normal) | **0.0000** |
+| 4h  | **3.254** | 3.139 (HAR-RV) | **0.0008** |
+| 12h | **2.623** | 2.543 (HAR-RV) | 0.35 |
+| 1d  | **2.220** | 2.191 (HAR-RV) | 0.68 |
 
-GARCH-t's own-distribution log score is the best of any rung/family combination at 3 of
-4 intervals, and its 5% VaR exceedance rate is never rejected by the Kupiec test at any
-interval (p=0.18-0.84 - every other rung's normal-density VaR is rejected at 1h and often
-elsewhere, p<0.05). This matches NEW_PROMPT's own expectation from the crypto-GARCH
-literature ("heavy-tailed innovations win") and Phase 1's own finding (fitted t
-degrees-of-freedom of 2-3, nowhere near normal) - **the point-forecast (QLIKE) contest
-found no clear winner, but the density/calibration contest shows Student-t innovations
-give a genuinely better-calibrated tail forecast than assuming normal**, a real
-distributional-modelling result that a point-forecast-only ladder would have missed
-entirely (exactly why NEW_PROMPT insists on density scoring "not just point scoring").
-This is not, on its own, enough to call GARCH-t the Phase 3 "winner" in the ladder's own
-QLIKE-beats-everything sense - it is a narrower, calibration-specific finding.
+GARCH-t's own-distribution log score is now the best of any rung/family combination at
+**all 4** intervals (previously reported as 3 of 4 - see correction below), but its 5%
+VaR exceedance rate is now **rejected by Kupiec at 1h and 4h** (p effectively 0 and
+0.0008), and not rejected at 12h/1d (p=0.35, 0.68). This is a materially different, more
+mixed calibration picture than originally reported. This still matches NEW_PROMPT's own
+expectation from the crypto-GARCH literature ("heavy-tailed innovations win") on the log
+score specifically: **the point-forecast (QLIKE) contest found no clear winner, but the
+density contest shows Student-t innovations give a better *log-score* tail forecast than
+assuming normal, at every interval.** The VaR-*coverage* half of the original claim does
+not survive the correction below - GARCH-t's 5% VaR is well-calibrated at the two
+coarser intervals but rejected at the two finer ones, not "never rejected anywhere." This
+is not, on its own, enough to call GARCH-t the Phase 3 "winner" in the ladder's own
+QLIKE-beats-everything sense - it is a narrower, calibration-specific finding, and now a
+more qualified one than first reported.
+
+### Correction (added after this notebook was first written)
+
+The GARCH-t density score above was originally computed with a lookahead bug: the
+Student-t degrees-of-freedom parameter used to *score* every bar was
+`fits[-1]["params"][3]` - the value estimated on the **final** training window of the
+whole sample - applied uniformly to every scored bar from the start of the evaluation
+period onward. The variance forecast itself was properly causal and rolling; only the
+shape parameter scoring it was not. This is the same class of bug as bug #3 below (a
+lookahead leak), one level deeper: in the innovation distribution's shape parameter
+rather than the point forecast itself.
+
+Diagnosing the fitted nu path directly (`dist_lib.nu_path_from_fits`) shows it genuinely
+varies across the 46 refits at 1h - from 2.2 (at the optimizer's own lower search bound,
+during the more turbulent 2021-2022 stretch of the sample) up to 8.1 (later, calmer
+refits) - not the constant value the bug effectively assumed. The original scoring used
+only the *last* of these (7.87, one of the thinnest-tailed fits in the whole path) to
+score bars throughout the entire sample, including the early, much-fatter-tailed
+stretch where the true causal nu was closer to 2.2-3.4.
+
+**Both halves of the original claim moved, in different directions, once this was
+fixed and Phase 3 was fully re-run (all 4 intervals):**
+- The **log score** win *strengthened*: GARCH-t now beats every normal-density rung at
+  all 4 intervals (previously 3 of 4 - 1d's comparison was marginally the other way
+  before the fix).
+- The **VaR-coverage** claim *weakened materially*: Kupiec now rejects GARCH-t's 5% VaR
+  at 1h and 4h (previously never rejected anywhere). The independence test
+  (Christoffersen) was already rejected at 1h before the fix (clustering in violations,
+  unaffected by this bug) and remains rejected after it.
+
+**What this changes about notebook 4's bottom line**: the density-scoring result is
+real but narrower than originally stated. "GARCH-t's own-distribution log score beats
+every normal-density rung, at every interval" still stands and is, if anything,
+strengthened. "Its 5% VaR coverage was never rejected by Kupiec" does **not** stand -
+replace it with "its 5% VaR coverage is well-calibrated at 12h/1d but rejected at 1h/4h."
+This does not change the notebook's overall conclusion (no rung wins the point-forecast
+ladder outright; a narrower density/calibration result exists for GARCH-t) but it does
+change the *strength* of the calibration half of that narrower result, and notebook 5's
+own tail-risk work should not assume GARCH-t's VaR is well-calibrated everywhere.
 
 ### Frozen transfer check (ETH/SOL/DOGE/BNB/XRP, 1d only)
 
@@ -493,15 +537,27 @@ Six real bugs surfaced while building this notebook, all in the notebook-4-local
    looked fine (their `min_train//2` happens to be under 500). Fixed by flooring the
    sufficiency check at `min(min_train, max_train) // 2` - the window that will actually
    be fit, not the warm-up gate.
+7. **GARCH-t's density score used the wrong (future-only) degrees of freedom - found
+   while preparing notebook 5, not while building this one.** `run_phase3.py` scored
+   GARCH-t's own-distribution log score/VaR using `fits[-1]["params"][3]`, the
+   degrees-of-freedom estimated on the *final* training window of the whole sample,
+   applied to score every bar from the start of the evaluation period - the variance
+   forecast was properly causal and rolling; the shape parameter scoring it was not.
+   Fixed with `dist_lib.nu_path_from_fits`, a causal, forward-filled step-function path
+   mirroring the variance forecast's own forward-fill exactly. See "Correction" above
+   for how the corrected numbers moved (log-score win strengthened to 4/4 intervals;
+   Kupiec VaR coverage, previously reported as never rejected, is now rejected at 1h/4h).
 
 None of these were caught by a unit test (there is no test suite for the notebook-4-local
 `dist_lib.py`/driver scripts, by design - they're forecasting-contest machinery specific
 to this notebook, not the general-purpose `distributions.py` primitives that do have
-one). All six were caught the same way: by reading the actual output numbers rather than
-trusting that a script which ran without raising had produced correct output - bug 3 in
-particular (a lookahead leak) would have silently inflated HAR-RV into an undeserved
-Phase 3 "winner" at 1d if the suspiciously perfect QLIKE score hadn't been checked by
-eye before being written up.
+one). All seven were caught the same way: by reading the actual output numbers rather
+than trusting that a script which ran without raising had produced correct output - bug 3
+(a lookahead leak) would have silently inflated HAR-RV into an undeserved Phase 3
+"winner" at 1d if the suspiciously perfect QLIKE score hadn't been checked by eye before
+being written up, and bug 7 (a subtler, one-level-deeper lookahead leak in a shape
+parameter rather than a point forecast) was only caught by deliberately re-deriving the
+causal parameter path and comparing it against what had been used to score.
 
 ## Phase 5 - Does any of it pay?
 
@@ -554,10 +610,13 @@ available point forecasts (all beating EWMA and RV-distribution fits with signif
 none beating each other); a range-based forecast is measurably, predictably biased low
 by exactly the amount Phase 1's normalized-range departure from the Brownian prediction
 implies; and a real, narrower distributional win exists in density calibration -
-GARCH-t's own Student-t innovation distribution gives a better-calibrated tail forecast
-(best log score at 3/4 intervals, VaR coverage never rejected) than any normal-density
+GARCH-t's own Student-t innovation distribution gives a better log-score tail forecast
+(best log score at all 4 intervals, after correcting a lookahead bug in the shape
+parameter used to score it - see "Correction" in Phase 3 above) than any normal-density
 alternative, confirming the crypto-GARCH literature's standard finding even though it
-doesn't rescue the point-forecast contest.
+doesn't rescue the point-forecast contest - though its 5% VaR coverage, once corrected,
+is only actually well-calibrated at 12h/1d and is rejected by Kupiec at 1h/4h, a more
+qualified calibration story than first reported.
 
 **Regime**: distributional regime models (especially HMM-Gaussian) find real, more
 persistent structure than a naive trailing-median threshold, and every model at every
