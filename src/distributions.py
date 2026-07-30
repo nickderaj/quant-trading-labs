@@ -32,6 +32,7 @@ import numpy as np
 import polars as pl
 from scipy import stats as st
 from scipy.optimize import fmin
+from scipy.special import beta as _betafn
 from scipy.special import xlogy
 
 # --------------------------------------------------------------------------
@@ -416,6 +417,55 @@ def crps(dists, actual: np.ndarray, n_points: int = 2000) -> np.ndarray:
         indicator = (xs >= y).astype(float)
         out[i] = np.trapezoid((cdf - indicator) ** 2, xs)
     return out
+
+
+def crps_normal_closed_form(
+    actual: np.ndarray, loc: np.ndarray | float = 0.0, scale: np.ndarray | float = 1.0
+) -> np.ndarray:
+    """Closed-form CRPS for a normal predictive distribution (Gneiting & Raftery
+    2007): CRPS(N(loc, scale^2), y) = scale * [z(2*Phi(z)-1) + 2*phi(z) - 1/sqrt(pi)],
+    z = (y - loc) / scale. Exact - no integration grid, so unlike `crps` above it
+    carries no resolution trade-off at all. `loc`/`scale` broadcast against
+    `actual`, so a full per-bar variance path can be scored in one vectorized call.
+    """
+    actual = np.asarray(actual, dtype=float)
+    z = (actual - loc) / scale
+    return scale * (z * (2.0 * st.norm.cdf(z) - 1.0) + 2.0 * st.norm.pdf(z) - 1.0 / np.sqrt(np.pi))
+
+
+def crps_t_closed_form(
+    actual: np.ndarray, df: np.ndarray | float, loc: np.ndarray | float = 0.0,
+    scale: np.ndarray | float = 1.0,
+) -> np.ndarray:
+    """Closed-form CRPS for a (non-standardized) Student-t predictive
+    distribution, following the Jordan/Krueger/Lerch formula also implemented in
+    R's `scoringRules::crps_t` (itself following Gneiting & Raftery 2007's
+    supplement). For standard (loc=0, scale=1) t with nu>1 degrees of freedom and
+    standard CDF/PDF F_nu, f_nu:
+
+        CRPS(t_nu, z) = z*(2*F_nu(z)-1) + 2*f_nu(z)*(nu+z^2)/(nu-1)
+                        - (2*sqrt(nu)/(nu-1)) * B(1/2, nu-1/2) / B(1/2, nu/2)^2
+
+    (B is the Beta function.) A location-scale t's CRPS is `scale` times this,
+    evaluated at the standardized z = (y-loc)/scale - exact, no integration grid.
+    This is why it exists: `crps`'s numerical grid is built as
+    linspace(ppf(1e-6), ppf(1-1e-6), n_points), which for a heavy-tailed t spans
+    a vastly wider range than for a normal (t(2)'s grid is ~1400 units wide vs a
+    normal's ~10), so cross-family CRPS comparisons using `crps` at a fixed
+    n_points partly measure integration resolution, not forecast quality - see
+    NEXT_RUN_PROMPT.md #1b / docs/06-scoring-rules-and-calibration.md#crps.
+    Undefined (NaN) for nu<=1, the same boundary where a Student-t's own mean
+    stops existing.
+    """
+    actual = np.asarray(actual, dtype=float)
+    nu = np.asarray(df, dtype=float)
+    z = (actual - loc) / scale
+    Fz = st.t.cdf(z, df=nu)
+    fz = st.t.pdf(z, df=nu)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        const = (2.0 * np.sqrt(nu) / (nu - 1.0)) * (_betafn(0.5, nu - 0.5) / _betafn(0.5, nu / 2.0) ** 2)
+        out = scale * (z * (2.0 * Fz - 1.0) + 2.0 * fz * (nu + z**2) / (nu - 1.0) - const)
+    return np.where(nu > 1.0, out, np.nan)
 
 
 def pit_values(dists, actual: np.ndarray) -> np.ndarray:

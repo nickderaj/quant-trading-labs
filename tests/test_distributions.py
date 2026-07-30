@@ -336,3 +336,83 @@ class TestScoringRuleSanity:
         hits = rng.random(3000) < 0.05
         lr, pvalue = dist.christoffersen_independence_test(hits)
         assert pvalue > 0.05
+
+
+# --------------------------------------------------------------------------
+# 6. Closed-form CRPS (notebook 5 #1b fix)
+# --------------------------------------------------------------------------
+
+
+class TestClosedFormCRPS:
+    """`crps`'s numerical grid (linspace(ppf(1e-6), ppf(1-1e-6), n_points)) spans
+    ~10 units for a normal but ~1400 units for a t(2) at the same n_points, so a
+    fixed n_points gives wildly different effective resolution across families -
+    see NEXT_RUN_PROMPT.md #1b. crps_normal_closed_form/crps_t_closed_form are
+    exact (no grid), and are checked here against the numerical version on a
+    light-tailed case where the numerical version is itself trustworthy (a very
+    fine grid), plus a direct demonstration that the OLD default (n_points=400)
+    is not trustworthy for a heavy-tailed t.
+    """
+
+    def test_closed_form_normal_matches_fine_numerical_grid(self):
+        y = np.linspace(-4, 4, 25)
+        numeric = dist.crps(dist.frozen_dist("normal", [0.0, 1.0]), y, n_points=200_000)
+        closed = dist.crps_normal_closed_form(y, loc=0.0, scale=1.0)
+        assert closed == pytest.approx(numeric, abs=1e-4)
+
+    def test_closed_form_t_matches_fine_numerical_grid_for_light_tail(self):
+        # df=30 is close enough to normal that crps's numerical grid (built
+        # from ppf(1e-6)/ppf(1-1e-6), same as the normal case) is fine enough
+        # to trust at a large n_points - the trustworthy "light-tailed case"
+        # the runbook asks for.
+        df = 30.0
+        y = np.linspace(-4, 4, 25)
+        numeric = dist.crps(dist.frozen_dist("t", [df, 0.0, 1.0]), y, n_points=200_000)
+        closed = dist.crps_t_closed_form(y, df=df, loc=0.0, scale=1.0)
+        assert closed == pytest.approx(numeric, abs=1e-4)
+
+    def test_closed_form_t_matches_fine_numerical_grid_nonstandard_loc_scale(self):
+        df = 20.0
+        y = np.linspace(-5, 15, 25)
+        numeric = dist.crps(dist.frozen_dist("t", [df, 5.0, 2.0]), y, n_points=200_000)
+        closed = dist.crps_t_closed_form(y, df=df, loc=5.0, scale=2.0)
+        assert closed == pytest.approx(numeric, abs=2e-4)
+
+    def test_old_default_grid_fails_on_heavy_tailed_t(self):
+        """Fails on the pre-fix implementation: a t(2.1) forecast's CRPS at
+        the OLD default n_points=400 disagrees with the true (closed-form)
+        value by 10s of percent - the exact motivating bug for #1b. Asserts
+        the closed form is accurate to 1% of a trustworthy fine-grid
+        reference, and separately demonstrates the old default grid is not.
+        """
+        df = 2.1
+        y = np.array([0.0, 1.0, -2.0, 5.0])
+        reference = dist.crps(dist.frozen_dist("t", [df, 0.0, 1.0]), y, n_points=200_000)
+        closed = dist.crps_t_closed_form(y, df=df, loc=0.0, scale=1.0)
+        # the closed form must be accurate to 1% of the trustworthy fine-grid reference
+        assert closed == pytest.approx(reference, rel=0.01)
+        # and the OLD default (n_points=400) must NOT be within 1% - demonstrating
+        # exactly the bug this checkpoint fixes (this assertion is the one that
+        # would fail against the pre-fix, only-numerical implementation, since
+        # there would be no closed form to fall back on in that world - it fails
+        # here on today's numerical `crps` at the old default n_points directly).
+        old_grid = dist.crps(dist.frozen_dist("t", [df, 0.0, 1.0]), y, n_points=400)
+        rel_error = np.abs((old_grid - reference) / reference)
+        assert np.any(rel_error > 0.01)
+
+    def test_crps_t_closed_form_undefined_below_df_one(self):
+        y = np.array([0.0, 1.0, -1.0])
+        out = dist.crps_t_closed_form(y, df=0.9, loc=0.0, scale=1.0)
+        assert np.all(np.isnan(out))
+
+    def test_crps_t_closed_form_vectorized_per_bar_df(self):
+        # a per-bar nu path (as nu_path_from_fits would produce) must be
+        # scoreable in one call, not just a scalar df.
+        y = np.array([0.5, -0.5, 1.5])
+        nu = np.array([3.0, 5.0, 8.0])
+        vectorized = dist.crps_t_closed_form(y, df=nu, loc=0.0, scale=1.0)
+        looped = np.array([
+            dist.crps_t_closed_form(np.array([yi]), df=nui, loc=0.0, scale=1.0)[0]
+            for yi, nui in zip(y, nu)
+        ])
+        assert vectorized == pytest.approx(looped)
