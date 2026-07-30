@@ -19,11 +19,13 @@ import sys
 sys.path.insert(0, "src")
 
 import numpy as np
+import polars as pl
 from scipy import stats as st
 from scipy.optimize import minimize
 
 sys.path.insert(0, "src/research/tmp")
 import dist_lib as L  # noqa: E402  (path must be set up first)
+import distributions as dist  # noqa: E402
 
 # --------------------------------------------------------------------------
 # Phase 1: Hill estimator (tail index), independent of any parametric MLE fit
@@ -421,3 +423,108 @@ def rolling_gpd_paths(
             for key in ["xi", "beta", "u", "n_exceed"]:
                 paths[tail][key][t:] = gfit[key]
     return paths, gpd_fits
+
+
+# --------------------------------------------------------------------------
+# Phase 1c / Phase 3 d2: HAR-log-RV (fit HAR-style features on log(rv)
+# instead of rv levels, exponentiate back with the lognormal mean correction)
+# --------------------------------------------------------------------------
+
+
+def har_log_rv_forecast(df: pl.DataFrame, interval: str, refit_every: int, min_train: int, resid_window: int = 250) -> np.ndarray:
+    """HAR-style variance forecast built in log(rv) space rather than rv
+    levels - Phase 1c found log-RV materially better PIT/KS-calibrated than
+    raw RV at every interval, and NEXT_RUN_PROMPT.md asks for this as a
+    ~10-line rung addition rather than letting it grow further.
+
+    Fits the same daily/weekly/monthly trailing-mean-of-log-rv features as
+    dist_lib.make_har_features, but on log(rv_target), via the same causal
+    rolling_ols_refit used for rung2. The regression forecasts E[log(rv)];
+    converting that back to a variance forecast needs the lognormal mean
+    correction exp(mu + sigma^2/2), so a causal, forward-looking-safe
+    residual variance is estimated as a trailing (shift(1)) rolling std of
+    the model's own past residuals (log_rv_t - mu_hat_t, only ever using
+    bars < t) - never a full-sample residual variance, which would leak.
+    """
+    bpd = max(1, 24 // L.INTERVAL_HOURS[interval])
+    rv = df["rv_target"].to_numpy()
+    log_rv = np.where(rv > 0, np.log(np.where(rv > 0, rv, 1.0)), np.nan)
+    log_rv_df = df.with_columns(pl.Series("log_rv_target", log_rv))
+    lrv = pl.col("log_rv_target")
+    log_rv_df = log_rv_df.with_columns(
+        lrv.rolling_mean(window_size=bpd, min_periods=1).shift(1).alias("log_rv_d"),
+        lrv.rolling_mean(window_size=bpd * 5, min_periods=bpd).shift(1).alias("log_rv_w"),
+        lrv.rolling_mean(window_size=bpd * 22, min_periods=bpd).shift(1).alias("log_rv_m"),
+    )
+    mu_hat = L.rolling_ols_refit(
+        log_rv_df, ["log_rv_d", "log_rv_w", "log_rv_m"], "log_rv_target",
+        refit_every=refit_every, min_train=min_train,
+    )
+    resid = log_rv - mu_hat
+    sigma2_resid = (
+        pl.Series("resid", resid).rolling_std(window_size=resid_window, min_periods=resid_window // 4) ** 2
+    ).shift(1).to_numpy()
+    with np.errstate(invalid="ignore"):
+        forecast = np.exp(mu_hat + sigma2_resid / 2.0)
+    forecast[~np.isfinite(mu_hat) | ~np.isfinite(sigma2_resid)] = np.nan
+    return forecast
+
+
+# --------------------------------------------------------------------------
+# Phase 3: vectorized density scoring (normal / t), using the closed-form
+# CRPS from #1b instead of distributions.crps's numerical-grid version, and
+# manual vectorized log-density formulas instead of building a scipy frozen
+# distribution object per observation - both purely a speed concern (10s of
+# thousands of bars x 8 models x 4 intervals), not a change in what's scored.
+# --------------------------------------------------------------------------
+
+
+def vectorized_normal_scores(actual: np.ndarray, variance_forecast: np.ndarray) -> dict:
+    mask = np.isfinite(actual) & np.isfinite(variance_forecast) & (variance_forecast > 0)
+    a, v = actual[mask], variance_forecast[mask]
+    log_score = -0.5 * np.log(2 * np.pi * v) - 0.5 * (a**2) / v
+    crps = dist.crps_normal_closed_form(a, loc=0.0, scale=np.sqrt(v))
+    return {"mask": mask, "log_score": log_score, "crps": crps}
+
+
+def vectorized_t_scores(actual: np.ndarray, variance_forecast: np.ndarray, nu: np.ndarray) -> dict:
+    nu = np.broadcast_to(np.asarray(nu, dtype=float), actual.shape)
+    mask = (
+        np.isfinite(actual) & np.isfinite(variance_forecast) & (variance_forecast > 0)
+        & np.isfinite(nu) & (nu > 2)
+    )
+    a, v, n_ = actual[mask], variance_forecast[mask], nu[mask]
+    c = np.sqrt(n_ / (n_ - 2))
+    scale = np.sqrt(v) / c
+    log_score = st.t.logpdf(a / scale, df=n_) - np.log(scale)
+    crps = dist.crps_t_closed_form(a, df=n_, loc=0.0, scale=scale)
+    return {"mask": mask, "log_score": log_score, "crps": crps}
+
+
+def benjamini_hochberg(pvalues: dict, alpha: float = 0.05) -> dict:
+    """Benjamini-Hochberg FDR adjustment. `pvalues`: {key: pvalue}. Returns
+    {key: {"pvalue": ..., "rank": ..., "bh_threshold": ..., "significant": bool}},
+    where "significant" applies the standard BH decision rule (reject every
+    hypothesis up to and including the largest rank k with p_(k) <= k/m*alpha).
+    """
+    items = sorted(pvalues.items(), key=lambda kv: (np.inf if not np.isfinite(kv[1]) else kv[1]))
+    m = len(items)
+    finite = [kv for kv in items if np.isfinite(kv[1])]
+    m_finite = len(finite)
+    # find the largest rank k (1-indexed among finite p-values) satisfying BH's rule
+    k_star = 0
+    for rank, (_key, p) in enumerate(finite, start=1):
+        if p <= (rank / m_finite) * alpha:
+            k_star = rank
+    out = {}
+    for rank, (key, p) in enumerate(items, start=1):
+        is_finite = np.isfinite(p)
+        bh_rank = finite.index((key, p)) + 1 if is_finite else None
+        out[key] = {
+            "pvalue": float(p) if is_finite else None,
+            "rank": bh_rank,
+            "bh_threshold": float((bh_rank / m_finite) * alpha) if is_finite else None,
+            "significant": bool(is_finite and bh_rank <= k_star),
+        }
+    return out
+
