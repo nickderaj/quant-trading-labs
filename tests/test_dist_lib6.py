@@ -121,3 +121,41 @@ class TestDurationModels:
             np.array([np.log(geo["q"] / (1 - geo["q"]))]), durations, fix_beta1=True,
         )
         assert -nll_at_geo_q_beta1 == pytest.approx(geo["loglik"], rel=1e-8)
+
+    def test_fit_returns_none_on_insufficient_data(self):
+        assert L6.fit_geometric_durations(np.array([1, 2, 3])) is None
+        assert L6.fit_discrete_weibull_durations(np.array([1, 2, 3])) is None
+
+
+class TestZooGarchFitAndScore:
+    def test_fit_garch_zoo_two_stage_matches_plain_garch_variance_recursion(self):
+        """The two-stage fit's variance recursion must be IDENTICAL to
+        dist_lib.fit_garch11(innovation="normal")'s own - it's the same
+        call, reused, not re-derived. Verified directly rather than assumed.
+        """
+        import dist_lib as L
+        from densities import ged
+
+        rng = np.random.default_rng(SEED)
+        r = rng.standard_t(5, 800) * 0.01
+        plain_fit = L.fit_garch11(r, innovation="normal")
+        zoo_fit = L6.fit_garch_zoo_two_stage(r, ged)
+        assert plain_fit is not None and zoo_fit is not None
+        assert zoo_fit["omega"] == plain_fit["omega"]
+        assert zoo_fit["alpha"] == plain_fit["alpha"]
+        assert zoo_fit["beta"] == plain_fit["beta"]
+        assert zoo_fit["family"] == "ged"
+
+    def test_score_zoo_model_matches_manual_logpdf_computation(self):
+        from densities import ged
+
+        n = 300
+        actual = np.array([0.01, -0.02, 0.005] * (n // 3))
+        variance_forecast = np.full(n, 0.0001)
+        fits = [{"t": 0, "shape": (2.0,)}, {"t": 150, "shape": (1.2,)}]
+        ls = L6.score_zoo_model(actual, variance_forecast, fits, ged)
+        sigma = np.sqrt(variance_forecast)
+        expected_seg1 = ged.logpdf(actual[:150] / sigma[:150], (2.0,)) - np.log(sigma[:150])
+        expected_seg2 = ged.logpdf(actual[150:] / sigma[150:], (1.2,)) - np.log(sigma[150:])
+        np.testing.assert_allclose(ls[:150], expected_seg1)
+        np.testing.assert_allclose(ls[150:], expected_seg2)

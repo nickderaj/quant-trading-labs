@@ -375,3 +375,97 @@ def fit_discrete_weibull_durations(durations: np.ndarray) -> dict | None:
     return {"q": q, "beta": beta, "loglik": ll, "n": len(durations)}
 
 
+# --------------------------------------------------------------------------
+# Phase 3 contest: GARCH(1,1) with a Phase-3 zoo innovation family.
+#
+# Two-stage fit (variance recursion via dist_lib.fit_garch11(innovation=
+# "normal") - unchanged, reused per rule 9 - then the zoo family's own
+# MLE on the resulting standardized residuals), not a joint MLE over
+# (omega,alpha,beta,shape) together. This is a deliberate scoping choice,
+# not an oversight: a joint fit needs per-family box constraints/
+# reparametrization (NIG's alpha>|beta| in particular) reimplemented in the
+# rolling-refit hot loop, where a wrong constraint silently produces a
+# non-stationary or ill-defined density every refit; two-stage reuses
+# dist_lib's already-tested variance recursion unchanged and asks each zoo
+# module's own already-tested `fit` to do only the one job it was built and
+# verified (per-family, in tests/test_dist_lib6_*.py) to do well. Documented
+# explicitly here and in the write-up so it is not confused with a joint fit.
+# --------------------------------------------------------------------------
+
+
+def fit_garch_zoo_two_stage(r: np.ndarray, family_module) -> dict | None:
+    garch_fit = L.fit_garch11(r, innovation="normal")
+    if garch_fit is None:
+        return None
+    omega, alpha, beta = garch_fit["omega"], garch_fit["alpha"], garch_fit["beta"]
+    uncond = omega / max(1 - alpha - beta, 1e-6)
+    sig2 = L._garch_variance_path(omega, alpha, beta, r, uncond)
+    if np.any(sig2 <= 0) or not np.all(np.isfinite(sig2)):
+        return None
+    z = r / np.sqrt(sig2)
+    shape = family_module.fit(z)
+    if shape is None:
+        return None
+    next_sig2 = omega + alpha * r[-1] ** 2 + beta * sig2[-1]
+    return {
+        "omega": float(omega), "alpha": float(alpha), "beta": float(beta),
+        "shape": tuple(float(s) for s in shape), "next_var": float(next_sig2),
+        "family": family_module.NAME,
+    }
+
+
+def rolling_garch_forecast_zoo(
+    returns: np.ndarray, refit_every: int, min_train: int, family_module, max_train: int = 500,
+) -> tuple[np.ndarray, list[dict]]:
+    """Structurally identical to dist_lib.rolling_garch_forecast /
+    dist_lib5.rolling_gjr_forecast's own refit-then-forward-fill loop,
+    generalized to fit_garch_zoo_two_stage's two-stage fit instead of a
+    single-family MLE."""
+    n = len(returns)
+    forecast = np.full(n, np.nan)
+    fits = []
+    fit = None
+    sig2_state = np.nan
+    for t in range(n):
+        if t >= min_train and t % refit_every == 0:
+            start = max(0, t - max_train)
+            window = returns[start:t]
+            new_fit = fit_garch_zoo_two_stage(window, family_module)
+            if new_fit is not None:
+                fit = new_fit
+                sig2_state = fit["omega"] / max(1 - fit["alpha"] - fit["beta"], 1e-6)
+                fits.append({"t": t, **fit})
+        if fit is not None:
+            forecast[t] = sig2_state
+            if t + 1 < n and np.isfinite(returns[t]):
+                sig2_state = fit["omega"] + fit["alpha"] * returns[t] ** 2 + fit["beta"] * sig2_state
+    return forecast, fits
+
+
+def score_zoo_model(actual: np.ndarray, variance_forecast: np.ndarray, fits: list[dict], family_module) -> np.ndarray:
+    """Per-bar log score for a zoo GARCH model: family_module.logpdf(z,
+    shape) - log(sigma) (change-of-variables from the unit-variance-
+    standardized density to the actual-return scale, same convention as
+    dist_lib._garch_negloglik's "- 0.5*log(sig2)" term). Evaluated in
+    per-refit-segment batches (shape is a step function of t, forward-filled
+    between refits, exactly like dist_lib.nu_path_from_fits) rather than a
+    per-bar python loop, since every zoo family's logpdf is vectorized.
+    """
+    n = len(actual)
+    log_score_full = np.full(n, np.nan)
+    if not fits:
+        return log_score_full
+    for i, f in enumerate(fits):
+        start = f["t"]
+        end = fits[i + 1]["t"] if i + 1 < len(fits) else n
+        a = actual[start:end]
+        v = variance_forecast[start:end]
+        mask = np.isfinite(a) & np.isfinite(v) & (v > 0)
+        if not mask.any():
+            continue
+        sigma = np.sqrt(v[mask])
+        z = a[mask] / sigma
+        ll = family_module.logpdf(z, f["shape"]) - np.log(sigma)
+        idx = np.arange(start, end)[mask]
+        log_score_full[idx] = ll
+    return log_score_full
