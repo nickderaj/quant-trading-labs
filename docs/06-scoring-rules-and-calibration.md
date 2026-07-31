@@ -543,6 +543,53 @@ Kupiec alone remains reasonably usable at that same sample size.
 
 ---
 
+### Duration-based coverage test
+
+**In one sentence.** Instead of asking "is the *rate* of VaR violations right" (Kupiec)
+or "does one violation raise the odds of the very next bar also being one" (Christoffersen
+independence), this asks the question directly in the space that actually matters for
+risk management: are the *gaps between violations* memoryless, the way an i.i.d. process's
+would be?
+
+**The maths.** Kupiec sees only a violation count; Christoffersen independence sees only
+adjacent (lag-1) pairs — a 2-state Markov chain literally cannot represent clustering that
+shows up three or five bars apart. The duration-based test instead fits the sequence of
+gaps between consecutive violations (coded as bars-since-last-violation minus one, so the
+support starts at 0) to a [geometric distribution](01-probability-and-distributions.md#geometric-distribution)
+(the discrete, memoryless i.i.d. null — a plain restatement of "violations are i.i.d.
+Bernoulli," reframed in duration space) against a **discrete Weibull**
+(Nakagawa & Osaki 1975: survival function $P(X>k) = q^{k^\beta}$, nesting the geometric
+exactly at $\beta=1$). $\beta<1$ means a *falling* hazard — having just had a violation
+makes the next one more likely soon than memorylessness implies, i.e. genuine clustering,
+visible at any lag, not just lag 1. Compared by a plain (non-boundary — $\beta=1$ is an
+*interior* point, see [boundary likelihood-ratio test](03-statistical-inference.md#boundary-likelihood-ratio-test))
+$\chi^2_1$ likelihood-ratio test.
+
+**Why it is here.** Notebook 4 already measured gamma waiting-time shapes of 0.52-0.85
+(direct evidence violations clump on scales a 2-state chain cannot see); Phase 4 of
+notebook 6 (`dist_lib6.fit_geometric_durations` / `fit_discrete_weibull_durations`,
+`src/results/6_distribution_zoo.md`) is the first place this repo actually tests that
+observation as a formal calibration failure mode, alongside a complementary count-based
+test (weekly violation counts: Poisson null vs. negative binomial, a
+[boundary likelihood-ratio test](03-statistical-inference.md#boundary-likelihood-ratio-test)
+since Poisson sits at the negative binomial's dispersion boundary).
+
+**Worked example.** On BTC at 12h, GARCH-EVT's 1% violations show a fitted discrete-Weibull
+$\hat\beta$ close to but not significantly below 1, and its count-based dispersion is
+statistically indistinguishable from Poisson — while several thin-tailed models on the same
+data show both significantly overdispersed counts and $\hat\beta$ well below 1, i.e.
+genuinely clustered violations, not just a right-on-average rate.
+
+**Pitfalls.** A model can pass Kupiec and Christoffersen independence (both individually
+weak against clustering beyond lag 1) while still failing this test — read literally, that
+means the practical risk statement "this model's 1% VaR is trustworthy" can be weaker than
+notebook 5's Gate B implied, since Gate B never ran this test. Needs at least a handful of
+violations to fit at all (`dist_lib6.fit_geometric_durations` requires 10+ gaps); at very
+low violation counts (thin symbols/intervals) this test is itself underpowered, same
+caveat as Christoffersen independence.
+
+---
+
 ### Conditional coverage
 
 **In one sentence.** A single combined test folding Kupiec's "is the rate right" question

@@ -191,3 +191,187 @@ def beats_all_significantly(best_name: str, model_names: list[str], all_pairs_dm
         if not best_wins_sig:
             return False
     return True
+
+
+# --------------------------------------------------------------------------
+# Phase 4: the violation process itself - count PMFs (Poisson vs. negative
+# binomial, a boundary-nested LR test) and durations (geometric vs. discrete
+# Weibull, the same boundary structure). Fit-once, descriptive machinery on
+# the OOS evaluation period's own violation sequence (same status as Phase 1
+# of notebook 5's Hill estimator: not a rolling forecast input, a diagnostic
+# of what the forecasts' own failures look like), not new rolling-refit code.
+# --------------------------------------------------------------------------
+
+from scipy import stats as _st  # noqa: E402
+from scipy.optimize import minimize as _minimize  # noqa: E402
+
+
+def violation_blocks_and_durations(hit: np.ndarray, block_size: int) -> tuple[np.ndarray, np.ndarray]:
+    """hit: boolean/0-1 violation indicator, one entry per bar (already
+    masked to finite/valid bars only by the caller). Returns:
+      - counts: violation count in each non-overlapping block of `block_size`
+        consecutive bars (the last partial block, if any, is dropped rather
+        than padded, so every block has the same exposure).
+      - durations: gaps between consecutive violations, in bars, coded as
+        (bars since previous violation - 1) so the support starts at 0 -
+        duration=0 means two violations landed on directly consecutive bars.
+        Only defined from the first violation onward (no duration is coded
+        for a hypothetical "time to first violation").
+    """
+    hit = np.asarray(hit).astype(bool)
+    n = len(hit)
+    n_blocks = n // block_size
+    if n_blocks < 4:
+        return np.array([]), np.array([])
+    counts = hit[: n_blocks * block_size].reshape(n_blocks, block_size).sum(axis=1)
+    hit_idx = np.where(hit)[0]
+    if len(hit_idx) < 3:
+        durations = np.array([])
+    else:
+        durations = np.diff(hit_idx) - 1
+    return counts, durations
+
+
+def _poisson_loglik(counts: np.ndarray, mu: float) -> float:
+    return float(np.sum(_st.poisson.logpmf(counts, mu)))
+
+
+def _nb2_negloglik(params: np.ndarray, counts: np.ndarray) -> float:
+    log_mu, log_alpha = params
+    mu, alpha = np.exp(log_mu), np.exp(log_alpha)
+    # NB2: Var = mu + alpha*mu^2, r = 1/alpha, p = r/(r+mu)
+    r = 1.0 / max(alpha, 1e-10)
+    p = r / (r + mu)
+    ll = float(np.sum(_st.nbinom.logpmf(counts, r, p)))
+    if not np.isfinite(ll):
+        return 1e10
+    return -ll
+
+
+def fit_poisson_counts(counts: np.ndarray) -> dict | None:
+    if len(counts) < 4 or np.all(counts == 0):
+        return None
+    mu = float(np.mean(counts))
+    if not np.isfinite(mu) or mu <= 0:
+        return None
+    return {"mu": mu, "loglik": _poisson_loglik(counts, mu), "n": len(counts)}
+
+
+def fit_nb_counts(counts: np.ndarray) -> dict | None:
+    """MLE (not method-of-moments) over (mu, alpha) in the NB2 dispersion
+    parametrization (Var = mu + alpha*mu^2), alpha>=0, so that alpha=0 is
+    exactly the Poisson boundary the LR test needs to be meaningful - a
+    method-of-moments NB fit (as distributions._fit_nbinom uses, for
+    rolling-refit speed reasons that don't apply to this one-shot fit) would
+    not give a proper-MLE log-likelihood to compare against Poisson's own.
+    """
+    if len(counts) < 4 or np.all(counts == 0):
+        return None
+    mean, var = float(np.mean(counts)), float(np.var(counts))
+    if mean <= 0:
+        return None
+    alpha0 = max((var - mean) / (mean**2), 1e-4) if var > mean else 1e-4
+    x0 = np.array([np.log(mean), np.log(alpha0)])
+    try:
+        res = _minimize(_nb2_negloglik, x0, args=(counts,), method="Nelder-Mead",
+                         options={"maxiter": 500, "xatol": 1e-8, "fatol": 1e-8})
+    except Exception:
+        return None
+    if not res.success or not np.all(np.isfinite(res.x)):
+        return None
+    mu, alpha = float(np.exp(res.x[0])), float(np.exp(res.x[1]))
+    ll = -float(res.fun)
+    if not np.isfinite(ll):
+        return None
+    return {"mu": mu, "alpha": alpha, "loglik": ll, "n": len(counts)}
+
+
+def boundary_lr_test(ll_full: float, ll_null: float) -> tuple[float, float]:
+    """Likelihood-ratio test where the null sits on the boundary of the
+    full model's parameter space (alpha=0 for NB-vs-Poisson; beta=1 for
+    discrete-Weibull-vs-geometric is NOT this case - beta=1 is an interior
+    point, so that comparison uses a plain chi2_1 test instead, see
+    fit_discrete_weibull's own docstring).
+
+    Self's-Chernoff (1954) boundary result: under the null, the LR statistic
+    is distributed as a 50:50 mixture of a point mass at 0 and chi2_1, NOT
+    a plain chi2_1 - using chi2_1 alone overstates significance (roughly
+    halves the p-value), a classic and specifically-flagged error per
+    NEXT_RUN_PROMPT.md section 4 Phase 4. p = 0.5 * chi2_1.sf(LR).
+    """
+    lr = max(0.0, 2.0 * (ll_full - ll_null))
+    p = 0.5 * float(_st.chi2.sf(lr, df=1))
+    return lr, p
+
+
+def _discrete_weibull_negloglik(params: np.ndarray, durations: np.ndarray, fix_beta1: bool) -> float:
+    if fix_beta1:
+        (logit_q,) = params
+        beta = 1.0
+    else:
+        logit_q, log_beta = params
+        beta = np.exp(log_beta)
+    q = 1.0 / (1.0 + np.exp(-logit_q))  # logit-transform to keep q in (0,1)
+    k = durations.astype(float)
+    # P(X=k) = q^(k^beta) - q^((k+1)^beta); compute in log-space via log(q)
+    log_q = np.log(q)
+    surv_k = np.exp(log_q * (k**beta))
+    surv_k1 = np.exp(log_q * ((k + 1.0) ** beta))
+    pmf = surv_k - surv_k1
+    pmf = np.clip(pmf, 1e-300, None)
+    ll = float(np.sum(np.log(pmf)))
+    if not np.isfinite(ll):
+        return 1e10
+    return -ll
+
+
+def fit_geometric_durations(durations: np.ndarray) -> dict | None:
+    """Geometric on {0,1,2,...} (bars-since-last-violation - 1): P(X=k) =
+    (1-q)*q^k. This is exactly the discrete-Weibull family at beta=1 fixed
+    (its survival function q^k is the beta=1 special case of q^(k^beta)),
+    so its own log-likelihood is directly comparable to the general
+    discrete-Weibull fit via a plain LR test (beta=1 is an INTERIOR point of
+    beta>0's parameter space, not a boundary, so no Chernoff mixture
+    correction is needed here - unlike the NB-vs-Poisson alpha=0 case).
+    """
+    if len(durations) < 10:
+        return None
+    mean = float(np.mean(durations))
+    if not np.isfinite(mean) or mean < 0:
+        return None
+    q = mean / (mean + 1.0)
+    if not (0.0 < q < 1.0):
+        return None
+    ll = -_discrete_weibull_negloglik(np.array([np.log(q / (1 - q))]), durations, fix_beta1=True)
+    return {"q": q, "beta": 1.0, "loglik": float(ll), "n": len(durations)}
+
+
+def fit_discrete_weibull_durations(durations: np.ndarray) -> dict | None:
+    """MLE over (q, beta) for the discrete Weibull (Nakagawa & Osaki 1975):
+    survival P(X>k) = q^(k^beta). beta<1 means a FALLING hazard (violations
+    cluster - once one has just happened, the next is more likely soon than
+    the memoryless geometric null implies); beta>1 means a rising hazard.
+    beta=1 nests the geometric exactly (see fit_geometric_durations).
+    """
+    if len(durations) < 10:
+        return None
+    geo = fit_geometric_durations(durations)
+    if geo is None:
+        return None
+    x0 = np.array([np.log(geo["q"] / (1 - geo["q"])), 0.0])
+    try:
+        res = _minimize(_discrete_weibull_negloglik, x0, args=(durations, False), method="Nelder-Mead",
+                         options={"maxiter": 1000, "xatol": 1e-8, "fatol": 1e-8})
+    except Exception:
+        return None
+    if not res.success or not np.all(np.isfinite(res.x)):
+        return None
+    logit_q, log_beta = res.x
+    q = 1.0 / (1.0 + np.exp(-logit_q))
+    beta = float(np.exp(log_beta))
+    ll = -float(res.fun)
+    if not np.isfinite(ll) or not (0.0 < q < 1.0):
+        return None
+    return {"q": q, "beta": beta, "loglik": ll, "n": len(durations)}
+
+

@@ -452,6 +452,49 @@ volatility comparison specifically.
 
 ---
 
+### Boundary likelihood-ratio test
+
+**In one sentence.** An ordinary [likelihood-ratio test](02-estimation-and-fitting.md#likelihood-ratio-test)
+compares a simpler ("null") model against a more flexible one that contains it as a
+special case — but when that special case sits right at the *edge* of the flexible
+model's allowed parameter range rather than somewhere in its interior, the usual
+chi-squared reference distribution is wrong, and using it anyway roughly halves the
+p-value, overstating significance.
+
+**The maths.** The ordinary LR test statistic $LR = 2(\ell_{\text{full}} -
+\ell_{\text{null}})$ is compared against a $\chi^2_1$ distribution when the null is one
+interior value of one extra parameter. Chernoff's (1954) boundary result: when the null
+value sits exactly on the *edge* of the full model's allowed range (so the parameter
+literally cannot go past it in the "more extreme" direction), the statistic's null
+distribution is instead a 50:50 **mixture** of a point mass at 0 and a $\chi^2_1$. The
+correct p-value is $p = 0.5 \times P(\chi^2_1 \ge LR)$, not the plain $P(\chi^2_1 \ge
+LR)$ — exactly half the naive number, because half of the mixture's probability mass
+sits at exactly 0 and never contributes to the upper tail at all.
+
+**Why it is here.** `dist_lib6.fit_nb_counts` fits a negative binomial's dispersion
+parameter $\alpha \ge 0$ (Poisson is the $\alpha=0$ boundary — variance cannot be *less*
+than the Poisson mean, so $\alpha$ cannot go negative); `dist_lib6.boundary_lr_test`
+applies the 0.5-mixture correction when testing NB against the Poisson null in Phase 4's
+violation-count analysis (`src/results/6_distribution_zoo.md`). The companion
+discrete-Weibull-vs-geometric comparison ($\beta=1$) is **not** this case — $\beta=1$ is
+an *interior* point of $\beta>0$'s range (a duration hazard can rise or fall from
+$\beta=1$ in either direction), so `dist_lib6.fit_discrete_weibull_durations` uses a
+plain, uncorrected $\chi^2_1$ test instead. Getting this distinction backwards in either
+direction is the "classic error" this entry exists to prevent.
+
+**Worked example.** A synthetic check (Poisson-generated counts, so the null is exactly
+true): the boundary-corrected p-value for a modest LR statistic comes out close to 0.5,
+matching "no real evidence of overdispersion" — using the uncorrected $\chi^2_1$ p-value
+on the same statistic would have reported roughly half that value, a meaningfully
+different-looking (though still non-significant, in this particular check) result.
+
+**Pitfalls.** The 50:50 mixture applies specifically to *one* extra parameter pinned at
+a boundary. Testing two or more boundary parameters simultaneously needs a different
+(more complex) mixture and is out of scope here — Phase 4's NB-vs-Poisson comparison is
+safely the one-parameter case.
+
+---
+
 ### Diebold-Mariano
 
 **In one sentence.** The standard test in forecasting research for "does forecast A

@@ -1,0 +1,2465 @@
+{
+ "n_total_cells": 240,
+ "n_counts_significant": 107,
+ "n_counts_valid": 238,
+ "n_durations_significant": 114,
+ "n_durations_valid": 235,
+ "n_durations_clustering_beta_lt_1": 215,
+ "n_reject_null": 127,
+ "frac_reject_null": 0.5291666666666667,
+ "gate_v_fires": true,
+ "by_model": {
+  "d0_trailing_std": {
+   "n": 24,
+   "n_reject": 17,
+   "frac_reject": 0.7083333333333334
+  },
+  "d1_har_rv": {
+   "n": 24,
+   "n_reject": 13,
+   "frac_reject": 0.5416666666666666
+  },
+  "d2_har_log_rv": {
+   "n": 24,
+   "n_reject": 10,
+   "frac_reject": 0.4166666666666667
+  },
+  "d3_range": {
+   "n": 24,
+   "n_reject": 10,
+   "frac_reject": 0.4166666666666667
+  },
+  "d4_garch_normal": {
+   "n": 24,
+   "n_reject": 16,
+   "frac_reject": 0.6666666666666666
+  },
+  "d5_garch_t": {
+   "n": 24,
+   "n_reject": 15,
+   "frac_reject": 0.625
+  },
+  "d6_gjr_normal": {
+   "n": 24,
+   "n_reject": 10,
+   "frac_reject": 0.4166666666666667
+  },
+  "d7_gjr_t": {
+   "n": 24,
+   "n_reject": 11,
+   "frac_reject": 0.4583333333333333
+  },
+  "d8_garch_evt": {
+   "n": 24,
+   "n_reject": 15,
+   "frac_reject": 0.625
+  },
+  "d9_gjr_evt": {
+   "n": 24,
+   "n_reject": 10,
+   "frac_reject": 0.4166666666666667
+  }
+ },
+ "cells": [
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 758,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 517,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d2_har_log_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 134,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 635,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 648,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 664,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 631,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 726,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 390,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1h",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 376,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 180,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 131,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 165,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 218,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d4_garch_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 167,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 136,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 164,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 185,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 98,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "4h",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 98,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 59,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 51,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 52,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 87,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 60,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 47,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 60,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 66,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 28,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "12h",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 27,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 29,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 18,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 17,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 28,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d4_garch_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 27,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 21,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 25,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 20,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 13,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 14,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 775,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 549,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d2_har_log_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 114,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 637,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 633,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 644,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 644,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 743,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 375,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1h",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 391,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 186,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d1_har_rv",
+   "counts_significant": null,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 144,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 163,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 189,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d4_garch_normal",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 162,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 144,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 161,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 177,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 102,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "4h",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 100,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 67,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 67,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 66,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 93,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 67,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 50,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 66,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 62,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 39,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "12h",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 39,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 27,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 27,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 28,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 30,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d4_garch_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 31,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 24,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 29,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 30,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 20,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 18,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 678,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 429,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d2_har_log_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 34,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d3_range",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 564,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 538,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 501,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 554,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 532,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 341,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1h",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 369,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 228,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 117,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d2_har_log_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 147,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 165,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 156,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 131,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 156,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 145,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 98,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "4h",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 100,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 68,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 32,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 40,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 72,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 45,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 39,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 43,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 38,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 25,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "12h",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 26,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 27,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 11,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 14,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d3_range",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 21,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 11,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": null,
+   "durations_cluster_beta_lt_1": null,
+   "n_violations": 10,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 14,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": null,
+   "durations_cluster_beta_lt_1": null,
+   "n_violations": 10,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 11,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 11,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 739,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 437,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": null,
+   "durations_cluster_beta_lt_1": null,
+   "n_violations": 3,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 587,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 688,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 665,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 622,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 714,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 455,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1h",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 398,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 183,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 101,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d2_har_log_rv",
+   "counts_significant": null,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 146,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 178,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 158,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 166,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 165,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 189,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 90,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "4h",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 101,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 50,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 34,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 45,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 80,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d4_garch_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 49,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 31,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 52,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 49,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 25,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "12h",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 26,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 33,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 13,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 19,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 14,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d4_garch_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 21,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 18,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 25,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 24,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 12,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "DOGEUSDT",
+   "interval": "1d",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 15,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 929,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 438,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d2_har_log_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 18,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 707,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 612,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 621,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 650,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 642,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 327,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1h",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 347,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 191,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 116,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d2_har_log_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 151,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 199,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 152,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 157,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 157,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 172,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 83,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "4h",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 92,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 65,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 35,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d2_har_log_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 47,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 93,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 53,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 38,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 54,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 64,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 25,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "12h",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 27,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 27,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 14,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d2_har_log_rv",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 19,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d3_range",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 23,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d4_garch_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 20,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 21,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 19,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 19,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": null,
+   "durations_cluster_beta_lt_1": null,
+   "n_violations": 10,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "BNBUSDT",
+   "interval": "1d",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 11,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 720,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 389,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": null,
+   "durations_cluster_beta_lt_1": null,
+   "n_violations": 4,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 539,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 580,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 568,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 595,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d7_gjr_t",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 680,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 340,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1h",
+   "model": "d9_gjr_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 348,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 183,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 93,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d2_har_log_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 164,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 171,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d4_garch_normal",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 146,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d5_garch_t",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 149,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d6_gjr_normal",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 152,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 169,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 88,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "4h",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 86,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d0_trailing_std",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 60,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d1_har_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 27,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 38,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d3_range",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 67,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d4_garch_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 42,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 40,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 38,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 49,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d8_garch_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 24,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "12h",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 23,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d0_trailing_std",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 21,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d1_har_rv",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 13,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d2_har_log_rv",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 13,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d3_range",
+   "counts_significant": true,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 20,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d4_garch_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 17,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d5_garch_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 15,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d6_gjr_normal",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 16,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d7_gjr_t",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": false,
+   "n_violations": 21,
+   "rejects_iid_bernoulli_null": false
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d8_garch_evt",
+   "counts_significant": true,
+   "durations_significant": true,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 16,
+   "rejects_iid_bernoulli_null": true
+  },
+  {
+   "symbol": "XRPUSDT",
+   "interval": "1d",
+   "model": "d9_gjr_evt",
+   "counts_significant": false,
+   "durations_significant": false,
+   "durations_cluster_beta_lt_1": true,
+   "n_violations": 14,
+   "rejects_iid_bernoulli_null": false
+  }
+ ]
+}
