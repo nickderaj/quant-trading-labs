@@ -1,0 +1,40 @@
+{
+ "symbol": "BTCUSDT",
+ "interval": "4h",
+ "level": 0.01,
+ "n_holdout_bars": 2185,
+ "buy_and_hold": {
+  "sharpe": -1.405131299947497,
+  "total_log_return": -0.5860551877852763,
+  "compound_return": -0.4434816794506191,
+  "max_drawdown": -0.7485621265284679
+ },
+ "garch_nig_overlay": {
+  "gross_sharpe": -1.4104547188199752,
+  "gross_total_log_return": -0.5364000511045035,
+  "gross_max_drawdown": -0.7038561245892692,
+  "net_sharpe": -1.4685742504873875,
+  "net_total_log_return": -0.5585267590055819,
+  "net_max_drawdown": -0.7189815174606924,
+  "mean_turnover_per_bar": 0.020252681442512396,
+  "annualized_fee_drag": 0.022177341099936694,
+  "n_bars": 2185,
+  "n_1pct_exceedances": 35,
+  "n_var_valid": 2185,
+  "expected_exceedances": 21.9
+ },
+ "garch_normal_overlay": {
+  "gross_sharpe": -1.4175469862227534,
+  "gross_total_log_return": -0.5397345929247168,
+  "gross_max_drawdown": -0.705251030498895,
+  "net_sharpe": -1.4764577569907267,
+  "net_total_log_return": -0.5621866597930613,
+  "net_max_drawdown": -0.7211892976962355,
+  "mean_turnover_per_bar": 0.020550486988891947,
+  "annualized_fee_drag": 0.022503444595731843,
+  "n_bars": 2185,
+  "n_1pct_exceedances": 60,
+  "n_var_valid": 2185,
+  "expected_exceedances": 21.9
+ }
+}

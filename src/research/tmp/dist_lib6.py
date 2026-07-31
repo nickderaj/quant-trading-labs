@@ -442,6 +442,26 @@ def rolling_garch_forecast_zoo(
     return forecast, fits
 
 
+def zoo_quantile_forecast(variance_forecast: np.ndarray, fits: list[dict], family_module, q: float) -> np.ndarray:
+    """VaR forecast at level q for a zoo GARCH model: sigma_t * family_module.ppf(q,
+    shape_t), forward-filled step-function shape exactly like score_zoo_model's own
+    per-refit-segment convention (used by Phase 6's risk-limit overlay)."""
+    n = len(variance_forecast)
+    out = np.full(n, np.nan)
+    if not fits:
+        return out
+    for i, f in enumerate(fits):
+        start = f["t"]
+        end = fits[i + 1]["t"] if i + 1 < len(fits) else n
+        v = variance_forecast[start:end]
+        mask = np.isfinite(v) & (v > 0)
+        sigma = np.sqrt(v[mask])
+        z_q = family_module.ppf(q, f["shape"])
+        idx = np.arange(start, end)[mask]
+        out[idx] = sigma * z_q
+    return out
+
+
 def score_zoo_model(actual: np.ndarray, variance_forecast: np.ndarray, fits: list[dict], family_module) -> np.ndarray:
     """Per-bar log score for a zoo GARCH model: family_module.logpdf(z,
     shape) - log(sigma) (change-of-variables from the unit-variance-
