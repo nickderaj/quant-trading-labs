@@ -346,3 +346,64 @@ $z_t$ series will carry that mis-calibration forward into the GPD tail fit; this
 exactly why [Gate C](08-research-methodology.md#frozen-transfer-check) (stability across
 symbols) matters for the whole two-stage pipeline, not just for the GPD piece in
 isolation.
+
+---
+
+### Spliced (semiparametric) EVT density
+
+**In one sentence.** A full probability density built from three pieces glued
+together — a [GPD](#generalized-pareto-with-xi-and-beta-explained-separately) tail on
+each side, an empirically-smoothed "body" in the middle — constructed so the total area
+under the curve is guaranteed to equal exactly 1, without ever needing to numerically
+search for a rescaling constant after the fact.
+
+**The maths.** [Conditional EVT](#conditional-evt-mcneil-frey-two-stage) alone gives a
+quantile/ES forecast beyond each threshold, but not a full density — useful for VaR/ES
+backtests, useless for a [log score](06-scoring-rules-and-calibration.md#log-score)
+contest. The fix: let $k_{\text{lo}}, k_{\text{up}}$ be the number of training-window
+observations beyond each threshold (out of $n$ total), and build the density as three
+separately-normalized pieces, each scaled by its own **known** weight:
+
+$$f(z) = \begin{cases}
+\frac{k_{\text{lo}}}{n} \cdot f_{\text{GPD,lo}}(z) & z < u_{\text{lo}} \\
+\left(1 - \frac{k_{\text{lo}}+k_{\text{up}}}{n}\right) \cdot f_{\text{KDE}}(z) & u_{\text{lo}} \le z \le u_{\text{up}} \\
+\frac{k_{\text{up}}}{n} \cdot f_{\text{GPD,up}}(z) & z > u_{\text{up}}
+\end{cases}$$
+
+where $f_{\text{GPD,lo/up}}$ is each tail's own GPD exceedance density (already a proper
+density on its own support) and $f_{\text{KDE}}$ is a Gaussian kernel density estimate on
+the training-window "body" observations, itself rescaled by a single `scipy.integrate.quad`
+call so it integrates to exactly 1 over $[u_{\text{lo}}, u_{\text{up}}]$. Because
+$\frac{k_{\text{lo}}}{n} + \left(1-\frac{k_{\text{lo}}+k_{\text{up}}}{n}\right) +
+\frac{k_{\text{up}}}{n} = 1$ and each piece already integrates to 1 over its own support,
+the whole spliced density integrates to exactly 1 **by construction** — no post-hoc
+rescaling of the spliced whole is ever needed.
+
+**Why it is here.** Notebook 5's own d8/d9 (GARCH-EVT, GJR-EVT) never entered its
+log-score contest because normalizing a GPD-tails-plus-empirical-body density proved too
+fiddly to trust — "an honest partial entry beats a hand-waved density" was its stated
+fallback. `dist_lib6.fit_spliced_evt_density` / `spliced_evt_logpdf`
+(`src/results/6_distribution_zoo.md`) fix the *normalization* half of that problem
+structurally rather than iteratively — but **not** the *continuity* half: nothing here
+forces the density's height to match exactly where the pieces meet, only that each
+piece integrates to its own known weight.
+
+**Worked example.** On BTC at 12h, GARCH-EVT and GJR-EVT decisively beat every other
+model in this repo's zoo (both non-EVT and the Phase 3 wider zoo) on log score, tied
+only with each other — the single cleanest Gate A result this notebook produced. It does
+**not** replicate cross-sectionally: on the other five symbols, EVT is rarely even the
+single best model, let alone a significant winner — the same "spectacular on BTC alone"
+pattern this whole research programme has repeatedly found and repeatedly refused to
+over-trust.
+
+**Pitfalls.** Verified numerically that total mass integrates to $\approx 1.0$
+(to seven decimal places in a synthetic check) — but the density is **not** perfectly
+continuous at the two splice points: a direct check found the relative jump in density
+height at each threshold typically runs 20-33% (mean ~0.28 across all fitted refits in
+this notebook), not zero. This is a real, quantified, and reported limitation, not a
+hidden one — a perfectly smooth splice would need the GPD scale and the KDE bandwidth to
+be jointly constrained to match at the boundary, which was judged not worth the
+complexity given the explicit timebox on this piece of work. Every log score computed
+from this density is still valid (it comes from a genuine, exactly-normalized
+probability density) — it is only the *visual smoothness* at the seam that is
+approximate.

@@ -469,3 +469,160 @@ def score_zoo_model(actual: np.ndarray, variance_forecast: np.ndarray, fits: lis
         idx = np.arange(start, end)[mask]
         log_score_full[idx] = ll
     return log_score_full
+
+
+# --------------------------------------------------------------------------
+# Phase 5: a normalized, splicable semiparametric EVT density - the fix for
+# notebook 5's own d8/d9 (GARCH-EVT, GJR-EVT), whose GPD-tails-plus-
+# empirical-body density never entered the log-score contest because
+# post-hoc normalization ("integrate then rescale the whole thing") proved
+# fiddly. The fix here is structural, not iterative: build each of the three
+# pieces (lower tail, interior, upper tail) as a SEPARATELY normalized
+# density scaled by its own KNOWN weight (k/n for each tail, 1-2k/n for the
+# interior) - total mass is then exactly 1 by construction (three weights
+# summing to 1, each piece already integrating to 1 over its own support),
+# with no post-hoc rescaling of the spliced whole ever needed.
+# --------------------------------------------------------------------------
+
+from scipy import integrate as _integrate  # noqa: E402
+from scipy import stats as _st2  # noqa: E402
+
+
+def fit_spliced_evt_density(z: np.ndarray, tail_frac: float = 0.10) -> dict | None:
+    """Fit both GPD tails (dist_lib5.fit_gpd_tail) plus a Gaussian-KDE
+    interior on the SAME training window's standardized residuals, and
+    precompute the interior piece's own normalizing constant (a single
+    scalar quad integral over the body range, not an iterative hunt).
+    Returns None if either tail fit fails or the KDE degenerates.
+    """
+    z = z[np.isfinite(z)]
+    n = len(z)
+    if n < 100:
+        return None
+    lower_fit = L5.fit_gpd_tail(z, tail_frac=tail_frac, tail="lower")
+    upper_fit = L5.fit_gpd_tail(z, tail_frac=tail_frac, tail="upper")
+    if lower_fit is None or upper_fit is None:
+        return None
+    u_lower, u_upper = -lower_fit["u"], upper_fit["u"]  # thresholds in z-space
+    if u_lower >= u_upper:
+        return None
+    k_lower, k_upper = lower_fit["n_exceed"], upper_fit["n_exceed"]
+    w_lower, w_upper = k_lower / n, k_upper / n
+    w_interior = 1.0 - w_lower - w_upper
+    if w_interior <= 1e-6:
+        return None
+
+    body = z[(z >= u_lower) & (z <= u_upper)]
+    if len(body) < 30 or np.std(body) <= 1e-10:
+        return None
+    try:
+        kde = _st2.gaussian_kde(body, bw_method="silverman")
+    except Exception:
+        return None
+    body_mass, _err = _integrate.quad(lambda x: kde(x)[0], u_lower, u_upper, limit=100)
+    if not np.isfinite(body_mass) or body_mass <= 1e-8:
+        return None
+
+    return {
+        "lower_fit": lower_fit, "upper_fit": upper_fit,
+        "u_lower": float(u_lower), "u_upper": float(u_upper),
+        "w_lower": float(w_lower), "w_upper": float(w_upper), "w_interior": float(w_interior),
+        "kde": kde, "body_mass": float(body_mass), "n": n,
+    }
+
+
+def spliced_evt_logpdf(z: np.ndarray, spliced_fit: dict) -> np.ndarray:
+    """Log density of the spliced EVT distribution, vectorized over z. Each
+    of the three pieces is a properly normalized density (integrating to 1
+    over its own support) times its own known weight - see
+    fit_spliced_evt_density's own docstring for why this makes the total
+    mass exactly 1 without ever normalizing the spliced whole post-hoc.
+    """
+    z = np.asarray(z, dtype=float)
+    u_lower, u_upper = spliced_fit["u_lower"], spliced_fit["u_upper"]
+    w_lower, w_upper, w_interior = spliced_fit["w_lower"], spliced_fit["w_upper"], spliced_fit["w_interior"]
+    lower_fit, upper_fit = spliced_fit["lower_fit"], spliced_fit["upper_fit"]
+    kde, body_mass = spliced_fit["kde"], spliced_fit["body_mass"]
+
+    out = np.full(z.shape, np.nan)
+
+    lower_mask = z < u_lower
+    if lower_mask.any():
+        xi, beta = lower_fit["xi"], lower_fit["beta"]
+        y = -z[lower_mask] - (-u_lower)  # exceedance in y-space, y = -z, u = -u_lower
+        support = 1.0 + xi * y / beta
+        valid = support > 0
+        dens = np.full(y.shape, 0.0)
+        dens[valid] = (1.0 / beta) * support[valid] ** (-1.0 / xi - 1.0)
+        with np.errstate(divide="ignore"):
+            out[lower_mask] = np.log(w_lower) + np.log(np.where(dens > 0, dens, 1e-300))
+
+    upper_mask = z > u_upper
+    if upper_mask.any():
+        xi, beta = upper_fit["xi"], upper_fit["beta"]
+        y = z[upper_mask] - u_upper
+        support = 1.0 + xi * y / beta
+        valid = support > 0
+        dens = np.full(y.shape, 0.0)
+        dens[valid] = (1.0 / beta) * support[valid] ** (-1.0 / xi - 1.0)
+        with np.errstate(divide="ignore"):
+            out[upper_mask] = np.log(w_upper) + np.log(np.where(dens > 0, dens, 1e-300))
+
+    interior_mask = ~lower_mask & ~upper_mask
+    if interior_mask.any():
+        kde_vals = kde(z[interior_mask])
+        normalized = kde_vals / body_mass
+        with np.errstate(divide="ignore"):
+            out[interior_mask] = np.log(w_interior) + np.log(np.where(normalized > 0, normalized, 1e-300))
+
+    return out
+
+
+def rolling_spliced_evt_fits(
+    returns: np.ndarray, variance_fits: list[dict], model: str, max_train: int, tail_frac: float = 0.10,
+) -> list[dict]:
+    """Same refit cadence/training-window convention as
+    dist_lib5.rolling_gpd_paths (refit exactly when the underlying variance
+    model refits, on the SAME training window), producing a list of
+    {"t": ..., "spliced": fit_spliced_evt_density(...)} entries for
+    forward-fill scoring via score_spliced_evt_model below."""
+    fits_out = []
+    for vf in variance_fits:
+        t = vf["t"]
+        start = max(0, t - max_train)
+        window = returns[start:t]
+        window = window[np.isfinite(window)]
+        if len(window) < 60:
+            continue
+        sig2 = L5._variance_path_for_fit(vf, window, model)
+        if np.any(sig2 <= 0) or not np.all(np.isfinite(sig2)):
+            continue
+        z = window / np.sqrt(sig2)
+        spliced = fit_spliced_evt_density(z, tail_frac=tail_frac)
+        if spliced is None:
+            continue
+        fits_out.append({"t": t, "spliced": spliced})
+    return fits_out
+
+
+def score_spliced_evt_model(actual: np.ndarray, variance_forecast: np.ndarray, spliced_fits: list[dict]) -> np.ndarray:
+    """Per-bar log score for the spliced EVT density, same segment-batched
+    forward-fill convention as score_zoo_model."""
+    n = len(actual)
+    log_score_full = np.full(n, np.nan)
+    if not spliced_fits:
+        return log_score_full
+    for i, f in enumerate(spliced_fits):
+        start = f["t"]
+        end = spliced_fits[i + 1]["t"] if i + 1 < len(spliced_fits) else n
+        a = actual[start:end]
+        v = variance_forecast[start:end]
+        mask = np.isfinite(a) & np.isfinite(v) & (v > 0)
+        if not mask.any():
+            continue
+        sigma = np.sqrt(v[mask])
+        z = a[mask] / sigma
+        ll = spliced_evt_logpdf(z, f["spliced"]) - np.log(sigma)
+        idx = np.arange(start, end)[mask]
+        log_score_full[idx] = ll
+    return log_score_full

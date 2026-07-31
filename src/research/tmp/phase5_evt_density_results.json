@@ -1,0 +1,587 @@
+{
+ "intervals": {
+  "12h": {
+   "per_symbol": {
+    "BTCUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.4710363473101564,
+      "d1_har_rv": 2.542864600073501,
+      "d2_har_log_rv": 2.5722588488344718,
+      "d3_range": 2.398552564136857,
+      "d4_garch_normal": 2.5221514994133325,
+      "d5_garch_t": 2.622684455811527,
+      "d6_gjr_normal": 2.5298936277206923,
+      "d7_gjr_t": 2.608453728064879,
+      "d8_garch_evt": 2.660197211889886,
+      "d9_gjr_evt": 2.6636482627781253
+     },
+     "best": "d9_gjr_evt",
+     "evt_is_best": true,
+     "d8_beats_all_non_evt_significantly": true,
+     "d9_beats_all_non_evt_significantly": true,
+     "evt_dominates_non_evt": true,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.282931623996213
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.3033692625295632
+     }
+    },
+    "ETHUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.247378953987447,
+      "d1_har_rv": 2.302152315870211,
+      "d2_har_log_rv": 2.3285120026842354,
+      "d3_range": 2.1975195107501424,
+      "d4_garch_normal": 2.2768776375032442,
+      "d5_garch_t": 2.3542583422747847,
+      "d6_gjr_normal": 2.285487059195493,
+      "d7_gjr_t": 2.3553784521622663,
+      "d8_garch_evt": 1.598055937704728,
+      "d9_gjr_evt": 1.6077568156666315
+     },
+     "best": "d7_gjr_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.31107529434524483
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.31565753776189576
+     }
+    },
+    "SOLUSDT": {
+     "scores": {
+      "d0_trailing_std": 1.8441038159191003,
+      "d1_har_rv": 1.9265420809355256,
+      "d2_har_log_rv": 1.9471818962984266,
+      "d3_range": 1.8143959910482237,
+      "d4_garch_normal": 1.912506921426565,
+      "d5_garch_t": 1.962197362114664,
+      "d6_gjr_normal": 1.9157242826115597,
+      "d7_gjr_t": 1.9598432448849044,
+      "d8_garch_evt": 1.1721933155707824,
+      "d9_gjr_evt": 0.6525169527854888
+     },
+     "best": "d5_garch_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.30682108763106297
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.280930982227818
+     }
+    },
+    "DOGEUSDT": {
+     "scores": {
+      "d0_trailing_std": 1.9154691796739576,
+      "d1_har_rv": 2.0036667713698235,
+      "d2_har_log_rv": 2.07045682759266,
+      "d3_range": 1.9691532129624627,
+      "d4_garch_normal": 2.0033022437154786,
+      "d5_garch_t": 2.0975415305801546,
+      "d6_gjr_normal": 2.0045773716558895,
+      "d7_gjr_t": 2.0945346577392123,
+      "d8_garch_evt": 1.3285757641958968,
+      "d9_gjr_evt": 1.5929187500942172
+     },
+     "best": "d5_garch_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.23903288888832883
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.28755066365239085
+     }
+    },
+    "BNBUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.3732677139943896,
+      "d1_har_rv": 2.4532457252717164,
+      "d2_har_log_rv": 2.5282410075285577,
+      "d3_range": 2.358674125343647,
+      "d4_garch_normal": 2.446992254889996,
+      "d5_garch_t": 2.530277207649517,
+      "d6_gjr_normal": 2.445341510761709,
+      "d7_gjr_t": 2.522717092169434,
+      "d8_garch_evt": 2.570018549391401,
+      "d9_gjr_evt": 2.568613659514619
+     },
+     "best": "d8_garch_evt",
+     "evt_is_best": true,
+     "d8_beats_all_non_evt_significantly": true,
+     "d9_beats_all_non_evt_significantly": true,
+     "evt_dominates_non_evt": true,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.26301092208507104
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.30252831031819516
+     }
+    },
+    "XRPUSDT": {
+     "scores": {
+      "d0_trailing_std": 1.9654487014812725,
+      "d1_har_rv": 2.07552275643043,
+      "d2_har_log_rv": 1.9466824259340723,
+      "d3_range": 1.863017394575722,
+      "d4_garch_normal": 1.9983478988313967,
+      "d5_garch_t": 2.2868224260205365,
+      "d6_gjr_normal": 1.932128179812052,
+      "d7_gjr_t": 2.2909878430559596,
+      "d8_garch_evt": 1.7792314854129982,
+      "d9_gjr_evt": 1.7752525924948366
+     },
+     "best": "d7_gjr_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.30622033744451566
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 44,
+      "frac_succeeded": 0.9565217391304348,
+      "mean_relative_continuity_gap": 0.2716724888423661
+     }
+    }
+   },
+   "n_evt_best_of_6": 2,
+   "n_evt_dominates_non_evt_of_6": 2,
+   "btc_evt_dominates": true,
+   "evt_wins_gate_a_cross_sectionally": false
+  },
+  "4h": {
+   "per_symbol": {
+    "BTCUSDT": {
+     "scores": {
+      "d0_trailing_std": 3.0725242318998878,
+      "d1_har_rv": 3.1386826061444704,
+      "d2_har_log_rv": 3.1674493527951935,
+      "d3_range": 3.1007883098060427,
+      "d4_garch_normal": 3.1303186384182817,
+      "d5_garch_t": 3.2542038761989,
+      "d6_gjr_normal": 3.124373809686245,
+      "d7_gjr_t": 3.233262432205519,
+      "d8_garch_evt": 2.935319280294671,
+      "d9_gjr_evt": 2.8543021836046685
+     },
+     "best": "d5_garch_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.2570444422493857
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.2921358475151365
+     }
+    },
+    "ETHUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.831459315623141,
+      "d1_har_rv": 2.900992175940865,
+      "d2_har_log_rv": 2.9202829964021597,
+      "d3_range": 2.8641668678297236,
+      "d4_garch_normal": 2.8796226121371182,
+      "d5_garch_t": 2.9914890436150476,
+      "d6_gjr_normal": 2.8879976914359005,
+      "d7_gjr_t": 2.9863008122033645,
+      "d8_garch_evt": 2.5112537469450595,
+      "d9_gjr_evt": 2.763900895824516
+     },
+     "best": "d5_garch_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.3283743124430945
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.33206214849369214
+     }
+    },
+    "SOLUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.426744915581424,
+      "d1_har_rv": 2.506426949272857,
+      "d2_har_log_rv": 2.5188553581923583,
+      "d3_range": 2.4617526734170583,
+      "d4_garch_normal": 2.4987935393933136,
+      "d5_garch_t": 2.561388390049316,
+      "d6_gjr_normal": 2.4899964099729726,
+      "d7_gjr_t": 2.5526343112628154,
+      "d8_garch_evt": 2.31310650013182,
+      "d9_gjr_evt": 2.226199089368468
+     },
+     "best": "d5_garch_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.29209829578387575
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.2870260644467347
+     }
+    },
+    "DOGEUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.481679088279088,
+      "d1_har_rv": 2.5651263808265194,
+      "d2_har_log_rv": 2.6180653426626144,
+      "d3_range": 2.5769856954272785,
+      "d4_garch_normal": 2.5481178335680075,
+      "d5_garch_t": 2.7012527095551957,
+      "d6_gjr_normal": 2.540918124624162,
+      "d7_gjr_t": 2.67957130426167,
+      "d8_garch_evt": 2.2954725665036655,
+      "d9_gjr_evt": 1.9565798510680708
+     },
+     "best": "d5_garch_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.2789161558959266
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.2665718535456222
+     }
+    },
+    "BNBUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.927852693235552,
+      "d1_har_rv": 3.01244475721327,
+      "d2_har_log_rv": 3.0621451615796262,
+      "d3_range": 3.0001675856642733,
+      "d4_garch_normal": 3.016074416448048,
+      "d5_garch_t": 3.1243680334947803,
+      "d6_gjr_normal": 3.015109991080456,
+      "d7_gjr_t": 3.119523005697377,
+      "d8_garch_evt": 2.966211204971764,
+      "d9_gjr_evt": 3.051779703645932
+     },
+     "best": "d5_garch_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.30971410170457775
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.30162233514357917
+     }
+    },
+    "XRPUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.633339333252588,
+      "d1_har_rv": 2.7186935090586446,
+      "d2_har_log_rv": 2.685734352223512,
+      "d3_range": 2.6801277876032636,
+      "d4_garch_normal": 2.7079714642836166,
+      "d5_garch_t": 2.866895596943975,
+      "d6_gjr_normal": 2.712682322922017,
+      "d7_gjr_t": 2.856774767188064,
+      "d8_garch_evt": 2.8744714446185946,
+      "d9_gjr_evt": 2.625600314873918
+     },
+     "best": "d8_garch_evt",
+     "evt_is_best": true,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.2919124639145189
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 46,
+      "frac_succeeded": 1.0,
+      "mean_relative_continuity_gap": 0.31264057331429135
+     }
+    }
+   },
+   "n_evt_best_of_6": 1,
+   "n_evt_dominates_non_evt_of_6": 0,
+   "btc_evt_dominates": false,
+   "evt_wins_gate_a_cross_sectionally": false
+  },
+  "1d": {
+   "per_symbol": {
+    "BTCUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.139423379464339,
+      "d1_har_rv": 2.190657131257402,
+      "d2_har_log_rv": 2.2439605421689555,
+      "d3_range": 2.116754962556573,
+      "d4_garch_normal": 2.162495377692633,
+      "d5_garch_t": 2.2201499686848485,
+      "d6_gjr_normal": 2.166474470080506,
+      "d7_gjr_t": 2.2197192322772157,
+      "d8_garch_evt": 2.2776834080670603,
+      "d9_gjr_evt": 2.2787214729240244
+     },
+     "best": "d9_gjr_evt",
+     "evt_is_best": true,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.24682880779490832
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.2629547056307706
+     }
+    },
+    "ETHUSDT": {
+     "scores": {
+      "d0_trailing_std": 1.903194307419785,
+      "d1_har_rv": 1.9314340933267782,
+      "d2_har_log_rv": 1.9656183256549302,
+      "d3_range": 1.882778103478837,
+      "d4_garch_normal": 1.8965598751850956,
+      "d5_garch_t": 1.9597530459507735,
+      "d6_gjr_normal": 1.9032210703357866,
+      "d7_gjr_t": 1.9708236896392106,
+      "d8_garch_evt": 0.8230341757556442,
+      "d9_gjr_evt": 1.4104781995264106
+     },
+     "best": "d7_gjr_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.21490741488532472
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.24241925238968962
+     }
+    },
+    "SOLUSDT": {
+     "scores": {
+      "d0_trailing_std": 1.4779486957791992,
+      "d1_har_rv": 1.5836459357360366,
+      "d2_har_log_rv": 1.6216672551365998,
+      "d3_range": 1.5081750980884037,
+      "d4_garch_normal": 1.5449221584596395,
+      "d5_garch_t": 1.6001140416750181,
+      "d6_gjr_normal": 1.5457302555142804,
+      "d7_gjr_t": 1.5925423531215002,
+      "d8_garch_evt": -0.1777977523349631,
+      "d9_gjr_evt": -0.17873925999534945
+     },
+     "best": "d2_har_log_rv",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.27045709863426975
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.2598155988709786
+     }
+    },
+    "DOGEUSDT": {
+     "scores": {
+      "d0_trailing_std": 1.5679115729598865,
+      "d1_har_rv": 1.6538029231114166,
+      "d2_har_log_rv": 1.7195221398500293,
+      "d3_range": 1.598586101182283,
+      "d4_garch_normal": 1.661067221444171,
+      "d5_garch_t": 1.7293492945286615,
+      "d6_gjr_normal": 1.6547586952342261,
+      "d7_gjr_t": 1.7280292276919924,
+      "d8_garch_evt": 1.147347340061448,
+      "d9_gjr_evt": 0.560090035309568
+     },
+     "best": "d5_garch_t",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.24160166641301326
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.23613708827335783
+     }
+    },
+    "BNBUSDT": {
+     "scores": {
+      "d0_trailing_std": 2.040829755571742,
+      "d1_har_rv": 2.1075706440874056,
+      "d2_har_log_rv": 2.208537088950562,
+      "d3_range": 2.043365845158569,
+      "d4_garch_normal": 2.078655455273443,
+      "d5_garch_t": 2.1451827138118458,
+      "d6_gjr_normal": 2.086587967222176,
+      "d7_gjr_t": 2.15628096256638,
+      "d8_garch_evt": 1.6191162124576102,
+      "d9_gjr_evt": 1.621466716216575
+     },
+     "best": "d2_har_log_rv",
+     "evt_is_best": false,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.2612569629954543
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.3140780925248786
+     }
+    },
+    "XRPUSDT": {
+     "scores": {
+      "d0_trailing_std": 1.5436115163958473,
+      "d1_har_rv": 1.7286197978179327,
+      "d2_har_log_rv": 1.613420732607564,
+      "d3_range": 1.643379808986755,
+      "d4_garch_normal": 1.6145344229625829,
+      "d5_garch_t": 1.9175068936937498,
+      "d6_gjr_normal": 1.605272608731715,
+      "d7_gjr_t": 1.9107078057995037,
+      "d8_garch_evt": 1.944075986704725,
+      "d9_gjr_evt": 1.9422644883400686
+     },
+     "best": "d8_garch_evt",
+     "evt_is_best": true,
+     "d8_beats_all_non_evt_significantly": false,
+     "d9_beats_all_non_evt_significantly": false,
+     "evt_dominates_non_evt": false,
+     "d8_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.29697214771896874
+     },
+     "d9_health": {
+      "n_refits_attempted": 46,
+      "n_refits_succeeded": 39,
+      "frac_succeeded": 0.8478260869565217,
+      "mean_relative_continuity_gap": 0.27913498910111306
+     }
+    }
+   },
+   "n_evt_best_of_6": 2,
+   "n_evt_dominates_non_evt_of_6": 0,
+   "btc_evt_dominates": false,
+   "evt_wins_gate_a_cross_sectionally": false
+  }
+ },
+ "scope_note": "1h dropped (compute budget, see module docstring)"
+}

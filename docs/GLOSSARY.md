@@ -143,6 +143,7 @@ instead — this list has no teaching order, it's a lookup table.
 - [Simple vs. log return](09-market-data-and-microstructure.md#simple-vs-log-return)
 - [Skewed-t (Jones-Faddy)](01-probability-and-distributions.md#skewed-t-jones-faddy)
 - [Skewness](01-probability-and-distributions.md#skewness)
+- [Spliced (semiparametric) EVT density](07-extreme-value-theory.md#spliced-semiparametric-evt-density)
 - [Stability vs. magnitude](08-research-methodology.md#stability-vs-magnitude)
 - [Standard deviation](01-probability-and-distributions.md#standard-deviation)
 - [Standard error](03-statistical-inference.md#standard-error)

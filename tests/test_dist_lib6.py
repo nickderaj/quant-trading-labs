@@ -159,3 +159,54 @@ class TestZooGarchFitAndScore:
         expected_seg2 = ged.logpdf(actual[150:] / sigma[150:], (1.2,)) - np.log(sigma[150:])
         np.testing.assert_allclose(ls[:150], expected_seg1)
         np.testing.assert_allclose(ls[150:], expected_seg2)
+
+
+class TestSplicedEvtDensity:
+    def test_total_mass_integrates_to_one(self):
+        from scipy import integrate
+
+        rng = np.random.default_rng(SEED)
+        z = rng.standard_t(4, 3000)
+        z = (z - z.mean()) / z.std()
+        fit = L6.fit_spliced_evt_density(z, tail_frac=0.10)
+        assert fit is not None
+
+        def pdf(x):
+            return float(np.exp(L6.spliced_evt_logpdf(np.array([x]), fit)[0]))
+
+        lower, _ = integrate.quad(pdf, -60, fit["u_lower"], limit=200)
+        middle, _ = integrate.quad(pdf, fit["u_lower"], fit["u_upper"], limit=200)
+        upper, _ = integrate.quad(pdf, fit["u_upper"], 60, limit=200)
+        assert (lower + middle + upper) == pytest.approx(1.0, abs=1e-4)
+
+    def test_piece_weights_sum_to_one(self):
+        rng = np.random.default_rng(SEED)
+        z = rng.standard_t(4, 3000)
+        z = (z - z.mean()) / z.std()
+        fit = L6.fit_spliced_evt_density(z, tail_frac=0.10)
+        assert fit is not None
+        assert (fit["w_lower"] + fit["w_interior"] + fit["w_upper"]) == pytest.approx(1.0)
+        assert fit["w_lower"] == pytest.approx(0.10, abs=0.02)
+        assert fit["w_upper"] == pytest.approx(0.10, abs=0.02)
+
+    def test_returns_none_on_insufficient_data(self):
+        rng = np.random.default_rng(SEED)
+        z = rng.standard_normal(50)
+        assert L6.fit_spliced_evt_density(z, tail_frac=0.10) is None
+
+    def test_score_spliced_evt_model_scores_are_finite_and_match_manual_computation(self):
+        rng = np.random.default_rng(SEED)
+        z_train = rng.standard_t(4, 3000)
+        z_train = (z_train - z_train.mean()) / z_train.std()
+        fit = L6.fit_spliced_evt_density(z_train, tail_frac=0.10)
+        assert fit is not None
+
+        n = 500
+        actual = rng.standard_t(4, n) * 0.01
+        variance_forecast = np.full(n, 0.0001)
+        spliced_fits = [{"t": 0, "spliced": fit}]
+        ls = L6.score_spliced_evt_model(actual, variance_forecast, spliced_fits)
+        assert np.all(np.isfinite(ls))
+        sigma = np.sqrt(variance_forecast)
+        expected = L6.spliced_evt_logpdf(actual / sigma, fit) - np.log(sigma)
+        np.testing.assert_allclose(ls, expected)
