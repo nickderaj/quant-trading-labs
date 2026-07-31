@@ -605,6 +605,161 @@ directly on this finding.
 
 ---
 
+### Generalized error distribution (GED)
+
+**In one sentence.** A bell-shaped distribution with one dial that moves smoothly
+between a sharp-peaked, thin-tailed shape and the ordinary bell curve — unlike the
+Student-t, every one of its moments (variance, kurtosis, everything) always exists.
+
+**The maths.** With shape parameter $\kappa > 0$ (also called $\beta$ in some sources,
+e.g. `scipy.stats.gennorm`),
+
+$$f(x \mid \kappa) = \frac{\kappa}{2\lambda\Gamma(1/\kappa)} \exp\!\left(-\left|\frac{x}{\lambda}\right|^\kappa\right)$$
+
+where $\lambda$ is chosen so the distribution has unit variance:
+$\lambda = \sqrt{\Gamma(1/\kappa)/\Gamma(3/\kappa)}$. $\kappa = 2$ is exactly the
+[normal distribution](#normalgaussian-distribution); $\kappa = 1$ is the Laplace
+(double-exponential) distribution — sharper peak, heavier shoulders than normal, but
+still every moment finite, unlike the [Student-t](#student-t-distribution) below $\nu=4$.
+
+**Why it is here.** Notebook 5 found GARCH-t's fitted degrees of freedom sitting near
+the finite-variance boundary ($\nu \approx 2$–3, see [Student-t](#student-t-distribution)
+above) — a single "how fat is the tail" dial forced onto data that might actually want a
+sharp peak with only moderately heavy shoulders, not genuinely unbounded kurtosis. GED
+tests that directly: if it wins over Student-t, the tail isn't infinite-variance-adjacent,
+it's just sharply peaked. `src/research/tmp/densities/ged.py`
+(`dist_lib6`'s Phase 3 density zoo).
+
+**Worked example.** Verified in `tests/test_dist_lib6_ged.py`: at $\kappa=2$, GED's
+`logpdf` matches `scipy.stats.norm.logpdf` exactly (both being the same distribution),
+and its 1%-level expected shortfall matches the closed-form normal ES to four decimal
+places — confirming the unit-variance rescaling $\lambda(\kappa)$ is implemented
+correctly before it's ever fit to real returns.
+
+**Pitfalls.** $\kappa$ and the Student-t's $\nu$ measure genuinely different things and
+are not interchangeable dials — $\kappa$ controls peakedness with *all moments always
+finite*; $\nu$ controls a power-law tail where moments can vanish entirely. A model can
+prefer small $\kappa$ (sharp peak) while still disagreeing with a low-$\nu$ t on how
+extreme the very worst 1% of days can get — check the fitted expected shortfall, not
+just which family wins on log score.
+
+---
+
+### Normal-inverse Gaussian (NIG) distribution
+
+**In one sentence.** A distribution built from mixing normals of different, randomly
+varying widths (the "inverse Gaussian" part controls how the width itself varies) — it
+gets semi-heavy tails and, unlike GED or the plain Student-t, can be lopsided.
+
+**The maths.** With tail-weight parameter $\alpha > 0$ and skew parameter $\beta$
+(requiring $\alpha > |\beta|$), plus scale $\delta$ and location $\mu$ fixed to give
+zero mean and unit variance:
+
+$$f(x) = \frac{\alpha\delta}{\pi}\exp\!\big(\delta\gamma+\beta(x-\mu)\big)\,
+\frac{K_1\!\left(\alpha\sqrt{\delta^2+(x-\mu)^2}\right)}{\sqrt{\delta^2+(x-\mu)^2}},
+\qquad \gamma=\sqrt{\alpha^2-\beta^2}$$
+
+$K_1$ is the modified Bessel function of the second kind (`scipy.special.kv(1, ...)`) —
+like the [gamma function](#the-gamma-function), treat it as a normalizing black box.
+$\beta = 0$ gives a symmetric distribution; $\beta \ne 0$ tilts one tail heavier than the
+other. As $\alpha \to \infty$ with $\beta=0$, NIG approaches the normal distribution.
+
+**Why it is here.** Every innovation distribution used in notebooks 4–5 (normal,
+Student-t, semiparametric-EVT) is symmetric. NIG is the one family in this repo's zoo
+that can fit an asymmetric conditional tail directly, in one density, rather than
+needing separate upper/lower GPD tail fits as EVT does — a direct test of whether
+crypto's down-day tail genuinely differs in *shape*, not just magnitude, from its up-day
+tail. `src/research/tmp/densities/nig.py`.
+
+**Worked example.** Verified in `tests/test_dist_lib6_nig.py`: for shape
+$(\alpha,\beta)=(3.0, 1.0)$ — noticeably skewed — numerically integrating the density
+confirms mean $\approx 0$ and variance $\approx 1$ to roughly 14 decimal places once
+$\delta = \gamma^3/\alpha^2$ and $\mu = -\delta\beta/\gamma$ are solved for from that
+constraint, and its `ppf`/CDF round-trip to within $10^{-9}$.
+
+**Pitfalls.** NIG has no closed-form quantile function — `ppf` here numerically inverts
+the CDF via root-finding, which is markedly slower than GED/Johnson-SU/Hansen-skew-t's
+closed forms and made `es()`'s naive nested-integration implementation take ~25 seconds
+per call before being replaced with a fixed-point Gauss-Legendre rule. $(\alpha,\beta)$
+also sit on a genuine likelihood ridge (both jointly move tail weight and skew), so MLE
+recovery on a few thousand points is noisier than GED's or Hansen skew-t's better-
+conditioned shape parameters — a modest discrepancy between fitted and "eyeballed" shape
+is expected, not necessarily a bug.
+
+---
+
+### Johnson SU distribution
+
+**In one sentence.** A four-parameter family built by squashing a normal distribution
+through a hyperbolic-sine transform — extremely flexible in both skew and kurtosis, and
+(unlike NIG) has an exact, cheap-to-evaluate quantile function.
+
+**The maths.** With shape parameters $\gamma$ (skew-ish) and $\delta > 0$
+(kurtosis-ish), Johnson SU is the distribution of $X = \xi + \eta\sinh\!\left(
+\frac{Z-\gamma}{\delta}\right)$ for $Z$ standard normal. `scipy.stats.johnsonsu(gamma,
+delta)` implements it directly; this repo's standardized version solves for the location
+$\xi$ (`loc`) and scale $\eta$ (`scale`) that give exactly zero mean and unit variance at
+each $(\gamma,\delta)$, via `scipy.stats.johnsonsu(gamma, delta).stats(moments='mv')`.
+
+**Why it is here.** Its quantile function is closed-form (scipy provides it directly,
+no root-finding), which matters on this hardware — VaR/ES forecasts across a full rolling
+history are cheap, unlike NIG's numerically-inverted CDF. It is also the most flexible
+member of this zoo in both directions (skew and kurtosis independently), making it the
+natural "if a shape this flexible still can't beat GARCH-t, the extra parameters aren't
+buying anything real" test case. `src/research/tmp/densities/johnsonsu.py`.
+
+**Worked example.** Verified in `tests/test_dist_lib6_johnsonsu.py`: at $\gamma=0$,
+large $\delta$ (e.g. $\delta=20$), the density at $z=0$ approaches the standard normal's
+density there (Johnson SU $\to$ normal as $\delta\to\infty$ with $\gamma=0$) — confirming
+the standardization and the shape's own limiting behaviour agree before it is trusted on
+real returns.
+
+**Pitfalls.** Two free shape parameters plus the closed-form loc/scale solve is cheaper
+to *fit* per refit than NIG or Hansen skew-t, but this repo's own GJR-GARCH finding
+(notebook 5: extra parameters cost more in refit-to-refit estimation noise than they buy
+in fit quality) applies here too — a flexible shape is not automatically a better
+*forecast*, only a better *in-sample* fit.
+
+---
+
+### Hansen's skewed Student-t distribution
+
+**In one sentence.** A Student-t with one extra dial for lopsidedness, built so that
+setting that dial to zero recovers the ordinary (symmetric, unit-variance) Student-t
+exactly — the most direct, single-parameter test of "are the two tails really the same
+shape" this repo has.
+
+**The maths.** With degrees of freedom $\nu > 2$ and skew $\lambda \in (-1,1)$, define
+$c = \frac{\Gamma((\nu+1)/2)}{\sqrt{\pi(\nu-2)}\,\Gamma(\nu/2)}$,
+$a = \frac{4\lambda c(\nu-2)}{\nu-1}$, $b=\sqrt{1+3\lambda^2-a^2}$; the density is
+piecewise around $z=-a/b$, using $(1-\lambda)$ as the left tail's scale and
+$(1+\lambda)$ as the right's. Built by Hansen (1994) specifically so it is *already*
+zero-mean, unit-variance for every valid $(\nu,\lambda)$ — no separate rescaling needed,
+unlike GED/Johnson SU/NIG above. At $\lambda=0$: $a=0$, $b=1$, and the density collapses
+exactly to a standardized Student-t.
+
+**Why it is here.** Every finding in this research programme so far is about the *lower*
+tail specifically (the Acerbi-Székely ES-underestimation result, GJR's leverage effect).
+"Are the two tails the same shape" has never actually been tested — Hansen's $\lambda$
+answers it in one number, and because it nests the symmetric t exactly at $\lambda=0$, it
+is directly likelihood-ratio-testable against the incumbent GARCH-t, the same way GJR was
+tested against plain GARCH in notebook 5. `src/research/tmp/densities/hansen_skewt.py`.
+
+**Worked example.** Verified in `tests/test_dist_lib6_hansen_skewt.py`: at $\lambda=0$,
+`logpdf` matches the standardized Student-t formula already used elsewhere in this
+codebase (`st.t.logpdf(z\sqrt{\nu/(\nu-2)}, df=\nu) + \log\sqrt{\nu/(\nu-2)}$, the same
+expression `dist_lib5.vectorized_t_scores` uses) to within $10^{-15}$ — machine
+precision, confirming the piecewise formula's boundary case is not just approximately
+but *exactly* the family it claims to nest.
+
+**Pitfalls.** $\lambda$ answers "is the tail shape asymmetric," which is a different
+question from GJR's leverage $\gamma$ ("does a down-move raise *next-bar variance* more
+than an up-move of the same size") — a nonzero $\hat\lambda$ and a significant leverage
+effect are both about asymmetry but are not the same finding and should not be
+conflated when both are reported for the same interval/symbol.
+
+---
+
 ### Gamma distribution
 
 **In one sentence.** A flexible, always-positive, typically right-skewed distribution
