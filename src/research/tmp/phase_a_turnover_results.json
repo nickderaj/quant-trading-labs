@@ -1,0 +1,614 @@
+{
+  "config_id": "cfg2_12h",
+  "interval": "12h",
+  "by_offset": {
+    "0": {
+      "A0_baseline_band0": {
+        "name": "A0_baseline_band0",
+        "sharpe_net": -0.17982292785719303,
+        "sharpe_gross": 0.6023993718132705,
+        "mean_turnover_per_bar": 0.6746074070747196,
+        "turnover_per_year": 492.4634071645453,
+        "annual_fee_drag_pct": 0.2792649838515154,
+        "max_drawdown_net": -0.8289830134842808,
+        "bootstrap_ci_excess_return": [
+          -0.25835661223319434,
+          0.2462095839456857
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.17857095913276325
+      },
+      "A1_hysteresis_band0.05": {
+        "name": "A1_hysteresis_band0.05",
+        "sharpe_net": -0.17956508301938173,
+        "sharpe_gross": 0.538724094855963,
+        "mean_turnover_per_bar": 0.5994473733458376,
+        "turnover_per_year": 437.5965825424615,
+        "annual_fee_drag_pct": 0.24463468413264766,
+        "max_drawdown_net": -0.7806687260757321,
+        "bootstrap_ci_excess_return": [
+          -0.2562643350881518,
+          0.24475620821387992
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.163012713934322
+      },
+      "A1_hysteresis_band0.1": {
+        "name": "A1_hysteresis_band0.1",
+        "sharpe_net": -0.18091197046210689,
+        "sharpe_gross": 0.5056071433225238,
+        "mean_turnover_per_bar": 0.5652726016763355,
+        "turnover_per_year": 412.64899922372496,
+        "annual_fee_drag_pct": 0.22920024059301405,
+        "max_drawdown_net": -0.7749818629094862,
+        "bootstrap_ci_excess_return": [
+          -0.25706199885475556,
+          0.2451085965414598
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.15671613924815242
+      },
+      "A1_hysteresis_band0.15": {
+        "name": "A1_hysteresis_band0.15",
+        "sharpe_net": -0.2630390669111496,
+        "sharpe_gross": 0.44606881680536825,
+        "mean_turnover_per_bar": 0.5372271371571236,
+        "turnover_per_year": 392.1758101247002,
+        "annual_fee_drag_pct": 0.2166768474443595,
+        "max_drawdown_net": -0.7267211453172624,
+        "bootstrap_ci_excess_return": [
+          -0.2503424025380888,
+          0.22082636046006307
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.13995069756203635
+      },
+      "A1_hysteresis_band0.2": {
+        "name": "A1_hysteresis_band0.2",
+        "sharpe_net": -0.3112444055609473,
+        "sharpe_gross": 0.3883974873206394,
+        "mean_turnover_per_bar": 0.5173964105599188,
+        "turnover_per_year": 377.6993797087407,
+        "annual_fee_drag_pct": 0.20789874617132298,
+        "max_drawdown_net": -0.7492623305035189,
+        "bootstrap_ci_excess_return": [
+          -0.25171660275579477,
+          0.21941953336934325
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.12542558964751005
+      },
+      "A2_quantize_grid0.05": {
+        "name": "A2_quantize_grid0.05",
+        "sharpe_net": -0.032620145984448984,
+        "sharpe_gross": 0.7496301210132574,
+        "mean_turnover_per_bar": 0.6742507492507492,
+        "turnover_per_year": 492.20304695304696,
+        "annual_fee_drag_pct": 0.2790989820054589,
+        "max_drawdown_net": -0.6863113844337103,
+        "bootstrap_ci_excess_return": [
+          -0.24167670321749465,
+          0.2544100626114602
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.25
+      },
+      "A3_throttle_k2": {
+        "name": "A3_throttle_k2",
+        "sharpe_net": 0.14200437105663477,
+        "sharpe_gross": 0.6398006492552891,
+        "mean_turnover_per_bar": 0.42229032391164806,
+        "turnover_per_year": 308.27193645550307,
+        "annual_fee_drag_pct": 0.1666966805826621,
+        "max_drawdown_net": -0.5505793226565234,
+        "bootstrap_ci_excess_return": [
+          -0.22857735969418636,
+          0.27323460266008137
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.240492694460205
+      },
+      "A3_throttle_k3": {
+        "name": "A3_throttle_k3",
+        "sharpe_net": 0.7127405058403992,
+        "sharpe_gross": 1.1014617407800484,
+        "mean_turnover_per_bar": 0.3259830404346743,
+        "turnover_per_year": 237.96761951731224,
+        "annual_fee_drag_pct": 0.12639119898262605,
+        "max_drawdown_net": -0.47137657409683037,
+        "bootstrap_ci_excess_return": [
+          -0.18687338379946558,
+          0.31308603530295026
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.240492694460205
+      },
+      "A3_throttle_k6": {
+        "name": "A3_throttle_k6",
+        "sharpe_net": 1.0110515992468403,
+        "sharpe_gross": 1.2300377134443228,
+        "mean_turnover_per_bar": 0.19716624440519157,
+        "turnover_per_year": 143.93135841578984,
+        "annual_fee_drag_pct": 0.07464468800303664,
+        "max_drawdown_net": -0.43251452905411675,
+        "bootstrap_ci_excess_return": [
+          -0.1674447379677096,
+          0.35220123166343753
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.240492694460205
+      },
+      "A4_combined": {
+        "name": "A4_combined",
+        "sharpe_net": 0.5611560907911468,
+        "sharpe_gross": 0.9281099213642724,
+        "mean_turnover_per_bar": 0.2971528471528472,
+        "turnover_per_year": 216.92157842157843,
+        "annual_fee_drag_pct": 0.11459466611486574,
+        "max_drawdown_net": -0.4559595849021373,
+        "bootstrap_ci_excess_return": [
+          -0.1992585287298761,
+          0.2988108712905412
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.2
+      }
+    },
+    "7": {
+      "A0_baseline_band0": {
+        "name": "A0_baseline_band0",
+        "sharpe_net": 0.1340460564480977,
+        "sharpe_gross": 0.9160634216743312,
+        "mean_turnover_per_bar": 0.6659349694248703,
+        "turnover_per_year": 486.1325276801553,
+        "annual_fee_drag_pct": 0.2752207936276858,
+        "max_drawdown_net": -0.5598314416605258,
+        "bootstrap_ci_excess_return": [
+          -0.24934371392662386,
+          0.2459971721690649
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.18358627564483393
+      },
+      "A1_hysteresis_band0.05": {
+        "name": "A1_hysteresis_band0.05",
+        "sharpe_net": 0.2007371968825021,
+        "sharpe_gross": 0.9171992248519721,
+        "mean_turnover_per_bar": 0.5945780820539452,
+        "turnover_per_year": 434.04199989938,
+        "annual_fee_drag_pct": 0.24242419023750908,
+        "max_drawdown_net": -0.4841492729222636,
+        "bootstrap_ci_excess_return": [
+          -0.2424948959899821,
+          0.2533794265212327
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.16499367006070498
+      },
+      "A1_hysteresis_band0.1": {
+        "name": "A1_hysteresis_band0.1",
+        "sharpe_net": 0.22502317786808498,
+        "sharpe_gross": 0.9090649920248031,
+        "mean_turnover_per_bar": 0.5599137681606694,
+        "turnover_per_year": 408.73705075728867,
+        "annual_fee_drag_pct": 0.22679786692726997,
+        "max_drawdown_net": -0.46029941777515976,
+        "bootstrap_ci_excess_return": [
+          -0.2410488525680271,
+          0.2548819883016861
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.16499367006070503
+      },
+      "A1_hysteresis_band0.15": {
+        "name": "A1_hysteresis_band0.15",
+        "sharpe_net": 0.118890084122027,
+        "sharpe_gross": 0.8287875749463672,
+        "mean_turnover_per_bar": 0.5330245976215391,
+        "turnover_per_year": 389.1079562637235,
+        "annual_fee_drag_pct": 0.214811694025227,
+        "max_drawdown_net": -0.45531399833751196,
+        "bootstrap_ci_excess_return": [
+          -0.24058422237013816,
+          0.23041172036426913
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.13690288332546163
+      },
+      "A1_hysteresis_band0.2": {
+        "name": "A1_hysteresis_band0.2",
+        "sharpe_net": 0.08341668652203467,
+        "sharpe_gross": 0.7838872602066688,
+        "mean_turnover_per_bar": 0.513387984107883,
+        "turnover_per_year": 374.7732283987546,
+        "annual_fee_drag_pct": 0.206132585840409,
+        "max_drawdown_net": -0.45651528512974127,
+        "bootstrap_ci_excess_return": [
+          -0.2379632182656286,
+          0.22402915835825277
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.11864843653649279
+      },
+      "A2_quantize_grid0.05": {
+        "name": "A2_quantize_grid0.05",
+        "sharpe_net": 0.26292245268524256,
+        "sharpe_gross": 1.0403324493785209,
+        "mean_turnover_per_bar": 0.6643606393606395,
+        "turnover_per_year": 484.9832667332668,
+        "annual_fee_drag_pct": 0.27448851834727017,
+        "max_drawdown_net": -0.4369804766999447,
+        "bootstrap_ci_excess_return": [
+          -0.23888853279791425,
+          0.2538109482454247
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.25
+      },
+      "A3_throttle_k2": {
+        "name": "A3_throttle_k2",
+        "sharpe_net": 0.46951999125174426,
+        "sharpe_gross": 0.965492704755731,
+        "mean_turnover_per_bar": 0.41732280397185784,
+        "turnover_per_year": 304.6456468994562,
+        "annual_fee_drag_pct": 0.1645823137155995,
+        "max_drawdown_net": -0.32507907799116564,
+        "bootstrap_ci_excess_return": [
+          -0.2264134402519396,
+          0.2716903312642518
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.18358627564483393
+      },
+      "A3_throttle_k3": {
+        "name": "A3_throttle_k3",
+        "sharpe_net": 0.8890158917142512,
+        "sharpe_gross": 1.2957078446784338,
+        "mean_turnover_per_bar": 0.3247291147676501,
+        "turnover_per_year": 237.05225378038458,
+        "annual_fee_drag_pct": 0.12587566516650123,
+        "max_drawdown_net": -0.25340591972669546,
+        "bootstrap_ci_excess_return": [
+          -0.2006989269516791,
+          0.30821278880144953
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.18358627564483393
+      },
+      "A3_throttle_k6": {
+        "name": "A3_throttle_k6",
+        "sharpe_net": 1.0530241922538384,
+        "sharpe_gross": 1.2895392786769968,
+        "mean_turnover_per_bar": 0.19400764685401034,
+        "turnover_per_year": 141.62558220342754,
+        "annual_fee_drag_pct": 0.07340583195049438,
+        "max_drawdown_net": -0.23569915050711165,
+        "bootstrap_ci_excess_return": [
+          -0.17530149234327885,
+          0.31176904978539965
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.18358627564483393
+      },
+      "A4_combined": {
+        "name": "A4_combined",
+        "sharpe_net": 0.901029129041257,
+        "sharpe_gross": 1.3100194405902987,
+        "mean_turnover_per_bar": 0.3002747252747253,
+        "turnover_per_year": 219.2005494505495,
+        "annual_fee_drag_pct": 0.11586632492266087,
+        "max_drawdown_net": -0.26182212496580765,
+        "bootstrap_ci_excess_return": [
+          -0.19100920642825361,
+          0.2863069986374501
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.25
+      }
+    },
+    "14": {
+      "A0_baseline_band0": {
+        "name": "A0_baseline_band0",
+        "sharpe_net": -0.039807610954710006,
+        "sharpe_gross": 0.7506272597672282,
+        "mean_turnover_per_bar": 0.6692101008206219,
+        "turnover_per_year": 488.523373599054,
+        "annual_fee_drag_pct": 0.2767465824587398,
+        "max_drawdown_net": -0.5722210036091313,
+        "bootstrap_ci_excess_return": [
+          -0.31130170441083677,
+          0.2852009710171746
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.18418445723736132
+      },
+      "A1_hysteresis_band0.05": {
+        "name": "A1_hysteresis_band0.05",
+        "sharpe_net": 0.027627696919858863,
+        "sharpe_gross": 0.7467555515415947,
+        "mean_turnover_per_bar": 0.5979103701479836,
+        "turnover_per_year": 436.47457020802807,
+        "annual_fee_drag_pct": 0.24393670330945544,
+        "max_drawdown_net": -0.5372083908479336,
+        "bootstrap_ci_excess_return": [
+          -0.30988956941058804,
+          0.2959763252044537
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.15803447608573967
+      },
+      "A1_hysteresis_band0.1": {
+        "name": "A1_hysteresis_band0.1",
+        "sharpe_net": 0.04833376500883886,
+        "sharpe_gross": 0.7397867557514416,
+        "mean_turnover_per_bar": 0.5628204250752659,
+        "turnover_per_year": 410.85891030494406,
+        "annual_fee_drag_pct": 0.2281004416110621,
+        "max_drawdown_net": -0.4915650026057493,
+        "bootstrap_ci_excess_return": [
+          -0.30151682098797855,
+          0.2879989937512881
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.15760019075438683
+      },
+      "A1_hysteresis_band0.15": {
+        "name": "A1_hysteresis_band0.15",
+        "sharpe_net": -0.0011273359405387024,
+        "sharpe_gross": 0.7143629939811961,
+        "mean_turnover_per_bar": 0.5353771238054277,
+        "turnover_per_year": 390.8253003779622,
+        "annual_fee_drag_pct": 0.2158556581577161,
+        "max_drawdown_net": -0.47437397786816865,
+        "bootstrap_ci_excess_return": [
+          -0.3008961094832755,
+          0.276557371893986
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.13799963944153554
+      },
+      "A1_hysteresis_band0.2": {
+        "name": "A1_hysteresis_band0.2",
+        "sharpe_net": -0.027496901695171296,
+        "sharpe_gross": 0.6795382256200658,
+        "mean_turnover_per_bar": 0.5163571830929334,
+        "turnover_per_year": 376.9407436578414,
+        "annual_fee_drag_pct": 0.2074409661170272,
+        "max_drawdown_net": -0.4852940687946955,
+        "bootstrap_ci_excess_return": [
+          -0.29929630409627084,
+          0.27314063704752606
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.11908843822591851
+      },
+      "A2_quantize_grid0.05": {
+        "name": "A2_quantize_grid0.05",
+        "sharpe_net": 0.012203427690702614,
+        "sharpe_gross": 0.8023169986452379,
+        "mean_turnover_per_bar": 0.6681818181818181,
+        "turnover_per_year": 487.7727272727272,
+        "annual_fee_drag_pct": 0.2762678821836547,
+        "max_drawdown_net": -0.5275626748348379,
+        "bootstrap_ci_excess_return": [
+          -0.3033598929390892,
+          0.2807536504810078
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.25000000000000006
+      },
+      "A3_throttle_k2": {
+        "name": "A3_throttle_k2",
+        "sharpe_net": 0.3082999038576304,
+        "sharpe_gross": 0.8119604642126966,
+        "mean_turnover_per_bar": 0.4218809694176975,
+        "turnover_per_year": 307.97310767491916,
+        "annual_fee_drag_pct": 0.16652219908322238,
+        "max_drawdown_net": -0.45292986019250425,
+        "bootstrap_ci_excess_return": [
+          -0.2812560416989064,
+          0.3186182484466031
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.18418445723736127
+      },
+      "A3_throttle_k3": {
+        "name": "A3_throttle_k3",
+        "sharpe_net": 0.48980797678681753,
+        "sharpe_gross": 0.8616185335000004,
+        "mean_turnover_per_bar": 0.32712606458594073,
+        "turnover_per_year": 238.80202714773674,
+        "annual_fee_drag_pct": 0.12686145886623904,
+        "max_drawdown_net": -0.3873115590901445,
+        "bootstrap_ci_excess_return": [
+          -0.2576458443203994,
+          0.3449947537900292
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.16842514425319605
+      },
+      "A3_throttle_k6": {
+        "name": "A3_throttle_k6",
+        "sharpe_net": 0.27203066591555786,
+        "sharpe_gross": 0.5459899566887583,
+        "mean_turnover_per_bar": 0.19765711501396108,
+        "turnover_per_year": 144.28969396019158,
+        "annual_fee_drag_pct": 0.07483737406492809,
+        "max_drawdown_net": -0.3884198547268133,
+        "bootstrap_ci_excess_return": [
+          -0.26332101804530783,
+          0.2867876119762724
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.16842514425319605
+      },
+      "A4_combined": {
+        "name": "A4_combined",
+        "sharpe_net": 0.526859324407677,
+        "sharpe_gross": 0.873562042660263,
+        "mean_turnover_per_bar": 0.3022977022977023,
+        "turnover_per_year": 220.67732267732268,
+        "annual_fee_drag_pct": 0.11669056176450526,
+        "max_drawdown_net": -0.3581698080979136,
+        "bootstrap_ci_excess_return": [
+          -0.2662264118354849,
+          0.3462978065315475
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.2
+      }
+    },
+    "21": {
+      "A0_baseline_band0": {
+        "name": "A0_baseline_band0",
+        "sharpe_net": -0.3430329826991165,
+        "sharpe_gross": 0.42818780844834015,
+        "mean_turnover_per_bar": 0.667190595338687,
+        "turnover_per_year": 487.0491345972415,
+        "annual_fee_drag_pct": 0.27580566889624536,
+        "max_drawdown_net": -0.8274476224311402,
+        "bootstrap_ci_excess_return": [
+          -0.3810800012519536,
+          0.30757814241463355
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.18210470116386157
+      },
+      "A1_hysteresis_band0.05": {
+        "name": "A1_hysteresis_band0.05",
+        "sharpe_net": -0.2424691045375429,
+        "sharpe_gross": 0.46711114686498995,
+        "mean_turnover_per_bar": 0.5978321223120947,
+        "turnover_per_year": 436.41744928782913,
+        "annual_fee_drag_pct": 0.2439012776476871,
+        "max_drawdown_net": -0.7219461354006479,
+        "bootstrap_ci_excess_return": [
+          -0.3723297918877846,
+          0.3182128436955164
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.16027333725840903
+      },
+      "A1_hysteresis_band0.1": {
+        "name": "A1_hysteresis_band0.1",
+        "sharpe_net": -0.1705308094571532,
+        "sharpe_gross": 0.5095517278941392,
+        "mean_turnover_per_bar": 0.5631190493889401,
+        "turnover_per_year": 411.0769060539263,
+        "annual_fee_drag_pct": 0.22823452347565415,
+        "max_drawdown_net": -0.6563714076214917,
+        "bootstrap_ci_excess_return": [
+          -0.36172150486230753,
+          0.3194979504388183
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.14545214287387792
+      },
+      "A1_hysteresis_band0.15": {
+        "name": "A1_hysteresis_band0.15",
+        "sharpe_net": -0.28611606644526694,
+        "sharpe_gross": 0.4196134951502634,
+        "mean_turnover_per_bar": 0.5373593545175598,
+        "turnover_per_year": 392.27232879781866,
+        "annual_fee_drag_pct": 0.21673607828442898,
+        "max_drawdown_net": -0.6368893470760517,
+        "bootstrap_ci_excess_return": [
+          -0.3595461556633732,
+          0.29745351108439766
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.1396386857914968
+      },
+      "A1_hysteresis_band0.2": {
+        "name": "A1_hysteresis_band0.2",
+        "sharpe_net": -0.2871070578282857,
+        "sharpe_gross": 0.40968723946862734,
+        "mean_turnover_per_bar": 0.5178125927786055,
+        "turnover_per_year": 378.003192728382,
+        "annual_fee_drag_pct": 0.20808285138966573,
+        "max_drawdown_net": -0.6379549576071443,
+        "bootstrap_ci_excess_return": [
+          -0.358342144282779,
+          0.29631237317089
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.11934252975508981
+      },
+      "A2_quantize_grid0.05": {
+        "name": "A2_quantize_grid0.05",
+        "sharpe_net": -0.2853404662501274,
+        "sharpe_gross": 0.4851733039060605,
+        "mean_turnover_per_bar": 0.6675074925074924,
+        "turnover_per_year": 487.2804695304695,
+        "annual_fee_drag_pct": 0.2759538999873728,
+        "max_drawdown_net": -0.760564479628133,
+        "bootstrap_ci_excess_return": [
+          -0.3737821393271534,
+          0.30265342512193844
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.20000000000000007
+      },
+      "A3_throttle_k2": {
+        "name": "A3_throttle_k2",
+        "sharpe_net": -0.0443683503636015,
+        "sharpe_gross": 0.44640136046461043,
+        "mean_turnover_per_bar": 0.4215602505293917,
+        "turnover_per_year": 307.738982886456,
+        "annual_fee_drag_pct": 0.16638570110610315,
+        "max_drawdown_net": -0.7351123343325537,
+        "bootstrap_ci_excess_return": [
+          -0.35751080812779407,
+          0.3378884225422662
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.18210470116386157
+      },
+      "A3_throttle_k3": {
+        "name": "A3_throttle_k3",
+        "sharpe_net": 0.4978584445253477,
+        "sharpe_gross": 0.881154301129573,
+        "mean_turnover_per_bar": 0.32616925032069033,
+        "turnover_per_year": 238.10355273410394,
+        "annual_fee_drag_pct": 0.12646784070717682,
+        "max_drawdown_net": -0.5484744084823051,
+        "bootstrap_ci_excess_return": [
+          -0.3242637582844248,
+          0.3919587355246934
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.1515722205780839
+      },
+      "A3_throttle_k6": {
+        "name": "A3_throttle_k6",
+        "sharpe_net": 0.587449586277264,
+        "sharpe_gross": 0.7962693818134329,
+        "mean_turnover_per_bar": 0.1960020274213754,
+        "turnover_per_year": 143.08148001760404,
+        "annual_fee_drag_pct": 0.07418786596310623,
+        "max_drawdown_net": -0.762429601160334,
+        "bootstrap_ci_excess_return": [
+          -0.33495754757830903,
+          0.42701128844686553
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.1515722205780839
+      },
+      "A4_combined": {
+        "name": "A4_combined",
+        "sharpe_net": 0.3681916221365269,
+        "sharpe_gross": 0.7300356433003334,
+        "mean_turnover_per_bar": 0.30024975024975026,
+        "turnover_per_year": 219.1823176823177,
+        "annual_fee_drag_pct": 0.11585603666335621,
+        "max_drawdown_net": -0.5454412234523806,
+        "bootstrap_ci_excess_return": [
+          -0.3434218798171621,
+          0.38152028251778075
+        ],
+        "n_folds": 11,
+        "max_abs_net_position_imbalance": 0.2
+      }
+    }
+  }
+}

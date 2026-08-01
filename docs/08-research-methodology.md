@@ -519,6 +519,83 @@ bug rather than a genuine high-turnover strategy.
 
 ---
 
+### Turnover budgeting
+
+**In one sentence.** Deliberately capping or reducing how often a strategy trades —
+treating turnover as a scarce resource to spend on genuine signal rather than an
+automatic byproduct of recomputing a ranking every bar — as a distinct lever from the
+signal itself.
+
+**The maths.** No single formula; it's a design choice applied on top of an existing
+position-construction rule, evaluated by comparing [turnover](#turnover) and net Sharpe
+before/after the intervention on an *otherwise identical* signal (same predictions,
+different trading mechanics).
+
+**Why it is here.** Notebook 7's whole starting premise, stated directly in
+`src/results/3_cross_sectional_ic.md` and `6_distribution_zoo.md`: every alpha attempt
+in this research programme so far has been gross-profitable and net-negative, i.e. cost,
+not signal absence, is the thing that keeps failing. Phase A tests three independent
+turnover-budgeting mechanisms — [hysteresis bands](#hysteresis-no-trade-band), weight
+quantization (rounding position sizes to a coarse grid so sub-grid rebalances never
+trigger a trade), and rebalance throttling (recomputing positions only every $k$-th
+bar) — against the *same frozen predictions* used in `3_cross_sectional_ic.md`'s
+cfg2_12h, specifically so a Sharpe change can only be attributed to trading mechanics,
+never to a re-fit signal.
+
+**Worked example.** cfg2_12h's own headline turnover was ~578/year (offset 0); holding
+the identical model's predictions fixed and rebalancing only every 6th 12h bar instead
+of every bar cut turnover 71% and moved net Sharpe from roughly flat/negative to
+consistently positive across all four origin offsets — but the bootstrap 95% CI on
+excess return over basket still included zero at every offset, so the point-estimate
+improvement did not clear the pre-declared bar for a genuine edge (Gate TC, see
+`src/results/7_alpha_generation.md`).
+
+**Pitfalls.** A turnover-budgeting change that also happens to alter *which* predictions
+get acted on (e.g. retraining a model per intervention, or reusing an unseeded model fit)
+confounds "cost reduction helped" with "a different, luckier signal got tested" — the
+predictions must be generated once, from a fixed seed, and reused unchanged across every
+turnover intervention for the comparison to mean anything.
+
+---
+
+### Hysteresis / no-trade band
+
+**In one sentence.** A rule that only lets a position *enter* a portfolio leg once it
+clears a threshold, but only lets it *exit* once it has fallen past a wider threshold —
+so a prediction hovering right at the cutoff, flickering in and out of the top/bottom
+ranks from noise alone, doesn't trigger a trade on every flicker.
+
+**The maths.** With a cross-section of $n$ ranked symbols and a target leg size
+$k_{\text{enter}} = \lfloor n \cdot \text{top\_frac} \rfloor$: a symbol enters a leg once
+it ranks in the top/bottom $k_{\text{enter}}$, but a symbol already in that leg is only
+dropped once it falls outside the wider $k_{\text{exit}} = \lfloor n \cdot
+(\text{top\_frac} + \text{band}) \rfloor$ — between the two thresholds, it holds its
+previous bar's position rather than being re-ranked from scratch. At $\text{band}=0$,
+$k_{\text{exit}} = k_{\text{enter}}$ and the rule collapses to plain top-$k$/bottom-$k$
+selection every bar (no memory effect at all).
+
+**Why it is here.** `src/research/tmp/alpha_lib7.py`'s `hysteresis_weights` is Phase A's
+first turnover-reduction mechanism, built specifically because most of cfg2_12h's
+turnover was suspected to be "rank noise" (small, contribution-free shuffles near the
+top/bottom cutoff) rather than genuine signal-driven trading. `band=0.0` is required to
+reproduce `research.dollar_neutral_weights` exactly — the correctness check every other
+band's number depends on (`tests/test_alpha_lib7.py`).
+
+**Worked example.** A symbol sitting at rank 5 of 30 with `top_frac=0.2` (top 6 symbols
+long) that drifts to rank 7 next bar would exit the long leg immediately under plain
+top-$k$ selection; with `band=0.1` ($k_{\text{exit}}=9$), it stays long until it falls
+to rank 10 or worse — avoiding an exit-then-possible-re-entry round trip if it drifts
+back to rank 6 the bar after.
+
+**Pitfalls.** A wider band trades a real thing (turnover) for a real cost (positions lag
+the ranking more, potentially holding a symbol whose relative attractiveness has
+genuinely changed, not just noisily fluctuated) — the fact that turnover falls
+monotonically as the band widens (verified as a tripwire in
+`tests/test_alpha_lib7.py`) says nothing on its own about whether net Sharpe improves;
+that has to be checked separately, band by band.
+
+---
+
 ### Maximum drawdown
 
 **In one sentence.** The single worst peak-to-trough decline a strategy's cumulative
