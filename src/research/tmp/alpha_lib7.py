@@ -265,6 +265,53 @@ def apply_book_scale(weights: pl.DataFrame, book_scale: pl.DataFrame) -> pl.Data
     )
 
 
+def forward_fill_shape_path(fits: list[dict], n: int, shape_idx: int) -> np.ndarray:
+    """Forward-filled per-bar path of one component of a rolling zoo fit's
+    `shape` tuple (e.g. Hansen skew-t's nu at shape_idx=0, lambda at
+    shape_idx=1), using the exact same per-refit-segment convention as
+    `dist_lib6.zoo_quantile_forecast` - each refit's shape value holds from
+    its own `t` until the next refit's `t` (or the end of the series).
+    Causal by construction: fits[i]["shape"] was only ever estimated from
+    data strictly before fits[i]["t"] pushed forward, same guarantee
+    dist_lib6.rolling_garch_forecast_zoo already provides.
+    """
+    out = np.full(n, np.nan)
+    if not fits:
+        return out
+    for i, f in enumerate(fits):
+        start = f["t"]
+        end = fits[i + 1]["t"] if i + 1 < len(fits) else n
+        out[start:end] = f["shape"][shape_idx]
+    return out
+
+
+def zoo_es_forecast(
+    variance_forecast: np.ndarray, fits: list[dict], family_module, q: float
+) -> np.ndarray:
+    """sigma_t * family_module.es(q, shape_t): the actual-return-scale
+    expected-shortfall analogue of dist_lib6.zoo_quantile_forecast (which
+    does the same thing for the VaR/ppf). Not in dist_lib6.py itself because
+    notebook 6 never needed a standalone ES *forecast* path (only
+    Acerbi-Szekely's realized-vs-predicted ES test, which calls
+    family_module.es directly per-refit) - added here as the direct analogue
+    for Phase D's D3 "rank on predicted ES" factor.
+    """
+    n = len(variance_forecast)
+    out = np.full(n, np.nan)
+    if not fits:
+        return out
+    for i, f in enumerate(fits):
+        start = f["t"]
+        end = fits[i + 1]["t"] if i + 1 < len(fits) else n
+        v = variance_forecast[start:end]
+        mask = np.isfinite(v) & (v > 0)
+        sigma = np.sqrt(v[mask])
+        es_z = family_module.es(q, f["shape"])
+        idx = np.arange(start, end)[mask]
+        out[idx] = sigma * es_z
+    return out
+
+
 def apply_tilt(panel: pl.DataFrame, tilt: pl.DataFrame, pred_col: str) -> pl.DataFrame:
     """Shrink pred_col's SIZE input (not the ranking itself) by tilt,
     BEFORE `dollar_neutral_weights`/`hysteresis_weights` are called - the
