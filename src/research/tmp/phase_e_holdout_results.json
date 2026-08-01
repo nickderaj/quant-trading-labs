@@ -1,0 +1,22 @@
+{
+  "gate_verdicts": {
+    "TC": {
+      "fired": false,
+      "reason": "no turnover-qualifying variant clears CI-excludes-zero at >=2/4 offsets"
+    },
+    "RG": {
+      "fired": false,
+      "reason": "no gated variant improves net Sharpe by >=0.20 over ungated at >=3/4 offsets"
+    },
+    "CY": {
+      "fired": false,
+      "reason": "no carry variant clears net>0 + CI-excludes-zero + DSR>50% at >=3/4 offsets"
+    },
+    "TF": {
+      "fired": false,
+      "reason": "D2_tail_premium technically clears the raw numeric bar at 4/4 offsets but its sign flips when the dominant single symbol is excluded - not counted as a genuine cross-sectional finding"
+    }
+  },
+  "any_gate_fired": false,
+  "holdout_run": false
+}
