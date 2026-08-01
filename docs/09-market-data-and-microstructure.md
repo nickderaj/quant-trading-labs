@@ -175,6 +175,44 @@ dynamic) is a real, but separate, question from whether it's *statistically* sig
 
 ---
 
+### Carry / basis trade
+
+**In one sentence.** A trade whose expected profit comes from a structural payment
+(here, [funding rate](#funding-rate)) rather than from predicting which way price will
+move — go long the assets that pay you to hold them, short the assets that charge you.
+
+**The maths.** No new formula beyond funding rate itself; the *ranking* signal is
+$-\text{funding\_rate}$ (or its rolling z-score), not funding rate directly, because of
+how the payment is directional: funding positive means longs pay shorts, so being SHORT
+collects it and being LONG pays it — the sign a genuine carry ranking needs is the
+opposite of funding rate's own raw sign.
+
+**Why it is here.** Notebook 7's Phase C tests carry as a PRIMARY cross-sectional
+signal for the first time in this research programme (notebook 3 only ever included
+raw `funding_rate` as one of eight features inside a fitted model). The sign convention
+above is a pre-declared correction to notebook 7's own runbook, decided from two
+independent sources before any Phase C number was seen: the economic mechanism itself,
+and notebook 3's own screening result that raw `funding_rate`'s IC against forward
+return is *negative* (`src/results/3_cross_sectional_ic.md` Phase 4) — ranking directly
+on funding_rate points the wrong way for a book that wants to profit from the payment.
+
+**Worked example.** `src/results/7_alpha_generation.md`'s Phase C: ranking the frozen
+30-symbol universe by $-\text{funding\_rate}$ (long the most negative-funding names,
+short the most positive-funding ones) at 4h/12h/1d, all four origin offsets — full
+funding coverage (30/30 symbols, 100% of panel rows), so this is not a
+coverage-limited result the way `funding_rate`'s own weak notebook-3 IC survival was.
+
+**Pitfalls.** The whole appeal of a carry trade is supposed to be low turnover (a
+payment schedule changes slowly, unlike a price-momentum rank) — but a *rank-based*
+carry book can still churn heavily if funding rates cluster closely together
+cross-sectionally, so small changes flip which symbols sit in the top/bottom
+`top_frac`. Notebook 7's own Phase C found exactly this: realized turnover on the
+carry book (~970-1260/year at 4h) was *higher* than the price-based cfg2_12h signal
+it was meant to contrast with, not lower — "structurally low-turnover" is a claim about
+the underlying payment, not automatically true of every way you might rank and trade it.
+
+---
+
 ### Taker vs. maker
 
 **In one sentence.** Two roles in a trade: a "maker" places a resting order that sits on

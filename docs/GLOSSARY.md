@@ -26,6 +26,7 @@ instead — this list has no teaching order, it's a lookup table.
 - [Boundary solutions](02-estimation-and-fitting.md#boundary-solutions)
 - [Buy-and-hold baseline](08-research-methodology.md#buy-and-hold-baseline)
 - [Calibration vs. sharpness](06-scoring-rules-and-calibration.md#calibration-vs-sharpness)
+- [Carry / basis trade](09-market-data-and-microstructure.md#carry-basis-trade)
 - [CDF](01-probability-and-distributions.md#cdf)
 - [Central limit theorem (and when it fails under heavy tails)](03-statistical-inference.md#central-limit-theorem-and-when-it-fails-under-heavy-tails)
 - [Christoffersen independence](06-scoring-rules-and-calibration.md#christoffersen-independence)
