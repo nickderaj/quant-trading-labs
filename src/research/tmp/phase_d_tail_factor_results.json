@@ -1,0 +1,129 @@
+{
+  "interval": "4h",
+  "n_symbols": 30,
+  "factors": {
+    "D1_tail_quality": {
+      "ic_stats": {
+        "mean_ic": -0.0032241614081633947,
+        "nw_tstat": -1.428689631180077,
+        "n_periods": 8766
+      },
+      "by_offset": {},
+      "portfolio_skipped_ic_not_significant": true
+    },
+    "D2_tail_premium": {
+      "ic_stats": {
+        "mean_ic": -0.008892796293801693,
+        "nw_tstat": -3.2561579282201136,
+        "n_periods": 8766
+      },
+      "by_offset": {
+        "0": {
+          "sharpe_net": 0.4018027077778658,
+          "sharpe_gross": 0.43154038909814657,
+          "turnover_per_year": 13.60393772893773,
+          "bootstrap_ci_excess_return": [
+            -0.16697821345018202,
+            0.20588569119416758
+          ],
+          "top_symbol_by_leg_bars": "FTTUSDT",
+          "sharpe_net_excl_top_symbol": -0.33823872360284035,
+          "sign_flips_excl_top_symbol": true
+        },
+        "7": {
+          "sharpe_net": 0.4631932440347725,
+          "sharpe_gross": 0.4929111986524253,
+          "turnover_per_year": 13.856143856143856,
+          "bootstrap_ci_excess_return": [
+            -0.1710572694406417,
+            0.23514139211821763
+          ],
+          "top_symbol_by_leg_bars": "FTTUSDT",
+          "sharpe_net_excl_top_symbol": -0.3422177306137291,
+          "sign_flips_excl_top_symbol": true
+        },
+        "14": {
+          "sharpe_net": 0.3948037233231684,
+          "sharpe_gross": 0.4242359057599474,
+          "turnover_per_year": 13.783216783216789,
+          "bootstrap_ci_excess_return": [
+            -0.15219962183116556,
+            0.20571693696655818
+          ],
+          "top_symbol_by_leg_bars": "FTTUSDT",
+          "sharpe_net_excl_top_symbol": -0.4498318474792298,
+          "sign_flips_excl_top_symbol": true
+        },
+        "21": {
+          "sharpe_net": 0.3484447367132432,
+          "sharpe_gross": 0.3784725706874173,
+          "turnover_per_year": 14.001998001998004,
+          "bootstrap_ci_excess_return": [
+            -0.1288942005237346,
+            0.187927760396933
+          ],
+          "top_symbol_by_leg_bars": "FTTUSDT",
+          "sharpe_net_excl_top_symbol": -0.5051038203500636,
+          "sign_flips_excl_top_symbol": true
+        }
+      }
+    },
+    "D3_risk_ranking": {
+      "ic_stats": {
+        "mean_ic": -0.031018570274331442,
+        "nw_tstat": -9.17437094616242,
+        "n_periods": 8766
+      },
+      "by_offset": {
+        "0": {
+          "sharpe_net": -1.5520731520676472,
+          "sharpe_gross": -0.8217988814710794,
+          "turnover_per_year": 456.8850732600733,
+          "bootstrap_ci_excess_return": [
+            -0.2567503260688398,
+            0.01980284927488872
+          ],
+          "top_symbol_by_leg_bars": "FTTUSDT",
+          "sharpe_net_excl_top_symbol": -1.992952083233583,
+          "sign_flips_excl_top_symbol": false
+        },
+        "7": {
+          "sharpe_net": -1.5601856956984799,
+          "sharpe_gross": -0.8073803906987939,
+          "turnover_per_year": 468.2647352647353,
+          "bootstrap_ci_excess_return": [
+            -0.27401730367261873,
+            0.05385438499134581
+          ],
+          "top_symbol_by_leg_bars": "FTTUSDT",
+          "sharpe_net_excl_top_symbol": -2.000777415868449,
+          "sign_flips_excl_top_symbol": false
+        },
+        "14": {
+          "sharpe_net": -1.599672181145087,
+          "sharpe_gross": -0.8529447799139291,
+          "turnover_per_year": 467.75424575424574,
+          "bootstrap_ci_excess_return": [
+            -0.2668011830957518,
+            0.0337160093610085
+          ],
+          "top_symbol_by_leg_bars": "FTTUSDT",
+          "sharpe_net_excl_top_symbol": -2.0477608331185375,
+          "sign_flips_excl_top_symbol": false
+        },
+        "21": {
+          "sharpe_net": -1.677753558854546,
+          "sharpe_gross": -0.9304783788391799,
+          "turnover_per_year": 467.3166833166834,
+          "bootstrap_ci_excess_return": [
+            -0.25823737560573534,
+            0.02301468717532847
+          ],
+          "top_symbol_by_leg_bars": "FTTUSDT",
+          "sharpe_net_excl_top_symbol": -2.148628103527864,
+          "sign_flips_excl_top_symbol": false
+        }
+      }
+    }
+  }
+}

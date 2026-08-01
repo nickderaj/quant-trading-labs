@@ -158,6 +158,7 @@ instead — this list has no teaching order, it's a lookup table.
 - [Survivorship bias](08-research-methodology.md#survivorship-bias)
 - [T-statistic](03-statistical-inference.md#t-statistic)
 - [Tail index](01-probability-and-distributions.md#tail-index)
+- [Tail-premium factor](08-research-methodology.md#tail-premium-factor)
 - [Taker buy ratio](09-market-data-and-microstructure.md#taker-buy-ratio)
 - [Taker vs. maker](09-market-data-and-microstructure.md#taker-vs-maker)
 - [Test statistic](03-statistical-inference.md#test-statistic)

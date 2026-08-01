@@ -460,6 +460,50 @@ a broken calculation.
 
 ---
 
+### Tail-premium factor
+
+**In one sentence.** A hypothesized cross-sectional [information coefficient](#information-coefficient)
+strategy that ranks assets by a fitted tail-shape parameter (e.g. Hansen skew-t's degrees
+of freedom $\nu$) rather than by price momentum or level, on the theory that a riskier
+(fatter-tailed) asset should carry a return premium to compensate holders for that risk —
+the same logic behind an equity value/quality risk premium, applied to tail shape
+specifically.
+
+**The maths.** No new formula beyond [information coefficient](#information-coefficient)
+and [dollar-neutral weights](#turnover): rank symbols each bar by a rolling-fitted
+$\nu_t$ (or $|\lambda_t|$, or a predicted expected shortfall), long one extreme, short
+the other, exactly like any other cross-sectional factor.
+
+**Why it is here.** Notebook 7's Phase D built this directly from notebook 6's own
+per-symbol Hansen skew-t machinery (the slowest-moving signal available in this repo's
+whole toolkit, since a tail-shape parameter refits only every 30 days). The IC is
+computed and checked for significance BEFORE any portfolio is built — the pre-declared
+rule specifically to stop a non-significant IC from being backtested into a spurious
+Sharpe.
+
+**Worked example.** `src/results/7_alpha_generation.md`'s D2 factor (long high-$\nu$/
+thin-tail, short low-$\nu$/fat-tail) found a significant but NEGATIVE full-sample IC
+(NW t=-3.26) — the opposite sign from its own "long thin tails" hypothesis — yet its
+top/bottom-quintile portfolio backtested net-Sharpe-positive at all four origin offsets.
+Dropping the single symbol with the most leg-bars (FTTUSDT, whose collapse during the
+FTX exchange failure a low-refit-count tail fit happened to place at the extreme) flipped
+the sign to clearly negative at every offset — the portfolio's apparent edge was a
+single-symbol artifact, not a genuine cross-sectional tail-premium effect, caught by
+extending this whole programme's own "no single-asset finding" discipline from symbols
+already known to dominate (BTC in EVT) to a symbol identified only by checking leg
+composition after the fact.
+
+**Pitfalls.** A significant cross-sectional IC and a profitable top/bottom-quantile
+portfolio are NOT the same test — Spearman IC uses the full ranked cross-section every
+bar, while a dollar-neutral book only trades the extremes, so the two can even disagree
+in sign if the true relationship is non-monotonic or if one or two symbols' idiosyncratic
+histories dominate a thin extreme leg (as small as 6 symbols out of 30 here). Always
+check leg composition, not just the summary Sharpe, before crediting a cross-sectional
+factor result — especially when the pre-declared universe includes an asset with an
+unusual, low-data-quality history like a collapsed exchange token.
+
+---
+
 ### Transaction costs
 
 **In one sentence.** The real costs of actually executing a trade (exchange fees,
