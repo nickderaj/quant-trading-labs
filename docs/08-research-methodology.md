@@ -701,3 +701,101 @@ explicitly as a risk-management comparison (drawdown, tail exceedances), not a p
 return-maximization contest, since that is the more honest question given what this
 research programme has actually established (regimes and tails predict risk, not
 return).
+
+---
+
+### The replication crisis in factor investing
+
+**In one sentence.** A body of peer-reviewed literature finding that published
+return-predicting factors/anomalies systematically perform worse after publication than
+they did in the original sample — evidence, roughly in proportion to how much of the
+decay is attributable to real capital trading the anomaly away versus how much is
+attributable to the original discovery being statistical noise (an [overfitting](#overfitting)
+and [multiple-testing](#multiple-testing-in-research) story at the scale of an entire
+academic field, not one research programme).
+
+**The maths.** No single formula; the shared empirical pattern across this literature is
+a measured gap between in-sample and out-of-sample (or pre- vs. post-publication)
+risk-adjusted return for the same nominal strategy — the same [in-sample vs.
+out-of-sample](#in-sample-vs-out-of-sample) distinction this repo applies to every
+rolling-refit model, applied instead to an entire literature's worth of published
+strategies.
+
+**Why it is here.** Notebook 9's external research review surveyed this literature
+directly to adjudicate whether this programme's own eight-notebook run of nulls looks
+like genuine market efficiency or an artifact of an unusually strict internal bar
+(`src/results/9_external_research_review.md`, hypotheses (c) and (d)). The literature
+itself does not agree with itself: McLean & Pontiff (2016, Journal of Finance) find
+published factor returns 26% lower out-of-sample and 58% lower post-publication; Jensen,
+Kelly & Pedersen (2023, Journal of Finance) find over 80% of factors remain significant
+once construction is made careful and consistent across 93 countries — a genuine,
+unresolved Tier 1-vs-Tier 1 disagreement, reported as such rather than averaged into a
+false consensus, per this repo's own standard for [conflicting evidence](#pre-declared-gates-and-pre-registration).
+Separately, Harvey, Liu & Zhu (2016, Review of Financial Studies) argue the literature's
+own historical significance bar (t-stat > 2.0, uncorrected for the true scale of factor
+search) is too *loose*, not too strict, once corrected for the true number of factors
+tested (~316 at the time) — directly informing whether this repo's own [deflated
+Sharpe](#deflated-sharpe) threshold (>0.95) is defensible.
+
+**Worked example.** Notebook 8's own commodity carry result (net Sharpe 0.90-0.95 at
+every origin offset, deflated Sharpe probability 0.997, excess-return-vs-basket CI
+including zero — does not fire Gate AC) is exactly the kind of result this literature's
+own findings help contextualize: strong on an absolute-Sharpe basis (comparable to Man
+AHL's disclosed 0.86 institutional track record) but not shown, by this repo's own
+stricter excess-vs-passive-basket criterion, to beat simply holding the underlying asset
+class — the replication-crisis literature's broader lesson (real edges are usually
+smaller, and decay faster, than a first look suggests) argues for caution before treating
+even a Sharpe-0.9 result as obviously real, not for relaxing the bar that caught it.
+
+**Pitfalls.** "Most published factors don't replicate" and "most published factors do
+replicate with careful construction" are not actually the same finding measured two ways
+— McLean-Pontiff and Jensen-Kelly-Pedersen differ in method (raw replication of the
+original specification vs. a standardized, implementation-aware reconstruction across a
+much larger sample), so the honest reading is that BOTH the "markets learn and arbitrage
+away known effects" story and the "naive replication understates real effects" story have
+real peer-reviewed support, and treating either one alone as the literature's settled
+answer would be exactly the false-consensus error this repo's own methodology
+(§ above, [pre-declared gates](#pre-declared-gates-and-pre-registration)) is built to
+avoid.
+
+---
+
+### Regime-conditional backtesting and its multiple-testing cost
+
+**In one sentence.** Splitting a backtest by a market regime (contango/backwardation,
+high/low volatility, ...) and reporting the strategy's performance *within* the regime
+that happens to look best is one of the easiest ways to manufacture a false edge, because
+every candidate regime definition — and every candidate boundary within a definition — is
+itself a free parameter that was implicitly searched over, even when only one is ever
+shown.
+
+**The maths.** No new formula beyond [deflated Sharpe](#deflated-sharpe)'s own $n_{trials}$
+input — the point is what belongs *in* that count. If $k$ regime definitions (or regime
+boundaries within one definition) are computed and the best-looking one is reported, the
+deflated-Sharpe denominator must include all $k$, not just the one shown — exactly the
+same accounting a cross-sectional factor search already requires, applied to a
+conditioning variable instead of a signal.
+
+**Why it is here.** Notebook 7's Gate TF (a term-structure-conditioned factor that cleared
+its numeric bar and then turned out to be a single-symbol artifact once checked
+individually) and notebook 10a/10b's own regime-gated spread hypothesis (NEXT_PROMPT.md
+sec 4.1) are both instances of the same trap: "it works when I condition on X" is *the*
+most common route from a true null to a false positive, precisely because the conditioning
+variable is rarely pre-registered as rigorously as the primary signal is.
+
+**Worked example.** Notebook 10a pre-declares, in advance and before any backtest, at most
+three term-structure regime-definition variants (raw sign, a magnitude deadband, a
+persistence requirement) and states which is primary and why — a structural argument (does
+the definition actually create a no-trade zone distinct from unconditional trading?), not
+a look at which variant's backtest Sharpe was highest. All three variants that are run
+still enter the deflated-Sharpe count for Gate SPR, whether or not they end up being the
+one reported as primary.
+
+**Pitfalls.** Declaring a regime definition "in advance" is only a real safeguard if
+*nothing about its choice* was informed by having already seen the strategy's own
+performance under it — declaring one of three variants primary based on a *descriptive*
+property of the conditioning variable itself (e.g. "this definition creates a genuine
+no-trade zone and the others don't") is legitimate; declaring it primary because its
+backtest happened to have the highest Sharpe, even if written down before the notebook
+formally "ends," is not — the boundary is whether the choice used the target metric at
+all, not merely whether it appears early in a document.

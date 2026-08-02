@@ -1,0 +1,26 @@
+{
+  "product": "CL",
+  "cftc_code": "067651",
+  "coverage_note": "This repo's data/market/cot/ directory holds exactly one CFTC series (CL light sweet crude, NYMEX). A cross-product positioning panel is not possible with this repo's own data -- CL-only, never extrapolated, per docs/09's own documented pitfall.",
+  "n_days_joined": 4499,
+  "net_noncomm_frac_by_regime": {
+    "backwardation": {
+      "n": 1738,
+      "mean_net_noncomm_frac": 0.1879059424602315,
+      "std": 0.049041901443617315
+    },
+    "contango": {
+      "n": 2761,
+      "mean_net_noncomm_frac": 0.15941715860941616,
+      "std": 0.05261104496172862
+    }
+  },
+  "welch_ttest_backwardation_vs_contango": {
+    "t_stat": 18.437493870358328,
+    "p_value": 7.76964508163992e-73
+  },
+  "corr_roll_slope_vs_net_noncomm_frac": -0.072743124543002,
+  "inventory_theory_corroborated": true,
+  "interpretation": "Net speculative (non-commercial) length is predicted, under Keynes' normal-backwardation / inventory theory, to run higher when the market is backwardated (low inventory, hedgers paying speculators to hold long risk) than when contangoed. A positive corr(roll_slope, net_noncomm_frac) would be the OPPOSITE of this prediction (recall: roll_slope < 0 IS backwardation), so the theory-consistent sign is corr < 0.",
+  "_note": "descriptive only -- no strategy verdicts, no Sharpe, no gate (NEXT_PROMPT.md sec 1 rule 1). Dev window only."
+}

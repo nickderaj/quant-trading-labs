@@ -1,0 +1,20 @@
+{
+  "question": "Does this repo's cache hold a crypto spot price series distinct from the perpetual series it already caches?",
+  "resolved": "FALSE",
+  "fa_data_available": false,
+  "evidence": {
+    "binance_urls_found_in_src_data_py": [
+      "https://data.binance.vision/data/futures/um/daily/trades/",
+      "https://data.binance.vision/data/futures/um/monthly/klines/",
+      "https://fapi.binance.com/fapi/v1/fundingRate"
+    ],
+    "futures_host_used": true,
+    "spot_host_used": false,
+    "n_klines_or_ohlc_symbols": 30,
+    "n_symbols_with_funding_file": 30,
+    "symbols_with_klines_but_no_funding_file": []
+  },
+  "verdict": "FALSE. Every Binance URL this repo's downloader (src/data.py) calls is a USDS-M perpetual-futures endpoint (data.binance.vision/data/futures/um/... for bulk trades/klines, fapi.binance.com/fapi/v1/fundingRate for funding). No spot host (data.binance.vision/data/spot/... or api.binance.com) is ever called. Every cached klines/ohlc symbol has a matching funding file, which is itself confirming evidence: funding only exists for a perpetual contract, so its universal presence alongside every klines file means every cached bar series is a perpetual, not a spot, series.",
+  "action": "Per NEXT_PROMPT.md sec 2, Gate FA is deferred with this data-acquisition note. No proxy (e.g. treating the perpetual's own mark price as a spot stand-in) is built -- doing so would manufacture a cash-and-carry spread that is mechanically guaranteed to look small (perp vs. its own mark) rather than measuring the actual funding-arbitrage opportunity (perp vs. independent spot), exactly the failure mode sec 2 warns against.",
+  "_note": "data check only -- not a strategy gate, no DSR count."
+}

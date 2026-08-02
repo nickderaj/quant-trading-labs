@@ -1,0 +1,2354 @@
+{
+  "CL": {
+    "n_obs": 4521,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 1716,
+          "kupiec_p": 0.11750479618435684,
+          "observed_rate": 0.013986013986013986
+        },
+        "contango": {
+          "n": 2031,
+          "kupiec_p": 1.513926921525121e-07,
+          "observed_rate": 0.023633677991137372
+        },
+        "na": {
+          "n": 18,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3765,
+          "kupiec_p": 5.800294619296803e-07,
+          "observed_rate": 0.019123505976095617
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 1738,
+          "hill_left": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.07095867244874754,
+          "es_1pct_ci": [
+            -0.04687254782513222,
+            -0.03934197518338233
+          ]
+        },
+        "contango": {
+          "n": 2765,
+          "hill_left": {
+            "found": true,
+            "k_lo": 77,
+            "k_hi": 136,
+            "alpha_median": 2.5597905958169433,
+            "alpha_min": 2.4215404003752474,
+            "alpha_max": 2.661081309190374,
+            "k_chosen": 106
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.11225349915556927,
+          "es_1pct_ci": [
+            -0.06952237584882477,
+            -0.04759317717278346
+          ]
+        },
+        "na": {
+          "n": 18,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": null,
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 787,
+          "kupiec_p": 7.964377583563857e-11,
+          "observed_rate": 0.04066073697585769
+        },
+        "low_vol": {
+          "n": 1430,
+          "kupiec_p": 0.1530194106214916,
+          "observed_rate": 0.013986013986013986
+        },
+        "mid_vol": {
+          "n": 928,
+          "kupiec_p": 0.0049622530827149805,
+          "observed_rate": 0.020474137931034482
+        },
+        "na": {
+          "n": 620,
+          "kupiec_p": 0.009142217854360353,
+          "observed_rate": 0.0016129032258064516
+        },
+        "_pooled": {
+          "n": 3765,
+          "kupiec_p": 5.800294619296803e-07,
+          "observed_rate": 0.019123505976095617
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 542,
+          "kupiec_p": 0.0020007416875892,
+          "observed_rate": 0.025830258302583026
+        },
+        "na": {
+          "n": 620,
+          "kupiec_p": 0.009142217854360353,
+          "observed_rate": 0.0016129032258064516
+        },
+        "normal": {
+          "n": 2603,
+          "kupiec_p": 1.354279344123066e-07,
+          "observed_rate": 0.021897810218978103
+        },
+        "_pooled": {
+          "n": 3765,
+          "kupiec_p": 5.800294619296803e-07,
+          "observed_rate": 0.019123505976095617
+        }
+      }
+    }
+  },
+  "BZ": {
+    "n_obs": 4300,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 2088,
+          "kupiec_p": 0.037850163730621514,
+          "observed_rate": 0.014846743295019157
+        },
+        "contango": {
+          "n": 1312,
+          "kupiec_p": 0.0003351684907803429,
+          "observed_rate": 0.021341463414634148
+        },
+        "na": {
+          "n": 144,
+          "kupiec_p": 0.08888252922071331,
+          "observed_rate": 0.0
+        },
+        "_pooled": {
+          "n": 3544,
+          "kupiec_p": 0.0002825413977398236,
+          "observed_rate": 0.01664785553047404
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 2627,
+          "hill_left": {
+            "found": true,
+            "k_lo": 61,
+            "k_hi": 116,
+            "alpha_median": 2.9149549647502653,
+            "alpha_min": 2.8021838634662437,
+            "alpha_max": 3.037401322358146,
+            "k_chosen": 88
+          },
+          "hill_right": {
+            "found": true,
+            "k_lo": 63,
+            "k_hi": 124,
+            "alpha_median": 3.2655645387141155,
+            "alpha_min": 3.0370524530579943,
+            "alpha_max": 3.4126317824344645,
+            "k_chosen": 93
+          },
+          "es_1pct": -0.06432370267051798,
+          "es_1pct_ci": [
+            -0.04298606814936059,
+            -0.037276846757537764
+          ]
+        },
+        "contango": {
+          "n": 1505,
+          "hill_left": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.10319145418296889,
+          "es_1pct_ci": [
+            -0.06837827851452433,
+            -0.05167731807834759
+          ]
+        },
+        "na": {
+          "n": 168,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": null,
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 778,
+          "kupiec_p": 6.411714546963682e-08,
+          "observed_rate": 0.03470437017994859
+        },
+        "low_vol": {
+          "n": 1323,
+          "kupiec_p": 0.5256585190632987,
+          "observed_rate": 0.008314436885865457
+        },
+        "mid_vol": {
+          "n": 881,
+          "kupiec_p": 0.0011568777400772045,
+          "observed_rate": 0.022701475595913734
+        },
+        "na": {
+          "n": 562,
+          "kupiec_p": 0.01579463475188692,
+          "observed_rate": 0.0017793594306049821
+        },
+        "_pooled": {
+          "n": 3544,
+          "kupiec_p": 0.0002825413977398236,
+          "observed_rate": 0.01664785553047404
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 542,
+          "kupiec_p": 0.29826022236450134,
+          "observed_rate": 0.014760147601476014
+        },
+        "na": {
+          "n": 562,
+          "kupiec_p": 0.01579463475188692,
+          "observed_rate": 0.0017793594306049821
+        },
+        "normal": {
+          "n": 2440,
+          "kupiec_p": 5.0552111440824604e-06,
+          "observed_rate": 0.020491803278688523
+        },
+        "_pooled": {
+          "n": 3544,
+          "kupiec_p": 0.0002825413977398236,
+          "observed_rate": 0.01664785553047404
+        }
+      }
+    }
+  },
+  "NG": {
+    "n_obs": 4520,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 882,
+          "kupiec_p": 0.014085615623849548,
+          "observed_rate": 0.01927437641723356
+        },
+        "contango": {
+          "n": 2860,
+          "kupiec_p": 0.27591663472284855,
+          "observed_rate": 0.008041958041958041
+        },
+        "na": {
+          "n": 22,
+          "kupiec_p": 0.5060554091548759,
+          "observed_rate": 0.0
+        },
+        "_pooled": {
+          "n": 3764,
+          "kupiec_p": 0.7019356010003376,
+          "observed_rate": 0.010626992561105207
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 929,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.11411578351739099,
+          "es_1pct_ci": [
+            -0.08617194632300866,
+            -0.07302396304417386
+          ]
+        },
+        "contango": {
+          "n": 3565,
+          "hill_left": {
+            "found": true,
+            "k_lo": 112,
+            "k_hi": 177,
+            "alpha_median": 3.3689168851512346,
+            "alpha_min": 3.200479085788209,
+            "alpha_max": 3.5197674887665547,
+            "k_chosen": 144
+          },
+          "hill_right": {
+            "found": true,
+            "k_lo": 71,
+            "k_hi": 134,
+            "alpha_median": 3.5261885411653617,
+            "alpha_min": 3.397255515281364,
+            "alpha_max": 3.73739897698409,
+            "k_chosen": 102
+          },
+          "es_1pct": -0.08756095128639294,
+          "es_1pct_ci": [
+            -0.06082852228580577,
+            -0.055296927470590826
+          ]
+        },
+        "na": {
+          "n": 26,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": {
+      "kupiec": {
+        "heating_season": {
+          "n": 1578,
+          "kupiec_p": 0.053435961495613,
+          "observed_rate": 0.015209125475285171
+        },
+        "off_season": {
+          "n": 2186,
+          "kupiec_p": 0.18592439618656362,
+          "observed_rate": 0.007319304666056725
+        },
+        "_pooled": {
+          "n": 3764,
+          "kupiec_p": 0.7019356010003376,
+          "observed_rate": 0.010626992561105207
+        }
+      }
+    },
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 787,
+          "kupiec_p": 0.0002745055741087439,
+          "observed_rate": 0.025412960609911054
+        },
+        "low_vol": {
+          "n": 1430,
+          "kupiec_p": 0.06782427498117131,
+          "observed_rate": 0.005594405594405594
+        },
+        "mid_vol": {
+          "n": 928,
+          "kupiec_p": 0.8145222292810096,
+          "observed_rate": 0.010775862068965518
+        },
+        "na": {
+          "n": 619,
+          "kupiec_p": 0.048590859430827554,
+          "observed_rate": 0.0032310177705977385
+        },
+        "_pooled": {
+          "n": 3764,
+          "kupiec_p": 0.7019356010003376,
+          "observed_rate": 0.010626992561105207
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 542,
+          "kupiec_p": 0.29826022236450134,
+          "observed_rate": 0.014760147601476014
+        },
+        "na": {
+          "n": 619,
+          "kupiec_p": 0.048590859430827554,
+          "observed_rate": 0.0032310177705977385
+        },
+        "normal": {
+          "n": 2603,
+          "kupiec_p": 0.4451470264466659,
+          "observed_rate": 0.01152516327314637
+        },
+        "_pooled": {
+          "n": 3764,
+          "kupiec_p": 0.7019356010003376,
+          "observed_rate": 0.010626992561105207
+        }
+      }
+    }
+  },
+  "HO": {
+    "n_obs": 4521,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 1725,
+          "kupiec_p": 0.01702510075485001,
+          "observed_rate": 0.016231884057971015
+        },
+        "contango": {
+          "n": 2024,
+          "kupiec_p": 0.002809704915481131,
+          "observed_rate": 0.017292490118577076
+        },
+        "na": {
+          "n": 16,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3765,
+          "kupiec_p": 0.0001527645745294414,
+          "observed_rate": 0.016733067729083666
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 1892,
+          "hill_left": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.08294880205858744,
+          "es_1pct_ci": [
+            -0.050605676906862115,
+            -0.03893457637828563
+          ]
+        },
+        "contango": {
+          "n": 2607,
+          "hill_left": {
+            "found": true,
+            "k_lo": 47,
+            "k_hi": 101,
+            "alpha_median": 3.3636662828505313,
+            "alpha_min": 3.1886798713837017,
+            "alpha_max": 3.4995741491020578,
+            "k_chosen": 74
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.06829031820889933,
+          "es_1pct_ci": [
+            -0.045401620425642546,
+            -0.03957901325706386
+          ]
+        },
+        "na": {
+          "n": 22,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": null,
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 787,
+          "kupiec_p": 1.0093029090027072e-06,
+          "observed_rate": 0.03176620076238882
+        },
+        "low_vol": {
+          "n": 1430,
+          "kupiec_p": 0.34447161344905564,
+          "observed_rate": 0.012587412587412588
+        },
+        "mid_vol": {
+          "n": 928,
+          "kupiec_p": 0.010827592436019199,
+          "observed_rate": 0.01939655172413793
+        },
+        "na": {
+          "n": 620,
+          "kupiec_p": 0.0481980943201053,
+          "observed_rate": 0.0032258064516129032
+        },
+        "_pooled": {
+          "n": 3765,
+          "kupiec_p": 0.0001527645745294414,
+          "observed_rate": 0.016733067729083666
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 542,
+          "kupiec_p": 0.15810515692928676,
+          "observed_rate": 0.016605166051660517
+        },
+        "na": {
+          "n": 620,
+          "kupiec_p": 0.0481980943201053,
+          "observed_rate": 0.0032258064516129032
+        },
+        "normal": {
+          "n": 2603,
+          "kupiec_p": 6.654825040289209e-06,
+          "observed_rate": 0.019976949673453707
+        },
+        "_pooled": {
+          "n": 3765,
+          "kupiec_p": 0.0001527645745294414,
+          "observed_rate": 0.016733067729083666
+        }
+      }
+    }
+  },
+  "RB": {
+    "n_obs": 4519,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 2491,
+          "kupiec_p": 3.725577999985081e-05,
+          "observed_rate": 0.019269369731031716
+        },
+        "contango": {
+          "n": 1268,
+          "kupiec_p": 0.0009924978594299464,
+          "observed_rate": 0.02050473186119874
+        },
+        "na": {
+          "n": 4,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3763,
+          "kupiec_p": 1.414263664728472e-07,
+          "observed_rate": 0.019665160775976614
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 3050,
+          "hill_left": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "hill_right": {
+            "found": true,
+            "k_lo": 60,
+            "k_hi": 112,
+            "alpha_median": 3.972901787499831,
+            "alpha_min": 3.7109596227194865,
+            "alpha_max": 4.103848258245579,
+            "k_chosen": 86
+          },
+          "es_1pct": -0.06992968716677357,
+          "es_1pct_ci": [
+            -0.04708099156418382,
+            -0.041287504644002423
+          ]
+        },
+        "contango": {
+          "n": 1458,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.12112006048865874,
+          "es_1pct_ci": [
+            -0.07199034086395004,
+            -0.05118735442321195
+          ]
+        },
+        "na": {
+          "n": 11,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": null,
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 787,
+          "kupiec_p": 5.613873479211252e-09,
+          "observed_rate": 0.036848792884371026
+        },
+        "low_vol": {
+          "n": 1430,
+          "kupiec_p": 0.033611266322098605,
+          "observed_rate": 0.016083916083916083
+        },
+        "mid_vol": {
+          "n": 927,
+          "kupiec_p": 0.010711933549164838,
+          "observed_rate": 0.019417475728155338
+        },
+        "na": {
+          "n": 619,
+          "kupiec_p": 0.3442091697443226,
+          "observed_rate": 0.006462035541195477
+        },
+        "_pooled": {
+          "n": 3763,
+          "kupiec_p": 1.414263664728472e-07,
+          "observed_rate": 0.019665160775976614
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 542,
+          "kupiec_p": 0.07691137490351392,
+          "observed_rate": 0.01845018450184502
+        },
+        "na": {
+          "n": 619,
+          "kupiec_p": 0.3442091697443226,
+          "observed_rate": 0.006462035541195477
+        },
+        "normal": {
+          "n": 2602,
+          "kupiec_p": 1.0492994830365789e-08,
+          "observed_rate": 0.023059185242121444
+        },
+        "_pooled": {
+          "n": 3763,
+          "kupiec_p": 1.414263664728472e-07,
+          "observed_rate": 0.019665160775976614
+        }
+      }
+    }
+  },
+  "GC": {
+    "n_obs": 3797,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 598,
+          "kupiec_p": 0.9934452276286567,
+          "observed_rate": 0.010033444816053512
+        },
+        "contango": {
+          "n": 2363,
+          "kupiec_p": 0.028237325112318492,
+          "observed_rate": 0.014811680067710538
+        },
+        "na": {
+          "n": 80,
+          "kupiec_p": 0.20476560267650917,
+          "observed_rate": 0.0
+        },
+        "_pooled": {
+          "n": 3041,
+          "kupiec_p": 0.06684102726855323,
+          "observed_rate": 0.013482407102926669
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 811,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.03814654647039504,
+          "es_1pct_ci": [
+            -0.02472974086003609,
+            -0.018873294023410325
+          ]
+        },
+        "contango": {
+          "n": 2884,
+          "hill_left": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "hill_right": {
+            "found": true,
+            "k_lo": 66,
+            "k_hi": 141,
+            "alpha_median": 3.002221331024116,
+            "alpha_min": 2.878157607999625,
+            "alpha_max": 3.194780371830339,
+            "k_chosen": 103
+          },
+          "es_1pct": -0.036486584751268154,
+          "es_1pct_ci": [
+            -0.02372618829338085,
+            -0.020818832546530934
+          ]
+        },
+        "na": {
+          "n": 102,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": null,
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 662,
+          "kupiec_p": 0.02766995567043079,
+          "observed_rate": 0.019637462235649546
+        },
+        "low_vol": {
+          "n": 1218,
+          "kupiec_p": 0.8153033884805616,
+          "observed_rate": 0.010673234811165846
+        },
+        "mid_vol": {
+          "n": 786,
+          "kupiec_p": 0.09215856007530131,
+          "observed_rate": 0.01653944020356234
+        },
+        "na": {
+          "n": 375,
+          "kupiec_p": 0.3188150045224182,
+          "observed_rate": 0.005333333333333333
+        },
+        "_pooled": {
+          "n": 3041,
+          "kupiec_p": 0.06684102726855323,
+          "observed_rate": 0.013482407102926669
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 485,
+          "kupiec_p": 0.3574927329940176,
+          "observed_rate": 0.01443298969072165
+        },
+        "na": {
+          "n": 375,
+          "kupiec_p": 0.3188150045224182,
+          "observed_rate": 0.005333333333333333
+        },
+        "normal": {
+          "n": 2181,
+          "kupiec_p": 0.04033648008320891,
+          "observed_rate": 0.014672168729940394
+        },
+        "_pooled": {
+          "n": 3041,
+          "kupiec_p": 0.06684102726855323,
+          "observed_rate": 0.013482407102926669
+        }
+      }
+    }
+  },
+  "SI": {
+    "n_obs": 3791,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 420,
+          "kupiec_p": 3.998816997066055e-05,
+          "observed_rate": 0.03571428571428571
+        },
+        "contango": {
+          "n": 2415,
+          "kupiec_p": 0.005294330699485466,
+          "observed_rate": 0.016149068322981366
+        },
+        "na": {
+          "n": 200,
+          "kupiec_p": 0.21086933252965648,
+          "observed_rate": 0.02
+        },
+        "_pooled": {
+          "n": 3035,
+          "kupiec_p": 7.418298568611691e-06,
+          "observed_rate": 0.019110378912685338
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 589,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.07432450349098974,
+          "es_1pct_ci": [
+            -0.05509830406222277,
+            -0.044166866253045604
+          ]
+        },
+        "contango": {
+          "n": 2935,
+          "hill_left": {
+            "found": true,
+            "k_lo": 67,
+            "k_hi": 121,
+            "alpha_median": 2.8289199191268066,
+            "alpha_min": 2.6422521699717842,
+            "alpha_max": 2.9247173511435594,
+            "k_chosen": 94
+          },
+          "hill_right": {
+            "found": true,
+            "k_lo": 72,
+            "k_hi": 144,
+            "alpha_median": 3.0198885939377864,
+            "alpha_min": 2.883405071453667,
+            "alpha_max": 3.1727155525354807,
+            "k_chosen": 108
+          },
+          "es_1pct": -0.07020412199753709,
+          "es_1pct_ci": [
+            -0.04429420832471893,
+            -0.037696948998453404
+          ]
+        },
+        "na": {
+          "n": 267,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.059890080785714374,
+          "es_1pct_ci": [
+            null,
+            null
+          ]
+        }
+      }
+    },
+    "seasonal": null,
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 645,
+          "kupiec_p": 1.739024986123189e-05,
+          "observed_rate": 0.031007751937984496
+        },
+        "low_vol": {
+          "n": 1210,
+          "kupiec_p": 0.1119061382674396,
+          "observed_rate": 0.01487603305785124
+        },
+        "mid_vol": {
+          "n": 773,
+          "kupiec_p": 0.0005918821313794243,
+          "observed_rate": 0.02457956015523933
+        },
+        "na": {
+          "n": 407,
+          "kupiec_p": 0.06695866980747499,
+          "observed_rate": 0.002457002457002457
+        },
+        "_pooled": {
+          "n": 3035,
+          "kupiec_p": 7.418298568611691e-06,
+          "observed_rate": 0.019110378912685338
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 461,
+          "kupiec_p": 0.06909859956424855,
+          "observed_rate": 0.019522776572668113
+        },
+        "na": {
+          "n": 407,
+          "kupiec_p": 0.06695866980747499,
+          "observed_rate": 0.002457002457002457
+        },
+        "normal": {
+          "n": 2167,
+          "kupiec_p": 9.580612183855255e-07,
+          "observed_rate": 0.022150438394093218
+        },
+        "_pooled": {
+          "n": 3035,
+          "kupiec_p": 7.418298568611691e-06,
+          "observed_rate": 0.019110378912685338
+        }
+      }
+    }
+  },
+  "PL": {
+    "n_obs": 3960,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 421,
+          "kupiec_p": 0.015996507155214335,
+          "observed_rate": 0.023752969121140142
+        },
+        "contango": {
+          "n": 2668,
+          "kupiec_p": 6.6029218717853e-07,
+          "observed_rate": 0.020989505247376312
+        },
+        "na": {
+          "n": 115,
+          "kupiec_p": 0.1284136888845974,
+          "observed_rate": 0.0
+        },
+        "_pooled": {
+          "n": 3204,
+          "kupiec_p": 1.3195871499334727e-07,
+          "observed_rate": 0.020599250936329586
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 528,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.058891798147523086,
+          "es_1pct_ci": [
+            -0.04037059302039114,
+            -0.030621761153620676
+          ]
+        },
+        "contango": {
+          "n": 3266,
+          "hill_left": {
+            "found": true,
+            "k_lo": 54,
+            "k_hi": 148,
+            "alpha_median": 3.2385552451365682,
+            "alpha_min": 3.038154862590247,
+            "alpha_max": 3.3545715433185426,
+            "k_chosen": 101
+          },
+          "hill_right": {
+            "found": true,
+            "k_lo": 76,
+            "k_hi": 132,
+            "alpha_median": 4.4701047221120165,
+            "alpha_min": 4.2113247657906046,
+            "alpha_max": 4.639005861065695,
+            "k_chosen": 104
+          },
+          "es_1pct": -0.052704333004993276,
+          "es_1pct_ci": [
+            -0.03574287671154133,
+            -0.030726666203286446
+          ]
+        },
+        "na": {
+          "n": 166,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": null,
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 686,
+          "kupiec_p": 1.9449153379358618e-08,
+          "observed_rate": 0.037900874635568516
+        },
+        "low_vol": {
+          "n": 1250,
+          "kupiec_p": 0.04987394237334931,
+          "observed_rate": 0.016
+        },
+        "mid_vol": {
+          "n": 782,
+          "kupiec_p": 0.0006822822764927176,
+          "observed_rate": 0.024296675191815855
+        },
+        "na": {
+          "n": 486,
+          "kupiec_p": 0.03218138898938841,
+          "observed_rate": 0.00205761316872428
+        },
+        "_pooled": {
+          "n": 3204,
+          "kupiec_p": 1.3195871499334727e-07,
+          "observed_rate": 0.020599250936329586
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 463,
+          "kupiec_p": 0.07073788915112113,
+          "observed_rate": 0.019438444924406047
+        },
+        "na": {
+          "n": 486,
+          "kupiec_p": 0.03218138898938841,
+          "observed_rate": 0.00205761316872428
+        },
+        "normal": {
+          "n": 2255,
+          "kupiec_p": 2.5757922741950215e-09,
+          "observed_rate": 0.02483370288248337
+        },
+        "_pooled": {
+          "n": 3204,
+          "kupiec_p": 1.3195871499334727e-07,
+          "observed_rate": 0.020599250936329586
+        }
+      }
+    }
+  },
+  "PA": {
+    "n_obs": 3879,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 1190,
+          "kupiec_p": 0.016717395619100635,
+          "observed_rate": 0.01764705882352941
+        },
+        "contango": {
+          "n": 1605,
+          "kupiec_p": 0.00042421991347138093,
+          "observed_rate": 0.019937694704049845
+        },
+        "na": {
+          "n": 328,
+          "kupiec_p": 0.010237933441156104,
+          "observed_rate": 0.0
+        },
+        "_pooled": {
+          "n": 3123,
+          "kupiec_p": 0.00036990391252697476,
+          "observed_rate": 0.01697086135126481
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 1358,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.07307388839056325,
+          "es_1pct_ci": [
+            -0.0491114416582647,
+            -0.04069405630074487
+          ]
+        },
+        "contango": {
+          "n": 2105,
+          "hill_left": {
+            "found": true,
+            "k_lo": 45,
+            "k_hi": 94,
+            "alpha_median": 3.4931659308956853,
+            "alpha_min": 3.369842109331442,
+            "alpha_max": 3.6765647651190605,
+            "k_chosen": 69
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.08001012747912647,
+          "es_1pct_ci": [
+            -0.05591245922007204,
+            -0.044209268412198424
+          ]
+        },
+        "na": {
+          "n": 416,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.035259578662939293,
+          "es_1pct_ci": [
+            -0.026192409323226088,
+            -0.01952336669066945
+          ]
+        }
+      }
+    },
+    "seasonal": null,
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 643,
+          "kupiec_p": 5.4594034269434356e-05,
+          "observed_rate": 0.029548989113530325
+        },
+        "low_vol": {
+          "n": 1224,
+          "kupiec_p": 0.30234524403057483,
+          "observed_rate": 0.013071895424836602
+        },
+        "mid_vol": {
+          "n": 790,
+          "kupiec_p": 0.0019699576302814807,
+          "observed_rate": 0.02278481012658228
+        },
+        "na": {
+          "n": 466,
+          "kupiec_p": 0.0022093729148870557,
+          "observed_rate": 0.0
+        },
+        "_pooled": {
+          "n": 3123,
+          "kupiec_p": 0.00036990391252697476,
+          "observed_rate": 0.01697086135126481
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 440,
+          "kupiec_p": 0.05344629802458632,
+          "observed_rate": 0.020454545454545454
+        },
+        "na": {
+          "n": 466,
+          "kupiec_p": 0.0022093729148870557,
+          "observed_rate": 0.0
+        },
+        "normal": {
+          "n": 2217,
+          "kupiec_p": 3.9873261313812185e-05,
+          "observed_rate": 0.019846639603067207
+        },
+        "_pooled": {
+          "n": 3123,
+          "kupiec_p": 0.00036990391252697476,
+          "observed_rate": 0.01697086135126481
+        }
+      }
+    }
+  },
+  "ZC": {
+    "n_obs": 3773,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 599,
+          "kupiec_p": 0.13300712931021924,
+          "observed_rate": 0.01669449081803005
+        },
+        "contango": {
+          "n": 2403,
+          "kupiec_p": 0.9950914458845961,
+          "observed_rate": 0.009987515605493134
+        },
+        "na": {
+          "n": 15,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3017,
+          "kupiec_p": 0.49217797821417975,
+          "observed_rate": 0.011269472986410341
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 810,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.06490133619114567,
+          "es_1pct_ci": [
+            -0.04753192098241357,
+            -0.038661873602582046
+          ]
+        },
+        "contango": {
+          "n": 2938,
+          "hill_left": {
+            "found": true,
+            "k_lo": 92,
+            "k_hi": 146,
+            "alpha_median": 3.1919447756083272,
+            "alpha_min": 3.000269678006595,
+            "alpha_max": 3.3167478950045273,
+            "k_chosen": 119
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.04774848546250067,
+          "es_1pct_ci": [
+            -0.03324931039274293,
+            -0.030191357477388013
+          ]
+        },
+        "na": {
+          "n": 25,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": {
+      "kupiec": {
+        "growing": {
+          "n": 769,
+          "kupiec_p": 0.00854081337437221,
+          "observed_rate": 0.02080624187256177
+        },
+        "harvest": {
+          "n": 755,
+          "kupiec_p": 0.3203313312102023,
+          "observed_rate": 0.006622516556291391
+        },
+        "off_season": {
+          "n": 988,
+          "kupiec_p": 0.7751291183676494,
+          "observed_rate": 0.009109311740890687
+        },
+        "planting": {
+          "n": 505,
+          "kupiec_p": 0.6260520503817826,
+          "observed_rate": 0.007920792079207921
+        },
+        "_pooled": {
+          "n": 3017,
+          "kupiec_p": 0.49217797821417975,
+          "observed_rate": 0.011269472986410341
+        }
+      }
+    },
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 763,
+          "kupiec_p": 0.6278794090405129,
+          "observed_rate": 0.011795543905635648
+        },
+        "low_vol": {
+          "n": 1368,
+          "kupiec_p": 0.2628810446877849,
+          "observed_rate": 0.013157894736842105
+        },
+        "mid_vol": {
+          "n": 874,
+          "kupiec_p": 0.5400235307667172,
+          "observed_rate": 0.008009153318077803
+        },
+        "na": {
+          "n": 12,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3017,
+          "kupiec_p": 0.49217797821417975,
+          "observed_rate": 0.011269472986410341
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 524,
+          "kupiec_p": 0.4623419648515026,
+          "observed_rate": 0.013358778625954198
+        },
+        "na": {
+          "n": 12,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "normal": {
+          "n": 2481,
+          "kupiec_p": 0.6630690310692451,
+          "observed_rate": 0.010882708585247884
+        },
+        "_pooled": {
+          "n": 3017,
+          "kupiec_p": 0.49217797821417975,
+          "observed_rate": 0.011269472986410341
+        }
+      }
+    }
+  },
+  "ZW": {
+    "n_obs": 3769,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 214,
+          "kupiec_p": 0.3819203037776654,
+          "observed_rate": 0.004672897196261682
+        },
+        "contango": {
+          "n": 2783,
+          "kupiec_p": 0.007381438234415259,
+          "observed_rate": 0.0053898670499461015
+        },
+        "na": {
+          "n": 16,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3013,
+          "kupiec_p": 0.004493004455253386,
+          "observed_rate": 0.005310321938267508
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 216,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.09180880082939771,
+          "es_1pct_ci": [
+            null,
+            null
+          ]
+        },
+        "contango": {
+          "n": 3537,
+          "hill_left": {
+            "found": true,
+            "k_lo": 39,
+            "k_hi": 181,
+            "alpha_median": 3.66644345946175,
+            "alpha_min": 3.440696106999521,
+            "alpha_max": 3.9137278751203564,
+            "k_chosen": 110
+          },
+          "hill_right": {
+            "found": true,
+            "k_lo": 100,
+            "k_hi": 153,
+            "alpha_median": 3.5752491441754337,
+            "alpha_min": 3.4077718650625757,
+            "alpha_max": 3.7488688417623317,
+            "k_chosen": 126
+          },
+          "es_1pct": -0.061877792699858616,
+          "es_1pct_ci": [
+            -0.04247546724519715,
+            -0.038401288716874205
+          ]
+        },
+        "na": {
+          "n": 16,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": {
+      "kupiec": {
+        "growing": {
+          "n": 764,
+          "kupiec_p": 0.3055976041328205,
+          "observed_rate": 0.006544502617801047
+        },
+        "harvest": {
+          "n": 504,
+          "kupiec_p": 0.027204095812354837,
+          "observed_rate": 0.001984126984126984
+        },
+        "off_season": {
+          "n": 1235,
+          "kupiec_p": 0.31408879218331265,
+          "observed_rate": 0.0072874493927125505
+        },
+        "planting": {
+          "n": 510,
+          "kupiec_p": 0.025720323754574257,
+          "observed_rate": 0.00196078431372549
+        },
+        "_pooled": {
+          "n": 3013,
+          "kupiec_p": 0.004493004455253386,
+          "observed_rate": 0.005310321938267508
+        }
+      }
+    },
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 762,
+          "kupiec_p": 0.8189685114034441,
+          "observed_rate": 0.009186351706036745
+        },
+        "low_vol": {
+          "n": 1364,
+          "kupiec_p": 0.019365807765030284,
+          "observed_rate": 0.004398826979472141
+        },
+        "mid_vol": {
+          "n": 875,
+          "kupiec_p": 0.02371392391026306,
+          "observed_rate": 0.0034285714285714284
+        },
+        "na": {
+          "n": 12,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3013,
+          "kupiec_p": 0.004493004455253386,
+          "observed_rate": 0.005310321938267508
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 517,
+          "kupiec_p": 0.4427769358977981,
+          "observed_rate": 0.013539651837524178
+        },
+        "na": {
+          "n": 12,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "normal": {
+          "n": 2484,
+          "kupiec_p": 0.00023759182586119334,
+          "observed_rate": 0.0036231884057971015
+        },
+        "_pooled": {
+          "n": 3013,
+          "kupiec_p": 0.004493004455253386,
+          "observed_rate": 0.005310321938267508
+        }
+      }
+    }
+  },
+  "KE": {
+    "n_obs": 2752,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 307,
+          "kupiec_p": 0.012986806842270045,
+          "observed_rate": 0.0
+        },
+        "contango": {
+          "n": 1686,
+          "kupiec_p": 0.12564699597587486,
+          "observed_rate": 0.006524317912218268
+        },
+        "na": {
+          "n": 3,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 1996,
+          "kupiec_p": 0.027610953724160104,
+          "observed_rate": 0.005511022044088177
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 374,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.058164715415606895,
+          "es_1pct_ci": [
+            null,
+            null
+          ]
+        },
+        "contango": {
+          "n": 2373,
+          "hill_left": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.0526340043304472,
+          "es_1pct_ci": [
+            -0.03878880852223332,
+            -0.03569560887589411
+          ]
+        },
+        "na": {
+          "n": 5,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": {
+      "kupiec": {
+        "growing": {
+          "n": 495,
+          "kupiec_p": 0.6570761820951057,
+          "observed_rate": 0.00808080808080808
+        },
+        "harvest": {
+          "n": 336,
+          "kupiec_p": 0.41997769951913266,
+          "observed_rate": 0.005952380952380952
+        },
+        "off_season": {
+          "n": 830,
+          "kupiec_p": 0.09528301933389612,
+          "observed_rate": 0.004819277108433735
+        },
+        "planting": {
+          "n": 335,
+          "kupiec_p": 0.12948302132535472,
+          "observed_rate": 0.0029850746268656717
+        },
+        "_pooled": {
+          "n": 1996,
+          "kupiec_p": 0.027610953724160104,
+          "observed_rate": 0.005511022044088177
+        }
+      }
+    },
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 644,
+          "kupiec_p": 0.8600737535110997,
+          "observed_rate": 0.009316770186335404
+        },
+        "low_vol": {
+          "n": 746,
+          "kupiec_p": 0.017016865404303725,
+          "observed_rate": 0.002680965147453083
+        },
+        "mid_vol": {
+          "n": 605,
+          "kupiec_p": 0.16731590758481263,
+          "observed_rate": 0.0049586776859504135
+        },
+        "na": {
+          "n": 1,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 1996,
+          "kupiec_p": 0.027610953724160104,
+          "observed_rate": 0.005511022044088177
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 515,
+          "kupiec_p": 0.11127471076207411,
+          "observed_rate": 0.003883495145631068
+        },
+        "na": {
+          "n": 1,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "normal": {
+          "n": 1480,
+          "kupiec_p": 0.10227644268149534,
+          "observed_rate": 0.006081081081081081
+        },
+        "_pooled": {
+          "n": 1996,
+          "kupiec_p": 0.027610953724160104,
+          "observed_rate": 0.005511022044088177
+        }
+      }
+    }
+  },
+  "ZS": {
+    "n_obs": 3776,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 1153,
+          "kupiec_p": 3.7677990820009865e-05,
+          "observed_rate": 0.024284475281873375
+        },
+        "contango": {
+          "n": 1851,
+          "kupiec_p": 0.05772443774679002,
+          "observed_rate": 0.005942733657482442
+        },
+        "na": {
+          "n": 16,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3020,
+          "kupiec_p": 0.12352354741365906,
+          "observed_rate": 0.012913907284768211
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 1459,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.049790224249790675,
+          "es_1pct_ci": [
+            -0.03544111080870812,
+            -0.030647512924185025
+          ]
+        },
+        "contango": {
+          "n": 2295,
+          "hill_left": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.03858227239161043,
+          "es_1pct_ci": [
+            -0.02680806077517023,
+            -0.023410401980327004
+          ]
+        },
+        "na": {
+          "n": 22,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": {
+      "kupiec": {
+        "growing": {
+          "n": 772,
+          "kupiec_p": 7.415206503820037e-05,
+          "observed_rate": 0.027202072538860103
+        },
+        "harvest": {
+          "n": 510,
+          "kupiec_p": 0.025720323754574257,
+          "observed_rate": 0.00196078431372549
+        },
+        "off_season": {
+          "n": 1233,
+          "kupiec_p": 0.9244144392125329,
+          "observed_rate": 0.009732360097323601
+        },
+        "planting": {
+          "n": 505,
+          "kupiec_p": 0.9821300946962385,
+          "observed_rate": 0.009900990099009901
+        },
+        "_pooled": {
+          "n": 3020,
+          "kupiec_p": 0.12352354741365906,
+          "observed_rate": 0.012913907284768211
+        }
+      }
+    },
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 764,
+          "kupiec_p": 0.143371134282012,
+          "observed_rate": 0.015706806282722512
+        },
+        "low_vol": {
+          "n": 1367,
+          "kupiec_p": 0.2616661284418491,
+          "observed_rate": 0.013167520117044623
+        },
+        "mid_vol": {
+          "n": 878,
+          "kupiec_p": 0.9407596240680136,
+          "observed_rate": 0.010250569476082005
+        },
+        "na": {
+          "n": 11,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3020,
+          "kupiec_p": 0.12352354741365906,
+          "observed_rate": 0.012913907284768211
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 524,
+          "kupiec_p": 0.284934372482862,
+          "observed_rate": 0.0057251908396946565
+        },
+        "na": {
+          "n": 11,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "normal": {
+          "n": 2485,
+          "kupiec_p": 0.035142943059311336,
+          "observed_rate": 0.01448692152917505
+        },
+        "_pooled": {
+          "n": 3020,
+          "kupiec_p": 0.12352354741365906,
+          "observed_rate": 0.012913907284768211
+        }
+      }
+    }
+  },
+  "ZL": {
+    "n_obs": 3770,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 826,
+          "kupiec_p": 0.01648167030944932,
+          "observed_rate": 0.01937046004842615
+        },
+        "contango": {
+          "n": 2169,
+          "kupiec_p": 0.1977842190854317,
+          "observed_rate": 0.007376671277086215
+        },
+        "na": {
+          "n": 19,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3014,
+          "kupiec_p": 0.6060748092355659,
+          "observed_rate": 0.010948905109489052
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 828,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.07562592847499376,
+          "es_1pct_ci": [
+            -0.05231030888242154,
+            -0.041794288806330335
+          ]
+        },
+        "contango": {
+          "n": 2923,
+          "hill_left": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "hill_right": {
+            "found": true,
+            "k_lo": 75,
+            "k_hi": 128,
+            "alpha_median": 4.217609814948087,
+            "alpha_min": 4.02622343134903,
+            "alpha_max": 4.443361318079631,
+            "k_chosen": 101
+          },
+          "es_1pct": -0.04104993499747808,
+          "es_1pct_ci": [
+            -0.029804874680021944,
+            -0.026864206853228812
+          ]
+        },
+        "na": {
+          "n": 19,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": {
+      "kupiec": {
+        "growing": {
+          "n": 772,
+          "kupiec_p": 0.04142492591536689,
+          "observed_rate": 0.018134715025906734
+        },
+        "harvest": {
+          "n": 504,
+          "kupiec_p": 0.027204095812354837,
+          "observed_rate": 0.001984126984126984
+        },
+        "off_season": {
+          "n": 1233,
+          "kupiec_p": 0.8492413773129202,
+          "observed_rate": 0.010543390105433901
+        },
+        "planting": {
+          "n": 505,
+          "kupiec_p": 0.9821300946962385,
+          "observed_rate": 0.009900990099009901
+        },
+        "_pooled": {
+          "n": 3014,
+          "kupiec_p": 0.6060748092355659,
+          "observed_rate": 0.010948905109489052
+        }
+      }
+    },
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 761,
+          "kupiec_p": 0.037161648584409,
+          "observed_rate": 0.018396846254927726
+        },
+        "low_vol": {
+          "n": 1367,
+          "kupiec_p": 0.018994110645170904,
+          "observed_rate": 0.0043891733723482075
+        },
+        "mid_vol": {
+          "n": 875,
+          "kupiec_p": 0.1780084921024276,
+          "observed_rate": 0.014857142857142857
+        },
+        "na": {
+          "n": 11,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3014,
+          "kupiec_p": 0.6060748092355659,
+          "observed_rate": 0.010948905109489052
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 522,
+          "kupiec_p": 0.06188607746295438,
+          "observed_rate": 0.019157088122605363
+        },
+        "na": {
+          "n": 11,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "normal": {
+          "n": 2481,
+          "kupiec_p": 0.7115691136534236,
+          "observed_rate": 0.009270455461507456
+        },
+        "_pooled": {
+          "n": 3014,
+          "kupiec_p": 0.6060748092355659,
+          "observed_rate": 0.010948905109489052
+        }
+      }
+    }
+  },
+  "ZM": {
+    "n_obs": 3766,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 1682,
+          "kupiec_p": 0.6495761701602976,
+          "observed_rate": 0.0089179548156956
+        },
+        "contango": {
+          "n": 1311,
+          "kupiec_p": 0.22656636896275129,
+          "observed_rate": 0.006864988558352402
+        },
+        "na": {
+          "n": 17,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3010,
+          "kupiec_p": 0.24670725900776755,
+          "observed_rate": 0.007973421926910298
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 1972,
+          "hill_left": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.04678469665962406,
+          "es_1pct_ci": [
+            -0.03502180927963925,
+            -0.03174054651938044
+          ]
+        },
+        "contango": {
+          "n": 1775,
+          "hill_left": {
+            "found": true,
+            "k_lo": 35,
+            "k_hi": 85,
+            "alpha_median": 3.1878931049257475,
+            "alpha_min": 2.9827115052867756,
+            "alpha_max": 3.276753128003583,
+            "k_chosen": 60
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.04504007824484827,
+          "es_1pct_ci": [
+            -0.030145862108740568,
+            -0.026131527327421477
+          ]
+        },
+        "na": {
+          "n": 19,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": {
+      "kupiec": {
+        "growing": {
+          "n": 767,
+          "kupiec_p": 0.6385266683270359,
+          "observed_rate": 0.011734028683181226
+        },
+        "harvest": {
+          "n": 510,
+          "kupiec_p": 0.11569731398702099,
+          "observed_rate": 0.00392156862745098
+        },
+        "off_season": {
+          "n": 1229,
+          "kupiec_p": 0.49748812096514017,
+          "observed_rate": 0.008136696501220505
+        },
+        "planting": {
+          "n": 504,
+          "kupiec_p": 0.32329583633157477,
+          "observed_rate": 0.005952380952380952
+        },
+        "_pooled": {
+          "n": 3010,
+          "kupiec_p": 0.24670725900776755,
+          "observed_rate": 0.007973421926910298
+        }
+      }
+    },
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 763,
+          "kupiec_p": 0.4104873681464417,
+          "observed_rate": 0.01310615989515072
+        },
+        "low_vol": {
+          "n": 1363,
+          "kupiec_p": 0.2995955864152998,
+          "observed_rate": 0.007336757153338224
+        },
+        "mid_vol": {
+          "n": 874,
+          "kupiec_p": 0.07129319129855752,
+          "observed_rate": 0.004576659038901602
+        },
+        "na": {
+          "n": 10,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 3010,
+          "kupiec_p": 0.24670725900776755,
+          "observed_rate": 0.007973421926910298
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 524,
+          "kupiec_p": 0.915435931800324,
+          "observed_rate": 0.009541984732824428
+        },
+        "na": {
+          "n": 10,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "normal": {
+          "n": 2476,
+          "kupiec_p": 0.22511128351657153,
+          "observed_rate": 0.007673667205169628
+        },
+        "_pooled": {
+          "n": 3010,
+          "kupiec_p": 0.24670725900776755,
+          "observed_rate": 0.007973421926910298
+        }
+      }
+    }
+  },
+  "ES": {
+    "n_obs": 2179,
+    "term_structure": {
+      "kupiec": {
+        "backwardation": {
+          "n": 549,
+          "kupiec_p": 0.006180871968604059,
+          "observed_rate": 0.023679417122040074
+        },
+        "contango": {
+          "n": 871,
+          "kupiec_p": 0.2892722441897732,
+          "observed_rate": 0.013777267508610792
+        },
+        "na": {
+          "n": 3,
+          "kupiec_p": null,
+          "observed_rate": null
+        },
+        "_pooled": {
+          "n": 1423,
+          "kupiec_p": 0.009540620649785574,
+          "observed_rate": 0.017568517217146872
+        }
+      },
+      "hill_and_es_by_state": {
+        "backwardation": {
+          "n": 667,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "es_1pct": -0.058559688432993084,
+          "es_1pct_ci": [
+            -0.04086324024584015,
+            -0.030290413083790997
+          ]
+        },
+        "contango": {
+          "n": 1490,
+          "hill_left": {
+            "found": false,
+            "reason": "insufficient finite alpha estimates"
+          },
+          "hill_right": {
+            "found": false,
+            "reason": "no 50-wide window has relative spread < 0.1"
+          },
+          "es_1pct": -0.0354581489886127,
+          "es_1pct_ci": [
+            -0.024092770524763066,
+            -0.020687208093272656
+          ]
+        },
+        "na": {
+          "n": 22,
+          "note": "insufficient observations"
+        }
+      }
+    },
+    "seasonal": null,
+    "vix_regime": {
+      "kupiec": {
+        "high_vol": {
+          "n": 510,
+          "kupiec_p": 3.0000706255910143e-05,
+          "observed_rate": 0.03333333333333333
+        },
+        "low_vol": {
+          "n": 253,
+          "kupiec_p": 0.2707608249757419,
+          "observed_rate": 0.003952569169960474
+        },
+        "mid_vol": {
+          "n": 425,
+          "kupiec_p": 0.22007387210303347,
+          "observed_rate": 0.01647058823529412
+        },
+        "na": {
+          "n": 235,
+          "kupiec_p": 0.029750392801981333,
+          "observed_rate": 0.0
+        },
+        "_pooled": {
+          "n": 1423,
+          "kupiec_p": 0.009540620649785574,
+          "observed_rate": 0.017568517217146872
+        }
+      }
+    },
+    "yield_curve_regime": {
+      "kupiec": {
+        "inverted": {
+          "n": 540,
+          "kupiec_p": 0.5081134944041361,
+          "observed_rate": 0.012962962962962963
+        },
+        "na": {
+          "n": 235,
+          "kupiec_p": 0.029750392801981333,
+          "observed_rate": 0.0
+        },
+        "normal": {
+          "n": 648,
+          "kupiec_p": 0.00018798117806725933,
+          "observed_rate": 0.027777777777777776
+        },
+        "_pooled": {
+          "n": 1423,
+          "kupiec_p": 0.009540620649785574,
+          "observed_rate": 0.017568517217146872
+        }
+      }
+    }
+  },
+  "_gate_CI": {
+    "n_products_with_signal": 4,
+    "n_products_total": 16,
+    "threshold": 10,
+    "fires": false,
+    "details": {
+      "CL": {
+        "pooled_p": 5.800294619296803e-07,
+        "state_ps": [
+          0.11750479618435684,
+          1.513926921525121e-07
+        ],
+        "conditioning_adds_information": false
+      },
+      "BZ": {
+        "pooled_p": 0.0002825413977398236,
+        "state_ps": [
+          0.037850163730621514,
+          0.0003351684907803429,
+          0.08888252922071331
+        ],
+        "conditioning_adds_information": false
+      },
+      "NG": {
+        "pooled_p": 0.7019356010003376,
+        "state_ps": [
+          0.014085615623849548,
+          0.27591663472284855,
+          0.5060554091548759
+        ],
+        "conditioning_adds_information": true
+      },
+      "HO": {
+        "pooled_p": 0.0001527645745294414,
+        "state_ps": [
+          0.01702510075485001,
+          0.002809704915481131
+        ],
+        "conditioning_adds_information": false
+      },
+      "RB": {
+        "pooled_p": 1.414263664728472e-07,
+        "state_ps": [
+          3.725577999985081e-05,
+          0.0009924978594299464
+        ],
+        "conditioning_adds_information": false
+      },
+      "GC": {
+        "pooled_p": 0.06684102726855323,
+        "state_ps": [
+          0.9934452276286567,
+          0.028237325112318492,
+          0.20476560267650917
+        ],
+        "conditioning_adds_information": true
+      },
+      "SI": {
+        "pooled_p": 7.418298568611691e-06,
+        "state_ps": [
+          3.998816997066055e-05,
+          0.005294330699485466,
+          0.21086933252965648
+        ],
+        "conditioning_adds_information": false
+      },
+      "PL": {
+        "pooled_p": 1.3195871499334727e-07,
+        "state_ps": [
+          0.015996507155214335,
+          6.6029218717853e-07,
+          0.1284136888845974
+        ],
+        "conditioning_adds_information": false
+      },
+      "PA": {
+        "pooled_p": 0.00036990391252697476,
+        "state_ps": [
+          0.016717395619100635,
+          0.00042421991347138093,
+          0.010237933441156104
+        ],
+        "conditioning_adds_information": false
+      },
+      "ZC": {
+        "pooled_p": 0.49217797821417975,
+        "state_ps": [
+          0.13300712931021924,
+          0.9950914458845961
+        ],
+        "conditioning_adds_information": false
+      },
+      "ZW": {
+        "pooled_p": 0.004493004455253386,
+        "state_ps": [
+          0.3819203037776654,
+          0.007381438234415259
+        ],
+        "conditioning_adds_information": false
+      },
+      "KE": {
+        "pooled_p": 0.027610953724160104,
+        "state_ps": [
+          0.012986806842270045,
+          0.12564699597587486
+        ],
+        "conditioning_adds_information": false
+      },
+      "ZS": {
+        "pooled_p": 0.12352354741365906,
+        "state_ps": [
+          3.7677990820009865e-05,
+          0.05772443774679002
+        ],
+        "conditioning_adds_information": true
+      },
+      "ZL": {
+        "pooled_p": 0.6060748092355659,
+        "state_ps": [
+          0.01648167030944932,
+          0.1977842190854317
+        ],
+        "conditioning_adds_information": true
+      },
+      "ZM": {
+        "pooled_p": 0.24670725900776755,
+        "state_ps": [
+          0.6495761701602976,
+          0.22656636896275129
+        ],
+        "conditioning_adds_information": false
+      },
+      "ES": {
+        "pooled_p": 0.009540620649785574,
+        "state_ps": [
+          0.006180871968604059,
+          0.2892722441897732
+        ],
+        "conditioning_adds_information": false
+      }
+    }
+  },
+  "_config": {
+    "min_train": 750,
+    "refit_every": 63,
+    "max_train": 2000,
+    "reference_model": "garch_t"
+  }
+}

@@ -1,0 +1,644 @@
+{
+  "per_product": {
+    "CL": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 87,
+          "k_hi": 121,
+          "alpha_median": 1.476529363267954,
+          "alpha_min": 1.3770576640296615,
+          "alpha_max": 1.573463121126559,
+          "k_chosen": 104
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 122,
+          "k_hi": 150,
+          "alpha_median": 1.0167933093270358,
+          "alpha_min": 0.9688392187937442,
+          "alpha_max": 1.1037652731415923,
+          "k_chosen": 136
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 1.9534966270785161,
+          "p": 0.0,
+          "n": 490
+        },
+        "0.025": {
+          "z": 0.7113886961693634,
+          "p": 0.013333333333333334,
+          "n": 490
+        }
+      },
+      "RE_holdout": {
+        "n": 490,
+        "observed_rate": 0.01020408163265306,
+        "kupiec_p": 0.9639069275810777,
+        "christoffersen_independence_p": 0.7478958932211262,
+        "pass": true
+      }
+    },
+    "BZ": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 30,
+          "k_hi": 87,
+          "alpha_median": 1.8707606611588616,
+          "alpha_min": 1.6734163905175228,
+          "alpha_max": 2.0441520061002065,
+          "k_chosen": 58
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 115,
+          "k_hi": 150,
+          "alpha_median": 1.0394783153505833,
+          "alpha_min": 0.9984516361408481,
+          "alpha_max": 1.126851254449704,
+          "k_chosen": 132
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 1.5288023064013703,
+          "p": 0.006688963210702341,
+          "n": 490
+        },
+        "0.025": {
+          "z": 0.7438940762605766,
+          "p": 0.013333333333333334,
+          "n": 490
+        }
+      },
+      "RE_holdout": {
+        "n": 490,
+        "observed_rate": 0.014285714285714285,
+        "kupiec_p": 0.37033107824340195,
+        "christoffersen_independence_p": 0.08079666517483274,
+        "pass": true
+      }
+    },
+    "NG": {
+      "CT_holdout": {
+        "upper": {
+          "found": false,
+          "reason": "no 20-wide window has relative spread < 0.1"
+        },
+        "lower": {
+          "found": false,
+          "reason": "no 20-wide window has relative spread < 0.1"
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 0.5608423495167205,
+          "p": 0.7619047619047619,
+          "n": 121
+        },
+        "0.025": {
+          "z": -0.2882240983667158,
+          "p": 0.6597222222222222,
+          "n": 121
+        }
+      },
+      "RE_holdout": {
+        "n": 121,
+        "observed_rate": 0.0,
+        "kupiec_p": 0.11886739173170935,
+        "christoffersen_independence_p": 1.0,
+        "pass": true
+      }
+    },
+    "HO": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 83,
+          "k_hi": 140,
+          "alpha_median": 1.500070460188228,
+          "alpha_min": 1.347243408180699,
+          "alpha_max": 1.6455482485231865,
+          "k_chosen": 111
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 36,
+          "k_hi": 85,
+          "alpha_median": 1.7347073175851313,
+          "alpha_min": 1.6112768105383448,
+          "alpha_max": 1.855801739726967,
+          "k_chosen": 60
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 1.72553429214546,
+          "p": 0.0,
+          "n": 490
+        },
+        "0.025": {
+          "z": 0.4702303830925052,
+          "p": 0.12666666666666668,
+          "n": 490
+        }
+      },
+      "RE_holdout": {
+        "n": 490,
+        "observed_rate": 0.006122448979591836,
+        "kupiec_p": 0.35270685386757394,
+        "christoffersen_independence_p": 0.8473891810453965,
+        "pass": true
+      }
+    },
+    "RB": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 61,
+          "k_hi": 106,
+          "alpha_median": 1.9470360614884,
+          "alpha_min": 1.8108878402542803,
+          "alpha_max": 2.0853955104463053,
+          "k_chosen": 83
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 26,
+          "k_hi": 54,
+          "alpha_median": 2.1177671343714644,
+          "alpha_min": 2.01339303913018,
+          "alpha_max": 2.254988540994926,
+          "k_chosen": 40
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 1.2224684710636766,
+          "p": 0.020066889632107024,
+          "n": 490
+        },
+        "0.025": {
+          "z": 0.44691688463038926,
+          "p": 0.14,
+          "n": 490
+        }
+      },
+      "RE_holdout": {
+        "n": 490,
+        "observed_rate": 0.01020408163265306,
+        "kupiec_p": 0.9639069275810777,
+        "christoffersen_independence_p": 0.03509089917162713,
+        "pass": false
+      }
+    },
+    "GC": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 63,
+          "k_hi": 93,
+          "alpha_median": 2.0086028524501005,
+          "alpha_min": 1.8722771603847082,
+          "alpha_max": 2.0711945616754877,
+          "k_chosen": 78
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 88,
+          "k_hi": 129,
+          "alpha_median": 1.208748653013557,
+          "alpha_min": 1.1069361747483577,
+          "alpha_max": 1.254617459159864,
+          "k_chosen": 108
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 1.678188261797907,
+          "p": 0.0,
+          "n": 435
+        },
+        "0.025": {
+          "z": 0.9743835504726144,
+          "p": 0.006666666666666667,
+          "n": 435
+        }
+      },
+      "RE_holdout": {
+        "n": 435,
+        "observed_rate": 0.011494252873563218,
+        "kupiec_p": 0.7596466477751056,
+        "christoffersen_independence_p": 0.7328038030804993,
+        "pass": true
+      }
+    },
+    "SI": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 37,
+          "k_hi": 64,
+          "alpha_median": 2.175261292246452,
+          "alpha_min": 2.086998804409112,
+          "alpha_max": 2.29956720165027,
+          "k_chosen": 50
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 55,
+          "k_hi": 82,
+          "alpha_median": 1.2115673202336257,
+          "alpha_min": 1.1332140097634291,
+          "alpha_max": 1.2859353418931012,
+          "k_chosen": 68
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 2.828047564397602,
+          "p": 0.0,
+          "n": 368
+        },
+        "0.025": {
+          "z": 0.9455503823424931,
+          "p": 0.006666666666666667,
+          "n": 368
+        }
+      },
+      "RE_holdout": {
+        "n": 368,
+        "observed_rate": 0.019021739130434784,
+        "kupiec_p": 0.12193328605629791,
+        "christoffersen_independence_p": 0.00413107285062703,
+        "pass": false
+      }
+    },
+    "PL": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 36,
+          "k_hi": 56,
+          "alpha_median": 2.2987829817510765,
+          "alpha_min": 2.19615844974142,
+          "alpha_max": 2.413019088919513,
+          "k_chosen": 46
+        },
+        "lower": {
+          "found": false,
+          "reason": "no 20-wide window has relative spread < 0.1"
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 2.2565569509358987,
+          "p": 0.0,
+          "n": 344
+        },
+        "0.025": {
+          "z": 0.693280525169933,
+          "p": 0.02666666666666667,
+          "n": 344
+        }
+      },
+      "RE_holdout": {
+        "n": 344,
+        "observed_rate": 0.011627906976744186,
+        "kupiec_p": 0.7673740197710728,
+        "christoffersen_independence_p": 0.75865939688811,
+        "pass": true
+      }
+    },
+    "PA": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 46,
+          "k_hi": 91,
+          "alpha_median": 1.7643495619649912,
+          "alpha_min": 1.6757520598527607,
+          "alpha_max": 1.8582373621954724,
+          "k_chosen": 68
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 51,
+          "k_hi": 76,
+          "alpha_median": 1.854994171738015,
+          "alpha_min": 1.7146841113246742,
+          "alpha_max": 1.9748642915717614,
+          "k_chosen": 63
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 1.2860773662703244,
+          "p": 0.04067796610169491,
+          "n": 395
+        },
+        "0.025": {
+          "z": 0.7928540099941561,
+          "p": 0.013333333333333334,
+          "n": 395
+        }
+      },
+      "RE_holdout": {
+        "n": 395,
+        "observed_rate": 0.007594936708860759,
+        "kupiec_p": 0.6158902101634374,
+        "christoffersen_independence_p": 0.8301099037559179,
+        "pass": true
+      }
+    },
+    "ZC": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 48,
+          "k_hi": 91,
+          "alpha_median": 2.254959402744555,
+          "alpha_min": 2.164041687788424,
+          "alpha_max": 2.4023002454436417,
+          "k_chosen": 69
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 37,
+          "k_hi": 64,
+          "alpha_median": 2.4353979107633412,
+          "alpha_min": 2.3101482392968125,
+          "alpha_max": 2.5678216195560903,
+          "k_chosen": 50
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 1.2334676953739332,
+          "p": 0.020338983050847456,
+          "n": 393
+        },
+        "0.025": {
+          "z": 0.5689930144232251,
+          "p": 0.08666666666666667,
+          "n": 393
+        }
+      },
+      "RE_holdout": {
+        "n": 393,
+        "observed_rate": 0.017811704834605598,
+        "kupiec_p": 0.16086474779742935,
+        "christoffersen_independence_p": 0.6138827479892368,
+        "pass": true
+      }
+    },
+    "ZW": {
+      "CT_holdout": {
+        "upper": {
+          "found": false,
+          "reason": "no 20-wide window has relative spread < 0.1"
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 51,
+          "k_hi": 85,
+          "alpha_median": 2.753052004440356,
+          "alpha_min": 2.5872576763523094,
+          "alpha_max": 2.9654006374918085,
+          "k_chosen": 68
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": -0.5231881993663108,
+          "p": 0.2305084745762712,
+          "n": 391
+        },
+        "0.025": {
+          "z": -0.6891041047088637,
+          "p": 0.02,
+          "n": 391
+        }
+      },
+      "RE_holdout": {
+        "n": 391,
+        "observed_rate": 0.005115089514066497,
+        "kupiec_p": 0.28400005287382984,
+        "christoffersen_independence_p": 0.8858226980116072,
+        "pass": true
+      }
+    },
+    "KE": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 106,
+          "k_hi": 127,
+          "alpha_median": 1.022706222161149,
+          "alpha_min": 0.9696514943498261,
+          "alpha_max": 1.063074020135364,
+          "k_chosen": 116
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 77,
+          "k_hi": 96,
+          "alpha_median": 2.3164605225128723,
+          "alpha_min": 2.1623855125813902,
+          "alpha_max": 2.371509031591766,
+          "k_chosen": 86
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": NaN,
+          "p": 0.0,
+          "n": 385
+        },
+        "0.025": {
+          "z": -0.7135444291580739,
+          "p": 0.02666666666666667,
+          "n": 385
+        }
+      },
+      "RE_holdout": {
+        "n": 385,
+        "observed_rate": 0.0025974025974025974,
+        "kupiec_p": 0.08198469590744162,
+        "christoffersen_independence_p": 0.9423926265930394,
+        "pass": true
+      }
+    },
+    "ZS": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 49,
+          "k_hi": 81,
+          "alpha_median": 2.0533845432082662,
+          "alpha_min": 1.9735082935870987,
+          "alpha_max": 2.1896030564157236,
+          "k_chosen": 65
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 29,
+          "k_hi": 48,
+          "alpha_median": 2.7769902415281322,
+          "alpha_min": 2.595429738052964,
+          "alpha_max": 2.8616507195142904,
+          "k_chosen": 38
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 0.7222258529087169,
+          "p": 0.15593220338983052,
+          "n": 393
+        },
+        "0.025": {
+          "z": -0.028666415322386896,
+          "p": 0.9666666666666667,
+          "n": 393
+        }
+      },
+      "RE_holdout": {
+        "n": 393,
+        "observed_rate": 0.010178117048346057,
+        "kupiec_p": 0.9717729868918934,
+        "christoffersen_independence_p": 0.7739700531306279,
+        "pass": true
+      }
+    },
+    "ZL": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 74,
+          "k_hi": 94,
+          "alpha_median": 1.638298972102941,
+          "alpha_min": 1.609396962986133,
+          "alpha_max": 1.7658098679459493,
+          "k_chosen": 84
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 60,
+          "k_hi": 88,
+          "alpha_median": 1.7498754854795562,
+          "alpha_min": 1.6862762258027186,
+          "alpha_max": 1.8899784020352488,
+          "k_chosen": 74
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": -0.30875688873469165,
+          "p": 0.42953020134228187,
+          "n": 387
+        },
+        "0.025": {
+          "z": -0.05939674610866219,
+          "p": 0.9533333333333334,
+          "n": 387
+        }
+      },
+      "RE_holdout": {
+        "n": 387,
+        "observed_rate": 0.00516795865633075,
+        "kupiec_p": 0.29236839913085677,
+        "christoffersen_independence_p": 0.8852336568316017,
+        "pass": true
+      }
+    },
+    "ZM": {
+      "CT_holdout": {
+        "upper": {
+          "found": false,
+          "reason": "no 20-wide window has relative spread < 0.1"
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 89,
+          "k_hi": 121,
+          "alpha_median": 1.6321515250563967,
+          "alpha_min": 1.5253908636989932,
+          "alpha_max": 1.7521219079305603,
+          "k_chosen": 105
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 0.22381181662106897,
+          "p": 0.6148648648648649,
+          "n": 389
+        },
+        "0.025": {
+          "z": -0.3551159183092387,
+          "p": 0.2866666666666667,
+          "n": 389
+        }
+      },
+      "RE_holdout": {
+        "n": 389,
+        "observed_rate": 0.010282776349614395,
+        "kupiec_p": 0.9555053432026039,
+        "christoffersen_independence_p": 0.7728279949081894,
+        "pass": true
+      }
+    },
+    "ES": {
+      "CT_holdout": {
+        "upper": {
+          "found": true,
+          "k_lo": 26,
+          "k_hi": 76,
+          "alpha_median": 2.029993739319425,
+          "alpha_min": 1.8740839046278708,
+          "alpha_max": 2.18021039882851,
+          "k_chosen": 51
+        },
+        "lower": {
+          "found": true,
+          "k_lo": 58,
+          "k_hi": 83,
+          "alpha_median": 1.4716091093408674,
+          "alpha_min": 1.4039878783218283,
+          "alpha_max": 1.54063796669776,
+          "k_chosen": 70
+        }
+      },
+      "CE_holdout": {
+        "0.01": {
+          "z": 1.572988783085961,
+          "p": 0.0,
+          "n": 485
+        },
+        "0.025": {
+          "z": 0.6131195196517365,
+          "p": 0.04666666666666667,
+          "n": 485
+        }
+      },
+      "RE_holdout": {
+        "n": 485,
+        "observed_rate": 0.01443298969072165,
+        "kupiec_p": 0.3574927329940176,
+        "christoffersen_independence_p": 0.6503508253686604,
+        "pass": true
+      }
+    }
+  },
+  "summary": {
+    "n_products": 16,
+    "RE_holdout_pass_count": 14,
+    "CE_holdout_reject_1pct_count": 11
+  },
+  "_config": {
+    "holdout_start": "2025-01-01",
+    "holdout_end": "2026-07-28"
+  }
+}

@@ -6,6 +6,7 @@ __pycache__/
 # Downloaded / cached market data
 src/cache/
 src/tmp/
+src/data/
 *.parquet
 *.csv
 *.zip
@@ -18,5 +19,4 @@ src/tmp/
 .ruff_cache/
 
 # Scratch prompts (local only)
-NEXT_RUN_PROMPT.md
 NEXT_PROMPT.md

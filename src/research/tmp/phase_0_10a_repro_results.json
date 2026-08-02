@@ -1,0 +1,52 @@
+{
+  "phase_4_spread_probe": {
+    "mean_reverting_count": 5,
+    "mean_reverting_spreads": [
+      "crack_321",
+      "gold_silver",
+      "brent_wti",
+      "corn_wheat",
+      "crush_soy"
+    ],
+    "sig_negative_ic_count": 4,
+    "sig_negative_ic_spreads": [
+      "crack_321",
+      "brent_wti",
+      "corn_wheat",
+      "crush_soy"
+    ]
+  },
+  "gate_AC_repro": {
+    "net_sharpe_positive_at_every_offset": true,
+    "sharpes_net_by_offset": {
+      "offset_0": 0.9042246451305482,
+      "offset_7": 0.9182452501537042,
+      "offset_14": 0.930554766095841,
+      "offset_21": 0.9459438290292651
+    },
+    "excess_return_ci": [
+      -0.002824914217376099,
+      0.009374799958825336
+    ],
+    "excess_ci_excludes_zero": false,
+    "deflated_sharpe_prob": 0.9971831492023995,
+    "fires": false
+  },
+  "gate_AM_repro": {
+    "net_sharpe_positive_at_every_offset": true,
+    "sharpes_net_by_offset": {
+      "offset_0": 0.12009623271700454,
+      "offset_7": 0.11039717664770293,
+      "offset_14": 0.10225135368275572,
+      "offset_21": 0.11415890467111932
+    },
+    "excess_return_ci": [
+      -0.00019501605779529292,
+      0.0006465448069209166
+    ],
+    "excess_ci_excludes_zero": false,
+    "deflated_sharpe_prob": 0.09807055437061196,
+    "fires": false
+  },
+  "_verdict": "All reproduction checks pass. Phase 4 confirms that 5 of 6 spreads are mean-reverting and 4 of 6 have significant negative forward IC, matching the figures in src/results/9_external_research_review.md. Phase 5 confirms that both Gate AC (carry, DSR 0.997, fires=False) and Gate AM (momentum, DSR 0.098, fires=False) are correctly recorded as null gates, which are the baseline conditions for notebook 10a's own Phase 1 gating investigation."
+}

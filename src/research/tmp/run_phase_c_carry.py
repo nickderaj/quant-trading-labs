@@ -34,11 +34,7 @@ sys.path.insert(0, "src")
 
 import numpy as np
 import polars as pl
-
-import data
-import features
-import research
-from alpha_lib7 import hysteresis_weights, throttle_weights
+from alpha_lib7 import throttle_weights
 from backtest_configs import (
     CACHE_DIR,
     DOWNLOAD_DIR,
@@ -52,6 +48,10 @@ from backtest_configs import (
     TAKER_FEE,
     TOP_FRAC,
 )
+
+import data
+import features
+import research
 
 INTERVALS = ["4h", "12h", "1d"]
 BARS_PER_DAY = {"4h": 6, "12h": 2, "1d": 1}

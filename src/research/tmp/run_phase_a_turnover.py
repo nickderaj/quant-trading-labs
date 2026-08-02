@@ -33,8 +33,6 @@ sys.path.insert(0, "src")
 
 import numpy as np
 import polars as pl
-
-import research
 from alpha_lib7 import hysteresis_weights, quantize_weights, throttle_weights
 from backtest_configs import (
     BARS_PER_DAY,
@@ -48,6 +46,8 @@ from backtest_configs import (
     build_featured_panel,
     train_predict_fold,
 )
+
+import research
 
 CONFIG_ID = "cfg2_12h"
 INTERVAL = "12h"

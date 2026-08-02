@@ -1116,3 +1116,84 @@ distributions like the Student-t whose degrees of freedom don't have to be whole
 and trying to interpret its value as meaningful on its own — on first reading, every
 entry above that mentions $\Gamma(\cdot)$ can have that term ignored without losing the
 concept being taught.
+
+---
+
+### Copulas (Gaussian and t)
+
+**In one sentence.** A copula separates a joint distribution into two independent
+pieces: each variable's own **marginal** shape (fit separately, however heavy-tailed or
+skewed it is) and a **dependence structure** that describes how the variables move
+together, expressed entirely on a rank/probability scale — this lets a portfolio built
+from very different marginals (say, a symmetric-t gold and a right-skewed NIG natural
+gas) still have a single, coherent joint model.
+
+**The maths.** Sklar's theorem: any joint CDF can be written
+$F(x_1, \ldots, x_n) = C(F_1(x_1), \ldots, F_n(x_n))$ for some copula $C$ on
+$[0,1]^n$. The **Gaussian copula** takes $C$ from a multivariate normal with correlation
+matrix $\Sigma$: transform each marginal to a normal score via $\Phi^{-1}(F_i(x_i))$,
+apply the multivariate normal's own correlation structure. The **t-copula** does the
+same with a multivariate Student-t (correlation matrix plus one shared degrees-of-freedom
+parameter) instead of a multivariate normal.
+
+**Why it is here.** Notebook 8's risk engine (`commod_lib8.portfolio_risk`) needs
+portfolio-level VaR/ES across 16 products with very different marginal shapes, under
+three explicit dependence assumptions: empirical (bootstrap-resample real historical
+joint outcomes — whatever dependence, including tail dependence, is actually in the
+data), Gaussian copula, and t-copula. Simulating from a copula means: draw correlated
+normal (or t) variates, convert each to a $(0,1)$ pseudo-uniform via its own CDF, then
+convert *that* to the target marginal's own scale via that marginal's `ppf` — the
+marginal and the dependence structure never have to be the same family.
+
+**Worked example.** Two assets with correlation 0.6: under a Gaussian copula, simulate
+$(z_1, z_2)$ correlated standard normals via a Cholesky factor of the correlation
+matrix, $u_i = \Phi(z_i)$, then $x_i = F_i^{-1}(u_i)$ where $F_i^{-1}$ is *that specific
+asset's* fitted marginal quantile function (e.g. a skewed NIG for one, Student-t for the
+other) — the correlation between $x_1$ and $x_2$ in the resulting sample will be close
+to 0.6, but the *tail* co-movement depends entirely on which copula generated $u_1, u_2$,
+not on the marginals.
+
+**Pitfalls.** The Gaussian copula has **zero asymptotic tail dependence** — no matter
+how high the correlation, the probability of a simultaneous extreme move in both
+variables goes to zero relative to a single extreme move, in the limit. This is not a
+subtle numerical quirk; it is the specific, famous, and empirically wrong assumption
+blamed for understating joint default risk in the 2008 mortgage-CDO crisis. The t-copula
+(lower degrees of freedom = more tail dependence) is the standard fix, and this notebook
+reports [tail-dependence coefficients](#tail-dependence-coefficient) for both, side by
+side against the empirical estimate, specifically so this understatement is a measured
+number rather than an assumed footnote.
+
+---
+
+### Tail-dependence coefficient
+
+**In one sentence.** The probability that one variable is in its own extreme lower tail
+*given* that another variable already is — a direct measure of "do crises spread," which
+an ordinary correlation coefficient cannot capture because correlation is a whole-
+distribution average, not a tail-specific statistic.
+
+**The maths.** $\lambda_L = \lim_{q \to 0^+} P(U_2 \le q \mid U_1 \le q)$, where
+$U_1, U_2$ are the pseudo-uniform (rank-transformed) marginals. Estimated empirically at
+a fixed small $q$ (this notebook uses $q=0.10$) rather than taking the formal limit:
+$\hat\lambda_L = \dfrac{1}{n_q}\sum_i \mathbb{1}[U_{1,i} \le q]\,\mathbb{1}[U_{2,i} \le q]$
+divided by the count of $U_{1,i} \le q$.
+
+**Why it is here.** It is the number that makes the [Gaussian copula's](#copulas-gaussian-and-t)
+tail-dependence failure concrete rather than assumed: this notebook computes
+$\hat\lambda_L$ from real historical joint returns, from Gaussian-copula-simulated data
+at the same empirical correlation, and from t-copula-simulated data, and reports all
+three side by side for every product pair in the portfolio.
+
+**Worked example.** Two independent standard normal series give
+$\hat\lambda_L \approx q = 0.10$ at the $q=0.10$ threshold (no tail dependence beyond
+what the threshold itself implies) — the correct sanity-check baseline. A comonotonic
+pair (a series compared with itself) gives $\hat\lambda_L = 1.0$ exactly — perfect tail
+dependence, the other sanity-check baseline these two extremes bracket every real
+estimate against.
+
+**Pitfalls.** The empirical estimator is noisy at small $q$ with a small sample — it
+counts a shrinking number of joint tail events as $q \to 0$, so an estimate from a
+16-year daily history at $q=0.01$ can be based on only a handful of joint exceedances.
+Reporting at a slightly less extreme $q$ (0.10 here) trades off some purity for a more
+stable estimate, and that tradeoff should be stated whenever the number is used, not
+left implicit.

@@ -722,3 +722,46 @@ approximation when the underlying variance is infinite or near-infinite — more
 observations of a genuinely heavy-tailed quantity do not make its average behave more
 normally in the way the theorem promises for a finite-variance variable; this is a
 qualitative failure mode, not something that shrinks away with more data.
+
+---
+
+### Stationarity and the augmented Dickey-Fuller test
+
+**In one sentence.** A series is (weakly) **stationary** if its mean, variance, and
+autocovariance structure don't drift over time — a **unit root** is the specific failure
+mode where a series behaves like a random walk instead (today's level is exactly
+yesterday's level plus unpredictable noise, so it can wander arbitrarily far with no
+tendency to return), and the **augmented Dickey-Fuller (ADF) test** is the standard test
+for telling the two apart.
+
+**The maths.** Fit $\Delta y_t = a + b\,y_{t-1} + \sum_{i=1}^{p} \gamma_i \Delta y_{t-i} +
+\varepsilon_t$ by OLS (the $\gamma_i$ lagged-difference terms are the "augmented" part —
+enough of them to soak up any remaining autocorrelation in $\varepsilon_t$, chosen here by
+BIC). $H_0$: $b=0$ (unit root — $y$ is a random walk in levels). $H_1$: $b<0$ (stationary
+— $y$ reverts toward a fixed mean). The test statistic is $b$'s own OLS t-stat, but it is
+**not** compared against a standard normal/t table — under $H_0$ the statistic's sampling
+distribution is skewed left, so a dedicated, tabulated critical value (MacKinnon 2010,
+asymptotic for the constant-only case: −3.43 at 1%, −2.86 at 5%, −2.57 at 10%) is required
+instead. Using an ordinary t-table here silently understates significance.
+
+**Why it is here.** It's the precondition for treating any spread or pair as
+mean-reverting at all (see
+[cointegration and the Engle-Granger test](09-market-data-and-microstructure.md#cointegration-and-the-engle-granger-test)):
+a series with a unit root can drift arbitrarily far from any "fair value," so a
+mean-reversion trading signal built on it has no statistical floor under it — the position
+can simply never come back.
+
+**Worked example.** `spread_lib10.adf_test`, applied to all 30 of this repo's pre-built
+commodity spreads (notebook 10a): 23 of 30 reject the unit-root null at 5%. gold_silver
+and platinum_palladium do not (t = −1.76 and −1.41), resolving a disagreement notebook 9's
+cheaper AR(1)/IC probe had flagged but not settled — both pairs are not actually
+cointegrated, consistent with their weak showing on the cheaper tests too.
+
+**Pitfalls.** A large ADF t-stat magnitude is reassuring but the test has genuinely low
+power against a *near*-unit-root process (e.g. $b=-0.001$, technically stationary but with
+a half-life of centuries) — always read the ADF result alongside an estimated half-life
+(see [Ornstein-Uhlenbeck process and half-life of mean reversion](09-market-data-and-microstructure.md#ornstein-uhlenbeck-process-and-half-life-of-mean-reversion)),
+never the t-stat in isolation. The lag-augmentation count also matters: too few lags leave
+autocorrelation in the residual (inflating apparent significance), too many waste degrees
+of freedom — an automatic rule (BIC here) is a reasonable default, not a guarantee of the
+"right" answer for every series.

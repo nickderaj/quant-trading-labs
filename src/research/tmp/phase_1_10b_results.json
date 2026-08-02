@@ -1,0 +1,120 @@
+{
+  "trading_rule": {
+    "signal": "60-day rolling z-score of spread value, clipped to [-2,2]",
+    "position": "position_t = -z_t / 2",
+    "cost": "one round-turn cost per leg, summed across legs, charged on |delta position|",
+    "roll_window_exclusion": "applied to signal AND P&L, not just the descriptive screen",
+    "n_trials": 8
+  },
+  "inter_commodity": {
+    "taxonomy_group": "inter_commodity",
+    "n_eligible_spreads": 7,
+    "eligible_spreads": [
+      "bean_corn",
+      "brent_wti",
+      "corn_wheat",
+      "crack_321",
+      "crush_soy",
+      "gasheat_rbho",
+      "gasoline_crack"
+    ],
+    "by_offset": {
+      "offset_0": {
+        "sharpe": 0.4230636455441535,
+        "mean_daily": 9.389278726753121e-05,
+        "std_daily": 0.0035231147979126434,
+        "n": 3677,
+        "max_drawdown_cum": -0.13774489881496765
+      },
+      "offset_7": {
+        "sharpe": 0.42346720686602235,
+        "mean_daily": 9.407187432771449e-05,
+        "std_daily": 0.003526470727386436,
+        "n": 3670,
+        "max_drawdown_cum": -0.13774489881496765
+      },
+      "offset_14": {
+        "sharpe": 0.4238719252695927,
+        "mean_daily": 9.425164585932631e-05,
+        "std_daily": 0.003529836265193149,
+        "n": 3663,
+        "max_drawdown_cum": -0.13774489881496765
+      },
+      "offset_21": {
+        "sharpe": 0.42445211259078747,
+        "mean_daily": 9.450965748226451e-05,
+        "std_daily": 0.0035346609349974608,
+        "n": 3653,
+        "max_drawdown_cum": -0.13774489881496765
+      }
+    },
+    "excess_return_ci_vs_zero": [
+      -2.206010116562808e-05,
+      0.00020412758712499288
+    ],
+    "ci_excludes_zero": false,
+    "deflated_sharpe_prob": 0.5621883699343364,
+    "net_sharpe_positive_at_every_offset": true,
+    "fires": false
+  },
+  "calendar": {
+    "taxonomy_group": "calendar",
+    "n_eligible_spreads": 16,
+    "eligible_spreads": [
+      "brent_calendar",
+      "bz_cal_m1m3",
+      "cl_cal_m2m3",
+      "ho_cal_m1m2",
+      "ho_cal_m2m3",
+      "ke_cal_m1m2",
+      "ng_cal_m1m2",
+      "ng_cal_m2m3",
+      "ng_calendar",
+      "rb_cal_m1m2",
+      "rb_cal_m2m3",
+      "wti_calendar",
+      "zc_cal_m1m2",
+      "zl_cal_m1m2",
+      "zm_cal_m1m2",
+      "zw_cal_m1m2"
+    ],
+    "by_offset": {
+      "offset_0": {
+        "sharpe": 0.5044342376082704,
+        "mean_daily": 3.183802199090469e-05,
+        "std_daily": 0.0010019401794398534,
+        "n": 3677,
+        "max_drawdown_cum": -0.033806768105125104
+      },
+      "offset_7": {
+        "sharpe": 0.5049979280653807,
+        "mean_daily": 3.19040583004318e-05,
+        "std_daily": 0.0010028976285113022,
+        "n": 3670,
+        "max_drawdown_cum": -0.033806768105125104
+      },
+      "offset_14": {
+        "sharpe": 0.5048383423550517,
+        "mean_daily": 3.192889673883078e-05,
+        "std_daily": 0.0010039956950995104,
+        "n": 3663,
+        "max_drawdown_cum": -0.033806768105125104
+      },
+      "offset_21": {
+        "sharpe": 0.5050832903823591,
+        "mean_daily": 3.1988892377148494e-05,
+        "std_daily": 0.0010053944237467182,
+        "n": 3653,
+        "max_drawdown_cum": -0.033806768105125104
+      }
+    },
+    "excess_return_ci_vs_zero": [
+      1.9161479811623253e-07,
+      6.828219698024037e-05
+    ],
+    "ci_excludes_zero": true,
+    "deflated_sharpe_prob": 0.6797865123158808,
+    "net_sharpe_positive_at_every_offset": true,
+    "fires": false
+  }
+}

@@ -1,0 +1,602 @@
+{
+  "strategy_A_carry": {
+    "by_offset": {
+      "offset_0": {
+        "label": "carry_offset0",
+        "no_bars": 4507,
+        "total_log_return": 9.571555258166685,
+        "compound_return": 14349.718048611805,
+        "std": 0.035949493697205806,
+        "sharpe": 0.9377831929073085,
+        "max_drawdown": -7.46898918906358,
+        "sharpe_net": 0.9042246451305482,
+        "total_log_return_net": 9.2292762602127,
+        "compound_return_net": 10190.163091791415,
+        "max_drawdown_net": -7.524367620286916,
+        "mean_turnover_per_bar": 0.4454089934176466,
+        "turnover_per_year": 112.24306634124696,
+        "annual_fee_drag_log": 0.019137853890482243,
+        "annual_fee_drag_pct": 0.0193221564573317
+      },
+      "offset_7": {
+        "label": "carry_offset7",
+        "no_bars": 4500,
+        "total_log_return": 9.703927182288409,
+        "compound_return": 16380.815412151043,
+        "std": 0.03596603824130021,
+        "sharpe": 0.951793388817303,
+        "max_drawdown": -7.468989189063578,
+        "sharpe_net": 0.9182452501537042,
+        "total_log_return_net": 9.362131717457945,
+        "compound_return_net": 11638.17354478918,
+        "max_drawdown_net": -7.524367620286914,
+        "mean_turnover_per_bar": 0.44547222222222216,
+        "turnover_per_year": 112.259,
+        "annual_fee_drag_log": 0.019140546030505936,
+        "annual_fee_drag_pct": 0.01932490061899997
+      },
+      "offset_14": {
+        "label": "carry_offset14",
+        "no_bars": 4493,
+        "total_log_return": 9.818395906426217,
+        "compound_return": 18367.562203617297,
+        "std": 0.035982048023189446,
+        "sharpe": 0.9640920754134515,
+        "max_drawdown": -7.468989189063578,
+        "sharpe_net": 0.930554766095841,
+        "total_log_return_net": 9.477101694595403,
+        "compound_return_net": 13056.287612153046,
+        "max_drawdown_net": -7.524367620286916,
+        "mean_turnover_per_bar": 0.4455356480451072,
+        "turnover_per_year": 112.27498330736702,
+        "annual_fee_drag_log": 0.019142252700059037,
+        "annual_fee_drag_pct": 0.01932664027125708
+      },
+      "offset_21": {
+        "label": "carry_offset21",
+        "no_bars": 4486,
+        "total_log_return": 9.963727146190266,
+        "compound_return": 21240.819726470083,
+        "std": 0.03599829136399871,
+        "sharpe": 0.9794469978469268,
+        "max_drawdown": -7.468989189063578,
+        "sharpe_net": 0.9459438290292651,
+        "total_log_return_net": 9.62315499598696,
+        "compound_return_net": 15109.648848212746,
+        "max_drawdown_net": -7.524367620286912,
+        "mean_turnover_per_bar": 0.44539493238222616,
+        "turnover_per_year": 112.23952296032101,
+        "annual_fee_drag_log": 0.019131560822833852,
+        "annual_fee_drag_pct": 0.019315741814229525
+      }
+    },
+    "gate_AC": {
+      "net_sharpe_positive_at_every_offset": true,
+      "sharpes_net_by_offset": {
+        "offset_0": 0.9042246451305482,
+        "offset_7": 0.9182452501537042,
+        "offset_14": 0.930554766095841,
+        "offset_21": 0.9459438290292651
+      },
+      "excess_return_ci": [
+        -0.002824914217376099,
+        0.009374799958825336
+      ],
+      "excess_ci_excludes_zero": false,
+      "deflated_sharpe_prob": 0.9971831492023995,
+      "fires": false
+    }
+  },
+  "strategy_B_momentum": {
+    "by_lookback": {
+      "mom_1m": {
+        "by_offset": {
+          "offset_0": {
+            "label": "mom_mom_1m_offset0",
+            "no_bars": 4507,
+            "total_log_return": 0.6983179491374907,
+            "compound_return": 1.0103683201457572,
+            "std": 0.008767512756852922,
+            "sharpe": 0.2805365881716143,
+            "max_drawdown": -0.4855200374336388,
+            "sharpe_net": 0.12009623271700454,
+            "total_log_return_net": 0.29892974784782844,
+            "compound_return_net": 0.3484148910972533,
+            "max_drawdown_net": -0.5473521606527245,
+            "mean_turnover_per_bar": 0.5297130389764071,
+            "turnover_per_year": 133.4876858220546,
+            "annual_fee_drag_log": 0.022331002157753462,
+            "annual_fee_drag_pct": 0.02258220537478295
+          },
+          "offset_7": {
+            "label": "mom_mom_1m_offset7",
+            "no_bars": 4500,
+            "total_log_return": 0.6733555288631483,
+            "compound_return": 0.9608058346266957,
+            "std": 0.008769580276460222,
+            "sharpe": 0.27086530440297085,
+            "max_drawdown": -0.4855200374336386,
+            "sharpe_net": 0.11039717664770293,
+            "total_log_return_net": 0.27442617695362115,
+            "compound_return_net": 0.3157754359325944,
+            "max_drawdown_net": -0.5473521606527243,
+            "mean_turnover_per_bar": 0.5299444444444444,
+            "turnover_per_year": 133.54600000000002,
+            "annual_fee_drag_log": 0.02234004370693352,
+            "annual_fee_drag_pct": 0.02259145114388147
+          },
+          "offset_14": {
+            "label": "mom_mom_1m_offset14",
+            "no_bars": 4493,
+            "total_log_return": 0.652601719388254,
+            "compound_return": 0.9205310174478749,
+            "std": 0.008773046765858659,
+            "sharpe": 0.2628219426392023,
+            "max_drawdown": -0.48552003743363903,
+            "sharpe_net": 0.10225135368275572,
+            "total_log_return_net": 0.253880832350486,
+            "compound_return_net": 0.2890181858474248,
+            "max_drawdown_net": -0.5473521606527237,
+            "mean_turnover_per_bar": 0.5303991394020328,
+            "turnover_per_year": 133.66058312931227,
+            "annual_fee_drag_log": 0.022363156806925782,
+            "annual_fee_drag_pct": 0.02261508667548714
+          },
+          "offset_21": {
+            "label": "mom_mom_1m_offset21",
+            "no_bars": 4486,
+            "total_log_return": 0.6809636833661362,
+            "compound_return": 0.9757808422182217,
+            "std": 0.008772992742780024,
+            "sharpe": 0.2746737660209678,
+            "max_drawdown": -0.4855200374336386,
+            "sharpe_net": 0.11415890467111932,
+            "total_log_return_net": 0.28300332835424535,
+            "compound_return_net": 0.3271095789006073,
+            "max_drawdown_net": -0.5473521606527241,
+            "mean_turnover_per_bar": 0.5305394560855996,
+            "turnover_per_year": 133.6959429335711,
+            "annual_fee_drag_log": 0.022355329795585487,
+            "annual_fee_drag_pct": 0.022607082686930673
+          }
+        },
+        "gate": {
+          "net_sharpe_positive_at_every_offset": true,
+          "sharpes_net_by_offset": {
+            "offset_0": 0.12009623271700454,
+            "offset_7": 0.11039717664770293,
+            "offset_14": 0.10225135368275572,
+            "offset_21": 0.11415890467111932
+          },
+          "excess_return_ci": [
+            -0.00019501605779529292,
+            0.0006465448069209166
+          ],
+          "excess_ci_excludes_zero": false,
+          "deflated_sharpe_prob": 0.09807055437061196,
+          "fires": false
+        }
+      },
+      "mom_3m": {
+        "by_offset": {
+          "offset_0": {
+            "label": "mom_mom_3m_offset0",
+            "no_bars": 4465,
+            "total_log_return": -0.014834412070211689,
+            "compound_return": -0.014724924243932569,
+            "std": 0.009014582496317945,
+            "sharpe": -0.005850642051706635,
+            "max_drawdown": -0.7702071092528784,
+            "sharpe_net": -0.13338627638245118,
+            "total_log_return_net": -0.3381665854196932,
+            "compound_return_net": -0.28692351014278994,
+            "max_drawdown_net": -0.8642914137296137,
+            "mean_turnover_per_bar": 0.42430011198208284,
+            "turnover_per_year": 106.92362821948488,
+            "annual_fee_drag_log": 0.01824853475567063,
+            "annual_fee_drag_pct": 0.018416056724690558
+          },
+          "offset_7": {
+            "label": "mom_mom_3m_offset7",
+            "no_bars": 4458,
+            "total_log_return": -0.034396087514082296,
+            "compound_return": -0.03381126645651822,
+            "std": 0.009018246999013888,
+            "sharpe": -0.013581480848513787,
+            "max_drawdown": -0.7702071092528782,
+            "sharpe_net": -0.14106544836314702,
+            "total_log_return_net": -0.3572197790986307,
+            "compound_return_net": -0.300381280734922,
+            "max_drawdown_net": -0.8642914137296138,
+            "mean_turnover_per_bar": 0.4245177209510991,
+            "turnover_per_year": 106.97846567967697,
+            "annual_fee_drag_log": 0.01824844555390449,
+            "annual_fee_drag_pct": 0.018415965880183686
+          },
+          "offset_14": {
+            "label": "mom_mom_3m_offset14",
+            "no_bars": 4451,
+            "total_log_return": -0.04903690322447918,
+            "compound_return": -0.047854008207114274,
+            "std": 0.009022129732595061,
+            "sharpe": -0.019384591093566658,
+            "max_drawdown": -0.7702071092528782,
+            "sharpe_net": -0.14701438545993034,
+            "total_log_return_net": -0.3718583830709249,
+            "compound_return_net": -0.31054812633195816,
+            "max_drawdown_net": -0.8642914137296138,
+            "mean_turnover_per_bar": 0.42518535160638055,
+            "turnover_per_year": 107.14670860480791,
+            "annual_fee_drag_log": 0.01827701930382034,
+            "annual_fee_drag_pct": 0.018445066259054548
+          },
+          "offset_21": {
+            "label": "mom_mom_3m_offset21",
+            "no_bars": 4444,
+            "total_log_return": -0.029741554428967865,
+            "compound_return": -0.029303626688601647,
+            "std": 0.0090271408671256,
+            "sharpe": -0.01176900272745575,
+            "max_drawdown": -0.7702071092528782,
+            "sharpe_net": -0.1392991294367575,
+            "total_log_return_net": -0.3519855381491188,
+            "compound_return_net": -0.29670970721786316,
+            "max_drawdown_net": -0.8642914137296138,
+            "mean_turnover_per_bar": 0.4251987698769877,
+            "turnover_per_year": 107.1500900090009,
+            "annual_fee_drag_log": 0.018273061183050866,
+            "annual_fee_drag_pct": 0.018441035138463055
+          }
+        },
+        "gate": {
+          "net_sharpe_positive_at_every_offset": false,
+          "sharpes_net_by_offset": {
+            "offset_0": -0.13338627638245118,
+            "offset_7": -0.14106544836314702,
+            "offset_14": -0.14701438545993034,
+            "offset_21": -0.1392991294367575
+          },
+          "excess_return_ci": [
+            -0.00033388632269295583,
+            0.0005149522109987643
+          ],
+          "excess_ci_excludes_zero": false,
+          "deflated_sharpe_prob": 0.009092120223738703,
+          "fires": false
+        }
+      },
+      "mom_6m": {
+        "by_offset": {
+          "offset_0": {
+            "label": "mom_mom_6m_offset0",
+            "no_bars": 4402,
+            "total_log_return": 0.02928791589773745,
+            "compound_return": 0.029721024852863653,
+            "std": 0.008810963945973846,
+            "sharpe": 0.011987131698741412,
+            "max_drawdown": -0.6810232986388889,
+            "sharpe_net": -0.1067927661797134,
+            "total_log_return_net": -0.26092661030488196,
+            "compound_return_net": -0.22966254762863958,
+            "max_drawdown_net": -0.810595161813414,
+            "mean_turnover_per_bar": 0.38380281690140844,
+            "turnover_per_year": 96.71830985915494,
+            "annual_fee_drag_log": 0.01661382567084509,
+            "annual_fee_drag_pct": 0.016752602746729173
+          },
+          "offset_7": {
+            "label": "mom_mom_6m_offset7",
+            "no_bars": 4395,
+            "total_log_return": 0.0181222198686,
+            "compound_return": 0.018287423739796083,
+            "std": 0.008810593137529021,
+            "sharpe": 0.007429295618399959,
+            "max_drawdown": -0.6810232986388891,
+            "sharpe_net": -0.1114681559182913,
+            "total_log_return_net": -0.2719068031661819,
+            "compound_return_net": -0.23807473319649564,
+            "max_drawdown_net": -0.8105951618134142,
+            "mean_turnover_per_bar": 0.38407281001137655,
+            "turnover_per_year": 96.7863481228669,
+            "annual_fee_drag_log": 0.01662965046752334,
+            "annual_fee_drag_pct": 0.016768692777250117
+          },
+          "offset_14": {
+            "label": "mom_mom_6m_offset14",
+            "no_bars": 4388,
+            "total_log_return": 0.06435560220377885,
+            "compound_return": 0.06647157098117962,
+            "std": 0.008805292639414614,
+            "sharpe": 0.026440898921206917,
+            "max_drawdown": -0.6810232986388893,
+            "sharpe_net": -0.09263079635111174,
+            "total_log_return_net": -0.2254612015999714,
+            "compound_return_net": -0.20185197328641113,
+            "max_drawdown_net": -0.8105951618134142,
+            "mean_turnover_per_bar": 0.38422971741112116,
+            "turnover_per_year": 96.82588878760255,
+            "annual_fee_drag_log": 0.016643991467307447,
+            "annual_fee_drag_pct": 0.01678327436141072
+          },
+          "offset_21": {
+            "label": "mom_mom_6m_offset21",
+            "no_bars": 4381,
+            "total_log_return": 0.06072687036007583,
+            "compound_return": 0.06260864463190163,
+            "std": 0.00880890476069497,
+            "sharpe": 0.024979630065363242,
+            "max_drawdown": -0.6810232986388891,
+            "sharpe_net": -0.09412100553160578,
+            "total_log_return_net": -0.2288163177620584,
+            "compound_return_net": -0.20452536535229138,
+            "max_drawdown_net": -0.810595161813414,
+            "mean_turnover_per_bar": 0.3843871262268888,
+            "turnover_per_year": 96.86555580917599,
+            "annual_fee_drag_log": 0.016654846703213374,
+            "annual_fee_drag_pct": 0.016794311843626245
+          }
+        },
+        "gate": {
+          "net_sharpe_positive_at_every_offset": false,
+          "sharpes_net_by_offset": {
+            "offset_0": -0.1067927661797134,
+            "offset_7": -0.1114681559182913,
+            "offset_14": -0.09263079635111174,
+            "offset_21": -0.09412100553160578
+          },
+          "excess_return_ci": [
+            -0.0003027223822346257,
+            0.0005614897904916843
+          ],
+          "excess_ci_excludes_zero": false,
+          "deflated_sharpe_prob": 0.012328346954758672,
+          "fires": false
+        }
+      },
+      "mom_12m": {
+        "by_offset": {
+          "offset_0": {
+            "label": "mom_mom_12m_offset0",
+            "no_bars": 4276,
+            "total_log_return": 0.5249833713173928,
+            "compound_return": 0.6904307385091568,
+            "std": 0.00890025276255413,
+            "sharpe": 0.2189806702845032,
+            "max_drawdown": -0.38717784016324175,
+            "sharpe_net": 0.1128660097020797,
+            "total_log_return_net": 0.2706146927041356,
+            "compound_return_net": 0.31076992385765445,
+            "max_drawdown_net": -0.4343406941188086,
+            "mean_turnover_per_bar": 0.3410703149360773,
+            "turnover_per_year": 85.94971936389149,
+            "annual_fee_drag_log": 0.014990857579640037,
+            "annual_fee_drag_pct": 0.015103784067792772
+          },
+          "offset_7": {
+            "label": "mom_mom_12m_offset7",
+            "no_bars": 4269,
+            "total_log_return": 0.504134421008941,
+            "compound_return": 0.6555518891559298,
+            "std": 0.008905067820340616,
+            "sharpe": 0.2105150915012075,
+            "max_drawdown": -0.3871778401632422,
+            "sharpe_net": 0.10428435970575135,
+            "total_log_return_net": 0.24976373887984218,
+            "compound_return_net": 0.28372208723837256,
+            "max_drawdown_net": -0.4343406941188084,
+            "mean_turnover_per_bar": 0.34162957757476375,
+            "turnover_per_year": 86.09065354884048,
+            "annual_fee_drag_log": 0.015015556780635477,
+            "annual_fee_drag_pct": 0.015128856629821545
+          },
+          "offset_14": {
+            "label": "mom_mom_12m_offset14",
+            "no_bars": 4262,
+            "total_log_return": 0.5003005921541273,
+            "compound_return": 0.6492169378715424,
+            "std": 0.00890591762781839,
+            "sharpe": 0.20923732925208896,
+            "max_drawdown": -0.3871778401632422,
+            "sharpe_net": 0.10284147897667487,
+            "total_log_return_net": 0.2459281786933391,
+            "compound_return_net": 0.27880772460167336,
+            "max_drawdown_net": -0.43434069411880827,
+            "mean_turnover_per_bar": 0.34219067730330044,
+            "turnover_per_year": 86.23205068043173,
+            "annual_fee_drag_log": 0.015040321021144686,
+            "annual_fee_drag_pct": 0.015153995836250355
+          },
+          "offset_21": {
+            "label": "mom_mom_12m_offset21",
+            "no_bars": 4255,
+            "total_log_return": 0.5080930828108262,
+            "compound_return": 0.6621186483944101,
+            "std": 0.008911644823440385,
+            "sharpe": 0.21270912407905665,
+            "max_drawdown": -0.38717784016324197,
+            "sharpe_net": 0.10620879395276524,
+            "total_log_return_net": 0.25372671004490743,
+            "compound_return_net": 0.2888195347013689,
+            "max_drawdown_net": -0.43434069411880827,
+            "mean_turnover_per_bar": 0.34275362318840585,
+            "turnover_per_year": 86.37391304347828,
+            "annual_fee_drag_log": 0.015064706448181326,
+            "annual_fee_drag_pct": 0.015178751101779409
+          }
+        },
+        "gate": {
+          "net_sharpe_positive_at_every_offset": true,
+          "sharpes_net_by_offset": {
+            "offset_0": 0.1128660097020797,
+            "offset_7": 0.10428435970575135,
+            "offset_14": 0.10284147897667487,
+            "offset_21": 0.10620879395276524
+          },
+          "excess_return_ci": [
+            -0.00014819897334498823,
+            0.0007040401348124774
+          ],
+          "excess_ci_excludes_zero": false,
+          "deflated_sharpe_prob": 0.09084154357220342,
+          "fires": false
+        }
+      }
+    },
+    "best_lookback": "mom_1m",
+    "gate_AM": {
+      "net_sharpe_positive_at_every_offset": true,
+      "sharpes_net_by_offset": {
+        "offset_0": 0.12009623271700454,
+        "offset_7": 0.11039717664770293,
+        "offset_14": 0.10225135368275572,
+        "offset_21": 0.11415890467111932
+      },
+      "excess_return_ci": [
+        -0.00019501605779529292,
+        0.0006465448069209166
+      ],
+      "excess_ci_excludes_zero": false,
+      "deflated_sharpe_prob": 0.09807055437061196,
+      "fires": false
+    }
+  },
+  "_scope_note": "Strategies C (cross-sectional momentum), D (basis-momentum), E (spread mean reversion), and F (COT hedging pressure) are declared in NEXT_PROMPT.md sec 4 Phase 5 but were not run in this pass -- see results MD for the explicit scope tradeoff.",
+  "_config_log": [
+    {
+      "label": "carry",
+      "origin_offset": 0,
+      "pred_col": "carry_signal",
+      "target_col": "fwd_return_carry"
+    },
+    {
+      "label": "carry",
+      "origin_offset": 7,
+      "pred_col": "carry_signal",
+      "target_col": "fwd_return_carry"
+    },
+    {
+      "label": "carry",
+      "origin_offset": 14,
+      "pred_col": "carry_signal",
+      "target_col": "fwd_return_carry"
+    },
+    {
+      "label": "carry",
+      "origin_offset": 21,
+      "pred_col": "carry_signal",
+      "target_col": "fwd_return_carry"
+    },
+    {
+      "label": "mom_mom_1m",
+      "origin_offset": 0,
+      "pred_col": "mom_1m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_1m",
+      "origin_offset": 7,
+      "pred_col": "mom_1m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_1m",
+      "origin_offset": 14,
+      "pred_col": "mom_1m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_1m",
+      "origin_offset": 21,
+      "pred_col": "mom_1m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_3m",
+      "origin_offset": 0,
+      "pred_col": "mom_3m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_3m",
+      "origin_offset": 7,
+      "pred_col": "mom_3m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_3m",
+      "origin_offset": 14,
+      "pred_col": "mom_3m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_3m",
+      "origin_offset": 21,
+      "pred_col": "mom_3m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_6m",
+      "origin_offset": 0,
+      "pred_col": "mom_6m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_6m",
+      "origin_offset": 7,
+      "pred_col": "mom_6m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_6m",
+      "origin_offset": 14,
+      "pred_col": "mom_6m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_6m",
+      "origin_offset": 21,
+      "pred_col": "mom_6m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_12m",
+      "origin_offset": 0,
+      "pred_col": "mom_12m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_12m",
+      "origin_offset": 7,
+      "pred_col": "mom_12m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_12m",
+      "origin_offset": 14,
+      "pred_col": "mom_12m",
+      "target_col": "fwd_return_1"
+    },
+    {
+      "label": "mom_mom_12m",
+      "origin_offset": 21,
+      "pred_col": "mom_12m",
+      "target_col": "fwd_return_1"
+    }
+  ],
+  "_config": {
+    "carry_horizon_days": 21,
+    "mom_lookbacks": {
+      "mom_1m": 21,
+      "mom_3m": 63,
+      "mom_6m": 126,
+      "mom_12m": 252
+    },
+    "top_frac": 0.3,
+    "origin_offsets": [
+      0,
+      7,
+      14,
+      21
+    ]
+  }
+}

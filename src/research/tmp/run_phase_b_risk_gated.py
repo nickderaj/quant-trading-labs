@@ -24,12 +24,10 @@ import sys
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
-import numpy as np
-import polars as pl
-
 import dist_lib as L
 import dist_lib6 as L6
-import research
+import numpy as np
+import polars as pl
 from alpha_lib7 import (
     apply_book_scale,
     hysteresis_weights,
@@ -52,6 +50,8 @@ from run_phase_a_turnover import (
     build_signal_panel,
     fold_excess_returns,
 )
+
+import research
 
 Q = 0.01
 K_VALUES = [1.25, 1.5, 2.0]  # B1 stand-down thresholds, pre-declared

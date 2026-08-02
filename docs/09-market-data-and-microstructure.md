@@ -470,3 +470,598 @@ cached and complete — a gap in the underlying 1h data (this repo's own write-u
 real, documented ~120-hour gap for SOL/XRP in Feb-Apr 2022, a genuine hole in Binance's
 own archive) would silently propagate into a slightly less accurate coarser-bar RV target
 for that period, worth remembering when interpreting results spanning that window.
+
+---
+
+### Futures roll, front month, and continuous contract
+
+**In one sentence.** A futures contract expires on a fixed date, so a series that wants
+to represent "the price of crude oil" for years at a time has to splice together a
+sequence of individual contracts — the **front month** is whichever contract is
+currently the nearest-to-expiry one still being actively traded, and **rolling** is the
+act of switching from the expiring front month to the next one before delivery risk
+arrives; a **continuous contract** is the resulting spliced series.
+
+**The maths.** No single formula — it's a rule, applied daily. Notebook 8's rule: roll
+$N$ calendar days before the contract's first-notice date (or last-trade date where
+first-notice isn't populated), snapped backward off a weekend since no exchange trading
+calendar is available. $N=5$ in production; sensitivity checked at $N \in \{3, 5, 10\}$.
+
+**Why it is here.** Every tail statistic, every backtest, and the risk engine itself sit
+on top of this series. Get the roll wrong and every number built on it is wrong in a way
+that doesn't announce itself — notebook 8's own Phase 0 found this out directly: rolling
+into a contract-month that was never actually traded (see
+[roll_calendar vs. contracts.parquet](#seasonal-and-liquid-months-vs-nominally-listed-months)
+below) silently deleted 60% of one product's front-month series before the bug was caught.
+
+**Worked example.** CL's May-2020 contract (the one that famously settled at
+$-\$37.63/\text{bbl}$ on 2020-04-20) had its roll date fall on 2020-04-17 under the
+production $N=5$ rule — a real book following this rule was already three trading days
+into the June contract by the time the crash happened, and never touched the negative
+print at all. The row itself survives in the raw per-contract data (see
+[hygiene filter](#negative-and-contaminated-settlement-rows) below); it just never
+enters the *continuous* front-month series, because rolling early is what a real book
+that respects physical delivery risk actually does.
+
+**Pitfalls.** "Front month" is not "most-traded contract" — those disagree constantly.
+On any given day the most heavily-traded platinum contract might be four months out
+while the nominal front month trades a token handful of contracts; a naive
+max-volume-per-date selection rule (rather than a fixed roll calendar) will happily
+follow that liquidity around and produce a series with implausible month-to-month jumps.
+
+---
+
+### Back-adjustment vs. ratio-adjustment
+
+**In one sentence.** Splicing contracts together (see [futures roll](#futures-roll-front-month-and-continuous-contract))
+creates an artificial price jump at every roll date (the old and new contract rarely
+trade at exactly the same price); **back-adjustment** removes the jump by adding a
+constant offset to every price before the roll, while **ratio-adjustment** removes it by
+multiplying by a constant ratio instead.
+
+**The maths.** Back-adjustment: at each roll, $\text{offset} \mathrel{+}= P_{\text{new}} - P_{\text{old}}$,
+then every pre-roll price has the *cumulative* offset subtracted. Ratio-adjustment: at
+each roll, $\text{ratio} \mathrel{*}= P_{\text{old}} / P_{\text{new}}$, then every
+pre-roll price is *multiplied* by the cumulative ratio. Both make the return **at** the
+roll date well-defined and continuous; neither is the return an account actually earned
+that day (see the third convention below).
+
+**Why it is here.** Notebook 8 needed three separate return conventions and got the
+choice between these two wrong on the first attempt. The *unadjusted* return — computed
+within a single contract only, `null` exactly at every roll boundary — is the correct
+series for backtests and cost accounting, since P&L and fees are charged on the contract
+actually held. Back- and ratio-adjustment exist only to make a *continuous* series for
+charting and for statistics (tail index, ACF, ...) that need an unbroken series.
+
+**Worked example.** Over a 16-year, ~200-roll history, back-adjustment's additive offset
+can grow large enough to push an old contract's *adjusted* price negative or through
+zero — nonsensical for a commodity, and it happened in this notebook: several products'
+back-adjusted 2010-era prices went negative purely from the accumulated splice offset,
+producing single-day "returns" of 100%+ that were pure adjustment artifact, not a real
+price move. Ratio-adjustment (multiplicative) cannot cross zero as long as the raw price
+never does, and was the series notebook 8 actually used for every tail/ACF/density
+statistic once this was caught.
+
+**Pitfalls.** Never compute a log return across a roll boundary on **unadjusted**
+prices — that silently invents a jump equal to the roll's own price gap, which can dwarf
+a normal day's move and will single-handedly corrupt a kurtosis or Hill-tail-index
+estimate. And never use **back-adjusted** returns for a multi-decade tail statistic
+without first checking the adjusted price hasn't drifted through zero.
+
+---
+
+### Contango and backwardation
+
+**In one sentence.** **Contango**: futures prices increase with maturity (a farther-out
+contract costs more) — the "normal" state for a storable good under positive cost of
+carry. **Backwardation**: futures prices decrease with maturity — the market is paying a
+premium for immediate delivery, the classic signature of scarce current inventory.
+
+**The maths.** This notebook's operational definition: the annualised F1→F2 roll slope,
+$\text{slope} = \dfrac{\ln(F_2/F_1)}{\text{dte}_2 - \text{dte}_1} \times 365$.
+$\text{slope} < 0$ (F2 cheaper than F1) is backwardation; $\text{slope} > 0$ is contango.
+
+**Why it is here.** Inventory theory (Kaldor-Working; Deaton-Laroque) predicts that
+backwardation — low inventory — should carry higher volatility and a fatter right tail
+(a supply shock has less buffer to absorb it), the central conditional-tail question
+notebook 8's Phase 4 exists to test. It is also the raw signal behind the oldest
+commodity risk premium in the literature: go long backwardated markets, short contangoed
+ones (Keynes' "normal backwardation"; Erb-Harvey 2006; Gorton-Rouwenhorst 2006).
+
+**Worked example.** A CL curve with $F_1 = \$75.00$ (10 days to expiry) and
+$F_2 = \$74.50$ (40 days to expiry) has
+$\text{slope} = \ln(74.50/75.00) / 30 \times 365 \approx -0.081$, i.e. roughly 8.1%
+annualised backwardation — the front month is pricier than the deferred month by an
+amount that, extrapolated, corresponds to an 8%/year roll yield for a long-front
+position.
+
+**Pitfalls.** The sign convention is easy to flip. A carry *trading* signal wants to be
+long backwardation, so the predictive score fed into a ranking function needs the
+**negative** of the roll slope (very negative slope → very positive score → long leg) —
+using the raw slope as the ranking score silently reverses the whole book's positions.
+
+---
+
+### Convenience yield
+
+**In one sentence.** The non-monetary benefit of physically holding a commodity right
+now rather than a promise to receive it later — insurance against a stockout, the
+ability to keep a factory running — which is what allows backwardation to persist
+without being an arbitrage.
+
+**The maths.** From the cost-of-carry identity (below), convenience yield $y$ is
+whatever makes it balance: $F = S \, e^{(r + u - y)T}$, so
+$y = r + u - \dfrac{1}{T}\ln(F/S)$ where $S$ is spot, $r$ the risk-free rate, $u$
+physical storage cost. $y$ is not directly observable — it is inferred residually from
+the other four quantities, all of which *are* observable.
+
+**Why it is here.** It is the theoretical reason backwardation and contango exist at all
+rather than being pure arbitrage. This notebook does not attempt to estimate $y$
+directly (that needs a storage-cost estimate this dataset does not provide); the F1/F2
+roll slope is used as the *observable proxy* for the inventory state $y$ is meant to
+summarize.
+
+**Worked example.** If crude spot is $75, one-year storage costs 2%/year, the risk-free
+rate is 5%/year, and the one-year future trades at $73, then
+$y = 0.05 + 0.02 - \ln(73/75) \approx 0.097$, roughly 9.7%/year — inventory is scarce
+enough that holders are effectively being paid a large convenience yield to keep barrels
+on hand rather than sell the future.
+
+**Pitfalls.** Convenience yield is a *residual*, not a free-standing measurement — any
+error in the storage-cost or financing-rate assumption goes straight into the estimate.
+It is also not constant: it rises sharply exactly when inventory is tight, which is
+precisely the regime this notebook's Phase 4 conditions on.
+
+---
+
+### Cost of carry
+
+**In one sentence.** The net cost of holding a physical position from today until a
+future delivery date — financing plus storage minus convenience yield — which is what a
+futures price has to compensate for relative to spot.
+
+**The maths.** $F = S \, e^{(r + u - y)T}$ — the same identity convenience yield is
+solved from, read the other direction: given spot, financing, storage, and convenience
+yield, this pins down the no-arbitrage futures price.
+
+**Why it is here.** It's the textbook explanation for why $F \neq S$ at all, and the
+frame every other term on this page (contango, backwardation, convenience yield, the
+roll slope itself) sits inside.
+
+**Worked example.** Gold has near-zero convenience yield (it isn't consumed, and storage
+is cheap and standardized) and near-zero physical storage cost relative to its price —
+so gold's forward curve should track almost purely the financing rate $r$, and does:
+gold trades in near-permanent contango, unlike crude or natural gas which flip sign
+depending on inventory.
+
+**Pitfalls.** Cost-of-carry is a no-arbitrage *bound*, not a prediction of what the
+curve will do — it says what $F$ *must* be given the other four inputs, not which way
+inventory will move next. Confusing the identity for a forecast is the same category of
+mistake as confusing an accounting relationship for a causal one.
+
+---
+
+### The Samuelson effect
+
+**In one sentence.** Volatility rises as a futures contract approaches expiry, because
+there is less and less time left for supply and demand to arbitrage away fresh news
+before delivery — a contract with one day left reacts to news the same size move it
+always did, but that move now represents a much larger fraction of its remaining
+"time to mean-revert."
+
+**The maths.** No single closed form; operationalised here as realised volatility
+bucketed by days-to-expiry (`dte_f1`), e.g. $[0,5), [5,10), \ldots, [120, \infty)$ days,
+comparing mean realised vol across buckets. A genuine Samuelson effect shows monotonic
+(or near-monotonic) rise in vol as the near bucket is approached.
+
+**Why it is here.** It is a first-order reason a naive front-month series is
+contaminated near every roll — if the roll rule waits too long, the series inherits a
+burst of expiry-driven volatility that has nothing to do with the underlying commodity's
+"true" risk that week, one more argument (alongside the delivery-risk argument) for
+rolling before expiry rather than at it.
+
+**Worked example.** Predicted strongest in seasonal/storage-driven products (natural
+gas, grains) where expiry-week supply/demand information is most information-dense, and
+weakest in metals where physical delivery logistics dominate less of the price
+formation process.
+
+**Pitfalls.** The effect is about time-to-expiry, not calendar time — a contract can
+show elevated vol in its final week regardless of *which* calendar month that week falls
+in, so it must not be confused with (or allowed to contaminate) a month-of-year
+seasonality estimate computed from the same series.
+
+---
+
+### Basis and basis-momentum
+
+**In one sentence.** **Basis** is the gap between a nearby and a deferred futures price
+(or between spot and futures) — essentially the same object as the roll slope above,
+viewed as a level rather than an annualised rate. **Basis-momentum** (Boons-Prado 2019)
+is trend-following applied to that gap itself: has the basis been widening or narrowing
+recently, independent of whether the *level* is currently in backwardation or contango.
+
+**The maths.** Basis-momentum signal: the trailing return differential between the F1
+and F2 legs, $\sum_t (r_1_t - r_2_t)$ over some lookback — a distinct object from the
+plain roll-slope carry signal, and from price-level momentum on F1 alone.
+
+**Why it is here.** It's a **distinct, more recent factor** from carry per se (sec 3.3
+of this notebook's own pre-registration) — carry bets on the *level* of backwardation
+persisting; basis-momentum bets on the *direction of change* in that level continuing,
+which can point a different way than the level itself.
+
+**Worked example.** A market that is contangoed but rapidly *moving toward*
+backwardation (inventory draining) gives a basis-momentum signal in the opposite
+direction to what a pure level-based carry signal would say — carry says "short" (still
+contangoed), basis-momentum says "long" (moving the right way for a future backwardation
+bet to pay off first).
+
+**Pitfalls.** Declared in this notebook's pre-registration as in scope but not run in
+this pass, given the volume of machinery Phase 5 already covers with carry and
+time-series momentum — see the results MD for the explicit scope tradeoff, not a silent
+omission.
+
+---
+
+### Hedging pressure and the COT report
+
+**In one sentence.** Keynes' "normal backwardation" theory: commodity producers are
+natural hedgers who want to sell their future output forward, so they must pay
+speculators a risk premium to take the other side — **hedging pressure** measures how
+lopsided that natural hedging demand is, typically via the CFTC's weekly
+**Commitment of Traders (COT)** report's split of open interest between commercial
+(hedger) and non-commercial (speculator) positions.
+
+**The maths.** A common operationalisation: net non-commercial position as a fraction of
+open interest, $\frac{\text{noncomm\_long} - \text{noncomm\_short}}{\text{open\_interest}}$,
+or its rolling z-score — no single canonical formula, but this notebook's data only
+supports one market's worth of it (see pitfalls).
+
+**Why it is here.** It's a third, independent theoretical account of *why* commodity
+risk premia might exist (alongside the storage/convenience-yield account behind
+contango/backwardation), operationalisable here for exactly one product.
+
+**Worked example.** CFTC code 067651 (light sweet crude, NYMEX) is the one COT series
+with weekly history back to 2006 this notebook's data provides. It must be lagged by at
+least a full week before touching any signal: the report is **as-of Tuesday, released
+Friday 15:30 ET**, and is itself subject to later revision.
+
+**Pitfalls.** COT coverage in this dataset is CL and ES only — nowhere near enough to
+build a cross-sectional hedging-pressure factor across the 16-product panel. Declared
+explicitly as a single-market, CL-only time-series test (or out of scope entirely), never
+silently extrapolated into a panel-wide claim the data can't support.
+
+---
+
+### Crack and crush spreads
+
+**In one sentence.** **Crack spreads** are refining margins — the price gap between
+crude oil and its refined products (gasoline, heating oil) — and **crush spreads** are
+the analogous processing margin for soybeans into soybean meal and oil. Both are
+"physical process" spreads: the legs are linked by an actual industrial conversion, not
+just by both being commodities.
+
+**The maths.** The 3-2-1 crack spread: $3 \times \text{CL} - 2 \times \text{RB} - 1 \times \text{HO}$
+(3 barrels of crude yield roughly 2 of gasoline and 1 of heating oil, in the ratio a
+refinery actually processes them). Crush spread: a similar weighted combination of ZS
+(soybeans) against ZM (meal) and ZL (oil), reflecting a crushing plant's actual output
+ratios.
+
+**Why it is here.** These spreads are structurally lower-volatility, lower-directional-
+exposure trades than an outright position — the two/three legs share most of their
+common price risk, leaving mostly the refining/crushing *margin* itself as the exposed
+factor, which is exactly the kind of "cheap in vol terms" opportunity sec 3.3 flags as
+the most plausible place a genuine edge could survive transaction costs.
+
+**Worked example.** `spreads/crack_321.parquet` and `spreads/crush_soy.parquet` are
+pre-built in this dataset, with `regime` and `roll_window_flag` columns marking exactly
+the dates where a spread's *own* roll mechanics (each leg rolls on its own calendar)
+contaminate the spread's measured return — not incidental data, the single most
+important column for trading any of these spreads honestly.
+
+**Pitfalls.** A spread backtest that looks profitable only *inside* `roll_window == True`
+dates is not profitable — it is a roll-mechanics artifact, and this notebook's own
+standard requires reporting every spread result both including and excluding those
+dates specifically to catch this.
+
+---
+
+### Calendar spreads
+
+**In one sentence.** The price gap between two delivery months of the *same*
+underlying commodity (e.g. CL's December contract vs. its following June) — a pure play
+on the shape of one product's own term structure, with none of the cross-commodity
+processing-ratio complexity of a crack or crush spread.
+
+**The maths.** $\text{spread} = F_{\text{near}} - F_{\text{far}}$ (or a ratio), tracked
+as its own time series with its own roll calendar (the *spread's* roll, distinct from
+either individual leg's roll) — this is exactly the same quantity as the roll slope
+behind [contango and backwardation](#contango-and-backwardation), just expressed as a
+raw price difference rather than an annualised rate.
+
+**Why it is here.** It is the vehicle notebook 8's spread mean-reversion strategy (sec 4
+Phase 5, strategy E) would trade — cointegrated legs, mostly-hedged directional
+exposure, cheap in vol terms, one of the two places sec 3.3 flags as most plausible for
+a surviving edge (alongside the crack/crush spreads above).
+
+**Worked example.** Not every product has a full calendar-spread ladder in this
+dataset — `cl_cal_m1m2.parquet` (the nearest calendar spread) does not exist for CL,
+only `cl_cal_m2m3` and `wti_calendar`; checking each file's actual existence before
+assuming symmetry across products is a real, documented gotcha in this dataset.
+
+**Pitfalls.** Same roll-window discipline as crack/crush spreads applies, and a
+stationarity/cointegration check on the two legs is a precondition for trading a
+calendar spread as mean-reverting at all — an uncointegrated pair can drift arbitrarily
+far apart with no reversion ever arriving.
+
+---
+
+### Cointegration and the Engle-Granger test
+
+**In one sentence.** Two individually non-stationary price series (each wanders like a
+random walk on its own) are **cointegrated** if a fixed linear combination of them is
+stationary — i.e. they wander *together*, so the gap between them keeps returning to a
+stable level even though neither leg does on its own. This is the actual statistical
+license to trade a spread as mean-reverting; without it, "the spread looks like it
+reverts" is an unfounded eyeball impression.
+
+**The maths.** The **Engle-Granger two-step test**: (1) regress one leg on the other,
+$\text{leg}_1 = c + h \cdot \text{leg}_2 + u_t$ ($h$ is the hedge ratio); (2) run the
+[augmented Dickey-Fuller test](03-statistical-inference.md#stationarity-and-the-augmented-dickey-fuller-test)
+on the residual $\hat u_t$. If $\hat u_t$ is stationary, the two legs are cointegrated and
+$\hat u_t$ itself — a stationary series with a well-defined mean to revert to — is the
+tradeable spread. In this repo's own pre-built spread data, step (1) is already done
+upstream (`hedge_ratio` and the `value` column *are* $\hat u_t$), so
+`spread_lib10.adf_test` run directly on `value` performs step (2) and completes the test.
+
+**Why it is here.** It is the difference between "this spread's history happens to show
+mean reversion" (a backward-looking, possibly spurious observation — two independent
+random walks can drift together for a long stretch by pure chance) and "there is a
+structural reason this gap cannot grow without bound" (the actual claim a mean-reversion
+strategy needs to be true prospectively, not just historically).
+
+**Worked example.** brent_wti clears the test comfortably (ADF t = −3.39 vs. the 5%
+critical value of −2.86) — BZ and CL crude are genuinely linked (substitutable grades, one
+global oil market) and their spread is a legitimate mean-reversion candidate. gold_silver
+does not (t = −1.76) — gold and silver track a common macro factor loosely, but nothing
+structurally pins their *ratio*, and notebook 10a excludes it from any regime-gated
+backtest on exactly this basis.
+
+**Pitfalls.** Cointegration is a **property of the pair as constructed**, not of either
+leg alone — a hedge ratio estimated on one sample window and never re-checked can drift
+out of the relationship that made the pair cointegrated in the first place. It is also not
+transitive in the naive sense: A cointegrated with B and B cointegrated with C does not
+guarantee A cointegrated with C. And a passing ADF test says the *level* reverts — it says
+nothing about how fast (see half-life, next) or how large the round-trip transaction cost
+is relative to the amplitude of the reversion, both separate questions a cointegration
+test alone cannot answer.
+
+---
+
+### Ornstein-Uhlenbeck process and half-life of mean reversion
+
+**In one sentence.** The continuous-time model behind "mean reversion with a speed": a
+process that is constantly pulled back toward a long-run mean at a rate proportional to
+how far it currently is from that mean, and **half-life** is the plain-English translation
+of that pull-back rate into "how many days until half of today's deviation is gone."
+
+**The maths.** SDE form: $dX_t = \theta(\mu - X_t)\,dt + \sigma\,dW_t$, where $\theta>0$ is
+the mean-reversion speed and $\mu$ the long-run mean. Its discrete-time analogue is
+exactly the AR(1)-in-differences regression this repo already fits
+(`research_lib9.ols_ar1_diff`): $\Delta v_t = \alpha + \beta v_{t-1} + \varepsilon_t$, with
+$\beta$ playing $-\theta$'s role (a more negative $\beta$ = faster pull-back). Half-life
+follows from solving $(1+\beta)^k = 0.5$:
+$$\text{half-life} = \frac{-\ln 2}{\ln(1+\beta)}, \quad -1 < \beta < 0.$$
+
+**Why it is here.** Half-life is the number that turns a statistically-significant
+$\beta$ into a *tradeable* fact: it sets the natural holding period, and therefore roughly
+how many round trips per year the strategy needs, and therefore how much of its edge a
+per-trade cost model will eat. A significant but glacially slow-reverting spread
+(platinum_palladium, half-life 552 days even before failing its own cointegration test) is
+a very different proposition from one reverting in weeks (brent_wti under a both-legs-
+agree backwardation regime, 9.5 days in notebook 10a's own Phase 3) — the same
+significance test, wildly different practical implications.
+
+**Worked example.** brent_wti's pooled (unconditional) half-life is ~79 days
+($\beta \approx -0.0087$); notebook 8's own carry strategy on the *same underlying
+commodities* held positions with a comparable multi-week horizon at 21-day rebalance —
+half-lives in this range are long enough that per-trade transaction costs, not
+signal-strength, become the deciding factor for whether a spread strategy nets positive.
+
+**Pitfalls.** The half-life formula requires $-1 < \beta < 0$ — a $\beta \geq 0$ (no mean
+reversion at all) or $\beta \leq -1$ (oscillatory/unstable) has no valid half-life and must
+be reported as `None`, not coerced into a number. Half-life is also a *population*
+property estimated with real sampling uncertainty from a finite series — a point estimate
+of "77 days" from ~2,500 observations carries a wide implicit confidence interval that a
+single reported number obscures if not paired with the underlying $t$-statistic.
+
+---
+
+### The commodity inverse-leverage effect
+
+**In one sentence.** In equities, volatility tends to *rise* when price *falls* (the
+classic "leverage effect" — a falling stock raises its own debt-to-equity ratio,
+mechanically raising equity volatility). Commodities are hypothesised to show the
+**opposite** sign: volatility rising when price *rises*, because a price spike signals
+scarcity, and scarcity is itself a volatile state.
+
+**The maths.** Estimated here as $\text{corr}(r_t, \sigma_{t+1})$ per product, with a
+bootstrap CI. Negative correlation = equity-style leverage effect; positive = inverse
+leverage.
+
+**Why it is here.** It is one of the most-cited "commodities are structurally different
+from equities" stylised facts (alongside the [contango/backwardation](#contango-and-backwardation)
+skew-flip prediction) — and one this notebook can test directly, since GJR-GARCH's own
+asymmetry parameter $\gamma$ (see [conditional EVT](07-extreme-value-theory.md#conditional-evt-mcneil-frey-two-stage))
+implicitly assumes the *equity* sign unless refit; a wrong-signed $\gamma$ on commodity
+data would be fitting the asymmetry term backwards.
+
+**Worked example.** Notebook 8's own leverage-correlation table (Phase 1) found this
+prediction only weakly and inconsistently supported across the 16-product panel — most
+correlations sat close to zero with wide, mostly zero-including CIs, and where a
+significant correlation *did* appear (palladium) it was **negative** (equity-sign), not
+the predicted positive inverse-leverage sign. Reported as a genuine disagreement with
+the consensus prior, not smoothed over.
+
+**Pitfalls.** A single correlation estimate over a 14-year window can be dominated by a
+handful of extreme episodes (2020 COVID crash, 2022 energy crisis) — before trusting a
+per-product sign, check whether it is stable across sub-periods or an artifact of one or
+two dominant events.
+
+---
+
+### Negative and contaminated settlement rows
+
+**In one sentence.** Not every negative or near-zero price in a raw futures OHLCV feed
+is a data error — some are genuine (WTI settled at $-\$37.63$ on 2020-04-20) — but many
+are spread/differential settlement values mistakenly carrying an outright contract's
+ticker, and the two cases must be told apart by evidence, not by a sign check.
+
+**The maths.** Notebook 8's hygiene rule is two-tier, both relative to each date's
+highest-volume contract (the *anchor*, almost always a genuine liquid outright):
+(1) **contract-level** — if a contract_id deviates from the anchor by more than 30% on
+over half its trading days (with at least 10 days of history to judge), every row of
+that contract is junk; (2) **row-level** — for contracts that pass (1), a single day is
+still flagged if it deviates from the anchor by >30% *and* its volume is below 50,000
+contracts.
+
+**Why it is here.** Volume alone cannot separate the real case from the fake one: CL's
+genuine 2020-04-20 crash traded on 8.4% of that day's total CL volume; NG's mislabeled
+spread-differential contract (`NG202507`, 2025-05-23) traded on a *comparable* 9.9% of
+that day's NG volume. An absolute or relative volume cutoff flags both or neither. The
+signal that actually separates them is **persistence**: `NG202507` prints a near-zero or
+negative close on 97% of the ~575 days it appears — a differential series mislabeled as
+an outright, not an outright having one bad day. CL's contract deviates like this on
+0.6% of its ~343 days — one genuine event in an otherwise normally-trading contract.
+
+**Worked example.** Pulled directly from the audit trail (`exact_statistics/raw`) for
+one confirmed junk contract (GC201511): its `settlement_price` stat prints exactly 0.0,
+while its `trading_session_low/high` and best-bid/best-offer stats print ~$1127-1128,
+in line with real gold spot at the time — direct evidence the settlement feed for that
+contract is broken, not that gold outright traded near zero.
+
+**Pitfalls.** A rule based purely on `close <= 0` fails both ways: it wrongly keeps
+plenty of near-zero *junk* prints that happen to be barely positive, and — worse — it
+would wrongly discard CL's real April-2020 print if applied to the outright series
+itself rather than to hygiene screening upstream of curve construction.
+
+---
+
+### Seasonal/liquid months vs. nominally listed months
+
+**In one sentence.** A product's `contracts.parquet` listing (every ticker that was ever
+issued) is not the same thing as which of those tickers were ever *genuinely traded* —
+some products (platinum, palladium) list a contract for every calendar month but only
+trade real size on a quarterly cycle, leaving the "in-between" months technically listed
+but functionally dead.
+
+**The maths.** A contract-month is treated as liquid if its lifetime total volume
+clears a threshold (5,000 contracts in this notebook); months below that threshold are
+excluded from the roll sequence entirely, on top of (not instead of) the
+`roll_calendar`-vs-`contracts.parquet` membership check.
+
+**Why it is here.** `roll_calendar.parquet` lists an entry for every calendar month for
+every product — including seasonal/quarterly-cycle products like the grains, whose real
+delivery months (corn: Mar/May/Jul/Sep/Dec) are a strict subset of what's listed.
+Rolling into a month with zero real contracts, or one with a token handful of trades
+spread over a few days, leaves the front-month series with a hole for that whole month.
+
+**Worked example.** Before this filter, platinum's front-month series was null on 57% of
+trading days. The pattern was stark once found: `PL`'s real active months (Jan/Apr/Jul/
+Oct) traded total lifetime volume in the hundreds of thousands of contracts; the
+"in-between" months (Feb/Mar/May/Jun/Aug/Nov/Dec) traded total lifetime volume in the
+tens to low hundreds, over a handful of days each, before going silent for the rest of
+that contract's life.
+
+**Pitfalls.** This is a *coarse, contract-lifetime* liquidity filter, deliberately
+distinct from a *daily* liquidity screen (minimum volume per day) — applying a daily
+screen upstream of continuous-series construction was tried first and created the same
+kind of hole for a different reason (a single quiet day on an otherwise-legitimate front
+month), which is why the two screens are kept separate: one decides which contract-months
+are eligible to be rolled into at all; the other is a downstream per-row filter for
+signal/backtest use, never applied to the series-construction step itself.
+
+---
+
+### Structural cash-and-carry arbitrage
+
+**In one sentence.** A delta-neutral trade that holds an asset long in one venue/form
+and short in another (spot vs. futures, or spot vs. a perpetual future) in equal dollar
+size, profiting from a structural payment or convergence rather than from ranking or
+predicting direction — distinct from [carry as a cross-sectional ranking
+signal](#carry-basis-trade), which bets on the *relative* size of a payment across many
+assets while still carrying full directional exposure to whichever asset it's long or
+short.
+
+**The maths.** No new formula beyond [cost of carry](#cost-of-carry) and [funding
+rate](#funding-rate): hold $+1$ unit spot and $-1$ unit future/perpetual (dollar-matched),
+so the position's P&L from the *underlying's own price move* cancels to (approximately)
+zero, leaving only the basis convergence (futures) or the accumulated funding payments
+(perpetuals) as the source of return.
+
+**Why it is here.** Notebook 9's external research review found unusually strong,
+unusually consistent Tier 1 (peer-reviewed/regulatory) evidence for this category at
+institutional scale — the Treasury cash-futures basis trade alone represented roughly
+$4 trillion of hedge funds' gross Treasury exposure by late 2025 (Federal Reserve, Office
+of Financial Research, Dallas Fed, CFTC sources, `src/results/9_external_research_review.md`)
+— a real, large, structurally-motivated (not directional) return source this research
+programme has never tested in any form. Notebook 7's own Gate CY tested funding rate only
+as a *ranking* signal (§ above) and found the resulting book's own turnover exceeded the
+signal it was meant to replace; the structural, delta-neutral version is a different
+trade with a different (and untested) cost/turnover profile.
+
+**Worked example.** The Treasury basis trade: short a Treasury futures contract, long a
+repo-financed Treasury security deliverable into that future, at (near) zero net exposure
+to the level of interest rates — the trade's real risk is not "will rates move" but "will
+the futures-implied and cash-market prices actually converge before financing conditions
+change," which is precisely why regulators (not just academics) track its scale as a
+financial-stability question, not a return-prediction one.
+
+**Pitfalls.** "Delta-neutral" only cancels *price* risk from the underlying, not every
+risk in the trade — the Treasury version's real risk is repo-funding-rate and dealer
+intermediation-capacity risk (Dallas Fed, `src/results/9_external_research_review.md`
+Gate FA discussion), and a crypto spot-vs-perpetual version of the same idea carries
+exchange-counterparty risk and the possibility that funding turns negative, reversing the
+trade from collecting a payment to making one. A cash-and-carry trade being "structural"
+does not mean it is risk-free — only that its risk is a different kind than the
+directional bet a ranking-based carry signal still carries.
+
+---
+
+### Market making and inventory risk
+
+**In one sentence.** Continuously quoting both a buy (bid) and sell (ask) price for an
+asset, profiting from the spread between them when both sides get filled, while managing
+the risk that one side fills much more than the other and leaves an unwanted directional
+position (inventory) exposed to the next price move.
+
+**The maths.** The Avellaneda-Stoikov (2008) formulation skews the market maker's quoted
+mid-price away from the true mid by an amount proportional to current inventory $q$,
+risk aversion $\gamma$, and remaining time-to-horizon: reservation price
+$r = s - q\gamma\sigma^2(T-t)$, where $s$ is the observed mid-price and $\sigma^2$ the
+asset's variance — a market maker long inventory ($q>0$) quotes *below* the true mid on
+both sides, making the ask more attractive to sell into (reducing inventory) and the bid
+less attractive to buy into (not adding to it).
+
+**Why it is here.** Notebook 9's external research review lists this among the
+structural/mechanical return sources this research programme has never tested at all
+(`src/results/9_external_research_review.md`, Gate MM) — and, unusually for that
+notebook's shortlist, explicitly could NOT be made testable with this repo's existing
+data: every backtest in this programme runs on OHLCV bars, but a market maker's entire
+risk (inventory versus the *actual order book*, fill probability at a given quote
+distance from mid) cannot be reconstructed from bars at any frequency, no matter how
+fine — it requires level-2 (full order-book depth) data this repo has never had.
+
+**Worked example.** A market maker holding a large long BTC inventory after a run of buy
+orders should NOT keep quoting symmetric bid/ask around the observed mid — by the formula
+above, it should shift its whole quote ladder down, making its ask price closer to the
+current mid (encouraging sells that reduce inventory) and its bid price further below the
+mid (discouraging further buys) — actively steering its own inventory back toward zero
+rather than passively accepting whatever flow arrives.
+
+**Pitfalls.** The model's edge (the spread) is earned from *uninformed* flow (traders who
+just want to transact now) but lost to *informed* flow (traders who know something the
+quotes don't yet reflect) — a market maker who cannot tell the two apart, or who quotes
+through a genuine regime shift without widening, can lose far more on the informed side of
+its book than the spread ever earned on the uninformed side, which is why every real
+implementation of this model layers volatility- and news-aware quote-widening on top of
+the base inventory-skew formula, not covered by the formula alone.

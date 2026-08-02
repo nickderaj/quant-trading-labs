@@ -1,0 +1,252 @@
+"""Phase 3: the shortlist (NEXT_PROMPT.md sec 4, Phase 3).
+
+Five concrete, testable-or-honestly-not-testable candidates, derived directly
+from the Phase 2 diagnosis (hypotheses (a) and (e) drove this list, since (b)
+was contradicted and (c) produced a bar recommendation rather than a strategy,
+per sec 9's instruction that the shortlist should be driven by the diagnosis).
+Each candidate is pre-registered in the same gate-name/claim/fire-condition
+format notebook 8's sec 5 used, BEFORE any of it is run.
+
+Writes phase_3_shortlist_results.json.
+"""
+
+import json
+
+OUT_PATH = "src/research/tmp/phase_3_shortlist_results.json"
+
+CANDIDATES = [
+    {
+        "id": "SP",
+        "gate_name": "Gate SP",
+        "title": "Structural mean-reversion in commodity spread series",
+        "hypothesis_addressed": "e",
+        "mechanism": (
+            "A crack/crush/inter-market/calendar spread's value is anchored by a real "
+            "economic relationship (refining economics for crack spreads, crush economics "
+            "for soy, near-identical underlying commodities for cross-metal/cross-crude "
+            "spreads, or the cost-of-carry relationship for calendar spreads) that bounds "
+            "how far the spread can drift before it becomes profitable for a physical "
+            "participant (refiner, processor, arbitrageur) to trade the relationship back "
+            "into line. The counterparty on the other side of a mean-reversion trade is "
+            "typically a hedger or directional speculator in one leg who is not managing "
+            "the spread relationship at all, not another stat-arb desk racing for the same "
+            "edge - closer to the Gatev-Goetzmann-Rouwenhorst mechanism than to a crowded "
+            "factor."
+        ),
+        "evidence_tier": 1,
+        "evidence_sources": ["gatev_goetzmann_rouwenhorst_2006", "zhu_2024_pairs_trading"],
+        "data_needed": "The 30 pre-built spread series in data/market/spreads/*.parquet, already in this repo, never backtested (notebook 8 explicitly declared this Strategy E and cut it from scope).",
+        "data_already_in_repo": True,
+        "expected_sharpe_turnover_capacity": (
+            "Not stated by the source literature for THIS repo's specific spread universe "
+            "(GGR's own 11%/yr excess return figure is for 1962-2002 US equity pairs, not "
+            "directly transferable). This notebook's own Phase 4 probe (see below) found "
+            "half-lives of 46-85 days for 5 of 6 tested spreads - implying LOW turnover if "
+            "traded (a genuine cost advantage relative to daily-rebalanced factor "
+            "strategies), but says nothing yet about net Sharpe or capacity."
+        ),
+        "infrastructure_assessment": "Fully testable in this repo as-is; no new data or infrastructure required.",
+        "preregistered_test": {
+            "claim": "A z-score mean-reversion signal on the pre-built spread series, costed with the existing futures cost model and roll-window exclusion, survives this repo's own bootstrap-CI-vs-zero bar.",
+            "fire_condition": (
+                "net Sharpe > 0 at every origin offset AND a block-bootstrap 95% CI on net "
+                "return excludes zero (a self-financing spread has no natural 'basket' "
+                "baseline the way a directional strategy does, so the excess-return "
+                "comparison is against zero, not a passive basket) AND deflated Sharpe "
+                "probability > 0.95 on the true count of spreads x parameter configurations "
+                "tried."
+            ),
+        },
+    },
+    {
+        "id": "VS",
+        "gate_name": "Gate VS",
+        "title": "Volatility-scaled commodity carry and momentum (re-implementing notebook 8's own signals)",
+        "hypothesis_addressed": "a",
+        "mechanism": (
+            "Same carry/momentum signals notebook 8 already built, re-weighted so each "
+            "position is sized inversely to its own trailing realized volatility rather "
+            "than held at a constant weight. The counterparty is unchanged from notebook "
+            "8's own carry/momentum tests (whoever is on the other side of a term-structure "
+            "or trend bet); this candidate tests whether a specific, well-evidenced "
+            "IMPLEMENTATION detail - not a new signal - closes carry's near-miss."
+        ),
+        "evidence_tier": 1,
+        "evidence_sources": ["barroso_santa_clara_2015", "man_group_vol_targeting"],
+        "data_needed": "notebook 8's own carry/momentum panel (already built by commod_lib8.py / run_phase_5_alpha.py).",
+        "data_already_in_repo": True,
+        "expected_sharpe_turnover_capacity": (
+            "Barroso-Santa-Clara (Tier 1, equities): Sharpe 0.53->0.97 from vol-scaling "
+            "alone. Man Group (Tier 2, explicitly tested across commodities/FX/bonds, not "
+            "just equities): benefit 'negligible' for commodities specifically - a direct, "
+            "sourced reason to expect a SMALLER effect here than the headline equity number "
+            "suggests. Included on the shortlist precisely because the prior is genuinely "
+            "mixed and untested in this repo, not because the evidence is one-sidedly "
+            "favourable - a good example of sec 6's discipline against motivated reasoning "
+            "in either direction."
+        ),
+        "infrastructure_assessment": "Fully testable in this repo as-is; reuses notebook 8's existing panel and cost model, only the position-weighting rule changes.",
+        "preregistered_test": {
+            "claim": "Vol-scaling notebook 8's carry signal (inverse trailing-63-day realized-vol position weights, same universe/cost model/rebalance) closes the excess-vs-basket CI gap that made Gate AC not fire.",
+            "fire_condition": (
+                "net Sharpe > 0 at every origin offset AND the block-bootstrap 95% CI on "
+                "excess return vs. the equal-weight basket excludes zero AND deflated Sharpe "
+                "probability > 0.95 - the SAME criterion Gate AC used, applied to the "
+                "vol-scaled variant, so any improvement is attributable to the sizing rule "
+                "alone, not a looser bar."
+            ),
+        },
+    },
+    {
+        "id": "BM",
+        "gate_name": "Gate BM",
+        "title": "Blended multi-lookback time-series momentum",
+        "hypothesis_addressed": "a",
+        "mechanism": (
+            "Notebook 8's Gate AM tested four momentum lookbacks (1/3/6/12-month) "
+            "SEPARATELY and found them sign-inconsistent (1m and 12m weakly positive, 3m "
+            "and 6m negative) - exactly the pattern the AQR century-of-evidence "
+            "methodology addresses by holding an EQUAL-WEIGHTED BLEND of multiple "
+            "lookbacks simultaneously per instrument, on the theory that different "
+            "lookbacks capture different, partially-offsetting noise and a blend nets out "
+            "some of the sign-flip risk rather than betting on any single window."
+        ),
+        "evidence_tier": 2,
+        "evidence_sources": ["aqr_century_trend_following"],
+        "data_needed": "notebook 8's own momentum panel (already built).",
+        "data_already_in_repo": True,
+        "expected_sharpe_turnover_capacity": (
+            "AQR's own blended, cross-asset-class result (Tier 2, 67 markets/4 asset "
+            "classes/137 years) is not directly transferable to a 16-commodity-only, "
+            "15-year universe; no source-stated expected Sharpe for this specific "
+            "construction is available - flagged explicitly rather than invented."
+        ),
+        "infrastructure_assessment": "Fully testable in this repo as-is; a straightforward re-aggregation of already-computed per-lookback signals.",
+        "preregistered_test": {
+            "claim": "An equal-weighted blend of notebook 8's four momentum lookbacks is sign-consistent across origin offsets, unlike any individual lookback.",
+            "fire_condition": (
+                "net Sharpe > 0 at every origin offset AND excess-vs-basket bootstrap CI "
+                "excludes zero AND deflated Sharpe probability > 0.95, counting the blend as "
+                "ONE additional configuration on top of the 4 already-logged single-lookback "
+                "configurations (5 total, not reset to 1) for the deflation calculation."
+            ),
+        },
+    },
+    {
+        "id": "FA",
+        "gate_name": "Gate FA",
+        "title": "Crypto perpetual funding-rate cash-and-carry (spot-long / perp-short), NOT the ranking-signal version already tested",
+        "hypothesis_addressed": "e",
+        "mechanism": (
+            "Distinct from notebook 7's Gate CY (which used funding rate as a CROSS-"
+            "SECTIONAL RANKING signal and found the carry's own turnover exceeded the "
+            "signal it replaced). This candidate is the STRUCTURAL version: hold spot "
+            "long and the perpetual future short in equal dollar size (delta-neutral), "
+            "collecting the funding payment from perpetual longs to shorts whenever "
+            "funding is positive, with no directional forecast at all - the same "
+            "mechanism as the Treasury cash-futures basis trade (Fed/OFR/CFTC sources), "
+            "applied to crypto."
+        ),
+        "evidence_tier": 1,
+        "evidence_sources": ["fed_hedge_fund_treasury_exposures", "ofr_treasury_basis_2021"],
+        "evidence_caveat": (
+            "The Tier 1 evidence above supports the GENERAL cash-and-carry mechanism (in "
+            "Treasury markets, not crypto) - applied to crypto specifically ONLY BY "
+            "ANALOGY, stated explicitly rather than implied. Crypto-specific funding-"
+            "arbitrage claims found during this survey (10-30%/yr annualized figures from "
+            "wundertrading.com, arbitragescanner.io, and similar) were Tier 3/4 marketing-"
+            "adjacent content with no stated cost model or capacity figure and are "
+            "EXPLICITLY NOT counted as evidence for this candidate's expected returns - "
+            "included in the record only as an example of the kind of claim sec 3.1 says "
+            "not to launder upward."
+        ),
+        "data_needed": "Perpetual OHLCV + funding-rate history (already in this repo, cache/*klines*) PLUS a matching SPOT price series for the same symbols, needed to construct the delta-neutral leg.",
+        "data_already_in_repo": False,
+        "expected_sharpe_turnover_capacity": "Not credibly stated by any Tier 1/2 source for crypto specifically; the Tier 3/4 crypto-specific figures found are explicitly discounted per above.",
+        "infrastructure_assessment": (
+            "NOT CONFIRMED TESTABLE. This repo's cached data (src/research/cache/*klines*) "
+            "was not verified during this survey to include a spot-market price series "
+            "distinct from the perpetual-futures series already used throughout notebooks "
+            "1-7 - the python-binance client this repo uses can pull either, and which one "
+            "is cached was not resolved here. Listed on the shortlist per sec 4 Phase 3's "
+            "explicit instruction to include infrastructure-uncertain candidates rather than "
+            "silently drop them; notebook 10 should resolve the data-availability question "
+            "FIRST, before any backtest work, as its own cheap first step."
+        ),
+        "preregistered_test": {
+            "claim": "A delta-neutral spot-long/perp-short funding-collection strategy on the top-5 crypto symbols by liquidity produces a positive, low-turnover net return once realistic spot+perp costs are charged on both legs.",
+            "fire_condition": (
+                "net Sharpe > 0 at every origin offset AND a block-bootstrap 95% CI on net "
+                "return excludes zero (self-financing, delta-neutral - no natural passive-"
+                "basket baseline) AND deflated Sharpe probability > 0.95 - contingent on "
+                "confirming spot data access first; not run this pass."
+            ),
+        },
+    },
+    {
+        "id": "MM",
+        "gate_name": "Gate MM",
+        "title": "Crypto perpetual market-making / inventory-managed liquidity provision",
+        "hypothesis_addressed": "e",
+        "mechanism": (
+            "Quote both sides of the order book continuously, skewing quotes away from "
+            "symmetric as inventory accumulates (Avellaneda-Stoikov), earning the "
+            "bid-ask spread from uninformed order flow while managing the risk of "
+            "adverse selection from informed flow. The counterparty is anyone who crosses "
+            "the spread to trade immediately rather than posting a limit order - a "
+            "structurally different, execution-driven source of return from every "
+            "strategy this repo has tested."
+        ),
+        "evidence_tier": 1,
+        "evidence_sources": ["avellaneda_stoikov_2008", "hummingbot_as_guide"],
+        "data_needed": "Level-2 (full order book depth, not just OHLCV) tick data, plus a live or realistically-simulated low-latency execution environment.",
+        "data_already_in_repo": False,
+        "expected_sharpe_turnover_capacity": "Not applicable - not testable at all with this repo's data, so no expected-performance claim is being made or sourced.",
+        "infrastructure_assessment": (
+            "NOT TESTABLE IN THIS REPO, and not close. This repo has OHLCV bar data only "
+            "(1h/4h/12h/1d for crypto, daily for commodities, one 6-month 1-minute energy "
+            "sample) - a market maker's entire risk (inventory vs. the actual limit order "
+            "book, fill probability at a given quote distance from mid) cannot be simulated "
+            "from bar data at all, regardless of bar frequency. This is exactly the kind of "
+            "'the profitable thing needs infrastructure we don't have' finding sec 4 Phase 3 "
+            "says to report as a finding, not a dead end: it is included on the shortlist "
+            "specifically to record that this repo would need L2/tick data and a "
+            "latency-aware simulator before this category is testable at all, which is a "
+            "genuine, actionable data-acquisition item for whoever owns this repo's data "
+            "pipeline, even though it is out of scope for notebook 10."
+        ),
+        "preregistered_test": {
+            "claim": "Not applicable - no test is pre-registered, since the data required does not exist in this repo and none of sec 4 Phase 3's requirements can be met.",
+            "fire_condition": "N/A - listed as a labelled infrastructure gap, not a candidate for notebook 10.",
+        },
+    },
+]
+
+
+def gate_SL(candidates):
+    n_full_detail = len(candidates)  # all 5 have full Phase-3 detail regardless of testability
+    n_testable = sum(1 for c in candidates if c["data_already_in_repo"])
+    fires = n_full_detail >= 3 and n_testable >= 1
+    return {
+        "n_candidates": n_full_detail,
+        "n_testable_with_repo_data": n_testable,
+        "testable_ids": [c["id"] for c in candidates if c["data_already_in_repo"]],
+        "fires": fires,
+    }
+
+
+def main():
+    sl = gate_SL(CANDIDATES)
+    out = {"candidates": CANDIDATES, "gate_SL": sl}
+    with open(OUT_PATH, "w") as f:
+        json.dump(out, f, indent=2)
+    for c in CANDIDATES:
+        print(f"{c['gate_name']}: {c['title']} (hyp {c['hypothesis_addressed']}, "
+              f"tier {c['evidence_tier']}, testable={c['data_already_in_repo']})")
+    print()
+    print("Gate SL:", json.dumps(sl, indent=2))
+    print(f"\nwritten {OUT_PATH}")
+
+
+if __name__ == "__main__":
+    main()

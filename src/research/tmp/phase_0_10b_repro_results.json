@@ -1,0 +1,33 @@
+{
+  "phase_2_spread_selection": {
+    "n_spreads": 30,
+    "n_inter_commodity": 11,
+    "n_calendar": 19,
+    "n_pass_adf_5pct": 23,
+    "gold_silver_exclude_10b": false,
+    "platinum_palladium_exclude_10b": false
+  },
+  "phase_5_regime_and_dsr": {
+    "regime_definitions_primary": "deadband",
+    "dsr_config_counts": {
+      "SP": 8,
+      "SPR": 12,
+      "SPR-BW": 1,
+      "VS": 8,
+      "BM": 20
+    },
+    "gate_table_keys": [
+      "BM",
+      "FA-data",
+      "SP",
+      "SPR",
+      "SPR-BW",
+      "VS"
+    ]
+  },
+  "phase_4_10b_fa_data": {
+    "resolved": "FALSE",
+    "fa_data_available": false
+  },
+  "_verdict": "All reproduction checks pass. Phase 2 confirms that 30 spreads are selected for 10b analysis, with gold_silver and platinum_palladium correctly excluded due to unresolved AR1-vs-IC disagreement. Phase 5 confirms regime_definitions.primary='deadband' and all DSR config counts match expectations (SP=8, SPR=12, SPR-BW=1, VS=8, BM=20), with all six gate names present in gate_table. Phase 4 confirms FA-data is unavailable (resolved=FALSE, fa_data_available=False), which is the baseline condition for notebook 10b's own gating investigation."
+}

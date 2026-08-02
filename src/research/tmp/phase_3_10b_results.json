@@ -1,0 +1,181 @@
+{
+  "gate_VS": {
+    "by_offset": {
+      "offset_0": {
+        "label": "carry_vs_offset0",
+        "no_bars": 4488,
+        "total_log_return": 11.229576290725127,
+        "compound_return": 75324.67240868426,
+        "std": 0.03301736273823498,
+        "sharpe": 1.2030077109834896,
+        "max_drawdown": -5.353756915958302,
+        "sharpe_net": 1.1646550846497716,
+        "total_log_return_net": 10.871377315063517,
+        "compound_return_net": 52646.672789883116,
+        "max_drawdown_net": -5.408560804595988,
+        "mean_turnover_per_bar": 0.49780354230253554,
+        "turnover_per_year": 125.44649266023897,
+        "annual_fee_drag_log": 0.02011277670827189,
+        "annual_fee_drag_pct": 0.0203164014636617
+      },
+      "offset_7": {
+        "label": "carry_vs_offset7",
+        "no_bars": 4481,
+        "total_log_return": 11.369805188331378,
+        "compound_return": 86663.98248985571,
+        "std": 0.03302683185469643,
+        "sharpe": 1.2195832037927996,
+        "max_drawdown": -5.353756915958302,
+        "sharpe_net": 1.1812038535321259,
+        "total_log_return_net": 11.011825398358122,
+        "compound_return_net": 60585.380244562126,
+        "max_drawdown_net": -5.408560804595988,
+        "mean_turnover_per_bar": 0.4982671529055737,
+        "turnover_per_year": 125.5633225322046,
+        "annual_fee_drag_log": 0.020131869465132943,
+        "annual_fee_drag_pct": 0.020335882302607057
+      },
+      "offset_14": {
+        "label": "carry_vs_offset14",
+        "no_bars": 4474,
+        "total_log_return": 11.637341051456863,
+        "compound_return": 113247.64192677966,
+        "std": 0.033005175765517786,
+        "sharpe": 1.2510538477752553,
+        "max_drawdown": -5.353756915958302,
+        "sharpe_net": 1.212635570730527,
+        "total_log_return_net": 11.27980127524547,
+        "compound_return_net": 79204.52022985257,
+        "max_drawdown_net": -5.408560804595988,
+        "mean_turnover_per_bar": 0.4984258123578517,
+        "turnover_per_year": 125.60330471417865,
+        "annual_fee_drag_log": 0.02013858372938557,
+        "annual_fee_drag_pct": 0.020342733130346385
+      },
+      "offset_21": {
+        "label": "carry_vs_offset21",
+        "no_bars": 4467,
+        "total_log_return": 11.819790155804096,
+        "compound_return": 135914.7049222335,
+        "std": 0.03301053056537706,
+        "sharpe": 1.2724525008072811,
+        "max_drawdown": -5.353756915958302,
+        "sharpe_net": 1.234019836825805,
+        "total_log_return_net": 11.462626228427807,
+        "compound_return_net": 95093.48244801632,
+        "max_drawdown_net": -5.408560804595988,
+        "mean_turnover_per_bar": 0.49862123032577294,
+        "turnover_per_year": 125.65255004209479,
+        "annual_fee_drag_log": 0.020148938817735672,
+        "annual_fee_drag_pct": 0.020353298924200104
+      }
+    },
+    "gate": {
+      "net_sharpe_positive_at_every_offset": true,
+      "sharpes_net_by_offset": {
+        "offset_0": 1.1646550846497716,
+        "offset_7": 1.1812038535321259,
+        "offset_14": 1.212635570730527,
+        "offset_21": 1.234019836825805
+      },
+      "excess_return_ci": [
+        -0.0022227489837535505,
+        0.00979012281003691
+      ],
+      "excess_ci_excludes_zero": false,
+      "deflated_sharpe_prob": 0.9997184978279431,
+      "n_trials": 8,
+      "fires": false
+    }
+  },
+  "gate_BM": {
+    "by_offset": {
+      "offset_0": {
+        "label": "mom_blend_offset0",
+        "no_bars": 4507,
+        "total_log_return": 0.258374166292779,
+        "compound_return": 0.29482320719688926,
+        "std": 0.008797115144616218,
+        "sharpe": 0.10344786314402625,
+        "max_drawdown": -0.4457320815332818,
+        "sharpe_net": -0.014776821523713716,
+        "total_log_return_net": -0.03690977370908227,
+        "compound_return_net": -0.0362369118049507,
+        "max_drawdown_net": -0.527089216740843,
+        "mean_turnover_per_bar": 0.38044523334072927,
+        "turnover_per_year": 95.87219880186379,
+        "annual_fee_drag_log": 0.01651021807864856,
+        "annual_fee_drag_pct": 0.016647264914692834
+      },
+      "offset_7": {
+        "label": "mom_blend_offset7",
+        "no_bars": 4500,
+        "total_log_return": 0.23341174601843662,
+        "compound_return": 0.2629013668985962,
+        "std": 0.008799161866308726,
+        "sharpe": 0.09357700842102555,
+        "max_drawdown": -0.4457320815332808,
+        "sharpe_net": -0.024619271613689417,
+        "total_log_return_net": -0.061413344603289705,
+        "compound_return_net": -0.05956556407227931,
+        "max_drawdown_net": -0.5270892167408429,
+        "mean_turnover_per_bar": 0.3804444444444444,
+        "turnover_per_year": 95.872,
+        "annual_fee_drag_log": 0.016510205074816677,
+        "annual_fee_drag_pct": 0.016647251694382803
+      },
+      "offset_14": {
+        "label": "mom_blend_offset14",
+        "no_bars": 4493,
+        "total_log_return": 0.21265793654354243,
+        "compound_return": 0.23696145955616088,
+        "std": 0.008802613061732273,
+        "sharpe": 0.08535595689411515,
+        "max_drawdown": -0.44573208153328076,
+        "sharpe_net": -0.032893864432784206,
+        "total_log_return_net": -0.08195868920642482,
+        "compound_return_net": -0.07868998204181532,
+        "max_drawdown_net": -0.5270892167408429,
+        "mean_turnover_per_bar": 0.38066622152978713,
+        "turnover_per_year": 95.92788782550637,
+        "annual_fee_drag_log": 0.016524235408188682,
+        "annual_fee_drag_pct": 0.01666151569430991
+      },
+      "offset_21": {
+        "label": "mom_blend_offset21",
+        "no_bars": 4486,
+        "total_log_return": 0.2410199005214246,
+        "compound_return": 0.27254635939233585,
+        "std": 0.008802677415816619,
+        "sharpe": 0.09689003595721421,
+        "max_drawdown": -0.44573208153328103,
+        "sharpe_net": -0.021238576142814086,
+        "total_log_return_net": -0.05283619320266547,
+        "compound_return_net": -0.0514646237007238,
+        "max_drawdown_net": -0.5270892167408429,
+        "mean_turnover_per_bar": 0.3805728934462773,
+        "turnover_per_year": 95.9043691484619,
+        "annual_fee_drag_log": 0.016507297284545405,
+        "annual_fee_drag_pct": 0.016644295501693007
+      }
+    },
+    "gate": {
+      "net_sharpe_positive_at_every_offset": false,
+      "sharpes_net_by_offset": {
+        "offset_0": -0.014776821523713716,
+        "offset_7": -0.024619271613689417,
+        "offset_14": -0.032893864432784206,
+        "offset_21": -0.021238576142814086
+      },
+      "excess_return_ci": [
+        -0.00028578652572561073,
+        0.0005755405011605723
+      ],
+      "excess_ci_excludes_zero": false,
+      "deflated_sharpe_prob": 0.02481187501569703,
+      "n_trials": 20,
+      "fires": false
+    }
+  },
+  "_note": "Gate VS reuses nb8's carry panel with inverse-20d-vol within-leg sizing; Gate BM reuses nb8's momentum panel with an equal-weighted blend of the 4 lookback signals as one new predictor."
+}

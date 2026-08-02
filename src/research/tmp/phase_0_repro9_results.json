@@ -1,0 +1,31 @@
+{
+  "gate_CE_repro": {
+    "n_products_rejecting_1pct_both_tails_bh": 15,
+    "n_products_total": 16,
+    "threshold": 14,
+    "fires": true
+  },
+  "gate_RE_repro": {
+    "n_products_passing_1pct_coverage": 15,
+    "n_products_total": 16,
+    "threshold": 14,
+    "fires": true
+  },
+  "gate_AC_repro": {
+    "net_sharpe_positive_at_every_offset": true,
+    "sharpes_net_by_offset": {
+      "offset_0": 0.9042246451305482,
+      "offset_7": 0.9182452501537042,
+      "offset_14": 0.930554766095841,
+      "offset_21": 0.9459438290292651
+    },
+    "excess_return_ci": [
+      -0.002824914217376099,
+      0.009374799958825336
+    ],
+    "excess_ci_excludes_zero": false,
+    "deflated_sharpe_prob": 0.9971831492023995,
+    "fires": false
+  },
+  "_verdict": "All three reproduction checks pass. Gate CE (15/16) and Gate RE (15/16) confirm notebook 8's risk-side headline results. Gate AC confirms the specific near-miss (net Sharpe 0.90-0.95, DSR 0.997, excess CI includes zero, does not fire) that hypothesis (c) in this notebook is built to investigate."
+}

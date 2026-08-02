@@ -1,0 +1,288 @@
+{
+  "regime_leg_rule": "leg1 (BZ for brent_wti), fixed per spread -- see phase_5_10a_results.json",
+  "primary_regime_definition": "deadband",
+  "n_trials_SPR": 12,
+  "n_trials_SPR_BW": 1,
+  "gate_SPR_by_definition": {
+    "raw_sign": {
+      "by_offset_gated": {
+        "offset_0": {
+          "sharpe": 0.4151802218466251,
+          "mean_daily": 9.198714774706823e-05,
+          "std_daily": 0.0035171489962179127,
+          "n": 3677,
+          "max_drawdown_cum": -0.13341518682489584
+        },
+        "offset_7": {
+          "sharpe": 0.4155762527607349,
+          "mean_daily": 9.216260007247136e-05,
+          "std_daily": 0.003520499331032537,
+          "n": 3670,
+          "max_drawdown_cum": -0.13341518682489584
+        },
+        "offset_14": {
+          "sharpe": 0.4159734191356802,
+          "mean_daily": 9.233872297733275e-05,
+          "std_daily": 0.003523859258415094,
+          "n": 3663,
+          "max_drawdown_cum": -0.13341518682489584
+        },
+        "offset_21": {
+          "sharpe": 0.4165427801333173,
+          "mean_daily": 9.25914980197016e-05,
+          "std_daily": 0.003528675885833206,
+          "n": 3653,
+          "max_drawdown_cum": -0.13341518682489584
+        }
+      },
+      "by_offset_unconditional": {
+        "offset_0": {
+          "sharpe": 0.4230636455441535,
+          "mean_daily": 9.389278726753121e-05,
+          "std_daily": 0.0035231147979126434,
+          "n": 3677,
+          "max_drawdown_cum": -0.13774489881496765
+        },
+        "offset_7": {
+          "sharpe": 0.42346720686602235,
+          "mean_daily": 9.407187432771449e-05,
+          "std_daily": 0.003526470727386436,
+          "n": 3670,
+          "max_drawdown_cum": -0.13774489881496765
+        },
+        "offset_14": {
+          "sharpe": 0.4238719252695927,
+          "mean_daily": 9.425164585932631e-05,
+          "std_daily": 0.003529836265193149,
+          "n": 3663,
+          "max_drawdown_cum": -0.13774489881496765
+        },
+        "offset_21": {
+          "sharpe": 0.42445211259078747,
+          "mean_daily": 9.450965748226451e-05,
+          "std_daily": 0.0035346609349974608,
+          "n": 3653,
+          "max_drawdown_cum": -0.13774489881496765
+        }
+      },
+      "gated_sharpe_positive_every_offset": true,
+      "gated_exceeds_unconditional_every_offset": false,
+      "gated_vs_zero_ci": [
+        -2.4674272460153442e-05,
+        0.00020138436149101782
+      ],
+      "gated_vs_zero_ci_excludes_zero": false,
+      "gated_minus_unconditional_ci": [
+        -9.013036614987155e-06,
+        5.161334365086086e-06
+      ],
+      "gated_minus_unconditional_ci_excludes_zero": false,
+      "deflated_sharpe_prob": null,
+      "is_headline": false,
+      "fires": false
+    },
+    "deadband": {
+      "by_offset_gated": {
+        "offset_0": {
+          "sharpe": 0.4255386733918193,
+          "mean_daily": 9.260713343150985e-05,
+          "std_daily": 0.0034546629015513725,
+          "n": 3677,
+          "max_drawdown_cum": -0.1391787865322886
+        },
+        "offset_7": {
+          "sharpe": 0.4259445990337078,
+          "mean_daily": 9.2783768290916e-05,
+          "std_daily": 0.0034579535999484886,
+          "n": 3670,
+          "max_drawdown_cum": -0.1391787865322886
+        },
+        "offset_14": {
+          "sharpe": 0.42635168854594707,
+          "mean_daily": 9.296107824942989e-05,
+          "std_daily": 0.003461253719836994,
+          "n": 3663,
+          "max_drawdown_cum": -0.1391787865322886
+        },
+        "offset_21": {
+          "sharpe": 0.42693527500604506,
+          "mean_daily": 9.321555697444887e-05,
+          "std_daily": 0.003465984609586624,
+          "n": 3653,
+          "max_drawdown_cum": -0.1391787865322886
+        }
+      },
+      "by_offset_unconditional": {
+        "offset_0": {
+          "sharpe": 0.4230636455441535,
+          "mean_daily": 9.389278726753121e-05,
+          "std_daily": 0.0035231147979126434,
+          "n": 3677,
+          "max_drawdown_cum": -0.13774489881496765
+        },
+        "offset_7": {
+          "sharpe": 0.42346720686602235,
+          "mean_daily": 9.407187432771449e-05,
+          "std_daily": 0.003526470727386436,
+          "n": 3670,
+          "max_drawdown_cum": -0.13774489881496765
+        },
+        "offset_14": {
+          "sharpe": 0.4238719252695927,
+          "mean_daily": 9.425164585932631e-05,
+          "std_daily": 0.003529836265193149,
+          "n": 3663,
+          "max_drawdown_cum": -0.13774489881496765
+        },
+        "offset_21": {
+          "sharpe": 0.42445211259078747,
+          "mean_daily": 9.450965748226451e-05,
+          "std_daily": 0.0035346609349974608,
+          "n": 3653,
+          "max_drawdown_cum": -0.13774489881496765
+        }
+      },
+      "gated_sharpe_positive_every_offset": true,
+      "gated_exceeds_unconditional_every_offset": true,
+      "gated_vs_zero_ci": [
+        -2.3751017253206425e-05,
+        0.0001999902725521027
+      ],
+      "gated_vs_zero_ci_excludes_zero": false,
+      "gated_minus_unconditional_ci": [
+        -2.2531973847151142e-05,
+        1.9782641434032196e-05
+      ],
+      "gated_minus_unconditional_ci_excludes_zero": false,
+      "deflated_sharpe_prob": 0.4841145082930752,
+      "is_headline": true,
+      "fires": false
+    },
+    "persistent": {
+      "by_offset_gated": {
+        "offset_0": {
+          "sharpe": 0.6425434127906219,
+          "mean_daily": 0.0001150461965793749,
+          "std_daily": 0.0028423009500096927,
+          "n": 3677,
+          "max_drawdown_cum": -0.0638304444186269
+        },
+        "offset_7": {
+          "sharpe": 0.6431569055948515,
+          "mean_daily": 0.00011526563074178789,
+          "std_daily": 0.0028450058547412746,
+          "n": 3670,
+          "max_drawdown_cum": -0.0638304444186269
+        },
+        "offset_14": {
+          "sharpe": 0.6437721590282914,
+          "mean_daily": 0.00011548590358240829,
+          "std_daily": 0.0028477184966230387,
+          "n": 3663,
+          "max_drawdown_cum": -0.0638304444186269
+        },
+        "offset_21": {
+          "sharpe": 0.6446541633965195,
+          "mean_daily": 0.00011580204347724108,
+          "std_daily": 0.002851607194216627,
+          "n": 3653,
+          "max_drawdown_cum": -0.0638304444186269
+        }
+      },
+      "by_offset_unconditional": {
+        "offset_0": {
+          "sharpe": 0.4230636455441535,
+          "mean_daily": 9.389278726753121e-05,
+          "std_daily": 0.0035231147979126434,
+          "n": 3677,
+          "max_drawdown_cum": -0.13774489881496765
+        },
+        "offset_7": {
+          "sharpe": 0.42346720686602235,
+          "mean_daily": 9.407187432771449e-05,
+          "std_daily": 0.003526470727386436,
+          "n": 3670,
+          "max_drawdown_cum": -0.13774489881496765
+        },
+        "offset_14": {
+          "sharpe": 0.4238719252695927,
+          "mean_daily": 9.425164585932631e-05,
+          "std_daily": 0.003529836265193149,
+          "n": 3663,
+          "max_drawdown_cum": -0.13774489881496765
+        },
+        "offset_21": {
+          "sharpe": 0.42445211259078747,
+          "mean_daily": 9.450965748226451e-05,
+          "std_daily": 0.0035346609349974608,
+          "n": 3653,
+          "max_drawdown_cum": -0.13774489881496765
+        }
+      },
+      "gated_sharpe_positive_every_offset": true,
+      "gated_exceeds_unconditional_every_offset": true,
+      "gated_vs_zero_ci": [
+        2.483197769780491e-05,
+        0.00020453932833372599
+      ],
+      "gated_vs_zero_ci_excludes_zero": true,
+      "gated_minus_unconditional_ci": [
+        -3.064363961708853e-05,
+        9.446250835187156e-05
+      ],
+      "gated_minus_unconditional_ci_excludes_zero": false,
+      "deflated_sharpe_prob": null,
+      "is_headline": false,
+      "fires": false
+    }
+  },
+  "gate_SPR_bw": {
+    "per_spread_offset_0": {
+      "bean_corn": {
+        "gated_sharpe": 0.169007708768932,
+        "unconditional_sharpe": 0.1827404998002041,
+        "gated_exceeds": false
+      },
+      "brent_wti": {
+        "gated_sharpe": 0.6036078572888394,
+        "unconditional_sharpe": 0.6137948299024693,
+        "gated_exceeds": false
+      },
+      "corn_wheat": {
+        "gated_sharpe": 0.48713408757875126,
+        "unconditional_sharpe": 0.6284816293871985,
+        "gated_exceeds": false
+      },
+      "crack_321": {
+        "gated_sharpe": 0.727859751209041,
+        "unconditional_sharpe": 0.6388301389804174,
+        "gated_exceeds": true
+      },
+      "crush_soy": {
+        "gated_sharpe": 0.3249370185450139,
+        "unconditional_sharpe": 0.3606135925847536,
+        "gated_exceeds": false
+      },
+      "gasheat_rbho": {
+        "gated_sharpe": 0.03657476225357429,
+        "unconditional_sharpe": -0.009375657639568468,
+        "gated_exceeds": true
+      },
+      "gasoline_crack": {
+        "gated_sharpe": 0.2598805467334652,
+        "unconditional_sharpe": 0.22280799661838976,
+        "gated_exceeds": true
+      }
+    },
+    "n_spreads_gated_exceeds_unconditional": 3,
+    "n_eligible_spreads": 7,
+    "brent_wti_exceeds": false,
+    "other_spreads_exceeding_count": 3,
+    "fires": false,
+    "brent_wti_both_legs_agree_secondary_variant": {
+      "gated_sharpe": 0.6941834574353583,
+      "unconditional_sharpe": 0.6137948299024693,
+      "gated_exceeds_unconditional": true
+    }
+  }
+}

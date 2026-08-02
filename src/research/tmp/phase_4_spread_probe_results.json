@@ -1,0 +1,136 @@
+{
+  "per_spread": {
+    "crack_321": {
+      "n_rows": 2483,
+      "n_roll_window_rows_dropped": 1597,
+      "date_range": [
+        "2010-06-07",
+        "2026-07-24"
+      ],
+      "ar1_mean_reversion": {
+        "alpha": 0.6724981302407814,
+        "beta": -0.008931143925307822,
+        "t_stat_beta": -2.841516978576562,
+        "n_obs": 2482,
+        "half_life_days": 77.26303143216991,
+        "mean_reverting": true
+      },
+      "zscore_5d_forward_ic": {
+        "ic": -0.08132555706219197,
+        "p_value": 6.216756963713236e-05,
+        "n": 2419
+      }
+    },
+    "gold_silver": {
+      "n_rows": 3301,
+      "n_roll_window_rows_dropped": 761,
+      "date_range": [
+        "2010-06-07",
+        "2026-07-20"
+      ],
+      "ar1_mean_reversion": {
+        "alpha": 0.2020721899360272,
+        "beta": -0.009161973086922076,
+        "t_stat_beta": -3.896291747812705,
+        "n_obs": 3300,
+        "half_life_days": 75.30768810388274,
+        "mean_reverting": true
+      },
+      "zscore_5d_forward_ic": {
+        "ic": -0.008455149894665852,
+        "p_value": 0.6306049840606468,
+        "n": 3237
+      }
+    },
+    "brent_wti": {
+      "n_rows": 2472,
+      "n_roll_window_rows_dropped": 1585,
+      "date_range": [
+        "2010-06-07",
+        "2026-07-15"
+      ],
+      "ar1_mean_reversion": {
+        "alpha": 0.07061805783727315,
+        "beta": -0.011137902320977259,
+        "t_stat_beta": -3.747332576033482,
+        "n_obs": 2471,
+        "half_life_days": 61.885968482868,
+        "mean_reverting": true
+      },
+      "zscore_5d_forward_ic": {
+        "ic": -0.12717671679115428,
+        "p_value": 3.777819637975673e-10,
+        "n": 2408
+      }
+    },
+    "corn_wheat": {
+      "n_rows": 3708,
+      "n_roll_window_rows_dropped": 357,
+      "date_range": [
+        "2010-06-07",
+        "2026-07-20"
+      ],
+      "ar1_mean_reversion": {
+        "alpha": 1.8241553363416263,
+        "beta": -0.01505941708293886,
+        "t_stat_beta": -5.2500369770303905,
+        "n_obs": 3707,
+        "half_life_days": 45.68004068564775,
+        "mean_reverting": true
+      },
+      "zscore_5d_forward_ic": {
+        "ic": -0.11182122256547086,
+        "p_value": 1.2961071681020148e-11,
+        "n": 3644
+      }
+    },
+    "platinum_palladium": {
+      "n_rows": 3183,
+      "n_roll_window_rows_dropped": 734,
+      "date_range": [
+        "2010-06-07",
+        "2026-07-20"
+      ],
+      "ar1_mean_reversion": {
+        "alpha": -0.1904988796152183,
+        "beta": -0.001255461729323927,
+        "t_stat_beta": -1.603984189557077,
+        "n_obs": 3182,
+        "half_life_days": 551.7587381598954,
+        "mean_reverting": false
+      },
+      "zscore_5d_forward_ic": {
+        "ic": -0.02490933685468998,
+        "p_value": 0.16428759983420482,
+        "n": 3119
+      }
+    },
+    "crush_soy": {
+      "n_rows": 3425,
+      "n_roll_window_rows_dropped": 640,
+      "date_range": [
+        "2010-06-07",
+        "2026-07-20"
+      ],
+      "ar1_mean_reversion": {
+        "alpha": 0.9530874935516543,
+        "beta": -0.008117155611958249,
+        "t_stat_beta": -3.464913975823687,
+        "n_obs": 3424,
+        "half_life_days": 85.04582151916367,
+        "mean_reverting": true
+      },
+      "zscore_5d_forward_ic": {
+        "ic": -0.06107618673064824,
+        "p_value": 0.00039585862317123566,
+        "n": 3361
+      }
+    }
+  },
+  "summary": {
+    "n_spreads_tested": 6,
+    "n_mean_reverting_ar1": 5,
+    "n_negative_significant_ic": 4,
+    "note": "This is a first-look descriptive screen, NOT a gated backtest: no cost model, no position sizing, no Sharpe ratio, no gate verdict. It only asks whether the mean-reversion MECHANISM Gatev-Goetzmann-Rouwenhorst and Zhu 2024 describe is even present, directionally, in this repo's own commodity spread data. A positive result here means 'worth a properly pre-registered gate in notebook 10', not 'a strategy exists'."
+  }
+}

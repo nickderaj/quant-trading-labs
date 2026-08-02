@@ -26,12 +26,10 @@ import sys
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
-import numpy as np
-import polars as pl
-
 import dist_lib as L
 import dist_lib6 as L6
-import research
+import numpy as np
+import polars as pl
 from alpha_lib7 import forward_fill_shape_path, zoo_es_forecast
 from backtest_configs import (
     GROSS_EXPOSURE,
@@ -43,6 +41,8 @@ from backtest_configs import (
     TOP_FRAC,
 )
 from densities import hansen_skewt
+
+import research
 
 INTERVAL = "4h"
 Q = 0.01
@@ -155,7 +155,7 @@ def main():
         ic_significant = abs(ic_stats["nw_tstat"]) > 2
 
         if not ic_significant:
-            print(f"  IC not significant (|t|<=2) - portfolio would be noise; reporting IC only, per section 4.", flush=True)
+            print("  IC not significant (|t|<=2) - portfolio would be noise; reporting IC only, per section 4.", flush=True)
             factor_result["portfolio_skipped_ic_not_significant"] = True
             results["factors"][factor_name] = factor_result
             continue

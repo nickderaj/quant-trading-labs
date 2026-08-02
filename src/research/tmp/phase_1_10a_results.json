@@ -1,0 +1,1543 @@
+{
+  "per_product": {
+    "CL": {
+      "sector": "energy",
+      "n_obs": 4522,
+      "n_backwardation": 1738,
+      "n_contango": 2766,
+      "n_null_flat_slope": 18,
+      "frac_backwardation": 0.38434321096859797,
+      "frac_contango": 0.6116762494471473,
+      "roll_slope_annualized_stats": {
+        "mean": 0.04793199994332302,
+        "median": 0.02787524431083157,
+        "std": 0.2668269549689033,
+        "p10": -0.1182510049568556,
+        "p90": 0.18583796824832627
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 57.625,
+          "backwardation": 36.208333333333336
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.9729418537708693,
+            "contango": 0.027058146229130685
+          },
+          "contango": {
+            "backwardation": 0.01735357917570499,
+            "contango": 0.982646420824295
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.29085872576177285,
+          "n": 361
+        },
+        "2": {
+          "frac_backwardation": 0.3392857142857143,
+          "n": 336
+        },
+        "3": {
+          "frac_backwardation": 0.3215258855585831,
+          "n": 367
+        },
+        "4": {
+          "frac_backwardation": 0.3866279069767442,
+          "n": 344
+        },
+        "5": {
+          "frac_backwardation": 0.38544474393531,
+          "n": 371
+        },
+        "6": {
+          "frac_backwardation": 0.36578947368421055,
+          "n": 380
+        },
+        "7": {
+          "frac_backwardation": 0.457286432160804,
+          "n": 398
+        },
+        "8": {
+          "frac_backwardation": 0.5239294710327456,
+          "n": 397
+        },
+        "9": {
+          "frac_backwardation": 0.5287958115183246,
+          "n": 382
+        },
+        "10": {
+          "frac_backwardation": 0.4371859296482412,
+          "n": 398
+        },
+        "11": {
+          "frac_backwardation": 0.32727272727272727,
+          "n": 385
+        },
+        "12": {
+          "frac_backwardation": 0.24415584415584415,
+          "n": 385
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "BZ": {
+      "sector": "energy",
+      "n_obs": 4369,
+      "n_backwardation": 2650,
+      "n_contango": 1516,
+      "n_null_flat_slope": 203,
+      "frac_backwardation": 0.6065461203936827,
+      "frac_contango": 0.3469901579308766,
+      "roll_slope_annualized_stats": {
+        "mean": -0.010382057481039061,
+        "median": -0.03899732928558202,
+        "std": 0.17163381993650037,
+        "p10": -0.1481044455036856,
+        "p90": 0.14828633627359522
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 11.22962962962963,
+          "backwardation": 19.62962962962963
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.9494148735371838,
+            "contango": 0.050585126462816155
+          },
+          "contango": {
+            "backwardation": 0.08905013192612138,
+            "contango": 0.9109498680738787
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.6200607902735562,
+          "n": 329
+        },
+        "2": {
+          "frac_backwardation": 0.6666666666666666,
+          "n": 306
+        },
+        "3": {
+          "frac_backwardation": 0.6666666666666666,
+          "n": 345
+        },
+        "4": {
+          "frac_backwardation": 0.7009345794392523,
+          "n": 321
+        },
+        "5": {
+          "frac_backwardation": 0.6866096866096866,
+          "n": 351
+        },
+        "6": {
+          "frac_backwardation": 0.653179190751445,
+          "n": 346
+        },
+        "7": {
+          "frac_backwardation": 0.5504087193460491,
+          "n": 367
+        },
+        "8": {
+          "frac_backwardation": 0.6071428571428571,
+          "n": 364
+        },
+        "9": {
+          "frac_backwardation": 0.6620111731843575,
+          "n": 358
+        },
+        "10": {
+          "frac_backwardation": 0.6702702702702703,
+          "n": 370
+        },
+        "11": {
+          "frac_backwardation": 0.6101694915254238,
+          "n": 354
+        },
+        "12": {
+          "frac_backwardation": 0.5521126760563381,
+          "n": 355
+        }
+      },
+      "date_range": [
+        "2010-06-09",
+        "2024-12-31"
+      ]
+    },
+    "NG": {
+      "sector": "energy",
+      "n_obs": 4521,
+      "n_backwardation": 929,
+      "n_contango": 3566,
+      "n_null_flat_slope": 26,
+      "frac_backwardation": 0.20548551205485513,
+      "frac_contango": 0.7887635478876355,
+      "roll_slope_annualized_stats": {
+        "mean": 0.2514721182061358,
+        "median": 0.16373799783501913,
+        "std": 0.4885477072731571,
+        "p10": -0.10476426505565871,
+        "p90": 0.7872912270188303
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 48.84931506849315,
+          "backwardation": 12.902777777777779
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.922497308934338,
+            "contango": 0.077502691065662
+          },
+          "contango": {
+            "backwardation": 0.020196353436185133,
+            "contango": 0.9798036465638149
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.6383561643835617,
+          "n": 365
+        },
+        "2": {
+          "frac_backwardation": 0.21194029850746268,
+          "n": 335
+        },
+        "3": {
+          "frac_backwardation": 0.051630434782608696,
+          "n": 368
+        },
+        "4": {
+          "frac_backwardation": 0.0,
+          "n": 347
+        },
+        "5": {
+          "frac_backwardation": 0.040214477211796246,
+          "n": 373
+        },
+        "6": {
+          "frac_backwardation": 0.3050397877984085,
+          "n": 377
+        },
+        "7": {
+          "frac_backwardation": 0.47715736040609136,
+          "n": 394
+        },
+        "8": {
+          "frac_backwardation": 0.07493540051679587,
+          "n": 387
+        },
+        "9": {
+          "frac_backwardation": 0.023622047244094488,
+          "n": 381
+        },
+        "10": {
+          "frac_backwardation": 0.0,
+          "n": 397
+        },
+        "11": {
+          "frac_backwardation": 0.16321243523316062,
+          "n": 386
+        },
+        "12": {
+          "frac_backwardation": 0.4857142857142857,
+          "n": 385
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "HO": {
+      "sector": "energy",
+      "n_obs": 4522,
+      "n_backwardation": 1892,
+      "n_contango": 2608,
+      "n_null_flat_slope": 22,
+      "frac_backwardation": 0.41839893852277754,
+      "frac_contango": 0.5767359575409111,
+      "roll_slope_annualized_stats": {
+        "mean": -0.015298868216885081,
+        "median": 0.013883557587741867,
+        "std": 0.17978852432662915,
+        "p10": -0.22106817424923114,
+        "p90": 0.1334187454635767
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 27.166666666666668,
+          "backwardation": 19.708333333333332
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.9497620306716024,
+            "contango": 0.05023796932839767
+          },
+          "contango": {
+            "backwardation": 0.03680981595092025,
+            "contango": 0.9631901840490797
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.7095890410958904,
+          "n": 365
+        },
+        "2": {
+          "frac_backwardation": 0.7522388059701492,
+          "n": 335
+        },
+        "3": {
+          "frac_backwardation": 0.4604904632152589,
+          "n": 367
+        },
+        "4": {
+          "frac_backwardation": 0.3804034582132565,
+          "n": 347
+        },
+        "5": {
+          "frac_backwardation": 0.31989247311827956,
+          "n": 372
+        },
+        "6": {
+          "frac_backwardation": 0.15079365079365079,
+          "n": 378
+        },
+        "7": {
+          "frac_backwardation": 0.17676767676767677,
+          "n": 396
+        },
+        "8": {
+          "frac_backwardation": 0.19047619047619047,
+          "n": 399
+        },
+        "9": {
+          "frac_backwardation": 0.39210526315789473,
+          "n": 380
+        },
+        "10": {
+          "frac_backwardation": 0.5482233502538071,
+          "n": 394
+        },
+        "11": {
+          "frac_backwardation": 0.4751958224543081,
+          "n": 383
+        },
+        "12": {
+          "frac_backwardation": 0.5494791666666666,
+          "n": 384
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "RB": {
+      "sector": "energy",
+      "n_obs": 4522,
+      "n_backwardation": 3051,
+      "n_contango": 1459,
+      "n_null_flat_slope": 12,
+      "frac_backwardation": 0.6747014595311809,
+      "frac_contango": 0.32264484741264926,
+      "roll_slope_annualized_stats": {
+        "mean": -0.06289154375996256,
+        "median": -0.07495011172704455,
+        "std": 0.4656297771799375,
+        "p10": -0.5203353821058243,
+        "p90": 0.23198415034402703
+      },
+      "persistence": {
+        "mean_run_length": {
+          "backwardation": 31.78125,
+          "contango": 15.197916666666666
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.9685349065880039,
+            "contango": 0.03146509341199607
+          },
+          "contango": {
+            "backwardation": 0.06515775034293553,
+            "contango": 0.9348422496570644
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.05191256830601093,
+          "n": 366
+        },
+        "2": {
+          "frac_backwardation": 0.15223880597014924,
+          "n": 335
+        },
+        "3": {
+          "frac_backwardation": 0.6557377049180327,
+          "n": 366
+        },
+        "4": {
+          "frac_backwardation": 0.6752873563218391,
+          "n": 348
+        },
+        "5": {
+          "frac_backwardation": 0.8310991957104558,
+          "n": 373
+        },
+        "6": {
+          "frac_backwardation": 0.8710526315789474,
+          "n": 380
+        },
+        "7": {
+          "frac_backwardation": 0.9545454545454546,
+          "n": 396
+        },
+        "8": {
+          "frac_backwardation": 0.9899749373433584,
+          "n": 399
+        },
+        "9": {
+          "frac_backwardation": 0.9711286089238845,
+          "n": 381
+        },
+        "10": {
+          "frac_backwardation": 0.8992443324937027,
+          "n": 397
+        },
+        "11": {
+          "frac_backwardation": 0.7362924281984334,
+          "n": 383
+        },
+        "12": {
+          "frac_backwardation": 0.21502590673575128,
+          "n": 386
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "GC": {
+      "sector": "metals",
+      "n_obs": 4479,
+      "n_backwardation": 893,
+      "n_contango": 3119,
+      "n_null_flat_slope": 467,
+      "frac_backwardation": 0.19937486045992409,
+      "frac_contango": 0.6963607948202724,
+      "roll_slope_annualized_stats": {
+        "mean": 0.014927111763746987,
+        "median": 0.011443980390403853,
+        "std": 0.025874386934101032,
+        "p10": -0.00971100537815204,
+        "p90": 0.04736300149722757
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 5.70201096892139,
+          "backwardation": 1.6355311355311355
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.3885778275475924,
+            "contango": 0.6114221724524076
+          },
+          "contango": {
+            "backwardation": 0.17511225144323284,
+            "contango": 0.8248877485567672
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.21451104100946372,
+          "n": 317
+        },
+        "2": {
+          "frac_backwardation": 0.17301038062283736,
+          "n": 289
+        },
+        "3": {
+          "frac_backwardation": 0.21359223300970873,
+          "n": 309
+        },
+        "4": {
+          "frac_backwardation": 0.2,
+          "n": 325
+        },
+        "5": {
+          "frac_backwardation": 0.2628398791540785,
+          "n": 331
+        },
+        "6": {
+          "frac_backwardation": 0.19327731092436976,
+          "n": 357
+        },
+        "7": {
+          "frac_backwardation": 0.23850574712643677,
+          "n": 348
+        },
+        "8": {
+          "frac_backwardation": 0.24456521739130435,
+          "n": 368
+        },
+        "9": {
+          "frac_backwardation": 0.2631578947368421,
+          "n": 323
+        },
+        "10": {
+          "frac_backwardation": 0.23098591549295774,
+          "n": 355
+        },
+        "11": {
+          "frac_backwardation": 0.21084337349397592,
+          "n": 332
+        },
+        "12": {
+          "frac_backwardation": 0.21787709497206703,
+          "n": 358
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "SI": {
+      "sector": "metals",
+      "n_obs": 4520,
+      "n_backwardation": 671,
+      "n_contango": 3159,
+      "n_null_flat_slope": 690,
+      "frac_backwardation": 0.14845132743362832,
+      "frac_contango": 0.6988938053097346,
+      "roll_slope_annualized_stats": {
+        "mean": 0.020444334831042174,
+        "median": 0.016100860052590454,
+        "std": 0.042467319123120364,
+        "p10": -0.010046767464721116,
+        "p90": 0.05895360070470522
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 6.808189655172414,
+          "backwardation": 1.449244060475162
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.30998509687034276,
+            "contango": 0.6900149031296572
+          },
+          "contango": {
+            "backwardation": 0.14661177960734642,
+            "contango": 0.8533882203926536
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.18775510204081633,
+          "n": 245
+        },
+        "2": {
+          "frac_backwardation": 0.08923076923076922,
+          "n": 325
+        },
+        "3": {
+          "frac_backwardation": 0.2185430463576159,
+          "n": 302
+        },
+        "4": {
+          "frac_backwardation": 0.11285266457680251,
+          "n": 319
+        },
+        "5": {
+          "frac_backwardation": 0.190625,
+          "n": 320
+        },
+        "6": {
+          "frac_backwardation": 0.1441717791411043,
+          "n": 326
+        },
+        "7": {
+          "frac_backwardation": 0.21220930232558138,
+          "n": 344
+        },
+        "8": {
+          "frac_backwardation": 0.1540983606557377,
+          "n": 305
+        },
+        "9": {
+          "frac_backwardation": 0.19637462235649547,
+          "n": 331
+        },
+        "10": {
+          "frac_backwardation": 0.22485207100591717,
+          "n": 338
+        },
+        "11": {
+          "frac_backwardation": 0.1457142857142857,
+          "n": 350
+        },
+        "12": {
+          "frac_backwardation": 0.2276923076923077,
+          "n": 325
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "PL": {
+      "sector": "metals",
+      "n_obs": 4485,
+      "n_backwardation": 583,
+      "n_contango": 3421,
+      "n_null_flat_slope": 481,
+      "frac_backwardation": 0.12998885172798216,
+      "frac_contango": 0.7627647714604237,
+      "roll_slope_annualized_stats": {
+        "mean": 0.013903195325933397,
+        "median": 0.01192909705388235,
+        "std": 0.017832117425658454,
+        "p10": -0.0031454826388139846,
+        "p90": 0.03568615449386228
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 9.858789625360231,
+          "backwardation": 1.6849710982658959
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.4065180102915952,
+            "contango": 0.5934819897084048
+          },
+          "contango": {
+            "backwardation": 0.10116959064327485,
+            "contango": 0.8988304093567251
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.21708185053380782,
+          "n": 281
+        },
+        "2": {
+          "frac_backwardation": 0.16666666666666666,
+          "n": 312
+        },
+        "3": {
+          "frac_backwardation": 0.12430939226519337,
+          "n": 362
+        },
+        "4": {
+          "frac_backwardation": 0.2518796992481203,
+          "n": 266
+        },
+        "5": {
+          "frac_backwardation": 0.1657142857142857,
+          "n": 350
+        },
+        "6": {
+          "frac_backwardation": 0.0891891891891892,
+          "n": 370
+        },
+        "7": {
+          "frac_backwardation": 0.2222222222222222,
+          "n": 288
+        },
+        "8": {
+          "frac_backwardation": 0.08398950131233596,
+          "n": 381
+        },
+        "9": {
+          "frac_backwardation": 0.09651474530831099,
+          "n": 373
+        },
+        "10": {
+          "frac_backwardation": 0.21710526315789475,
+          "n": 304
+        },
+        "11": {
+          "frac_backwardation": 0.14325842696629212,
+          "n": 356
+        },
+        "12": {
+          "frac_backwardation": 0.04986149584487535,
+          "n": 361
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "PA": {
+      "sector": "metals",
+      "n_obs": 4515,
+      "n_backwardation": 1456,
+      "n_contango": 2209,
+      "n_null_flat_slope": 850,
+      "frac_backwardation": 0.32248062015503876,
+      "frac_contango": 0.4892580287929125,
+      "roll_slope_annualized_stats": {
+        "mean": 0.0033927495692776316,
+        "median": 0.005116016882129966,
+        "std": 0.03200277986921901,
+        "p10": -0.027456383930014462,
+        "p90": 0.0347239799203814
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 4.418,
+          "backwardation": 2.917835671342685
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.6572802197802198,
+            "contango": 0.3427197802197802
+          },
+          "contango": {
+            "backwardation": 0.2259963768115942,
+            "contango": 0.7740036231884058
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.4589041095890411,
+          "n": 292
+        },
+        "2": {
+          "frac_backwardation": 0.2733118971061093,
+          "n": 311
+        },
+        "3": {
+          "frac_backwardation": 0.4900398406374502,
+          "n": 251
+        },
+        "4": {
+          "frac_backwardation": 0.4485049833887043,
+          "n": 301
+        },
+        "5": {
+          "frac_backwardation": 0.358974358974359,
+          "n": 351
+        },
+        "6": {
+          "frac_backwardation": 0.46296296296296297,
+          "n": 270
+        },
+        "7": {
+          "frac_backwardation": 0.4606413994169096,
+          "n": 343
+        },
+        "8": {
+          "frac_backwardation": 0.2661290322580645,
+          "n": 372
+        },
+        "9": {
+          "frac_backwardation": 0.4473684210526316,
+          "n": 266
+        },
+        "10": {
+          "frac_backwardation": 0.41304347826086957,
+          "n": 322
+        },
+        "11": {
+          "frac_backwardation": 0.30422535211267604,
+          "n": 355
+        },
+        "12": {
+          "frac_backwardation": 0.4805194805194805,
+          "n": 231
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "ZC": {
+      "sector": "grains",
+      "n_obs": 3779,
+      "n_backwardation": 811,
+      "n_contango": 2939,
+      "n_null_flat_slope": 29,
+      "frac_backwardation": 0.21460703889917968,
+      "frac_contango": 0.7777189732733527,
+      "roll_slope_annualized_stats": {
+        "mean": 0.023438856563824953,
+        "median": 0.08609654377076033,
+        "std": 0.20012160020539713,
+        "p10": -0.16553461765343502,
+        "p90": 0.14805737038612138
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 94.80645161290323,
+          "backwardation": 27.033333333333335
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.9630086313193588,
+            "contango": 0.036991368680641186
+          },
+          "contango": {
+            "backwardation": 0.010211027910142955,
+            "contango": 0.989788972089857
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.11785714285714285,
+          "n": 280
+        },
+        "2": {
+          "frac_backwardation": 0.241635687732342,
+          "n": 269
+        },
+        "3": {
+          "frac_backwardation": 0.379746835443038,
+          "n": 316
+        },
+        "4": {
+          "frac_backwardation": 0.35906040268456374,
+          "n": 298
+        },
+        "5": {
+          "frac_backwardation": 0.4786885245901639,
+          "n": 305
+        },
+        "6": {
+          "frac_backwardation": 0.47530864197530864,
+          "n": 324
+        },
+        "7": {
+          "frac_backwardation": 0.3333333333333333,
+          "n": 324
+        },
+        "8": {
+          "frac_backwardation": 0.14080459770114942,
+          "n": 348
+        },
+        "9": {
+          "frac_backwardation": 0.028391167192429023,
+          "n": 317
+        },
+        "10": {
+          "frac_backwardation": 0.029411764705882353,
+          "n": 340
+        },
+        "11": {
+          "frac_backwardation": 0.0,
+          "n": 312
+        },
+        "12": {
+          "frac_backwardation": 0.031545741324921134,
+          "n": 317
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "ZW": {
+      "sector": "grains",
+      "n_obs": 3779,
+      "n_backwardation": 216,
+      "n_contango": 3542,
+      "n_null_flat_slope": 21,
+      "frac_backwardation": 0.05715797830113787,
+      "frac_contango": 0.9372849960306959,
+      "roll_slope_annualized_stats": {
+        "mean": 0.10557442809766462,
+        "median": 0.08766309789162366,
+        "std": 0.07950302963534507,
+        "p10": 0.01984451747144075,
+        "p90": 0.20864423182775702
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 78.71111111111111,
+          "backwardation": 4.909090909090909
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.7962962962962963,
+            "contango": 0.2037037037037037
+          },
+          "contango": {
+            "backwardation": 0.012425868398757414,
+            "contango": 0.9875741316012426
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.04895104895104895,
+          "n": 286
+        },
+        "2": {
+          "frac_backwardation": 0.17037037037037037,
+          "n": 270
+        },
+        "3": {
+          "frac_backwardation": 0.2253968253968254,
+          "n": 315
+        },
+        "4": {
+          "frac_backwardation": 0.12286689419795221,
+          "n": 293
+        },
+        "5": {
+          "frac_backwardation": 0.05921052631578947,
+          "n": 304
+        },
+        "6": {
+          "frac_backwardation": 0.006153846153846154,
+          "n": 325
+        },
+        "7": {
+          "frac_backwardation": 0.021341463414634148,
+          "n": 328
+        },
+        "8": {
+          "frac_backwardation": 0.0028653295128939827,
+          "n": 349
+        },
+        "9": {
+          "frac_backwardation": 0.0,
+          "n": 318
+        },
+        "10": {
+          "frac_backwardation": 0.02040816326530612,
+          "n": 343
+        },
+        "11": {
+          "frac_backwardation": 0.006472491909385114,
+          "n": 309
+        },
+        "12": {
+          "frac_backwardation": 0.03773584905660377,
+          "n": 318
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "KE": {
+      "sector": "grains",
+      "n_obs": 2780,
+      "n_backwardation": 379,
+      "n_contango": 2381,
+      "n_null_flat_slope": 20,
+      "frac_backwardation": 0.13633093525179857,
+      "frac_contango": 0.8564748201438849,
+      "roll_slope_annualized_stats": {
+        "mean": 0.08803584922086077,
+        "median": 0.08896853179117362,
+        "std": 0.0859261487935347,
+        "p10": -0.021390452692157204,
+        "p90": 0.19664913394680156
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 56.69047619047619,
+          "backwardation": 9.24390243902439
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.8918205804749341,
+            "contango": 0.10817941952506596
+          },
+          "contango": {
+            "backwardation": 0.017226890756302522,
+            "contango": 0.9827731092436974
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.19282511210762332,
+          "n": 223
+        },
+        "2": {
+          "frac_backwardation": 0.26666666666666666,
+          "n": 210
+        },
+        "3": {
+          "frac_backwardation": 0.30638297872340425,
+          "n": 235
+        },
+        "4": {
+          "frac_backwardation": 0.14977973568281938,
+          "n": 227
+        },
+        "5": {
+          "frac_backwardation": 0.14035087719298245,
+          "n": 228
+        },
+        "6": {
+          "frac_backwardation": 0.1038961038961039,
+          "n": 231
+        },
+        "7": {
+          "frac_backwardation": 0.06465517241379311,
+          "n": 232
+        },
+        "8": {
+          "frac_backwardation": 0.028455284552845527,
+          "n": 246
+        },
+        "9": {
+          "frac_backwardation": 0.09009009009009009,
+          "n": 222
+        },
+        "10": {
+          "frac_backwardation": 0.08677685950413223,
+          "n": 242
+        },
+        "11": {
+          "frac_backwardation": 0.10222222222222223,
+          "n": 225
+        },
+        "12": {
+          "frac_backwardation": 0.13389121338912133,
+          "n": 239
+        }
+      },
+      "date_range": [
+        "2013-12-16",
+        "2024-12-31"
+      ]
+    },
+    "ZS": {
+      "sector": "grains",
+      "n_obs": 3779,
+      "n_backwardation": 1460,
+      "n_contango": 2296,
+      "n_null_flat_slope": 23,
+      "frac_backwardation": 0.38634559407250596,
+      "frac_contango": 0.6075681397195025,
+      "roll_slope_annualized_stats": {
+        "mean": -0.056186182647282513,
+        "median": 0.024561559985621192,
+        "std": 0.2237249911553144,
+        "p10": -0.3119797030143039,
+        "p90": 0.08271199153943885
+      },
+      "persistence": {
+        "mean_run_length": {
+          "backwardation": 32.44444444444444,
+          "contango": 51.022222222222226
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.9691780821917808,
+            "contango": 0.030821917808219176
+          },
+          "contango": {
+            "backwardation": 0.01917211328976035,
+            "contango": 0.9808278867102397
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.2867132867132867,
+          "n": 286
+        },
+        "2": {
+          "frac_backwardation": 0.275092936802974,
+          "n": 269
+        },
+        "3": {
+          "frac_backwardation": 0.35646687697160884,
+          "n": 317
+        },
+        "4": {
+          "frac_backwardation": 0.36363636363636365,
+          "n": 297
+        },
+        "5": {
+          "frac_backwardation": 0.6019736842105263,
+          "n": 304
+        },
+        "6": {
+          "frac_backwardation": 0.7461300309597523,
+          "n": 323
+        },
+        "7": {
+          "frac_backwardation": 0.7926829268292683,
+          "n": 328
+        },
+        "8": {
+          "frac_backwardation": 0.5919540229885057,
+          "n": 348
+        },
+        "9": {
+          "frac_backwardation": 0.13333333333333333,
+          "n": 315
+        },
+        "10": {
+          "frac_backwardation": 0.12389380530973451,
+          "n": 339
+        },
+        "11": {
+          "frac_backwardation": 0.1832797427652733,
+          "n": 311
+        },
+        "12": {
+          "frac_backwardation": 0.16300940438871472,
+          "n": 319
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "ZL": {
+      "sector": "grains",
+      "n_obs": 3779,
+      "n_backwardation": 831,
+      "n_contango": 2925,
+      "n_null_flat_slope": 23,
+      "frac_backwardation": 0.2198994442974332,
+      "frac_contango": 0.7740142894945753,
+      "roll_slope_annualized_stats": {
+        "mean": -0.005370296870295693,
+        "median": 0.042145315363294786,
+        "std": 0.13596803939375637,
+        "p10": -0.17205378687518713,
+        "p90": 0.07595400308971788
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 57.35294117647059,
+          "backwardation": 16.62
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.9398315282791817,
+            "contango": 0.06016847172081829
+          },
+          "contango": {
+            "backwardation": 0.01709986320109439,
+            "contango": 0.9829001367989056
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.12237762237762238,
+          "n": 286
+        },
+        "2": {
+          "frac_backwardation": 0.0962962962962963,
+          "n": 270
+        },
+        "3": {
+          "frac_backwardation": 0.14873417721518986,
+          "n": 316
+        },
+        "4": {
+          "frac_backwardation": 0.15771812080536912,
+          "n": 298
+        },
+        "5": {
+          "frac_backwardation": 0.2236842105263158,
+          "n": 304
+        },
+        "6": {
+          "frac_backwardation": 0.25,
+          "n": 320
+        },
+        "7": {
+          "frac_backwardation": 0.2978723404255319,
+          "n": 329
+        },
+        "8": {
+          "frac_backwardation": 0.3103448275862069,
+          "n": 348
+        },
+        "9": {
+          "frac_backwardation": 0.2984126984126984,
+          "n": 315
+        },
+        "10": {
+          "frac_backwardation": 0.2735294117647059,
+          "n": 340
+        },
+        "11": {
+          "frac_backwardation": 0.267741935483871,
+          "n": 310
+        },
+        "12": {
+          "frac_backwardation": 0.1625,
+          "n": 320
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "ZM": {
+      "sector": "grains",
+      "n_obs": 3778,
+      "n_backwardation": 1975,
+      "n_contango": 1777,
+      "n_null_flat_slope": 26,
+      "frac_backwardation": 0.5227633668607728,
+      "frac_contango": 0.47035468501852834,
+      "roll_slope_annualized_stats": {
+        "mean": -0.10102740450596621,
+        "median": -0.011782622561582268,
+        "std": 0.26402231179869584,
+        "p10": -0.40765703744815207,
+        "p90": 0.08326076821836492
+      },
+      "persistence": {
+        "mean_run_length": {
+          "backwardation": 35.90909090909091,
+          "contango": 32.30909090909091
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.9721518987341772,
+            "contango": 0.027848101265822784
+          },
+          "contango": {
+            "backwardation": 0.030405405405405407,
+            "contango": 0.9695945945945946
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.47368421052631576,
+          "n": 285
+        },
+        "2": {
+          "frac_backwardation": 0.5018450184501845,
+          "n": 271
+        },
+        "3": {
+          "frac_backwardation": 0.43670886075949367,
+          "n": 316
+        },
+        "4": {
+          "frac_backwardation": 0.3602693602693603,
+          "n": 297
+        },
+        "5": {
+          "frac_backwardation": 0.6348684210526315,
+          "n": 304
+        },
+        "6": {
+          "frac_backwardation": 0.6346749226006192,
+          "n": 323
+        },
+        "7": {
+          "frac_backwardation": 0.6811145510835913,
+          "n": 323
+        },
+        "8": {
+          "frac_backwardation": 0.6781609195402298,
+          "n": 348
+        },
+        "9": {
+          "frac_backwardation": 0.43174603174603177,
+          "n": 315
+        },
+        "10": {
+          "frac_backwardation": 0.4956268221574344,
+          "n": 343
+        },
+        "11": {
+          "frac_backwardation": 0.498371335504886,
+          "n": 307
+        },
+        "12": {
+          "frac_backwardation": 0.45625,
+          "n": 320
+        }
+      },
+      "date_range": [
+        "2010-06-06",
+        "2024-12-31"
+      ]
+    },
+    "ES": {
+      "sector": "control",
+      "n_obs": 2180,
+      "n_backwardation": 667,
+      "n_contango": 1491,
+      "n_null_flat_slope": 22,
+      "frac_backwardation": 0.30596330275229355,
+      "frac_contango": 0.6839449541284404,
+      "roll_slope_annualized_stats": {
+        "mean": 0.0126795937481825,
+        "median": 0.005924395115640416,
+        "std": 0.020761263599833452,
+        "p10": -0.010717802744800796,
+        "p90": 0.043698403945764075
+      },
+      "persistence": {
+        "mean_run_length": {
+          "contango": 55.22222222222222,
+          "backwardation": 25.653846153846153
+        },
+        "transition_matrix": {
+          "backwardation": {
+            "backwardation": 0.9610194902548725,
+            "contango": 0.038980509745127435
+          },
+          "contango": {
+            "backwardation": 0.0174496644295302,
+            "contango": 0.9825503355704698
+          }
+        }
+      },
+      "month_of_year_regime": {
+        "1": {
+          "frac_backwardation": 0.3021978021978022,
+          "n": 182
+        },
+        "2": {
+          "frac_backwardation": 0.35542168674698793,
+          "n": 166
+        },
+        "3": {
+          "frac_backwardation": 0.34972677595628415,
+          "n": 183
+        },
+        "4": {
+          "frac_backwardation": 0.288135593220339,
+          "n": 177
+        },
+        "5": {
+          "frac_backwardation": 0.27807486631016043,
+          "n": 187
+        },
+        "6": {
+          "frac_backwardation": 0.3202247191011236,
+          "n": 178
+        },
+        "7": {
+          "frac_backwardation": 0.2918918918918919,
+          "n": 185
+        },
+        "8": {
+          "frac_backwardation": 0.32044198895027626,
+          "n": 181
+        },
+        "9": {
+          "frac_backwardation": 0.29213483146067415,
+          "n": 178
+        },
+        "10": {
+          "frac_backwardation": 0.2972972972972973,
+          "n": 185
+        },
+        "11": {
+          "frac_backwardation": 0.28888888888888886,
+          "n": 180
+        },
+        "12": {
+          "frac_backwardation": 0.32954545454545453,
+          "n": 176
+        }
+      },
+      "date_range": [
+        "2018-01-01",
+        "2024-12-31"
+      ]
+    }
+  },
+  "sector_summary": {
+    "energy": {
+      "mean_frac_backwardation": 0.45789504829421884,
+      "products": [
+        {
+          "product": "CL",
+          "frac_backwardation": 0.38434321096859797
+        },
+        {
+          "product": "BZ",
+          "frac_backwardation": 0.6065461203936827
+        },
+        {
+          "product": "NG",
+          "frac_backwardation": 0.20548551205485513
+        },
+        {
+          "product": "HO",
+          "frac_backwardation": 0.41839893852277754
+        },
+        {
+          "product": "RB",
+          "frac_backwardation": 0.6747014595311809
+        }
+      ]
+    },
+    "metals": {
+      "mean_frac_backwardation": 0.20007391494414334,
+      "products": [
+        {
+          "product": "GC",
+          "frac_backwardation": 0.19937486045992409
+        },
+        {
+          "product": "SI",
+          "frac_backwardation": 0.14845132743362832
+        },
+        {
+          "product": "PL",
+          "frac_backwardation": 0.12998885172798216
+        },
+        {
+          "product": "PA",
+          "frac_backwardation": 0.32248062015503876
+        }
+      ]
+    },
+    "grains": {
+      "mean_frac_backwardation": 0.2561840596138047,
+      "products": [
+        {
+          "product": "ZC",
+          "frac_backwardation": 0.21460703889917968
+        },
+        {
+          "product": "ZW",
+          "frac_backwardation": 0.05715797830113787
+        },
+        {
+          "product": "KE",
+          "frac_backwardation": 0.13633093525179857
+        },
+        {
+          "product": "ZS",
+          "frac_backwardation": 0.38634559407250596
+        },
+        {
+          "product": "ZL",
+          "frac_backwardation": 0.2198994442974332
+        },
+        {
+          "product": "ZM",
+          "frac_backwardation": 0.5227633668607728
+        }
+      ]
+    },
+    "control": {
+      "mean_frac_backwardation": 0.30596330275229355,
+      "products": [
+        {
+          "product": "ES",
+          "frac_backwardation": 0.30596330275229355
+        }
+      ]
+    }
+  },
+  "curve_snapshots": {
+    "CL": {
+      "deep_contango": {
+        "date": "2020-04-21",
+        "close_f1": 14.02,
+        "dte_f1": 28,
+        "close_f2": 20.97,
+        "dte_f2": 62,
+        "close_f3": 24.05,
+        "dte_f3": 91,
+        "roll_slope_annualized": 4.322114900211629
+      },
+      "deep_backwardation": {
+        "date": "2018-07-03",
+        "close_f1": 74.63,
+        "dte_f1": 17,
+        "close_f2": 71.78,
+        "dte_f2": 49,
+        "close_f3": 68.79,
+        "dte_f3": 79,
+        "roll_slope_annualized": -0.4441215681156152
+      }
+    },
+    "NG": {
+      "deep_contango": {
+        "date": "2020-09-21",
+        "close_f1": 1.875,
+        "dte_f1": 7,
+        "close_f2": 2.73,
+        "dte_f2": 37,
+        "close_f3": null,
+        "dte_f3": null,
+        "roll_slope_annualized": 4.570930888923012
+      },
+      "deep_backwardation": {
+        "date": "2024-01-12",
+        "close_f1": 3.331,
+        "dte_f1": 17,
+        "close_f2": 2.615,
+        "dte_f2": 46,
+        "close_f3": 2.565,
+        "dte_f3": 74,
+        "roll_slope_annualized": -3.045968569605156
+      }
+    },
+    "ZC": {
+      "deep_contango": {
+        "date": "2024-08-28",
+        "close_f1": 365.25,
+        "dte_f1": 16,
+        "close_f2": 390.5,
+        "dte_f2": 107,
+        "close_f3": 409.25,
+        "dte_f3": 198,
+        "roll_slope_annualized": 0.26811824513033095
+      },
+      "deep_backwardation": {
+        "date": "2022-07-06",
+        "close_f1": 751.0,
+        "dte_f1": 8,
+        "close_f2": 600.25,
+        "dte_f2": 70,
+        "close_f3": 585.5,
+        "dte_f3": 161,
+        "roll_slope_annualized": -1.3190594690630943
+      }
+    }
+  },
+  "_dev_window": {
+    "start": {
+      "__default__": "2010-06-06",
+      "ES": "2018-01-01",
+      "KE": "2013-12-16"
+    },
+    "end": "2024-12-31"
+  },
+  "_note": "descriptive only -- no strategy verdicts, no Sharpe, no gate (NEXT_PROMPT.md sec 1 rule 1). Holdout (2025-01-01+) not read."
+}
