@@ -310,6 +310,35 @@ def ret_eq(realized_pnl: float, equity_at_open: float) -> float:
     return realized_pnl / equity_at_open
 
 
+def roc_auc_score(y_true: np.ndarray, y_score: np.ndarray) -> float:
+    """AUC via the Mann-Whitney U / rank-sum identity (no sklearn dependency
+    in this repo's environment): AUC = (sum of positive-class ranks -
+    n_pos*(n_pos+1)/2) / (n_pos * n_neg), with average ranks for ties.
+    NaN if either class is empty (a degenerate, single-class fold).
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_score = np.asarray(y_score, dtype=float)
+    n_pos = int((y_true == 1).sum())
+    n_neg = int((y_true == 0).sum())
+    if n_pos == 0 or n_neg == 0:
+        return float("nan")
+    order = np.argsort(y_score, kind="mergesort")
+    ranks = np.empty(len(y_score), dtype=float)
+    sorted_scores = y_score[order]
+    i = 0
+    r = 1
+    while i < len(sorted_scores):
+        j = i
+        while j + 1 < len(sorted_scores) and sorted_scores[j + 1] == sorted_scores[i]:
+            j += 1
+        avg_rank = (r + (r + (j - i))) / 2.0
+        ranks[order[i : j + 1]] = avg_rank
+        r += j - i + 1
+        i = j + 1
+    sum_ranks_pos = float(ranks[y_true == 1].sum())
+    return (sum_ranks_pos - n_pos * (n_pos + 1) / 2.0) / (n_pos * n_neg)
+
+
 def trade_blocks(dates: np.ndarray, freq: str = "1q") -> np.ndarray:
     """Assign each trade's date to a contiguous calendar block (quarter by
     default) for the paired block bootstrap -- an integer block id per
@@ -492,6 +521,7 @@ def simulate_single_spread(
     sign_flip: bool | np.ndarray = False,
     disable_stop: bool = False,
     stop_mult_scale: np.ndarray | None = None,
+    veto_entry_mask: np.ndarray | None = None,
 ) -> dict:
     """Simulate the pre-registered trading rule on one spread's own
     equity slice (single-position-per-spread; the shared-portfolio-equity
@@ -508,7 +538,11 @@ def simulate_single_spread(
     not a whole-spread flip). `disable_stop`: never check the stop breach
     (Gate TS-S). `stop_mult_scale`: optional per-bar multiplier applied to
     the effective `stop_atr_mult` at entry (Gate VA's vol-adaptive stop);
-    None means no scaling (multiplier 1.0 everywhere).
+    None means no scaling (multiplier 1.0 everywhere). `veto_entry_mask`:
+    optional per-bar boolean array (Gate LC, notebook 11c) -- True at bar i
+    means an otherwise-eligible entry at bar i is suppressed. Checked last,
+    after every other suppression/regime/reentry condition, so it never
+    creates an entry that the pre-declared rule would not otherwise take.
     """
     sign_flip_arr = (
         np.full(len(df), bool(sign_flip))
@@ -642,11 +676,13 @@ def simulate_single_spread(
                     cooldown_cleared or gated_bypass
                 ) and episode_count <= p.max_per_episode
 
+            vetoed = veto_entry_mask is not None and bool(veto_entry_mask[i])
             enter = (
                 (not suppress[i])
                 and regime_ok
                 and reentry_ok
                 and abs(z_i) > p.entry_threshold
+                and not vetoed
             )
             if enter:
                 raw_direction = -1 if z_i > 0 else 1
@@ -725,6 +761,7 @@ def simulate_book(
     disable_stop: bool = False,
     sign_flip_masks: dict[str, np.ndarray] | None = None,
     stop_mult_scales: dict[str, np.ndarray] | None = None,
+    veto_entry_masks: dict[str, np.ndarray] | None = None,
 ) -> dict:
     """Run `simulate_single_spread` independently per spread (each sized
     against its own copy of `start_equity` -- see `START_EQUITY`'s
@@ -744,6 +781,7 @@ def simulate_book(
     sign_flip_spreads = sign_flip_spreads or set()
     sign_flip_masks = sign_flip_masks or {}
     stop_mult_scales = stop_mult_scales or {}
+    veto_entry_masks = veto_entry_masks or {}
     all_dates_sorted = sorted(
         set().union(*[set(df["date"].to_numpy()) for df in spread_frames.values()])
     )
@@ -764,6 +802,7 @@ def simulate_book(
             sign_flip=sign_flip_masks.get(name, name in sign_flip_spreads),
             disable_stop=disable_stop,
             stop_mult_scale=stop_mult_scales.get(name),
+            veto_entry_mask=veto_entry_masks.get(name),
         )
         for t in res["trades"]:
             t["spread"] = name

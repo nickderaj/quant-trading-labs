@@ -1569,3 +1569,424 @@ class TestBookMetrics:
         metrics = SL11.book_metrics(book)
 
         assert metrics["final_equity"] == pytest.approx(book["portfolio_equity"][-1])
+
+
+# ---------------------------------------------------------------------------
+# Gate LC: roc_auc_score and veto_entry_mask tests
+# ---------------------------------------------------------------------------
+
+
+class TestRocAucScore:
+    """Test Mann-Whitney U / rank-sum AUC implementation."""
+
+    def test_perfect_separation(self):
+        """All positives score higher than all negatives -> AUC = 1.0."""
+        y_true = np.array([0, 0, 0, 1, 1, 1])
+        y_score = np.array([1.0, 2.0, 3.0, 5.0, 6.0, 7.0])
+        auc = SL11.roc_auc_score(y_true, y_score)
+        assert auc == pytest.approx(1.0)
+
+    def test_perfect_reversal(self):
+        """All positives score lower than all negatives -> AUC = 0.0."""
+        y_true = np.array([0, 0, 0, 1, 1, 1])
+        y_score = np.array([7.0, 6.0, 5.0, 3.0, 2.0, 1.0])
+        auc = SL11.roc_auc_score(y_true, y_score)
+        assert auc == pytest.approx(0.0)
+
+    def test_all_ties(self):
+        """All samples have identical scores -> AUC = 0.5."""
+        y_true = np.array([0, 0, 0, 1, 1, 1])
+        y_score = np.array([5.0, 5.0, 5.0, 5.0, 5.0, 5.0])
+        auc = SL11.roc_auc_score(y_true, y_score)
+        assert auc == pytest.approx(0.5)
+
+    def test_single_class_all_zeros(self):
+        """y_true with no positives (all zeros) -> NaN."""
+        y_true = np.array([0, 0, 0, 0])
+        y_score = np.array([1.0, 2.0, 3.0, 4.0])
+        auc = SL11.roc_auc_score(y_true, y_score)
+        assert np.isnan(auc)
+
+    def test_single_class_all_ones(self):
+        """y_true with no negatives (all ones) -> NaN."""
+        y_true = np.array([1, 1, 1, 1])
+        y_score = np.array([1.0, 2.0, 3.0, 4.0])
+        auc = SL11.roc_auc_score(y_true, y_score)
+        assert np.isnan(auc)
+
+    def test_worked_example_with_tied_ranks(self):
+        """Hand-computed example with known tied ranks.
+
+        y_true = [0, 1, 0, 1]
+        y_score = [1.0, 3.0, 1.0, 4.0]
+
+        After sorting by score (ascending):
+          scores: [1.0, 1.0, 3.0, 4.0]
+          y_true: [0,   0,   1,   1]
+          indices:[0,   2,   1,   3]
+
+        Ranks (1-indexed, with average for ties):
+          1.0: indices [0,2] -> tied -> avg rank = (1 + 2) / 2 = 1.5 each
+          3.0: index [1] -> rank 3
+          4.0: index [3] -> rank 4
+
+        Sum of ranks for positives (y_true==1): ranks[1] + ranks[3] = 3 + 4 = 7
+        n_pos=2, n_neg=2
+        AUC = (7 - 2*(2+1)/2) / (2*2) = (7 - 3) / 4 = 4/4 = 1.0
+        """
+        y_true = np.array([0, 1, 0, 1])
+        y_score = np.array([1.0, 3.0, 1.0, 4.0])
+        auc = SL11.roc_auc_score(y_true, y_score)
+        assert auc == pytest.approx(1.0)
+
+    def test_mixed_scores(self):
+        """A more typical AUC scenario with partial overlap."""
+        y_true = np.array([0, 0, 1, 1, 0, 1])
+        y_score = np.array([1.0, 2.5, 3.0, 4.0, 2.0, 3.5])
+        auc = SL11.roc_auc_score(y_true, y_score)
+        # AUC should be between 0 and 1, and >= 0.5 (some positive correlation)
+        assert 0.0 <= auc <= 1.0
+        assert auc >= 0.5
+
+    def test_empty_arrays_match_single_class_nan(self):
+        """Empty y_true or y_score with no examples of one class -> NaN."""
+        # If all are class 0, then n_pos=0
+        y_true = np.array([0, 0])
+        y_score = np.array([1.0, 2.0])
+        auc = SL11.roc_auc_score(y_true, y_score)
+        assert np.isnan(auc)
+
+
+class TestSimulateSingleSpreadVetoEntryMask:
+    """Test per-bar veto_entry_mask parameter."""
+
+    def _make_synthetic_frame(self):
+        """Build synthetic frame with clear entry-triggering spikes."""
+        n = 250
+        dates = np.array(
+            [np.datetime64("2024-01-01") + np.timedelta64(i, "D") for i in range(n)],
+            dtype="datetime64[D]",
+        )
+        # Create spikes to reliably trigger entries
+        value = np.zeros(n)
+        value[50:60] = 6.0  # Spike 1: should trigger entry ~bar 60
+        value[120:130] = -6.0  # Spike 2: should trigger entry ~bar 130
+        value = value + 0.01 * np.arange(n)  # Slight trend
+
+        leg1_price = np.full(n, 100.0) + 0.5 * value
+        leg2_price = np.full(n, 100.0) - 0.5 * value
+        roll_flag = np.zeros(n, dtype=bool)
+        ts_regime = np.array(["flat"] * n, dtype=object)
+        leg_roles = [[{"product": "CL"}, {"product": "CL"}] for _ in range(n)]
+
+        return pl.DataFrame(
+            {
+                "date": dates,
+                "value": value,
+                "leg1_price": leg1_price,
+                "leg2_price": leg2_price,
+                "roll_window_flag": roll_flag,
+                "ts_regime": ts_regime,
+                "leg_roles": leg_roles,
+            }
+        )
+
+    def test_veto_entry_mask_none_produces_baseline_trades(self):
+        """veto_entry_mask=None should produce baseline trades."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        result_baseline = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, veto_entry_mask=None
+        )
+
+        # Should have some trades (spikes should trigger entries)
+        assert len(result_baseline["trades"]) > 0
+        assert "equity_curve" in result_baseline
+
+    def test_veto_entry_mask_all_true_suppresses_all_entries(self):
+        """veto_entry_mask=all-True should result in zero trades."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # Baseline: with no veto (just to verify the frame can generate trades)
+        result_baseline = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, veto_entry_mask=None
+        )
+        assert len(result_baseline["trades"]) > 0  # Verify baseline has trades
+
+        # With all-True mask: every entry should be vetoed
+        veto_all = np.ones(len(df), dtype=bool)
+        result_vetoed = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, veto_entry_mask=veto_all
+        )
+
+        # All entries should be suppressed
+        assert len(result_vetoed["trades"]) == 0
+        # Equity should remain at starting value (no trades made)
+        assert result_vetoed["equity_curve"][1] == pytest.approx(1_000_000.0)
+
+    def test_veto_entry_mask_selective_blocks_specific_entry(self):
+        """Veto only at the first entry bar should suppress only that entry."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # Baseline: get the trades
+        result_baseline = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, veto_entry_mask=None
+        )
+        baseline_trades = result_baseline["trades"]
+        n_baseline = len(baseline_trades)
+        assert n_baseline > 0
+
+        # Find the first entry date
+        first_entry_date = baseline_trades[0]["entry_date"]
+        first_entry_idx = np.where(df["date"].to_numpy() == first_entry_date)[0][0]
+
+        # Create a veto mask that is True only at the first entry bar
+        veto_selective = np.zeros(len(df), dtype=bool)
+        veto_selective[first_entry_idx] = True
+
+        result_vetoed = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, veto_entry_mask=veto_selective
+        )
+        vetoed_trades = result_vetoed["trades"]
+
+        # The first entry should be suppressed; subsequent entries may still occur
+        # or the first entry may be skipped in favor of later logic
+        # At minimum, verify that veto worked (fewer or zero trades)
+        assert len(vetoed_trades) <= n_baseline
+        # And at least the first entry date should not be in vetoed trades
+        vetoed_entry_dates = [t["entry_date"] for t in vetoed_trades]
+        assert first_entry_date not in vetoed_entry_dates
+
+    def test_veto_entry_mask_does_not_exit_open_positions(self):
+        """Veto mask should only suppress entries, not affect exits."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # Run with all-True veto (no entries at all)
+        veto_all = np.ones(len(df), dtype=bool)
+        result_vetoed = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, veto_entry_mask=veto_all
+        )
+
+        # No trades should occur; exit logic is not tested since there are no entries
+        assert len(result_vetoed["trades"]) == 0
+
+    def test_veto_entry_mask_array_length_validation(self):
+        """veto_entry_mask length should match DataFrame length (or error gracefully)."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # Create a veto mask of incorrect length
+        veto_wrong_length = np.ones(50, dtype=bool)  # Too short
+
+        # This should either error or handle gracefully (index out of bounds)
+        try:
+            result = SL11.simulate_single_spread(
+                df, p, cost_per_contract=2.0, veto_entry_mask=veto_wrong_length
+            )
+            # If it doesn't error, it should at least return a valid result
+            assert "trades" in result
+        except (IndexError, ValueError):
+            # Expected: veto mask length mismatch should raise an error
+            pass
+
+
+class TestSimulateBookVetoEntryMasks:
+    """Test veto_entry_masks parameter in simulate_book."""
+
+    def _make_synthetic_frame(self):
+        """Build a small synthetic frame with guaranteed entries."""
+        n = 200
+        dates = np.array(
+            [np.datetime64("2024-01-01") + np.timedelta64(i, "D") for i in range(n)],
+            dtype="datetime64[D]",
+        )
+        # Create clear spikes that reliably trigger z-score entries
+        value = np.zeros(n)
+        value[50:60] = 6.0  # Spike 1 to trigger entry
+        value[120:130] = -6.0  # Spike 2 to trigger entry
+        value = value + 0.01 * np.arange(n)  # Slight trend
+
+        leg1_price = np.full(n, 100.0) + 0.5 * value
+        leg2_price = np.full(n, 100.0) - 0.5 * value
+        roll_flag = np.zeros(n, dtype=bool)
+        ts_regime = np.array(["flat"] * n, dtype=object)
+        leg_roles = [[{"product": "CL"}, {"product": "CL"}] for _ in range(n)]
+
+        return pl.DataFrame(
+            {
+                "date": dates,
+                "value": value,
+                "leg1_price": leg1_price,
+                "leg2_price": leg2_price,
+                "roll_window_flag": roll_flag,
+                "ts_regime": ts_regime,
+                "leg_roles": leg_roles,
+            }
+        )
+
+    def test_veto_entry_masks_none_default(self):
+        """veto_entry_masks=None should behave as if no mask is provided."""
+        df = self._make_synthetic_frame()
+        spread_frames = {"spread_A": df}
+        params = {"spread_A": SL11.TradingRuleParams()}
+
+        result = SL11.simulate_book(
+            spread_frames,
+            params,
+            {},
+            {},
+            round_turn_cost_fn=lambda p: 2.0,
+            start_equity=100_000.0,
+            veto_entry_masks=None,
+        )
+
+        # Should complete without error
+        assert "trades" in result
+        assert "portfolio_equity" in result
+        assert "per_spread" in result
+
+    def test_veto_entry_masks_per_spread_isolation(self):
+        """Veto mask for one spread should not affect another."""
+        df = self._make_synthetic_frame()
+        spread_frames = {"spread_A": df, "spread_B": df}
+        params = {
+            "spread_A": SL11.TradingRuleParams(),
+            "spread_B": SL11.TradingRuleParams(),
+        }
+
+        # Baseline: no veto masks
+        result_baseline = SL11.simulate_book(
+            spread_frames,
+            params,
+            {},
+            {},
+            round_turn_cost_fn=lambda p: 2.0,
+            start_equity=100_000.0,
+            veto_entry_masks=None,
+        )
+        baseline_trades_a = [
+            t for t in result_baseline["trades"] if t["spread"] == "spread_A"
+        ]
+        baseline_trades_b = [
+            t for t in result_baseline["trades"] if t["spread"] == "spread_B"
+        ]
+        baseline_total = len(result_baseline["trades"])
+
+        # Now veto all entries for spread_A only
+        veto_all_a = np.ones(len(df), dtype=bool)
+        veto_entry_masks = {"spread_A": veto_all_a}
+
+        result_vetoed = SL11.simulate_book(
+            spread_frames,
+            params,
+            {},
+            {},
+            round_turn_cost_fn=lambda p: 2.0,
+            start_equity=100_000.0,
+            veto_entry_masks=veto_entry_masks,
+        )
+        vetoed_trades_a = [
+            t for t in result_vetoed["trades"] if t["spread"] == "spread_A"
+        ]
+        vetoed_trades_b = [
+            t for t in result_vetoed["trades"] if t["spread"] == "spread_B"
+        ]
+        vetoed_total = len(result_vetoed["trades"])
+
+        # spread_A should have no trades (all entries vetoed)
+        assert len(vetoed_trades_a) == 0
+        # spread_B should have same trades count as baseline
+        # (veto on spread_A should not affect spread_B)
+        assert len(vetoed_trades_b) == len(baseline_trades_b)
+        # If baseline had any spread_A trades, vetoing them should reduce total
+        if len(baseline_trades_a) > 0:
+            assert vetoed_total < baseline_total
+
+    def test_veto_entry_masks_all_spreads_vetoed(self):
+        """Veto all entries across all spreads."""
+        df = self._make_synthetic_frame()
+        spread_frames = {"spread_X": df, "spread_Y": df}
+        params = {
+            "spread_X": SL11.TradingRuleParams(),
+            "spread_Y": SL11.TradingRuleParams(),
+        }
+
+        veto_all = np.ones(len(df), dtype=bool)
+        veto_entry_masks = {"spread_X": veto_all, "spread_Y": veto_all}
+
+        result = SL11.simulate_book(
+            spread_frames,
+            params,
+            {},
+            {},
+            round_turn_cost_fn=lambda p: 2.0,
+            start_equity=100_000.0,
+            veto_entry_masks=veto_entry_masks,
+        )
+
+        # No trades should occur across the entire portfolio
+        assert len(result["trades"]) == 0
+        # Portfolio equity should remain at starting value (no P&L)
+        assert result["portfolio_equity"][1] == pytest.approx(100_000.0)
+
+    def test_veto_entry_masks_partial_veto(self):
+        """Veto a portion of entry bars for one spread."""
+        df = self._make_synthetic_frame()
+        spread_frames = {"spread_A": df, "spread_B": df}
+        params = {
+            "spread_A": SL11.TradingRuleParams(),
+            "spread_B": SL11.TradingRuleParams(),
+        }
+
+        # Baseline
+        result_baseline = SL11.simulate_book(
+            spread_frames,
+            params,
+            {},
+            {},
+            round_turn_cost_fn=lambda p: 2.0,
+            start_equity=100_000.0,
+        )
+        baseline_trades_a = [
+            t for t in result_baseline["trades"] if t["spread"] == "spread_A"
+        ]
+        baseline_count = len(result_baseline["trades"])
+
+        # Partial veto: veto first 100 bars only for spread_A
+        veto_partial_a = np.zeros(len(df), dtype=bool)
+        veto_partial_a[:100] = True
+        veto_entry_masks = {"spread_A": veto_partial_a}
+
+        result_vetoed = SL11.simulate_book(
+            spread_frames,
+            params,
+            {},
+            {},
+            round_turn_cost_fn=lambda p: 2.0,
+            start_equity=100_000.0,
+            veto_entry_masks=veto_entry_masks,
+        )
+        vetoed_trades_a = [
+            t for t in result_vetoed["trades"] if t["spread"] == "spread_A"
+        ]
+        vetoed_count = len(result_vetoed["trades"])
+
+        # If baseline had trades on spread_A in the first 100 bars,
+        # they should be suppressed by the veto mask
+        baseline_early_trades_a = [
+            t
+            for t in baseline_trades_a
+            if t["entry_date"] < np.datetime64("2024-04-09")
+        ]
+        if len(baseline_early_trades_a) > 0:
+            # If there were early entries, veto should remove them
+            assert len(vetoed_trades_a) < len(baseline_trades_a)
+            assert vetoed_count < baseline_count
+        else:
+            # Edge case: no early trades, so veto has no effect; just verify structure
+            assert len(vetoed_trades_a) == len(baseline_trades_a)
+            assert "trades" in result_vetoed

@@ -1,0 +1,123 @@
+{
+  "prereg_cross_check": {
+    "claim": "entry-time features predict which trades will exit via stop",
+    "fires_if": "a classifier trained walk-forward achieves out-of-sample AUC > 0.60 on the stop-exit label AND a book that suppresses its top-decile predicted-loss entries beats the unsuppressed book on the three-way risk gate",
+    "n_trials": {
+      "n_trials": 4,
+      "breakdown": "4 offsets on one pre-declared feature set and one model class"
+    },
+    "matches_11a_prereg_exactly": true
+  },
+  "auc_leg_fires": true,
+  "suppression_leg_fires_all_offsets": false,
+  "gate_lc_fires": false,
+  "per_offset_suppression": {
+    "0": {
+      "n_oof_covered_trades": 25,
+      "top_decile_threshold_pred_prob": 0.5287824988365173,
+      "n_vetoed_trades": 3,
+      "unsuppressed_three_way": {
+        "sharpe": -0.1645553015711213,
+        "max_drawdown": -0.018774466725253625,
+        "return_over_drawdown": -0.5800431063829773,
+        "n_trades": 57
+      },
+      "suppressed_three_way": {
+        "sharpe": -0.16347484427893413,
+        "max_drawdown": -0.018774466725253625,
+        "return_over_drawdown": -0.576314638297876,
+        "n_trades": 57
+      },
+      "suppressed_beats_unsuppressed_three_way": true
+    },
+    "1": {
+      "n_oof_covered_trades": 20,
+      "top_decile_threshold_pred_prob": 0.538467937707901,
+      "n_vetoed_trades": 2,
+      "unsuppressed_three_way": {
+        "sharpe": -0.1645553015711213,
+        "max_drawdown": -0.018774466725253625,
+        "return_over_drawdown": -0.5800431063829773,
+        "n_trades": 57
+      },
+      "suppressed_three_way": {
+        "sharpe": -0.15906693559265425,
+        "max_drawdown": -0.018774466725253625,
+        "return_over_drawdown": -0.5608681276595775,
+        "n_trades": 57
+      },
+      "suppressed_beats_unsuppressed_three_way": true
+    },
+    "2": {
+      "n_oof_covered_trades": 20,
+      "top_decile_threshold_pred_prob": 0.5395813941955566,
+      "n_vetoed_trades": 2,
+      "unsuppressed_three_way": {
+        "sharpe": -0.1645553015711213,
+        "max_drawdown": -0.018774466725253625,
+        "return_over_drawdown": -0.5800431063829773,
+        "n_trades": 57
+      },
+      "suppressed_three_way": {
+        "sharpe": -0.1938659659745088,
+        "max_drawdown": -0.018774466725253625,
+        "return_over_drawdown": -0.6796464680851071,
+        "n_trades": 56
+      },
+      "suppressed_beats_unsuppressed_three_way": false
+    },
+    "3": {
+      "n_oof_covered_trades": 20,
+      "top_decile_threshold_pred_prob": 0.5272260189056397,
+      "n_vetoed_trades": 2,
+      "unsuppressed_three_way": {
+        "sharpe": -0.1645553015711213,
+        "max_drawdown": -0.018774466725253625,
+        "return_over_drawdown": -0.5800431063829773,
+        "n_trades": 57
+      },
+      "suppressed_three_way": {
+        "sharpe": -0.1639448233700828,
+        "max_drawdown": -0.018774466725253625,
+        "return_over_drawdown": -0.5779125531914917,
+        "n_trades": 57
+      },
+      "suppressed_beats_unsuppressed_three_way": true
+    }
+  },
+  "auc_bootstrap_robustness": {
+    "0": {
+      "point_estimate": 0.7569444444444444,
+      "bootstrap_95ci": [
+        0.4869904401154401,
+        0.96
+      ],
+      "ci_excludes_0_5": false
+    },
+    "1": {
+      "point_estimate": 0.6666666666666666,
+      "bootstrap_95ci": [
+        0.3887777777777778,
+        0.920078431372549
+      ],
+      "ci_excludes_0_5": false
+    },
+    "2": {
+      "point_estimate": 0.7380952380952381,
+      "bootstrap_95ci": [
+        0.45795454545454545,
+        0.9562728937728936
+      ],
+      "ci_excludes_0_5": false
+    },
+    "3": {
+      "point_estimate": 0.7066666666666667,
+      "bootstrap_95ci": [
+        0.37357509157509156,
+        0.9444444444444444
+      ],
+      "ci_excludes_0_5": false
+    }
+  },
+  "_note": "AUC-leg point estimates (0.67-0.76) clear the pre-registered 0.60 bar at every offset by their literal, non-CI text, but the bootstrap 95% CI on stitched OOS AUC does not exclude 0.5 at any offset (n=20-25 OOS-covered trades per offset) -- reported as a fragility caveat regardless of the mechanical verdict."
+}

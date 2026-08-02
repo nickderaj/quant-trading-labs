@@ -123,6 +123,44 @@ rule, rather than assuming any "sensible-looking" loss function has this propert
 
 ---
 
+### AUC / ROC-AUC
+
+**In one sentence.** For a binary label and a model's predicted score, AUC is the
+probability that a randomly chosen positive-labelled case receives a higher predicted
+score than a randomly chosen negative-labelled case — a rank-based measure of separation
+that only cares about relative ordering, not calibrated probability values.
+
+**The maths.** Equivalent to the Mann-Whitney U statistic: with $n_+$ positive and $n_-$
+negative cases and average ranks $R_i$ assigned to the pooled predicted scores (ties
+split evenly), $\text{AUC} = \dfrac{\sum_{i \in \text{positive}} R_i - n_+(n_++1)/2}{n_+ n_-}$.
+AUC = 0.5 is random ranking; 1.0 is perfect separation; below 0.5 means the score ranks
+backwards.
+
+**Why it is here.** Notebook 11c's entry-time loss classifier (Gate LC) needed a
+classification analogue of this file's regression/density scoring rules — none of
+[log score](#log-score), [CRPS](#crps) or QLIKE apply to a binary stop-exit-vs-zscore-exit
+label, and this repo's own `research.py` walk-forward harness (`walk_forward_run`,
+`batch_train_reg`) is regression-only, so AUC was added as new, minimal machinery
+(`spread_lib11.roc_auc_score`) rather than pulled in from a library this repo's
+environment doesn't have (no `sklearn`).
+
+**Worked example.** Gate LC's stitched out-of-sample AUC came back in the 0.67-0.76 range
+at all four pre-registered origin offsets on a 55-trade sample — clearing the
+pre-registered ">0.60" bar by its literal point-estimate text, but see the pitfall below
+before trusting that number on its own.
+
+**Pitfalls.** AUC computed on a handful of out-of-sample cases is a rank statistic on a
+small permutation space (with 5 test cases split 2/3 or 3/2 by label, only a few discrete
+AUC values are even achievable — 0, 0.25, 0.5, 0.75, 1.0), so a point estimate alone can
+look decisive while being consistent with pure noise. Bootstrap the *already-collected*
+out-of-sample predictions (resampling cases, not refitting the model) to get a CI on the
+AUC estimate itself — exactly as this repo already bootstraps a Sharpe ratio or a
+bootstrap CI on a return delta — before treating a small-sample AUC as a real result. A
+CI that straddles 0.5 means the point estimate is not distinguishable from chance, even
+if it clears a pre-registered threshold on its face value.
+
+---
+
 ### Log score
 
 **In one sentence.** The log-density (or log-probability-mass) that a fitted

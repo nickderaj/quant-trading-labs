@@ -11,6 +11,7 @@ instead — this list has no teaching order, it's a lookup table.
 
 - [The $2\sqrt{2/\pi}$ constant](04-volatility-models.md#the-2sqrt2pi-constant)
 - [Acerbi-Székely](06-scoring-rules-and-calibration.md#acerbi-székely)
+- [AUC / ROC-AUC](06-scoring-rules-and-calibration.md#auc--roc-auc)
 - [Aggregational Gaussianity](01-probability-and-distributions.md#aggregational-gaussianity)
 - [ANOVA](03-statistical-inference.md#anova)
 - [ARCH](04-volatility-models.md#arch)
