@@ -1,0 +1,33 @@
+{
+  "synthetic_demo": {
+    "n_trades": 400,
+    "injected_edge_per_trade": 15.0,
+    "injected_edge_total": 6000.0,
+    "paired_block_bootstrap": {
+      "control_point": -32787.796765047344,
+      "treatment_point": -27513.476264835896,
+      "delta_point": 5274.320500211448,
+      "delta_ci": [
+        4409.464080239904,
+        6160.731787833335
+      ],
+      "delta_excludes_zero": true,
+      "control_ci": [
+        -103558.36591133838,
+        43768.36734875069
+      ],
+      "n_blocks": 40
+    },
+    "paired_ci_recovers_injected_total": true,
+    "paired_ci_width": 1751.2677075934307,
+    "naive_unpaired_delta_ci": [
+      -142216.963835952,
+      152749.93123638822
+    ],
+    "naive_unpaired_delta_ci_width": 294966.8950723402,
+    "pairing_narrows_ci": true
+  },
+  "pnl_atr_example": 1.0,
+  "ret_eq_example": 0.0003,
+  "_note": "The real noise floor and control-book bootstrap are computed on the actual reproduced control book in Phase 4 (phase_4_11a_results.json), not here -- this script only proves the harness machinery works as intended, on data where the true effect (an injected constant per-trade edge, shared quarterly market shock cancels in the paired construction) is known by construction."
+}

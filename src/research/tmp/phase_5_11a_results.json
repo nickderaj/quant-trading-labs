@@ -1,0 +1,54 @@
+{
+  "n_trades": 57,
+  "entry_extremity": {
+    "top_group_median_abs_entry_z": 2.1333551579141505,
+    "worst_group_median_abs_entry_z": 2.228347646461521,
+    "discriminates": false
+  },
+  "stop_exit_fraction": {
+    "top_group": 0.0,
+    "worst_group": 0.8214285714285714
+  },
+  "mae_mfe_by_outcome": {
+    "winners_median_mae_atr": -0.9582215518098418,
+    "winners_median_mfe_atr": 2.712041363302277,
+    "losers_median_mae_atr": -3.5214376715807747,
+    "losers_median_mfe_atr": 0.2752906906683747
+  },
+  "exit_reason_profile": {
+    "stop": {
+      "n": 23,
+      "mean_pnl_atr": -6.34128168436113
+    },
+    "zscore": {
+      "n": 34,
+      "mean_pnl_atr": 3.030006273899688
+    }
+  },
+  "loss_win_asymmetry_ratio": 2.0928279056662658,
+  "their_reference": {
+    "entry_extremity_discriminates": false,
+    "stop_exit_fraction_top": 0.0,
+    "stop_exit_fraction_worst": 0.85,
+    "winners_mae_mfe": [
+      -0.31,
+      9.17
+    ],
+    "losers_mae_mfe": [
+      -6.78,
+      0.22
+    ],
+    "exit_reason_profile": {
+      "stop": {
+        "n": 698,
+        "mean_atr": -6.94
+      },
+      "zscore": {
+        "n": 6837,
+        "mean_atr": 2.05
+      }
+    }
+  },
+  "_dev_window_end": "2024-12-31",
+  "_note": "Our book has 57 trades total (Phase 4) vs their 333 (tune) / 9,545 pooled (trade-atlas, both books far larger than ours) -- every statistic here is reported on a much smaller sample and top/worst-group splits at n=57 median should be read as directionally suggestive, not independently powered."
+}

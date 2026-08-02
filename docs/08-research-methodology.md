@@ -390,6 +390,25 @@ any other statistic built from fat-tailed, possibly-non-i.i.d. data.
 
 ---
 
+### Fixed-notional vs. equity-path return
+
+**In one sentence.** Two different ways to express a trading strategy's total return: *equity-path* (compounded) return assumes a single growing equity base where each trade's dollar P&L becomes part of the new base for future trades; *fixed-notional* return instead computes each trade's percentage return against *its own* entry-time equity and sums those percentages arithmetically, measuring "did we call the direction right" independent of how big the book had grown by any particular trade.
+
+**The maths.** Given $n$ trades with realized P&L $\pi_i$ and entry-time equity $E_i$ (strictly *before* trade $i$ opens, to avoid lookahead), fixed-notional return is $R_{\text{fixed}} = \sum_{i=1}^{n} \frac{\pi_i}{E_i}$ — a simple arithmetic sum. Equity-path return uses a single running equity $\text{Equity}_t = \text{Equity}_{t-1} + \pi_t$, so $R_{\text{equity}} = \frac{\text{Equity}_n}{\text{Equity}_0} - 1$ — a compounded product. For a series of trades each with return $r$ (each contributing $+r$ to fixed-notional sum), equity-path final return is $(1+r)^n - 1 \approx nr$ for small $r$, but grows superlinearly as $r$ increases: two consecutive +10% trades give equity-path return of $(1.1)^2 - 1 = 21\%$, but fixed-notional sum of $10\% + 10\% = 20\%$.
+
+**Why it is here.** Notebook 11a's backtest harness computes both (see `spread_lib11.book_metrics`): fixed-notional return via `ret_eq()` (sum of `realized_pnl / equity_at_open` per trade), and equity-path return via the daily equity curve's growth. They answer different questions: fixed-notional asks "how well did we predict direction/magnitude, normalized to entry capital," independent of sequence and compounding; equity-path asks "how much did an investor's money actually grow." Both are reported because a strategy can look great on fixed-notional (correctly predicting many trades) while delivering modest equity-path return if the wins came early and the capital sat flat, or vice versa.
+
+**Worked example.** A backtest on a $1,000,000 starting equity, two trades:
+- Trade 1: enters at $1,000,000 equity, wins $100,000 (10% fixed-notional return), ending equity $1,100,000.
+- Trade 2: enters at $1,100,000 equity, wins $110,000 (10% fixed-notional return), ending equity $1,210,000.
+- Fixed-notional sum: 10% + 10% = 20% total.
+- Equity-path return: $1,210,000 / $1,000,000 − 1 = 21%.
+The 1% difference is small here but compounds to larger gaps over many trades; the fixed-notional metric directly reflects call accuracy while equity-path reflects actual money growth.
+
+**Pitfalls.** The equity snapshot used for a trade's fixed-notional return *must* be taken strictly *before* that trade's opening day (or opening bar), not on the same day or after any fills occur — a same-day post-fill snapshot would let that trade's own contribution leak into its own denominator, creating a lookahead bias where a trade's return is partially computed using information about its own outcome. This repo's `ret_eq` function guards this by construction (the backtest loop passes `entry_equity` pre-filled from the state machine, never a same-day recomputed value). Additionally, fixed-notional return is only meaningful for strategies that consistently trade across the sample — a strategy with only a few huge wins and many small losses can have a high fixed-notional sum while posting losses on a per-trade basis if the wins happened in a small number of outsized contracts that were then downsized, confounding "call accuracy" with "position sizing choices."
+
+---
+
 ### Deflated Sharpe
 
 **In one sentence.** A correction to the ordinary Sharpe ratio that accounts for how
@@ -637,6 +656,27 @@ genuinely changed, not just noisily fluctuated) — the fact that turnover falls
 monotonically as the band widens (verified as a tripwire in
 `tests/test_alpha_lib7.py`) says nothing on its own about whether net Sharpe improves;
 that has to be checked separately, band by band.
+
+---
+
+### ATR-based position sizing and why stop width and position size are the same decision
+
+**In one sentence.** When a position is sized so that a stop-loss hit costs exactly $X$ dollars (a fixed fraction of portfolio equity), the *position size* and the *stop distance* are mathematically linked — widen the stop and the position automatically halves to keep dollar risk constant, which means sweeping stop width alone is not isolating a single variable; any honest test must vary either stop width or sizing, not both independently.
+
+**The maths.** Fixed-fractional risk sizing computes position quantity as:
+$$\text{qty} = \left\lfloor \frac{\text{equity} \times \text{risk\_pct}}{\text{atr} \times \text{stop\_atr\_mult}} \right\rfloor$$
+where $\text{atr}$ is a volatility scale (ATR, or spread-change volatility), $\text{stop\_atr\_mult}$ is the multiple of volatility at which a stop is placed (e.g., 6 ATRs away), and $\text{risk\_pct}$ is the portfolio fraction risked per trade (e.g., 3%). The dollar risk of a stop hit is:
+$$\text{stop\_dollar\_loss} = \text{qty} \times \text{atr} \times \text{stop\_atr\_mult} \times (\text{point\_value or 1})$$
+which equals $\text{equity} \times \text{risk\_pct}$ by construction — constant, independent of how $\text{stop\_atr\_mult}$ is chosen. If $\text{stop\_atr\_mult}$ doubles (wider stop), the denominator doubles, so $\text{qty}$ halves, and the dollar-at-risk product $\text{qty} \times \text{stop\_atr\_mult}$ stays flat.
+
+**Why it is here.** Notebook 11a's Phase 2 backtest (see `spread_lib11.FixedFractionalSizing`) applies this sizing formula to each trade. When Phase 3 (risk gates) tests whether a wider or narrower stop improves profitability, *any* observed improvement or degradation comes from changing the stop distance *and* the resulting position size together — they are not independent levers. This means a gate that says "wider stops are better" might actually mean "smaller positions are better" or vice versa, and the gate's design must account for this coupling or else it's testing a compound effect, not a single policy choice.
+
+**Worked example.** Institutional setup: $1,000,000 portfolio equity, $\text{risk\_pct} = 3\%$, ATR = $500, spread entry price ~$10,000:
+- Config A: $\text{stop\_atr\_mult} = 6$ → $\text{qty} = \lfloor 30,000 / (500 \times 6) \rfloor = 10$ contracts, dollar risk = $10 \times 500 \times 6 = 30,000$ (exactly 3%).
+- Config B: $\text{stop\_atr\_mult} = 12$ (double width) → $\text{qty} = \lfloor 30,000 / (500 \times 12) \rfloor = 5$ contracts, dollar risk = $5 \times 500 \times 12 = 30,000$ (still exactly 3%).
+- The same $30,000 at-stop loss is distributed differently: 10 contracts × 6 ATRs vs. 5 contracts × 12 ATRs, but the tail-end behavior differs (fewer larger moves vs. more smaller ones hit the stop at different frequencies and sequences).
+
+**Pitfalls.** Confusing stop width with position sizing is easy when a backtest's results show "wider stops performed better" — the causal mechanism might be "smaller positions survived more edge cases" or "fewer trades trigger, reducing bad entries," not "tighter stops were premature exits." To cleanly test stop-width effects, hold position *size* constant and vary only stop distance (using, e.g., $\text{qty} = \text{constant}$ and letting dollar risk vary), or pre-declare that both are coupled and measure the *compound* effect of "wider stop + smaller position" as a single, named configuration choice, not as an isolated stop-width variable.
 
 ---
 

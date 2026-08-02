@@ -1,0 +1,904 @@
+{
+  "old_screen_random_walk_check": {
+    "n_random_walks": 20,
+    "n_obs": 2000,
+    "median_t_stat": -7.170537988980737,
+    "n_falsely_flagged_stationary_5pct": 20,
+    "false_positive_rate": 1.0,
+    "passes_random_walk_check": false
+  },
+  "variance_ratio_calibration": {
+    "q_5": {
+      "n_random_walks": 500,
+      "n_rejected_5pct_one_sided": 29,
+      "empirical_false_positive_rate": 0.058,
+      "nominal_rate": 0.05
+    },
+    "q_20": {
+      "n_random_walks": 500,
+      "n_rejected_5pct_one_sided": 23,
+      "empirical_false_positive_rate": 0.046,
+      "nominal_rate": 0.05
+    }
+  },
+  "per_spread": {
+    "bean_corn": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -3.0130085700206752,
+        "adf_pass": true,
+        "vr5_z": -2.585600752580305,
+        "vr5_pass": true,
+        "vr20_z": -2.115608561214526,
+        "vr20_pass": true,
+        "hurst": 0.47417941596565444,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 118.21512329069117,
+          "full_sample_in_band": false,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 1,
+          "sub_half_lives": [
+            66.56168367751448,
+            97.45934319543296,
+            2723.9378473244974,
+            56.52140994947176
+          ],
+          "stable": false
+        },
+        "stability_pass": false,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "brent_calendar": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -5.216180688783068,
+        "adf_pass": true,
+        "vr5_z": 1.7120059605692164,
+        "vr5_pass": false,
+        "vr20_z": 0.7268667651607827,
+        "vr20_pass": false,
+        "hurst": 0.307906735871804,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 42.714893368674446,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            28.91886383519796,
+            41.34395664400733,
+            31.646575548210627,
+            24.632880170338733
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "brent_wti": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -3.39286062405185,
+        "adf_pass": true,
+        "vr5_z": 0.8793726369839496,
+        "vr5_pass": false,
+        "vr20_z": -0.7659535883666732,
+        "vr20_pass": false,
+        "hurst": 0.40838742909420483,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 79.33586726392588,
+          "full_sample_in_band": false,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            57.25785192373142,
+            17.203693936193954,
+            34.16921710087083,
+            10.004804701584836
+          ],
+          "stable": false
+        },
+        "stability_pass": false,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "bz_cal_m1m3": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -4.8490785994929455,
+        "adf_pass": true,
+        "vr5_z": 2.7765854273069643,
+        "vr5_pass": false,
+        "vr20_z": 0.8033383469299544,
+        "vr20_pass": false,
+        "hurst": 0.3299896918990196,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 52.34030380692408,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            34.356011143048306,
+            57.755924144475,
+            36.28280463185522,
+            27.62958085190562
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "cl_cal_m2m3": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -5.121464901872671,
+        "adf_pass": true,
+        "vr5_z": 3.118524120000779,
+        "vr5_pass": false,
+        "vr20_z": 1.5147351435065026,
+        "vr20_pass": false,
+        "hurst": 0.3364944259314998,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 52.26922589552943,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 3,
+          "sub_half_lives": [
+            32.686403352526774,
+            76.74039978493767,
+            29.73074077998253,
+            32.69207349387027
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "corn_wheat": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -4.923414154743693,
+        "adf_pass": true,
+        "vr5_z": 4.3684497374005975,
+        "vr5_pass": false,
+        "vr20_z": -1.9154219922769644,
+        "vr20_pass": true,
+        "hurst": 0.3346181528992779,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 45.39416383825318,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 2,
+          "sub_half_lives": [
+            63.33534825052524,
+            58.70398307229037,
+            69.71208395877406,
+            25.78936607819442
+          ],
+          "stable": false
+        },
+        "stability_pass": false,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "crack_321": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -4.0424375994298805,
+        "adf_pass": true,
+        "vr5_z": -2.1570341075919743,
+        "vr5_pass": true,
+        "vr20_z": -2.5057376137318434,
+        "vr20_pass": true,
+        "hurst": 0.3999153109499014,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 47.91824647621847,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            51.02871148944432,
+            20.593253056807836,
+            29.6425684910555,
+            28.33290611029362
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": true
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "crush_soy": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -4.704982612455571,
+        "adf_pass": true,
+        "vr5_z": 1.2107977299966077,
+        "vr5_pass": false,
+        "vr20_z": -1.3025309600571,
+        "vr20_pass": false,
+        "hurst": 0.3958108013454298,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 54.89358620389937,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            12.162361069038637,
+            19.457140154441507,
+            46.888633134445286,
+            37.761888951928995
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "es_calendar": {
+      "old_screen_pass": false,
+      "new_screen": {
+        "adf_t_stat": 0.08400467085500007,
+        "adf_pass": false,
+        "vr5_z": -0.28107789890705026,
+        "vr5_pass": false,
+        "vr20_z": -2.00049096675637,
+        "vr20_pass": true,
+        "hurst": 0.47558942480788563,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": null,
+          "full_sample_in_band": false,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 2,
+          "sub_half_lives": [
+            26.596629255564284,
+            80.53302436567871,
+            702.2194556748216,
+            38.313632383685395
+          ],
+          "stable": false
+        },
+        "stability_pass": false,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "gasheat_rbho": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -4.715540578947361,
+        "adf_pass": true,
+        "vr5_z": -0.22186487970889446,
+        "vr5_pass": false,
+        "vr20_z": -1.7238050658968627,
+        "vr20_pass": true,
+        "hurst": 0.48639568303653935,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 45.76425551310017,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            35.39878051558374,
+            27.493369734728038,
+            55.324800760240656,
+            40.44851662912272
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "gasoline_crack": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -4.6191930794269975,
+        "adf_pass": true,
+        "vr5_z": -1.5670980699908006,
+        "vr5_pass": false,
+        "vr20_z": -1.0902708854605143,
+        "vr20_pass": false,
+        "hurst": 0.4200217172366909,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 36.239104814381555,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            43.182812897105194,
+            20.27847378354046,
+            24.506400739660318,
+            26.293349774045424
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "gc_cal_m1m2": {
+      "old_screen_pass": false,
+      "new_screen": {
+        "adf_t_stat": -0.20691066116260323,
+        "adf_pass": false,
+        "vr5_z": -9.301847594530193,
+        "vr5_pass": true,
+        "vr20_z": -9.600345336810173,
+        "vr20_pass": true,
+        "hurst": 0.027567372812554565,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 8.286532705085277,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 3,
+          "sub_half_lives": [
+            4.125630087486712,
+            6.7114142675995865,
+            1.8889700250605233,
+            5.762684502389026
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "gc_cal_m2m3": {
+      "old_screen_pass": false,
+      "new_screen": {
+        "adf_t_stat": -1.5869290347765719,
+        "adf_pass": false,
+        "vr5_z": -18.19057888297065,
+        "vr5_pass": true,
+        "vr20_z": -9.860788458924963,
+        "vr20_pass": true,
+        "hurst": 0.1510243344307834,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 21.200650132080096,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 2,
+          "sub_half_lives": [
+            0.3291574278099827,
+            36.76137477152375,
+            11.722890895598747,
+            303.1311514830489
+          ],
+          "stable": false
+        },
+        "stability_pass": false,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "gold_silver": {
+      "old_screen_pass": false,
+      "new_screen": {
+        "adf_t_stat": -1.7580722598762473,
+        "adf_pass": false,
+        "vr5_z": 0.8742450555241593,
+        "vr5_pass": false,
+        "vr20_z": -0.31207879589578064,
+        "vr20_pass": false,
+        "hurst": 0.4644888325931768,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 324.06998584106657,
+          "full_sample_in_band": false,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 2,
+          "sub_half_lives": [
+            85.90379612619256,
+            41.16593842899434,
+            88.69971577341694,
+            44.76807458944856
+          ],
+          "stable": false
+        },
+        "stability_pass": false,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "heating_oil_crack": {
+      "old_screen_pass": false,
+      "new_screen": {
+        "adf_t_stat": -2.7237507590145857,
+        "adf_pass": false,
+        "vr5_z": -1.7642150455232402,
+        "vr5_pass": true,
+        "vr20_z": -4.250031817261617,
+        "vr20_pass": true,
+        "hurst": 0.42202920446488107,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 56.199294544277365,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 3,
+          "sub_half_lives": [
+            52.435682287937844,
+            30.846817634381015,
+            66.06535275587558,
+            30.282002394960916
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "ho_cal_m1m2": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -6.822168432568776,
+        "adf_pass": true,
+        "vr5_z": -2.751738018969149,
+        "vr5_pass": true,
+        "vr20_z": -4.165578938822888,
+        "vr20_pass": true,
+        "hurst": 0.2559940355250411,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 21.943463086478754,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            13.524750722530236,
+            7.167768831887244,
+            18.760645227257633,
+            18.368327840739163
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": true
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "ho_cal_m2m3": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -4.638423548109666,
+        "adf_pass": true,
+        "vr5_z": 0.8556660873636522,
+        "vr5_pass": false,
+        "vr20_z": -4.866372160670823,
+        "vr20_pass": true,
+        "hurst": 0.30698612580215767,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 30.477019945794382,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            11.581757266699611,
+            20.950643492719216,
+            37.5287173254481,
+            20.04003321160171
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "kc_chicago_wheat": {
+      "old_screen_pass": false,
+      "new_screen": {
+        "adf_t_stat": -2.407701107569919,
+        "adf_pass": false,
+        "vr5_z": -0.2782066537787664,
+        "vr5_pass": false,
+        "vr20_z": -4.062678323398796,
+        "vr20_pass": true,
+        "hurst": 0.36963016183695213,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 113.39024975733471,
+          "full_sample_in_band": false,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 1,
+          "sub_half_lives": [
+            169.8855807728297,
+            75.82035482628302,
+            21.302065332349603,
+            82.75197587282597
+          ],
+          "stable": false
+        },
+        "stability_pass": false,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "ke_cal_m1m2": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -4.245617917597756,
+        "adf_pass": true,
+        "vr5_z": -6.64308988155693,
+        "vr5_pass": true,
+        "vr20_z": -6.490453088281037,
+        "vr20_pass": true,
+        "hurst": 0.3051421544450662,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 21.922369602719286,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            25.084712267523457,
+            28.024659052105076,
+            4.2651427098303545,
+            15.842437885065703
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": true
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "ng_cal_m1m2": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -8.937851314802318,
+        "adf_pass": true,
+        "vr5_z": -5.675842204373758,
+        "vr5_pass": true,
+        "vr20_z": -4.713384479686763,
+        "vr20_pass": true,
+        "hurst": 0.21920138378420906,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 12.175306198271683,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            18.487823567657244,
+            5.402743338588447,
+            22.011554258386255,
+            13.697692373314629
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": true
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "ng_cal_m2m3": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -7.067600426289711,
+        "adf_pass": true,
+        "vr5_z": -3.5169879513797997,
+        "vr5_pass": true,
+        "vr20_z": -2.184085954894871,
+        "vr20_pass": true,
+        "hurst": 0.29491121786901453,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 20.65077884426906,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            25.911775891567043,
+            11.920139078399009,
+            17.05261122581982,
+            29.96618801743359
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": true
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "ng_calendar": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -8.937851314802318,
+        "adf_pass": true,
+        "vr5_z": -5.675842204373758,
+        "vr5_pass": true,
+        "vr20_z": -4.713384479686763,
+        "vr20_pass": true,
+        "hurst": 0.21920138378420906,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 12.175306198271683,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            18.487823567657244,
+            5.402743338588447,
+            22.011554258386255,
+            13.697692373314629
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": true
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "platinum_palladium": {
+      "old_screen_pass": false,
+      "new_screen": {
+        "adf_t_stat": -1.4105904177634017,
+        "adf_pass": false,
+        "vr5_z": 0.2672530480414363,
+        "vr5_pass": false,
+        "vr20_z": -2.9594901271886314,
+        "vr20_pass": true,
+        "hurst": 0.43003021409050135,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 571.197282256378,
+          "full_sample_in_band": false,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 0,
+          "sub_half_lives": [
+            103.73036057218039,
+            182.6031532756158,
+            289.46231357140664,
+            126.84824881276056
+          ],
+          "stable": false
+        },
+        "stability_pass": false,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "rb_cal_m1m2": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -8.200997070548816,
+        "adf_pass": true,
+        "vr5_z": -1.0989559923469303,
+        "vr5_pass": false,
+        "vr20_z": -2.67681261711239,
+        "vr20_pass": true,
+        "hurst": 0.29651615907494444,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 15.08540064869191,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            15.815753371942947,
+            14.157889333531438,
+            12.861542297961417,
+            14.288403311933008
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "rb_cal_m2m3": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -7.590697644545989,
+        "adf_pass": true,
+        "vr5_z": 0.293322701561291,
+        "vr5_pass": false,
+        "vr20_z": -1.4362111340655255,
+        "vr20_pass": false,
+        "hurst": 0.3133714520564664,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 17.6210510583215,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            19.201155519451948,
+            14.109190741037287,
+            14.25541334133633,
+            19.92328927231178
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "wti_calendar": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -5.217847657895823,
+        "adf_pass": true,
+        "vr5_z": 2.857667785041968,
+        "vr5_pass": false,
+        "vr20_z": 2.6677912099014667,
+        "vr20_pass": false,
+        "hurst": 0.3271427486102026,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 45.09663436050515,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            26.303834253050525,
+            48.66862208776213,
+            34.47244644701035,
+            27.41614806470058
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "zc_cal_m1m2": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -6.636975375647986,
+        "adf_pass": true,
+        "vr5_z": -1.1577947301224445,
+        "vr5_pass": false,
+        "vr20_z": -4.0338935870594,
+        "vr20_pass": true,
+        "hurst": 0.3526509404960121,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 22.896290948898514,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 3,
+          "sub_half_lives": [
+            19.247531675168215,
+            24.38095946893156,
+            null,
+            20.799530022862527
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "zl_cal_m1m2": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -4.320191445160536,
+        "adf_pass": true,
+        "vr5_z": -5.514458935574663,
+        "vr5_pass": true,
+        "vr20_z": -6.373094847292107,
+        "vr20_pass": true,
+        "hurst": 0.35871405057707745,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 25.16167043196925,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 3,
+          "sub_half_lives": [
+            23.64173820522936,
+            11.729377437945292,
+            null,
+            13.806639386413455
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": true
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "zm_cal_m1m2": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -5.728309315808678,
+        "adf_pass": true,
+        "vr5_z": 0.6493900426010387,
+        "vr5_pass": false,
+        "vr20_z": -3.6311026723199187,
+        "vr20_pass": true,
+        "hurst": 0.2645949126503997,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 23.54780141452717,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            23.19100626984057,
+            17.193424289817088,
+            18.749674273657682,
+            25.045494937361838
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": false
+      },
+      "agrees_with_10a_adf_verdict": true
+    },
+    "zw_cal_m1m2": {
+      "old_screen_pass": true,
+      "new_screen": {
+        "adf_t_stat": -5.510314403082607,
+        "adf_pass": true,
+        "vr5_z": -11.39508697770724,
+        "vr5_pass": true,
+        "vr20_z": -8.897334714052626,
+        "vr20_pass": true,
+        "hurst": 0.19232958218584115,
+        "hurst_pass": true,
+        "stability": {
+          "full_sample_half_life": 9.203283614326672,
+          "full_sample_in_band": true,
+          "n_subperiods": 4,
+          "n_subperiods_in_band": 4,
+          "sub_half_lives": [
+            38.7881606324541,
+            25.682615112913954,
+            19.360380281750107,
+            3.2023635945157696
+          ],
+          "stable": true
+        },
+        "stability_pass": true,
+        "new_screen_pass": true
+      },
+      "agrees_with_10a_adf_verdict": true
+    }
+  },
+  "summary": {
+    "n_spreads": 30,
+    "n_old_screen_pass": 23,
+    "n_new_screen_pass": 8,
+    "n_disagreements_old_vs_10a_adf": 0
+  },
+  "_dev_window_end": "2024-12-31",
+  "_note": "Old screen here reuses 10a's own ADF-on-level test as the old-screen baseline (10a Phase 2's sec 4.3 test IS this repo's pre-existing old screen); the random-walk check is run on synthetic 30-day-deviation series per NEXT_PROMPT.md's literal spec for the old screen, which is a stricter construction than plain level-ADF and is reported separately in old_screen_random_walk_check, not conflated with old_screen_pass above."
+}

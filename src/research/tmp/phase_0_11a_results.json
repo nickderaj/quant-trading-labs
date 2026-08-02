@@ -1,0 +1,117 @@
+{
+  "checks": [
+    {
+      "name": "gate_sp_inter_commodity_sharpe",
+      "expected": 0.423,
+      "actual": 0.4230636455441535,
+      "pass": true
+    },
+    {
+      "name": "gate_sp_calendar_sharpe",
+      "expected": 0.504,
+      "actual": 0.5044342376082704,
+      "pass": true
+    },
+    {
+      "name": "gate_sp_inter_commodity_dsr",
+      "expected": 0.562,
+      "actual": 0.5621883699343364,
+      "pass": true
+    },
+    {
+      "name": "gate_sp_calendar_dsr",
+      "expected": 0.68,
+      "actual": 0.6797865123158808,
+      "pass": true
+    },
+    {
+      "name": "n_spreads_total",
+      "expected": 30,
+      "actual": 30,
+      "pass": true
+    },
+    {
+      "name": "n_calendar",
+      "expected": 19,
+      "actual": 19,
+      "pass": true
+    },
+    {
+      "name": "n_inter_commodity",
+      "expected": 11,
+      "actual": 11,
+      "pass": true
+    },
+    {
+      "name": "n_adf_pass_5pct",
+      "expected": 23,
+      "actual": 23,
+      "pass": true
+    },
+    {
+      "name": "n_adf_fail_5pct",
+      "expected": 7,
+      "actual": 7,
+      "pass": true
+    },
+    {
+      "name": "half_life_brent_calendar",
+      "expected": 42.7,
+      "actual": 42.714893368674446,
+      "pass": true
+    },
+    {
+      "name": "half_life_brent_wti",
+      "expected": 79.3,
+      "actual": 79.33586726392588,
+      "pass": true
+    },
+    {
+      "name": "half_life_corn_wheat",
+      "expected": 45.4,
+      "actual": 45.39416383825318,
+      "pass": true
+    },
+    {
+      "name": "half_life_bean_corn",
+      "expected": 118.2,
+      "actual": 118.21512329069117,
+      "pass": true
+    },
+    {
+      "name": "half_life_kc_chicago_wheat",
+      "expected": 113.4,
+      "actual": 113.39024975733471,
+      "pass": true
+    }
+  ],
+  "all_pass": true,
+  "half_life_corroboration": {
+    "brent_calendar": {
+      "expected": 42.7,
+      "actual": 42.714893368674446,
+      "close": true
+    },
+    "brent_wti": {
+      "expected": 79.3,
+      "actual": 79.33586726392588,
+      "close": true
+    },
+    "corn_wheat": {
+      "expected": 45.4,
+      "actual": 45.39416383825318,
+      "close": true
+    },
+    "bean_corn": {
+      "expected": 118.2,
+      "actual": 118.21512329069117,
+      "close": true
+    },
+    "kc_chicago_wheat": {
+      "expected": 113.4,
+      "actual": 113.39024975733471,
+      "close": true
+    }
+  },
+  "_note": "The taxonomy counts (30/11/19/23) here read as (n_total/n_inter_commodity/n_calendar/n_adf_pass) -- NEXT_PROMPT.md sec 3 Phase 0 lists them in that order."
+}

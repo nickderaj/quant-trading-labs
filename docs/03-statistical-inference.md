@@ -593,6 +593,20 @@ whose quality depends on that choice, not an exact answer.
 
 ---
 
+### Paired block bootstrap and why pairing on shared blocks matters
+
+**In one sentence.** When comparing two trading strategies (or forecasts) built on the same historical price path, resample the *same* calendar blocks for both in each bootstrap draw — so their shared market noise cancels in the difference, leaving only the genuine configuration disagreement between them, and producing a much narrower confidence interval than an unpaired bootstrap would.
+
+**The maths.** Extend [block bootstrap](#block-stationary-bootstrap) to a paired setup: given control book's trades with block IDs $\{b_i\}$ and treatment book's trades with block IDs $\{b_j\}$, resample the union of all unique block IDs once per bootstrap draw, evaluate *both* books on the *same* resampled blocks each draw, and compute the delta as (treatment sum — control sum). The delta's confidence interval relies on the fact that the shared blocks' contributions cancel: $\mathbb{E}[\text{delta}] = \mathbb{E}[\text{treatment on shared blocks}] - \mathbb{E}[\text{control on shared blocks}]$, not the independent sums each alone would have produced.
+
+**Why it is here.** Notebook 11a's Phase 2 evaluation harness (`src/research/tmp/spread_lib11.py`, `paired_block_bootstrap`) tests whether a configuration change (a stop-loss enabled vs. disabled, a threshold adjusted, etc.) on the *same* spread data produces a real P&L difference, as distinct from "which is better on some other data." An unpaired bootstrap that resamples each book's P&L independently throws away the fact that both P&Ls are driven by the same market shock series in the same historical windows — the shared noise gets double-counted as if it were independent uncertainty in each book separately, inflating the comparison's CI needlessly.
+
+**Worked example.** Synthetic example with quarterly blocks: a control book and treatment book (differing only in one parameter) trade the same underlying spread over 8 quarters. Both books' P&L is dominated by a massive market dislocation in Q3, which the control book turned into a loss (−$100,000) and the treatment book turned into a gain (+$80,000). An unpaired bootstrap resamples the control book's quarters independently and the treatment book's quarters independently — so Q3 sometimes appears in the control sample (contributing −$100k to the control draw) and sometimes doesn't, and separately Q3 sometimes appears in the treatment sample (contributing +$80k to the treatment draw) and sometimes doesn't. A draw that excludes Q3 from both gives a delta of roughly zero; a draw that includes Q3 in control only gives a delta of +$100k; a draw that includes Q3 in treatment only gives a delta of −$80k; a draw that includes Q3 in both gives a delta of +$180k. The unpaired resampling creates huge artificial swings (+$100k to −$80k, roughly ±$100k range from the Q3 noise alone, which neither book actually experienced that way). A paired bootstrap resamples the quarter IDs *once*, so Q3 either appears in both books' samples (delta +$180k, the true Q3 effect) or in neither (delta 0). Every draw either includes or excludes Q3 consistently across both books, so the Q3 noise cancels in the delta and never inflates the interval. Numerically: notebook 11a's actual demo on synthetic data shows a paired CI width of ±$1,751 vs. an unpaired CI width of ±$294,967 — a ~169x narrower interval, because pairing lets the shared market noise cancel.
+
+**Pitfalls.** Pairing only works when the two books genuinely trade the same underlying price path over the same time periods — if one book skips some dates or uses a different instrument (even a related one), the block structure differs and the pairing assumption breaks. Also, a narrow CI on (treatment − control) tells you whether the configuration difference is statistically real; it says nothing about which configuration is *correct* — a narrow delta CI just means the data gave a precise answer to "did this parameter change matter," not an endorsement of the treatment over the control or vice versa.
+
+---
+
 ### Multiple-testing problem
 
 **In one sentence.** If you run many significance tests at once, some will come back
@@ -765,3 +779,37 @@ never the t-stat in isolation. The lag-augmentation count also matters: too few 
 autocorrelation in the residual (inflating apparent significance), too many waste degrees
 of freedom — an automatic rule (BIC here) is a reasonable default, not a guarantee of the
 "right" answer for every series.
+
+---
+
+### Variance-ratio test (Lo-MacKinlay)
+
+**In one sentence.** A statistical test for whether a price series is a random walk (and thus has no predictable mean reversion), based on comparing the variance of multi-period returns to what a random walk's variance *should* be — VR(q) = Var(q-period returns) / (q × Var(1-period returns)), which equals 1 under the null.
+
+**The maths.** For a level series $x_t$ (e.g. a spread value), the q-period log returns are $r_t^{(q)} = x_t - x_{t-q}$. The variance ratio is:
+$$\mathrm{VR}(q) = \frac{\mathrm{Var}(r_t^{(q)})}{q \cdot \mathrm{Var}(r_t^{(1)})}$$
+Under the random-walk null, $\mathrm{VR}(q) = 1$ — the variance of q-period returns should be exactly $q$ times the variance of 1-period returns. The homoscedastic-null z-statistic (Lo & MacKinlay 1988, eq. 10) is:
+$$z = \frac{\mathrm{VR}(q) - 1}{\sqrt{2(2q-1)(q-1)/(3qn)}}$$
+asymptotically $\mathrm{Normal}(0,1)$. A one-sided test against mean reversion (the alternative that the series reverts toward a level) rejects the random walk when $z < -1.645$, i.e. when $\mathrm{VR}(q)$ is significantly below 1.
+
+**Why it is here.** `spread_lib11.variance_ratio` is used in notebook 11a to test whether a commodity calendar spread shows mean-reverting behavior: VR < 1 indicates slower diffusion than a random walk (mean reversion / anti-persistence), while VR > 1 indicates faster diffusion (trending / momentum). This complements the [Ornstein-Uhlenbeck half-life](09-market-data-and-microstructure.md#ornstein-uhlenbeck-process-and-half-life-of-mean-reversion) and [ADF](#stationarity-and-the-augmented-dickey-fuller-test) tests — all three measure mean reversion, but at different horizons and via different mechanisms, and they do not always agree.
+
+**Worked example.** Notebook 11a's `brent_calendar` spread (real numbers, `phase_1_11a_results.json`/`phase_3_11a_results.json`): VR(5) = 1.069 with z-stat +1.71 — *positive*, i.e. no evidence of mean reversion at the 5-day horizon, and in fact on the wrong side of the one-sided −1.645 rejection threshold. Yet the same spread's ADF test strongly rejects the unit root ($t = -5.22$), and its AR(1) half-life is 42.7 days. The two diagnostics disagree because they measure different things: `brent_calendar`'s daily changes carry short-horizon positive autocorrelation (5-day momentum) layered on top of genuine mean reversion at the 6-week half-life scale — not a contradiction, but a real, reportable finding (11a Phase 3) that a variance-ratio screen strict enough to require agreement on both fronts rejects even this spread, one of the external programme's own five live positions.
+
+**Pitfalls.** VR and half-life measure different things: VR tests whether the variance grows exactly linearly with time (random walk null) vs. sub-linearly (mean reversion) or super-linearly (momentum/trending); half-life measures the *speed* of reversion conditional on a process being mean-reverting. A series can show VR > 1 at short horizons (daily momentum) while still having a measurable half-life at longer horizons — no inconsistency. Additionally, the homoscedastic-null approximation assumes constant variance; if volatility itself changes over time (heteroskedasticity), the test's p-values can be misleading.
+
+---
+
+### Hurst exponent (variance-of-lagged-differences estimator)
+
+**In one sentence.** A descriptive measure (not a formal hypothesis test) of whether a time series behaves like a random walk (H = 0.5), mean-reverts (H < 0.5), or trends/persists (H > 0.5), computed by regressing the log-variance of lagged differences against log-lag and reading off half the slope.
+
+**The maths.** For a self-affine series, the variance of k-step differences scales as $k^{2H}$ for some Hurst exponent H. Compute $\tau_k = \mathrm{Var}(x_t - x_{t-k})$ for a range of lags $k \in [k_{\min}, k_{\max}]$, then fit $\log(\tau_k) = \log(\text{const}) + 2H \log(k)$ via ordinary least squares. The slope is $2H$, so $H = \frac{\text{slope}}{2}$. H = 0.5 indicates a random walk, H < 0.5 indicates mean reversion (anti-persistence), H > 0.5 indicates trending or persistence.
+
+**Why it is here.** `spread_lib11.hurst_exponent` is used descriptively in notebook 11a to characterize a spread's statistical behavior — not as a formal test with a p-value, but as a summary statistic alongside ADF and half-life to triangulate whether a series is genuinely mean-reverting. Unlike the [variance-ratio test](#variance-ratio-test-lo-mackinlay) (which tests a specific null), the Hurst exponent is a model-free, rough-and-ready measure whose finite-sample noise is large; it's reported alongside more formal tests rather than used alone to make a gate decision.
+
+**Worked example.** A synthetic mean-reverting AR(1) process with half-life 20 days might have H ≈ 0.35–0.45 depending on the window of lags used, the sample size, and the exact AR(1) coefficient; the same dataset's ADF t-stat will robustly reject the unit root, and its half-life estimate will pin the reversion speed precisely. The Hurst estimate confirms "this doesn't look like a random walk" but doesn't sharpen the estimate — a three-way consistency check (ADF significant, H < 0.5, half-life in expected range) is stronger evidence than any one alone.
+
+**Pitfalls.** The Hurst exponent is a finite-sample estimate with substantial noise, especially on shorter series or at the edges of the lag range; picking lag windows differently (e.g., $k_{\min}=2$ vs. $k_{\min}=10$, or varying $k_{\max}$) can materially shift the result, which is exactly why this repo uses it descriptively, not as a formal test. Do not report a Hurst estimate as a confident finding without triangulation against other stationarity tests; it is most useful as a sanity check that multiple different tests point the same direction.
+
+

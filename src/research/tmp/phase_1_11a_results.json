@@ -1,0 +1,151 @@
+{
+  "per_spread_checks": {
+    "brent_calendar": {
+      "n_obs": 2930,
+      "zscore_no_lookahead_shift_applied": true,
+      "n_finite_zscore": 2870,
+      "n_finite_atr": 2915,
+      "rolling_stability": {
+        "full_sample_half_life": 42.714893368674446,
+        "full_sample_in_band": true,
+        "n_subperiods": 4,
+        "n_subperiods_in_band": 4,
+        "sub_half_lives": [
+          28.91886383519796,
+          41.34395664400733,
+          31.646575548210627,
+          24.632880170338733
+        ],
+        "stable": true
+      },
+      "hurst_exponent": 0.307906735871804,
+      "variance_ratio_q5": {
+        "vr": 1.069305261295192,
+        "z_stat": 1.7120059605692164,
+        "n": 2929
+      },
+      "full_carry_mid": -0.7684583333333334,
+      "carry_ratio_at_median_value": 0.33833974949846135,
+      "label_ts_regime_n_backwardation": 1806,
+      "label_ts_regime_n_contango": 1011
+    },
+    "brent_wti": {
+      "n_obs": 2235,
+      "zscore_no_lookahead_shift_applied": true,
+      "n_finite_zscore": 2175,
+      "n_finite_atr": 2220,
+      "rolling_stability": {
+        "full_sample_half_life": 79.33586726392588,
+        "full_sample_in_band": false,
+        "n_subperiods": 4,
+        "n_subperiods_in_band": 4,
+        "sub_half_lives": [
+          57.25785192373142,
+          17.203693936193954,
+          34.16921710087083,
+          10.004804701584836
+        ],
+        "stable": false
+      },
+      "hurst_exponent": 0.40838742909420483,
+      "variance_ratio_q5": {
+        "vr": 1.0407616712553556,
+        "z_stat": 0.8793726369839496,
+        "n": 2234
+      },
+      "full_carry_mid": -0.7508333333333334,
+      "carry_ratio_at_median_value": 6.339622641509422,
+      "label_ts_regime_n_backwardation": 2207,
+      "label_ts_regime_n_contango": 23
+    },
+    "corn_wheat": {
+      "n_obs": 3357,
+      "zscore_no_lookahead_shift_applied": true,
+      "n_finite_zscore": 3297,
+      "n_finite_atr": 3342,
+      "rolling_stability": {
+        "full_sample_half_life": 45.39416383825318,
+        "full_sample_in_band": true,
+        "n_subperiods": 4,
+        "n_subperiods_in_band": 2,
+        "sub_half_lives": [
+          63.33534825052524,
+          58.70398307229037,
+          69.71208395877406,
+          25.78936607819442
+        ],
+        "stable": false
+      },
+      "hurst_exponent": 0.3346181528992779,
+      "variance_ratio_q5": {
+        "vr": 1.1652102490054461,
+        "z_stat": 4.3684497374005975,
+        "n": 3356
+      },
+      "full_carry_mid": -2.236458333333333,
+      "carry_ratio_at_median_value": 54.10340009315324,
+      "label_ts_regime_n_backwardation": 3181,
+      "label_ts_regime_n_contango": 176
+    },
+    "bean_corn": {
+      "n_obs": 3162,
+      "zscore_no_lookahead_shift_applied": true,
+      "n_finite_zscore": 3102,
+      "n_finite_atr": 3147,
+      "rolling_stability": {
+        "full_sample_half_life": 118.21512329069117,
+        "full_sample_in_band": false,
+        "n_subperiods": 4,
+        "n_subperiods_in_band": 1,
+        "sub_half_lives": [
+          66.56168367751448,
+          97.45934319543296,
+          2723.9378473244974,
+          56.52140994947176
+        ],
+        "stable": false
+      },
+      "hurst_exponent": 0.47417941596565444,
+      "variance_ratio_q5": {
+        "vr": 0.8992442508984066,
+        "z_stat": -2.585600752580305,
+        "n": 3161
+      },
+      "full_carry_mid": -2.2380208333333336,
+      "carry_ratio_at_median_value": 296.46730276937393,
+      "label_ts_regime_n_backwardation": 3162,
+      "label_ts_regime_n_contango": 0
+    },
+    "kc_chicago_wheat": {
+      "n_obs": 2541,
+      "zscore_no_lookahead_shift_applied": true,
+      "n_finite_zscore": 2481,
+      "n_finite_atr": 2526,
+      "rolling_stability": {
+        "full_sample_half_life": 113.39024975733471,
+        "full_sample_in_band": false,
+        "n_subperiods": 4,
+        "n_subperiods_in_band": 1,
+        "sub_half_lives": [
+          169.8855807728297,
+          75.82035482628302,
+          21.302065332349603,
+          82.75197587282597
+        ],
+        "stable": false
+      },
+      "hurst_exponent": 0.36963016183695213,
+      "variance_ratio_q5": {
+        "vr": 0.9879059635540438,
+        "z_stat": -0.2782066537787664,
+        "n": 2540
+      },
+      "full_carry_mid": -2.686458333333334,
+      "carry_ratio_at_median_value": 2.1403644823575023,
+      "label_ts_regime_n_backwardation": 1462,
+      "label_ts_regime_n_contango": 1069
+    }
+  },
+  "_note": "Full-sample half-life here (rolling_stability.full_sample_half_life) is expected to match phase_2_10a_results.json's ar1_mean_reversion.half_life_days for the same spread -- both call research_lib9.ols_ar1_diff on the same roll-window-excluded value series; this script's smoke check confirms the reimplemented Phase-1 wiring (rolling_stability) doesn't silently diverge from 10a's own AR(1) call.",
+  "_dev_window_end": "2024-12-31"
+}

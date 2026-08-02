@@ -1,0 +1,87 @@
+{
+  "trading_rule_params": {
+    "entry_threshold": 2.0,
+    "exit_threshold": 0.75,
+    "lookback": 60,
+    "stop_atr_mult": 6.0,
+    "risk_pct": 0.03,
+    "atr_window": 14,
+    "min_atr": 0.1,
+    "max_leverage": 5.0,
+    "cooldown_days": 10,
+    "episode_window_days": 30,
+    "max_per_episode": 1,
+    "half_life_max": 45.0,
+    "adf_pmax": 0.1,
+    "vol_pctile": 0.75,
+    "vol_regime_pctile": 0.9,
+    "liquidity_pctile": 0.1,
+    "vol_window": 20,
+    "percentile_window": 252,
+    "max_single_name_pct": 12.0,
+    "max_gross_exposure_pct": 100.0,
+    "daily_drawdown_limit_pct": 3.0,
+    "overnight_concentration_max_pct": 30.0
+  },
+  "stop_atr_overrides": {
+    "brent_calendar": 4.0,
+    "kc_chicago_wheat": 12.0
+  },
+  "regime_requirements": {
+    "brent_calendar": "backwardation"
+  },
+  "start_equity": 1000000.0,
+  "reconciliation": {
+    "theirs": {
+      "fixed_notional_return": 0.851,
+      "equity_path_return": 1.224,
+      "sharpe": 0.889,
+      "max_drawdown": -0.073,
+      "n_trades": 333,
+      "window": "2014-01-01 to 2023-12-31"
+    },
+    "ours_our_costs": {
+      "sharpe": -0.1645553015711213,
+      "max_drawdown": -0.018774466725253625,
+      "fixed_notional_return": -0.010744975581244145,
+      "equity_path_return": -0.010889999999999955,
+      "return_over_drawdown": -0.5800431063829773,
+      "n_trades": 57,
+      "n_stop_exits": 23,
+      "n_zscore_exits": 34,
+      "final_equity": 989110.0
+    },
+    "ours_their_costs": {
+      "sharpe": -0.25498706005745336,
+      "max_drawdown": -0.02136402916500324,
+      "fixed_notional_return": -0.016857021482756293,
+      "equity_path_return": -0.01695384800000166,
+      "return_over_drawdown": -0.7935697835394285,
+      "n_trades": 57,
+      "n_stop_exits": 23,
+      "n_zscore_exits": 34,
+      "final_equity": 983046.1519999984
+    },
+    "n_trades_ratio_ours_vs_theirs": 0.17117117117117117,
+    "sharpe_delta_ours_vs_theirs": -1.0535553015711212,
+    "material_divergence": true,
+    "divergence_note": "Our reimplementation and their reported control book diverge materially on every axis (trade count, Sharpe, both return conventions). This IS reported as a finding, not tuned away (NEXT_PROMPT.md sec 3 Phase 4's own instruction). Candidate, non-exhaustive explanations, none isolated by this notebook: (1) different tune window (theirs 2014-2023; ours spans the full available dev history 2010-2024, roughly 40% longer and starting in a different market regime); (2) an independently-built spread series (this repo's own `commod_lib8.build_continuous_series`, not theirs); (3) the vol/liquidity suppression filter's percentile-window warm-up and the reentry gate's approximate ADF p-value (`spread_lib11.approx_adf_pvalue`, a linear interpolation against 3 critical points, not the exact Dickey-Fuller CDF) are both reimplementations from spec, not their code, and are plausible sources of a lower trade count; (4) `simulate_book`'s documented joint-sizing simplification (independently-sized per-spread books pooled by dollar PnL, not a single shared-equity risk engine -- see `spread_lib11.simulate_book`'s docstring) understates compounding relative to a true joint-equity book. Sec 3 Phase 4 explicitly anticipates this outcome as 'a live possibility' given sec 0.2's data-corruption history."
+  },
+  "noise_floor_ours": {
+    "point_return": -0.010744975581244142,
+    "ci_return": [
+      -0.04913876027046648,
+      0.024518702119829663
+    ],
+    "half_width_pp": 3.682873119514807
+  },
+  "per_spread_trade_counts": {
+    "brent_wti": 33,
+    "brent_calendar": 24,
+    "corn_wheat": 0,
+    "bean_corn": 0,
+    "kc_chicago_wheat": 0
+  },
+  "_dev_window_end": "2024-12-31",
+  "_note": "This repo's holdout is untouched: this window is 2010-06-06 through 2024-12-31, matching every prior 10a/10b dev-window convention."
+}
