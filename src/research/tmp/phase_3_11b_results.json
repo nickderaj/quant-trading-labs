@@ -1,0 +1,115 @@
+{
+  "control_by_offset": {
+    "offset_0": {
+      "sharpe": -0.1645553015711213,
+      "max_drawdown": -0.018774466725253625,
+      "fixed_notional_return": -0.010744975581244145,
+      "equity_path_return": -0.010889999999999955,
+      "return_over_drawdown": -0.5800431063829773,
+      "n_trades": 57,
+      "n_stop_exits": 23,
+      "n_zscore_exits": 34,
+      "final_equity": 989110.0
+    },
+    "offset_7": {
+      "sharpe": -0.18450903172884517,
+      "max_drawdown": -0.018796992481203034,
+      "fixed_notional_return": -0.011957897070601966,
+      "equity_path_return": -0.012090000000000045,
+      "return_over_drawdown": -0.6431880000000015,
+      "n_trades": 57,
+      "n_stop_exits": 23,
+      "n_zscore_exits": 34,
+      "final_equity": 987910.0
+    },
+    "offset_14": {
+      "sharpe": -0.18004064623481578,
+      "max_drawdown": -0.01878994737815265,
+      "fixed_notional_return": -0.0115788558171589,
+      "equity_path_return": -0.011715000000000031,
+      "return_over_drawdown": -0.623471676861705,
+      "n_trades": 56,
+      "n_stop_exits": 23,
+      "n_zscore_exits": 33,
+      "final_equity": 988285.0
+    },
+    "offset_21": {
+      "sharpe": -0.20924521664781978,
+      "max_drawdown": -0.02141854108052188,
+      "fixed_notional_return": -0.014248914925620065,
+      "equity_path_return": -0.014345000000000052,
+      "return_over_drawdown": -0.6697468303779786,
+      "n_trades": 56,
+      "n_stop_exits": 23,
+      "n_zscore_exits": 33,
+      "final_equity": 985655.0
+    }
+  },
+  "va_by_offset": {
+    "offset_0": {
+      "sharpe": -0.11098060761138719,
+      "max_drawdown": -0.01627786210753379,
+      "fixed_notional_return": -0.007306854081506234,
+      "equity_path_return": -0.007495000000000029,
+      "return_over_drawdown": -0.4604413006134977,
+      "n_trades": 44,
+      "n_stop_exits": 17,
+      "n_zscore_exits": 27,
+      "final_equity": 992505.0
+    },
+    "offset_7": {
+      "sharpe": -0.14394762579651224,
+      "max_drawdown": -0.017217245240761514,
+      "fixed_notional_return": -0.009439961790789403,
+      "equity_path_return": -0.00961500000000004,
+      "return_over_drawdown": -0.5584517073170744,
+      "n_trades": 44,
+      "n_stop_exits": 17,
+      "n_zscore_exits": 27,
+      "final_equity": 990385.0
+    },
+    "offset_14": {
+      "sharpe": -0.1392511875784619,
+      "max_drawdown": -0.017210792226158955,
+      "fixed_notional_return": -0.009062076447869235,
+      "equity_path_return": -0.009240000000000026,
+      "return_over_drawdown": -0.5368724390243933,
+      "n_trades": 43,
+      "n_stop_exits": 17,
+      "n_zscore_exits": 26,
+      "final_equity": 990760.0
+    },
+    "offset_21": {
+      "sharpe": -0.15711762385908698,
+      "max_drawdown": -0.018919877865341994,
+      "fixed_notional_return": -0.010796886990027201,
+      "equity_path_return": -0.010950000000000015,
+      "return_over_drawdown": -0.5787563787638692,
+      "n_trades": 43,
+      "n_stop_exits": 17,
+      "n_zscore_exits": 26,
+      "final_equity": 989050.0
+    }
+  },
+  "net_sharpe_positive_every_offset": false,
+  "paired_bootstrap": {
+    "control_point": -0.010744975581244142,
+    "treatment_point": -0.00730685408150623,
+    "delta_point": 0.0034381214997379114,
+    "delta_ci": [
+      -0.003786435912236922,
+      0.012521042747536806
+    ],
+    "delta_excludes_zero": false,
+    "control_ci": [
+      -0.04913876027046648,
+      0.024518702119829663
+    ],
+    "n_blocks": 30
+  },
+  "control_max_drawdown": -0.018774466725253625,
+  "va_max_drawdown": -0.01627786210753379,
+  "drawdown_no_worse_than_control": true,
+  "n_trials": 4,
+  "fires": false
+}

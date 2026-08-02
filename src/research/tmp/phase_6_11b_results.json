@@ -1,0 +1,61 @@
+{
+  "gate_VS_drawdown_reconciliation": {
+    "published_sharpe_net_offset0": 1.1646550846497716,
+    "recomputed_sharpe_net_offset0": 1.1647848584631615,
+    "sharpe_unchanged": true,
+    "published_deflated_sharpe_prob": 0.9997184978279431,
+    "published_max_drawdown_net_log_units": -5.408560804595988,
+    "max_drawdown_log_cumsum_convention_pct": -0.9955219195913716,
+    "max_drawdown_fixed_notional_convention_pct": -1.0,
+    "ruin_note": "Under this fixed-notional, non-compounding, absorbing-floor reading, the account is wiped out at bar 49 of 4488 (2010-08-25) and never recovers -- a real difference in kind from the compounding reading, which survives this same stretch because each day's P&L is realized against the CURRENT (already-compounded) equity, not a fixed original base. This is the concrete illustration of why the two conventions diverge this much: a daily-rebalanced, always-reinvested strategy's true real-world equity path is closer to the compounding reading (that IS how a real account marks itself to market daily); the fixed-notional convention designed for this notebook's own episodic single-trade spread bookkeeping produces a materially different, more pessimistic answer when applied to a daily-rebalanced portfolio instead.",
+    "note": "Sharpe and DSR are unchanged (verified above) -- this recomputation touches only the drawdown convention. The published -5.41 log-unit drawdown corresponds to -0.9955 (-99.6%) of peak under a continuously-compounded reading; the fixed-notional, capital-bounded reading (no compounding, floored at zero) gives -1.0000 (-100.0%) of peak instead. This is a labelled hypothetical recomputation, not a replacement of 10b's own published number."
+  },
+  "three_way_risk_gate_summary": {
+    "TS": {
+      "sharpe": -0.1645553015711213,
+      "max_drawdown": -0.018774466725253625,
+      "return_over_drawdown": -0.5800431063829773,
+      "equity_path_return": -0.010889999999999955,
+      "fires": false
+    },
+    "TS-S": {
+      "sharpe": 0.30363733438169443,
+      "max_drawdown": -0.01831006304691829,
+      "return_over_drawdown": 1.810752913031627,
+      "equity_path_return": 0.033155000000000046,
+      "fires": false
+    },
+    "BF": {
+      "sharpe": -0.14623621063813214,
+      "max_drawdown": -0.0579569442481539,
+      "return_over_drawdown": -0.4826962560383393,
+      "equity_path_return": -0.02797560000000665,
+      "fires": false
+    },
+    "BF-X": {
+      "fires": false
+    },
+    "SCR": {
+      "sharpe": -0.1645553015711213,
+      "max_drawdown": -0.018774466725253625,
+      "return_over_drawdown": -0.5800431063829773,
+      "equity_path_return": -0.010889999999999955,
+      "fires": false
+    },
+    "VA": {
+      "sharpe": -0.11098060761138719,
+      "max_drawdown": -0.01627786210753379,
+      "return_over_drawdown": -0.4604413006134977,
+      "equity_path_return": -0.007495000000000029,
+      "fires": false
+    },
+    "RE": {
+      "sharpe": -0.11435293337698708,
+      "max_drawdown": -0.01571362946392907,
+      "return_over_drawdown": -0.49065685414680577,
+      "equity_path_return": -0.007709999999999995,
+      "fires": false,
+      "best_combo": "hl30_p0.2"
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "control_max_drawdown_target": -0.018774466725253625,
+  "per_spread": {
+    "es_calendar": {
+      "single_name_cap_diagnostic": {
+        "median_notional_per_contract": 196275.0,
+        "single_name_cap_dollars": 120000.0,
+        "frac_bars_notional_within_cap": 0.0022688598979013048
+      },
+      "default_risk_pct": 0.03,
+      "default_metrics": {
+        "sharpe": NaN,
+        "max_drawdown": 0.0,
+        "fixed_notional_return": 0.0,
+        "equity_path_return": 0.0,
+        "return_over_drawdown": NaN,
+        "n_trades": 0,
+        "n_stop_exits": 0,
+        "n_zscore_exits": 0,
+        "final_equity": 1000000.0
+      },
+      "default_mean_pnl_atr": NaN,
+      "risk_pct_0.15_metrics": {
+        "sharpe": NaN,
+        "max_drawdown": 0.0,
+        "fixed_notional_return": 0.0,
+        "equity_path_return": 0.0,
+        "return_over_drawdown": NaN,
+        "n_trades": 0,
+        "n_stop_exits": 0,
+        "n_zscore_exits": 0,
+        "final_equity": 1000000.0
+      },
+      "drawdown_matched_risk_pct": 0.1499999289512634,
+      "drawdown_matched_metrics": {
+        "sharpe": NaN,
+        "max_drawdown": 0.0,
+        "fixed_notional_return": 0.0,
+        "equity_path_return": 0.0,
+        "return_over_drawdown": NaN,
+        "n_trades": 0,
+        "n_stop_exits": 0,
+        "n_zscore_exits": 0,
+        "final_equity": 1000000.0
+      },
+      "drawdown_matched_mean_pnl_atr": NaN
+    },
+    "gc_cal_m2m3": {
+      "single_name_cap_diagnostic": {
+        "median_notional_per_contract": 147870.0,
+        "single_name_cap_dollars": 120000.0,
+        "frac_bars_notional_within_cap": 0.0921409214092141
+      },
+      "default_risk_pct": 0.03,
+      "default_metrics": {
+        "sharpe": 0.0771565796392749,
+        "max_drawdown": -9.999850002251343e-05,
+        "fixed_notional_return": 3.500355020775367e-05,
+        "equity_path_return": 3.500000000000725e-05,
+        "return_over_drawdown": 0.3500052500000243,
+        "n_trades": 5,
+        "n_stop_exits": 1,
+        "n_zscore_exits": 4,
+        "final_equity": 1000035.0
+      },
+      "default_mean_pnl_atr": -0.8090793380437,
+      "risk_pct_0.15_metrics": {
+        "sharpe": 0.0771565796392749,
+        "max_drawdown": -9.999850002251343e-05,
+        "fixed_notional_return": 3.500355020775367e-05,
+        "equity_path_return": 3.500000000000725e-05,
+        "return_over_drawdown": 0.3500052500000243,
+        "n_trades": 5,
+        "n_stop_exits": 1,
+        "n_zscore_exits": 4,
+        "final_equity": 1000035.0
+      },
+      "drawdown_matched_risk_pct": 0.1499999289512634,
+      "drawdown_matched_metrics": {
+        "sharpe": 0.0771565796392749,
+        "max_drawdown": -9.999850002251343e-05,
+        "fixed_notional_return": 3.500355020775367e-05,
+        "equity_path_return": 3.500000000000725e-05,
+        "return_over_drawdown": 0.3500052500000243,
+        "n_trades": 5,
+        "n_stop_exits": 1,
+        "n_zscore_exits": 4,
+        "final_equity": 1000035.0
+      },
+      "drawdown_matched_mean_pnl_atr": -0.8090793380437
+    }
+  },
+  "note": "Both spreads are trade-starved under the pre-declared risk caps: max_single_name_pct=12% of START_EQUITY=$1,000,000 caps notional per contract at $120,000, which is below es_calendar's and gc_cal_m2m3's own per-contract notional (ES/GC point values x their own price level) for nearly the entire dev window -- qty floors to 0 regardless of risk_pct, since the single-name cap (not the ATR-based risk_pct sizing) is the binding constraint here. Raising risk_pct from 0.03 to 0.15 (5x) does not meaningfully unlock trades, confirming this. The drawdown-matched risk_pct search is reported for completeness but is not a meaningful edge-vs-edge comparison for either spread given this constraint -- this notebook does not relax max_single_name_pct to work around it, since that is itself part of the pre-declared trading rule (sec 4.1). Does not adjudicate the external repo's own internal atlas-vs-v4-section contradiction for gc_cal_m2m3 (data this repo does not have)."
+}

@@ -1,0 +1,337 @@
+{
+  "eligible_universe": [
+    "brent_calendar",
+    "bz_cal_m1m3",
+    "cl_cal_m2m3",
+    "ho_cal_m1m2",
+    "ho_cal_m2m3",
+    "ke_cal_m1m2",
+    "ng_cal_m1m2",
+    "ng_cal_m2m3",
+    "ng_calendar",
+    "rb_cal_m1m2",
+    "rb_cal_m2m3",
+    "wti_calendar",
+    "zc_cal_m1m2",
+    "zl_cal_m1m2",
+    "zm_cal_m1m2",
+    "zw_cal_m1m2"
+  ],
+  "mild_backwardation_band_our_sign": [
+    0.0,
+    0.5
+  ],
+  "sign_convention_note": "carry_ratio's literal formula is positive in backwardation and negative in contango on this repo's data (opposite of the external repo's stated description); mild-backwardation bucket boundaries are applied as 0 < carry_ratio < 0.5 to match their -0.5 < c_corrected < 0 under our sign.",
+  "unconditional_by_offset": {
+    "offset_0": {
+      "sharpe": 0.23569700692735945,
+      "max_drawdown": -0.039648673595322204,
+      "fixed_notional_return": 0.05297532687869398,
+      "equity_path_return": 0.05171439999999894,
+      "return_over_drawdown": 1.3043160164152443,
+      "n_trades": 436,
+      "n_stop_exits": 122,
+      "n_zscore_exits": 314,
+      "final_equity": 1051714.399999999
+    },
+    "offset_7": {
+      "sharpe": 0.1856037680546413,
+      "max_drawdown": -0.04008626113215974,
+      "fixed_notional_return": 0.041622081601702776,
+      "equity_path_return": 0.040346799999998906,
+      "return_over_drawdown": 1.00649945543637,
+      "n_trades": 433,
+      "n_stop_exits": 122,
+      "n_zscore_exits": 311,
+      "final_equity": 1040346.7999999989
+    },
+    "offset_14": {
+      "sharpe": 0.188432732695802,
+      "max_drawdown": -0.04006404285048892,
+      "fixed_notional_return": 0.042187947616055474,
+      "equity_path_return": 0.04091799999999912,
+      "return_over_drawdown": 1.02131480222046,
+      "n_trades": 431,
+      "n_stop_exits": 122,
+      "n_zscore_exits": 309,
+      "final_equity": 1040917.9999999991
+    },
+    "offset_21": {
+      "sharpe": 0.18164715861200859,
+      "max_drawdown": -0.04013607717001777,
+      "fixed_notional_return": 0.04063668066697232,
+      "equity_path_return": 0.03936339999999916,
+      "return_over_drawdown": 0.980748562776937,
+      "n_trades": 426,
+      "n_stop_exits": 122,
+      "n_zscore_exits": 304,
+      "final_equity": 1039363.3999999991
+    }
+  },
+  "gate_BF": {
+    "headline_storage": "mid",
+    "by_storage": {
+      "low": {
+        "by_offset": {
+          "offset_0": {
+            "sharpe": 0.20042386255296832,
+            "max_drawdown": -0.03002605760957122,
+            "fixed_notional_return": 0.03623508413446122,
+            "equity_path_return": 0.03585299999999347,
+            "return_over_drawdown": 1.1940628525459445,
+            "n_trades": 378,
+            "n_stop_exits": 87,
+            "n_zscore_exits": 291,
+            "final_equity": 1035852.9999999935
+          },
+          "offset_7": {
+            "sharpe": 0.13905727821964808,
+            "max_drawdown": -0.030061605428812976,
+            "fixed_notional_return": 0.024809484882834416,
+            "equity_path_return": 0.02448539999999344,
+            "return_over_drawdown": 0.8145073974168079,
+            "n_trades": 375,
+            "n_stop_exits": 87,
+            "n_zscore_exits": 288,
+            "final_equity": 1024485.3999999935
+          },
+          "offset_14": {
+            "sharpe": 0.1424200299531073,
+            "max_drawdown": -0.03004455649429172,
+            "fixed_notional_return": 0.025374739595434268,
+            "equity_path_return": 0.025056599999993656,
+            "return_over_drawdown": 0.8339813571471509,
+            "n_trades": 373,
+            "n_stop_exits": 87,
+            "n_zscore_exits": 286,
+            "final_equity": 1025056.5999999937
+          },
+          "offset_21": {
+            "sharpe": 0.13244916220110017,
+            "max_drawdown": -0.030099832769865942,
+            "fixed_notional_return": 0.023526979094540778,
+            "equity_path_return": 0.02320699999999376,
+            "return_over_drawdown": 0.7710009612819891,
+            "n_trades": 368,
+            "n_stop_exits": 87,
+            "n_zscore_exits": 281,
+            "final_equity": 1023206.9999999937
+          }
+        },
+        "exceeds_unconditional_every_offset": false,
+        "n_trades_bf": 378,
+        "n_trades_unconditional": 436,
+        "trade_count_within_10pct": false
+      },
+      "mid": {
+        "by_offset": {
+          "offset_0": {
+            "sharpe": -0.14623621063813214,
+            "max_drawdown": -0.0579569442481539,
+            "fixed_notional_return": -0.026753143568434397,
+            "equity_path_return": -0.02797560000000665,
+            "return_over_drawdown": -0.4826962560383393,
+            "n_trades": 378,
+            "n_stop_exits": 87,
+            "n_zscore_exits": 291,
+            "final_equity": 972024.3999999934
+          },
+          "offset_7": {
+            "sharpe": -0.20844215587653606,
+            "max_drawdown": -0.058316951347993085,
+            "fixed_notional_return": -0.03817878437610726,
+            "equity_path_return": -0.03934320000000657,
+            "return_over_drawdown": -0.6746443202292077,
+            "n_trades": 375,
+            "n_stop_exits": 87,
+            "n_zscore_exits": 288,
+            "final_equity": 960656.7999999934
+          },
+          "offset_14": {
+            "sharpe": -0.20573160566155546,
+            "max_drawdown": -0.05828385091958388,
+            "fixed_notional_return": -0.03761058714985303,
+            "equity_path_return": -0.03877200000000636,
+            "return_over_drawdown": -0.6652271493436723,
+            "n_trades": 373,
+            "n_stop_exits": 87,
+            "n_zscore_exits": 286,
+            "final_equity": 961227.9999999936
+          },
+          "offset_21": {
+            "sharpe": -0.2159523917172541,
+            "max_drawdown": -0.05839116966709845,
+            "fixed_notional_return": -0.03946146253951909,
+            "equity_path_return": -0.040621600000006364,
+            "return_over_drawdown": -0.6956805323750062,
+            "n_trades": 368,
+            "n_stop_exits": 87,
+            "n_zscore_exits": 281,
+            "final_equity": 959378.3999999936
+          }
+        },
+        "exceeds_unconditional_every_offset": false,
+        "n_trades_bf": 378,
+        "n_trades_unconditional": 436,
+        "trade_count_within_10pct": false
+      },
+      "high": {
+        "by_offset": {
+          "offset_0": {
+            "sharpe": -0.18515786283850585,
+            "max_drawdown": -0.0530132716478352,
+            "fixed_notional_return": -0.03366738189634362,
+            "equity_path_return": -0.03482040000000641,
+            "return_over_drawdown": -0.6568242049145123,
+            "n_trades": 377,
+            "n_stop_exits": 84,
+            "n_zscore_exits": 293,
+            "final_equity": 965179.5999999936
+          },
+          "offset_7": {
+            "sharpe": -0.2479483418569583,
+            "max_drawdown": -0.05331585568051289,
+            "fixed_notional_return": -0.04509017208868283,
+            "equity_path_return": -0.046188000000006446,
+            "return_over_drawdown": -0.8663088946144083,
+            "n_trades": 374,
+            "n_stop_exits": 84,
+            "n_zscore_exits": 290,
+            "final_equity": 953811.9999999936
+          },
+          "offset_14": {
+            "sharpe": -0.2452883940645315,
+            "max_drawdown": -0.05328559385057774,
+            "fixed_notional_return": -0.04452205874582729,
+            "equity_path_return": -0.04561680000000623,
+            "return_over_drawdown": -0.856081291463577,
+            "n_trades": 372,
+            "n_stop_exits": 84,
+            "n_zscore_exits": 288,
+            "final_equity": 954383.1999999938
+          },
+          "offset_21": {
+            "sharpe": -0.255618483494667,
+            "max_drawdown": -0.05338370924793712,
+            "fixed_notional_return": -0.04636926886603021,
+            "equity_path_return": -0.04746640000000624,
+            "return_over_drawdown": -0.8891551499269501,
+            "n_trades": 367,
+            "n_stop_exits": 84,
+            "n_zscore_exits": 283,
+            "final_equity": 952533.5999999938
+          }
+        },
+        "exceeds_unconditional_every_offset": false,
+        "n_trades_bf": 377,
+        "n_trades_unconditional": 436,
+        "trade_count_within_10pct": false
+      }
+    },
+    "paired_bootstrap_headline": {
+      "control_point": 0.05297532687869402,
+      "treatment_point": -0.026753143568434393,
+      "delta_point": -0.07972847044712841,
+      "delta_ci": [
+        -0.18842688921672396,
+        0.021319822623828276
+      ],
+      "delta_excludes_zero": false,
+      "control_ci": [
+        -0.044345291513658854,
+        0.15295651299934435
+      ],
+      "n_blocks": 58
+    },
+    "deflated_sharpe_prob_headline": 0.03261543585620708,
+    "n_trials": 12,
+    "fires": false
+  },
+  "gate_BF_X": {
+    "per_spread": {
+      "brent_calendar": {
+        "unconditional_sharpe": -0.1074029581843199,
+        "bf_sharpe": -0.33257175456837057,
+        "bf_improves": false
+      },
+      "bz_cal_m1m3": {
+        "unconditional_sharpe": -0.11428072376721012,
+        "bf_sharpe": -0.272723531044097,
+        "bf_improves": false
+      },
+      "cl_cal_m2m3": {
+        "unconditional_sharpe": -0.27396093512323405,
+        "bf_sharpe": -0.27396093512323405,
+        "bf_improves": false
+      },
+      "ho_cal_m1m2": {
+        "unconditional_sharpe": -0.1604740349507839,
+        "bf_sharpe": -0.19816954497509154,
+        "bf_improves": false
+      },
+      "ho_cal_m2m3": {
+        "unconditional_sharpe": -0.2347701192810356,
+        "bf_sharpe": 0.19344978965541157,
+        "bf_improves": true
+      },
+      "ke_cal_m1m2": {
+        "unconditional_sharpe": NaN,
+        "bf_sharpe": NaN,
+        "bf_improves": false
+      },
+      "ng_cal_m1m2": {
+        "unconditional_sharpe": 0.09627399863503383,
+        "bf_sharpe": 0.2339882121356696,
+        "bf_improves": true
+      },
+      "ng_cal_m2m3": {
+        "unconditional_sharpe": -0.11408134578746286,
+        "bf_sharpe": -0.2427717626735781,
+        "bf_improves": false
+      },
+      "ng_calendar": {
+        "unconditional_sharpe": 0.09627399863503383,
+        "bf_sharpe": 0.2339882121356696,
+        "bf_improves": true
+      },
+      "rb_cal_m1m2": {
+        "unconditional_sharpe": 0.5025427243443666,
+        "bf_sharpe": -0.019584138187214065,
+        "bf_improves": false
+      },
+      "rb_cal_m2m3": {
+        "unconditional_sharpe": 0.17726889124656917,
+        "bf_sharpe": -0.05911695168088315,
+        "bf_improves": false
+      },
+      "wti_calendar": {
+        "unconditional_sharpe": -0.5952104647839562,
+        "bf_sharpe": -0.4880812470722232,
+        "bf_improves": true
+      },
+      "zc_cal_m1m2": {
+        "unconditional_sharpe": NaN,
+        "bf_sharpe": NaN,
+        "bf_improves": false
+      },
+      "zl_cal_m1m2": {
+        "unconditional_sharpe": NaN,
+        "bf_sharpe": NaN,
+        "bf_improves": false
+      },
+      "zm_cal_m1m2": {
+        "unconditional_sharpe": 0.263654571884755,
+        "bf_sharpe": 0.263654571884755,
+        "bf_improves": false
+      },
+      "zw_cal_m1m2": {
+        "unconditional_sharpe": NaN,
+        "bf_sharpe": NaN,
+        "bf_improves": false
+      }
+    },
+    "n_spreads_improved": 4,
+    "n_trials": 0,
+    "fires": false
+  }
+}

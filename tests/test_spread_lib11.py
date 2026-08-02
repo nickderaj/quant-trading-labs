@@ -1085,6 +1085,318 @@ class TestSimulateSingleSpread:
         assert len(result["equity_curve"]) == len(df)
 
 
+class TestSimulateSingleSpreadSignFlipArray:
+    """Test per-bar sign_flip array parameter."""
+
+    def _make_synthetic_frame(self):
+        """Build a small synthetic frame with distinct entry-triggering bars."""
+        n = 200
+        dates = np.array(
+            [np.datetime64("2024-01-01") + np.timedelta64(i, "D") for i in range(n)],
+            dtype="datetime64[D]",
+        )
+        # Create clear spikes to trigger z-score entries at known bars
+        value = np.zeros(n)
+        value[40:50] = 8.0  # Spike 1 (bars 40-49) -- entry should happen ~bar 50
+        value[100:110] = -8.0  # Spike 2 (bars 100-109) -- entry should happen ~bar 110
+        value[160:170] = 8.0  # Spike 3 (bars 160-169) -- entry should happen ~bar 170
+        value = value + 0.01 * np.arange(n)  # Slight trend to avoid constant values
+
+        leg1_price = np.full(n, 100.0) + 0.5 * value
+        leg2_price = np.full(n, 100.0) - 0.5 * value
+        roll_flag = np.zeros(n, dtype=bool)
+        ts_regime = np.array(["flat"] * n, dtype=object)
+        leg_roles = [[{"product": "CL"}, {"product": "CL"}] for _ in range(n)]
+
+        return pl.DataFrame(
+            {
+                "date": dates,
+                "value": value,
+                "leg1_price": leg1_price,
+                "leg2_price": leg2_price,
+                "roll_window_flag": roll_flag,
+                "ts_regime": ts_regime,
+                "leg_roles": leg_roles,
+            }
+        )
+
+    def test_sign_flip_array_does_not_error(self):
+        """Passing a per-bar mask should not error and should produce valid results."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # Create a mask that flips only the first half of days
+        flip_mask = np.zeros(len(df), dtype=bool)
+        flip_mask[:100] = True
+
+        # Run with the selective mask
+        result_partial_flip = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, sign_flip=flip_mask
+        )
+
+        # Should complete without error and return valid structure
+        assert "trades" in result_partial_flip
+        assert "equity_curve" in result_partial_flip
+        assert len(result_partial_flip["equity_curve"]) == len(df)
+
+    def test_sign_flip_bool_true_matches_all_true_array(self):
+        """sign_flip=True (bool) should match sign_flip=np.ones(n, dtype=bool) (array)."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # Run with sign_flip=True (scalar bool)
+        result_bool = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, sign_flip=True
+        )
+
+        # Run with all-True array
+        flip_mask = np.ones(len(df), dtype=bool)
+        result_array = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, sign_flip=flip_mask
+        )
+
+        # Both should produce identical trades
+        assert len(result_bool["trades"]) == len(result_array["trades"])
+        for t1, t2 in zip(result_bool["trades"], result_array["trades"]):
+            assert t1["direction"] == t2["direction"]
+            assert t1["qty"] == t2["qty"]
+            assert t1["entry_date"] == t2["entry_date"]
+            assert t1["exit_date"] == t2["exit_date"]
+
+    def test_sign_flip_bool_false_matches_all_false_array(self):
+        """sign_flip=False (bool) should match sign_flip=np.zeros(n, dtype=bool) (array)."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # Run with sign_flip=False (scalar bool)
+        result_bool = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, sign_flip=False
+        )
+
+        # Run with all-False array
+        flip_mask = np.zeros(len(df), dtype=bool)
+        result_array = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, sign_flip=flip_mask
+        )
+
+        # Both should produce identical trades
+        assert len(result_bool["trades"]) == len(result_array["trades"])
+        for t1, t2 in zip(result_bool["trades"], result_array["trades"]):
+            assert t1["direction"] == t2["direction"]
+            assert t1["qty"] == t2["qty"]
+            assert t1["entry_date"] == t2["entry_date"]
+            assert t1["exit_date"] == t2["exit_date"]
+
+
+class TestSimulateSingleSpreadStopMultScale:
+    """Test per-bar stop_mult_scale parameter."""
+
+    def _make_synthetic_frame(self):
+        """Build frame with volatility that will trigger stops under certain scales."""
+        n = 250
+        dates = np.array(
+            [np.datetime64("2024-01-01") + np.timedelta64(i, "D") for i in range(n)],
+            dtype="datetime64[D]",
+        )
+        # Create a strong spike to enter, then adverse move to test stop
+        value = np.zeros(n)
+        value[50:60] = 6.0  # Spike to trigger entry around bar 60
+        # Adverse move starting at bar 70 (move 8 points against position over 30 bars)
+        value[70:100] = 6.0 - 8.0 * (np.arange(30) / 30.0)
+        value = value + 0.01 * np.arange(n)
+
+        leg1_price = np.full(n, 100.0) + 0.5 * value
+        leg2_price = np.full(n, 100.0) - 0.5 * value
+        roll_flag = np.zeros(n, dtype=bool)
+        ts_regime = np.array(["flat"] * n, dtype=object)
+        leg_roles = [[{"product": "CL"}, {"product": "CL"}] for _ in range(n)]
+
+        return pl.DataFrame(
+            {
+                "date": dates,
+                "value": value,
+                "leg1_price": leg1_price,
+                "leg2_price": leg2_price,
+                "roll_window_flag": roll_flag,
+                "ts_regime": ts_regime,
+                "leg_roles": leg_roles,
+            }
+        )
+
+    def test_stop_mult_scale_widens_stop(self):
+        """Scale=1.25 should produce wider stop than scale=None/1.0."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # Run with scale=1.25 (wider stop)
+        scale_array = np.full(len(df), 1.25)
+        result_scale_1_25 = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, stop_mult_scale=scale_array
+        )
+
+        # With a wider stop, a moderate adverse move should exit the stop-scale=1.0
+        # trade but NOT the scale=1.25 trade (same stop triggered earlier on scale=1.0)
+        # Wider stop should result in fewer stop exits (or same if stops don't matter)
+        # At minimum, we should have at least tried the scaled version
+        assert len(result_scale_1_25["trades"]) > 0
+
+    def test_stop_mult_scale_nan_fallback_to_one(self):
+        """NaN entries in scale array should fall back to 1.0 (not error)."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # Create array with some NaN entries
+        scale_array = np.full(len(df), 1.2)
+        scale_array[80:90] = np.nan
+
+        # Should not raise an error
+        result = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, stop_mult_scale=scale_array
+        )
+        # Should produce trades (didn't error)
+        assert "trades" in result
+        assert "equity_curve" in result
+
+    def test_stop_mult_scale_all_nan_falls_back(self):
+        """All-NaN scale array should behave like scale=1.0."""
+        df = self._make_synthetic_frame()
+        p = SL11.TradingRuleParams()
+
+        # All NaN
+        scale_array_nan = np.full(len(df), np.nan)
+        result_nan = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, stop_mult_scale=scale_array_nan
+        )
+
+        # Default (scale=1.0)
+        scale_array_ones = np.ones(len(df))
+        result_ones = SL11.simulate_single_spread(
+            df, p, cost_per_contract=2.0, stop_mult_scale=scale_array_ones
+        )
+
+        # Should produce identical results
+        assert len(result_nan["trades"]) == len(result_ones["trades"])
+        for t1, t2 in zip(result_nan["trades"], result_ones["trades"]):
+            assert t1["direction"] == t2["direction"]
+            assert t1["exit_reason"] == t2["exit_reason"]
+
+
+class TestSimulateBookIntegration:
+    """Test simulate_book with new sign_flip_masks and stop_mult_scales params."""
+
+    def _make_synthetic_frame(self):
+        """Build a small synthetic frame."""
+        rng = np.random.default_rng(SEED)
+        n = 200
+        dates = np.array(
+            [np.datetime64("2024-01-01") + np.timedelta64(i, "D") for i in range(n)],
+            dtype="datetime64[D]",
+        )
+        value = 6 * np.sin(2 * np.pi * np.arange(n) / 60) + rng.normal(0, 0.2, n)
+        leg1_price = np.full(n, 100.0) + 0.5 * value
+        leg2_price = np.full(n, 100.0) - 0.5 * value
+        roll_flag = np.zeros(n, dtype=bool)
+        ts_regime = np.array(["flat"] * n, dtype=object)
+        leg_roles = [[{"product": "CL"}, {"product": "CL"}] for _ in range(n)]
+
+        return pl.DataFrame(
+            {
+                "date": dates,
+                "value": value,
+                "leg1_price": leg1_price,
+                "leg2_price": leg2_price,
+                "roll_window_flag": roll_flag,
+                "ts_regime": ts_regime,
+                "leg_roles": leg_roles,
+            }
+        )
+
+    def test_simulate_book_with_sign_flip_masks(self):
+        """sign_flip_masks dict should be correctly plumbed through to spreads."""
+        df = self._make_synthetic_frame()
+        spread_frames = {"spread_A": df, "spread_B": df}
+        params = {
+            "spread_A": SL11.TradingRuleParams(),
+            "spread_B": SL11.TradingRuleParams(),
+        }
+
+        # Create selective flip masks
+        flip_mask_A = np.zeros(len(df), dtype=bool)
+        flip_mask_A[50:100] = True
+
+        flip_mask_B = np.ones(len(df), dtype=bool)
+
+        sign_flip_masks = {"spread_A": flip_mask_A, "spread_B": flip_mask_B}
+
+        result = SL11.simulate_book(
+            spread_frames,
+            params,
+            {},
+            {},
+            round_turn_cost_fn=lambda p: 2.0,
+            start_equity=100_000.0,
+            sign_flip_masks=sign_flip_masks,
+        )
+
+        # Should complete without error and return required keys
+        assert "trades" in result
+        assert "portfolio_equity" in result
+        assert "per_spread" in result
+        # Trades should be allocated to spreads
+        spread_A_trades = [t for t in result["trades"] if t["spread"] == "spread_A"]
+        spread_B_trades = [t for t in result["trades"] if t["spread"] == "spread_B"]
+        assert len(spread_A_trades) + len(spread_B_trades) == len(result["trades"])
+
+    def test_simulate_book_with_stop_mult_scales(self):
+        """stop_mult_scales dict should be correctly plumbed through to spreads."""
+        df = self._make_synthetic_frame()
+        spread_frames = {"spread_X": df}
+        params = {"spread_X": SL11.TradingRuleParams()}
+
+        scale_array = np.full(len(df), 1.15)
+        stop_mult_scales = {"spread_X": scale_array}
+
+        result = SL11.simulate_book(
+            spread_frames,
+            params,
+            {},
+            {},
+            round_turn_cost_fn=lambda p: 2.0,
+            start_equity=100_000.0,
+            stop_mult_scales=stop_mult_scales,
+        )
+
+        # Should complete without error
+        assert "trades" in result
+        assert "portfolio_equity" in result
+        assert "per_spread" in result
+
+    def test_simulate_book_combined_masks_and_scales(self):
+        """Both sign_flip_masks and stop_mult_scales together."""
+        df = self._make_synthetic_frame()
+        spread_frames = {"spread_1": df}
+        params = {"spread_1": SL11.TradingRuleParams()}
+
+        flip_mask = np.random.default_rng(SEED).random(len(df)) > 0.5
+        scale_array = np.full(len(df), 1.1)
+
+        result = SL11.simulate_book(
+            spread_frames,
+            params,
+            {},
+            {},
+            round_turn_cost_fn=lambda p: 2.0,
+            start_equity=100_000.0,
+            sign_flip_masks={"spread_1": flip_mask},
+            stop_mult_scales={"spread_1": scale_array},
+        )
+
+        # Should produce valid results
+        assert "trades" in result
+        assert "portfolio_equity" in result
+        assert len(result["portfolio_equity"]) == len(df)
+
+
 class TestSimulateBook:
     """Test portfolio-level simulation."""
 

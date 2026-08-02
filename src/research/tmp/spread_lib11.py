@@ -489,8 +489,9 @@ def simulate_single_spread(
     stop_atr_mult_override: float | None = None,
     require_ts_regime: str | None = None,
     start_equity: float = 1_000_000.0,
-    sign_flip: bool = False,
+    sign_flip: bool | np.ndarray = False,
     disable_stop: bool = False,
+    stop_mult_scale: np.ndarray | None = None,
 ) -> dict:
     """Simulate the pre-registered trading rule on one spread's own
     equity slice (single-position-per-spread; the shared-portfolio-equity
@@ -501,8 +502,19 @@ def simulate_single_spread(
 
     `sign_flip`: reverse entry direction (Gate BF, sec 4.2) -- long the
     spread when z > entry_threshold instead of < -entry_threshold, and vice
-    versa. `disable_stop`: never check the stop breach (Gate TS-S).
+    versa. Either a single bool (whole-spread flip) or a per-bar boolean
+    array (flip only entries opened on bars where the array is True -- Gate
+    BF's actual claim is conditional on the mild-backwardation carry bucket,
+    not a whole-spread flip). `disable_stop`: never check the stop breach
+    (Gate TS-S). `stop_mult_scale`: optional per-bar multiplier applied to
+    the effective `stop_atr_mult` at entry (Gate VA's vol-adaptive stop);
+    None means no scaling (multiplier 1.0 everywhere).
     """
+    sign_flip_arr = (
+        np.full(len(df), bool(sign_flip))
+        if np.isscalar(sign_flip)
+        else np.asarray(sign_flip, dtype=bool)
+    )
     stop_mult = (
         stop_atr_mult_override
         if stop_atr_mult_override is not None
@@ -638,7 +650,12 @@ def simulate_single_spread(
             )
             if enter:
                 raw_direction = -1 if z_i > 0 else 1
-                direction = -raw_direction if sign_flip else raw_direction
+                direction = -raw_direction if sign_flip_arr[i] else raw_direction
+                scale_i = (
+                    float(stop_mult_scale[i])
+                    if stop_mult_scale is not None and np.isfinite(stop_mult_scale[i])
+                    else 1.0
+                )
                 notional_per_contract = max(abs(leg1[i]), abs(leg2[i])) * point_value
                 atr_dollars = atr_i * point_value
                 min_atr_dollars = p.min_atr * point_value
@@ -647,7 +664,7 @@ def simulate_single_spread(
                     atr=atr_dollars,
                     price=notional_per_contract,
                     risk_pct=p.risk_pct,
-                    stop_atr_mult=stop_mult,
+                    stop_atr_mult=stop_mult * scale_i,
                     min_atr=min_atr_dollars,
                     max_leverage=p.max_leverage,
                 )
@@ -664,7 +681,7 @@ def simulate_single_spread(
                         "entry_atr": float(atr_i),
                         "entry_equity": equity,
                         "entry_date": dates[i],
-                        "stop_distance": stop_mult * atr_i,
+                        "stop_distance": stop_mult * scale_i * atr_i,
                         "mae": 0.0,
                         "mfe": 0.0,
                     }
@@ -706,6 +723,8 @@ def simulate_book(
     start_equity: float = START_EQUITY,
     sign_flip_spreads: set[str] | None = None,
     disable_stop: bool = False,
+    sign_flip_masks: dict[str, np.ndarray] | None = None,
+    stop_mult_scales: dict[str, np.ndarray] | None = None,
 ) -> dict:
     """Run `simulate_single_spread` independently per spread (each sized
     against its own copy of `start_equity` -- see `START_EQUITY`'s
@@ -723,6 +742,8 @@ def simulate_book(
     level for this reason and are a disclosed scope simplification.
     """
     sign_flip_spreads = sign_flip_spreads or set()
+    sign_flip_masks = sign_flip_masks or {}
+    stop_mult_scales = stop_mult_scales or {}
     all_dates_sorted = sorted(
         set().union(*[set(df["date"].to_numpy()) for df in spread_frames.values()])
     )
@@ -740,8 +761,9 @@ def simulate_book(
             stop_atr_mult_override=stop_atr_mult_overrides.get(name),
             require_ts_regime=require_ts_regime.get(name),
             start_equity=start_equity,
-            sign_flip=name in sign_flip_spreads,
+            sign_flip=sign_flip_masks.get(name, name in sign_flip_spreads),
             disable_stop=disable_stop,
+            stop_mult_scale=stop_mult_scales.get(name),
         )
         for t in res["trades"]:
             t["spread"] = name

@@ -1,0 +1,98 @@
+{
+  "gate_claims_verbatim_from_11a_prereg": {
+    "TS": {
+      "notebook": "11b",
+      "claim": "trade structure, not the market, explains Gate SP's weak Sharpe",
+      "fires_if": "net Sharpe > 0 at every origin offset AND paired block-bootstrap 95% CI on (structured - 10b's continuous Gate SP), same spreads/costs/offsets, excludes zero AND DSR > 0.95 on the cumulative count"
+    },
+    "TS-S": {
+      "notebook": "11b",
+      "claim": "the stop is the active ingredient, not the discrete-trade packaging",
+      "fires_if": "Gate TS fires AND an otherwise-identical stop-disabled variant fails the same paired CI"
+    },
+    "BF": {
+      "notebook": "11b",
+      "claim": "mild backwardation should be traded in reverse, not filtered out",
+      "fires_if": "sign-flipped book's net Sharpe exceeds the unconditional book's at every offset AND paired-difference CI excludes zero AND DSR > 0.95 AND trade count within 10% of unconditional (sec 0.3 anti-throughput-collapse check, mandatory)"
+    },
+    "BF-X": {
+      "notebook": "11b",
+      "claim": "BF's improvement is not a brent_calendar artifact (they measured it on two spreads only)",
+      "fires_if": "BF's improvement holds independently for >= 3 eligible spreads with a computable carry ratio"
+    },
+    "SCR": {
+      "notebook": "11b",
+      "claim": "our own 10a sec 4.3 ADF exclusion earns its place",
+      "fires_if": "KEEP only if the ADF-passing universe's net Sharpe beats the full eligible universe (incl. kc_chicago_wheat, gc_cal_m2m3, es_calendar) with a paired CI excluding zero. A screen that cannot beat its own absence does not survive."
+    },
+    "VA": {
+      "notebook": "11b",
+      "claim": "the vol-adaptive stop, re-opened by their data correction",
+      "fires_if": "their 0.75x-1.25x scaling of stop_atr_mult by realized-vol percentile: net Sharpe > 0 every offset AND paired CI excludes zero AND drawdown no worse than control"
+    },
+    "RE": {
+      "notebook": "11b",
+      "claim": "the re-entry validity gates, re-opened by their data correction",
+      "fires_if": "sweep half_life_max in {30,45,60} and adf_pmax in {0.05,0.10,0.20} -- their own flagged follow-up. Fires on the same three-way criterion."
+    }
+  },
+  "fires": {
+    "TS": false,
+    "TS-S": false,
+    "BF": false,
+    "BF-X": false,
+    "SCR": false,
+    "VA": false,
+    "RE": false
+  },
+  "n_trials_actual": {
+    "TS": 4,
+    "TS-S": 1,
+    "BF": 12,
+    "BF-X": 0,
+    "SCR": 8,
+    "VA": 4,
+    "RE": 36
+  },
+  "n_trials_preregistered": {
+    "TS": 4,
+    "TS-S": 1,
+    "BF": 12,
+    "BF-X": 0,
+    "SCR": 8,
+    "VA": 4,
+    "RE": 36
+  },
+  "n_trials_mismatches": {},
+  "n_trials_match_prereg_exactly": true,
+  "n_trials_11b_total": 65,
+  "sharpe_by_gate_offset0": {
+    "TS": -0.1645553015711213,
+    "BF": -0.14623621063813214,
+    "SCR": -0.1645553015711213,
+    "VA": -0.11098060761138719,
+    "RE": -0.11435293337698708
+  },
+  "max_drawdown_by_gate_offset0": {
+    "TS": -0.018774466725253625,
+    "BF": -0.0579569442481539,
+    "SCR": -0.018774466725253625,
+    "VA": -0.01627786210753379,
+    "RE": -0.01571362946392907
+  },
+  "deflated_sharpe_prob_by_gate": {
+    "TS": 0.1293028348017588,
+    "BF": 0.03261543585620708,
+    "VA": null,
+    "RE": 0.013818819067235708
+  },
+  "institutionally_fundable_flag": {
+    "TS": false,
+    "BF": false,
+    "SCR": false,
+    "VA": false,
+    "RE": false
+  },
+  "any_gate_fires": false,
+  "summary": "All seven 11b gates return a fired=False verdict, cross-checked against the exact pre-registered criteria and DSR trial counts from phase_6_11a_results.json (no wording or count changed). Every comparison is internal (structured book vs 10b's continuous benchmark, sign-flipped vs unconditional, screen-inclusive vs screen-exclusive, vol-adaptive vs static stop, reentry-swept vs baseline) -- none validates the external programme's own absolute reported numbers, which this repo's Phase 4 reproduction (11a) already found diverge materially. This is the fifteenth-plus gate in this programme's history to return a well-powered null, extending the run from 10a/10b."
+}
