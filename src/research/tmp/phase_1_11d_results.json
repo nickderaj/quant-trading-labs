@@ -1,0 +1,210 @@
+{
+  "gate": "MB",
+  "n_trials": 12,
+  "origin_offsets": [
+    0,
+    7,
+    14,
+    21
+  ],
+  "cost_multipliers": [
+    1,
+    2,
+    3
+  ],
+  "by_offset": {
+    "offset_0": {
+      "cost_1x": {
+        "sharpe": 0.17336395542728184,
+        "max_drawdown": -0.35475996493693407,
+        "fixed_notional_return": 0.09297923756014807,
+        "equity_path_return": 0.08885207541858442,
+        "return_over_drawdown": 0.25045688409169764,
+        "n_trades": 42,
+        "n_stop_exits": 24,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1088852.0754185845
+      },
+      "cost_2x": {
+        "sharpe": 0.16614682874124093,
+        "max_drawdown": -0.3583346101478512,
+        "fixed_notional_return": 0.08557422838466869,
+        "equity_path_return": 0.081509316370586,
+        "return_over_drawdown": 0.2274670491275033,
+        "n_trades": 42,
+        "n_stop_exits": 24,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1081509.316370586
+      },
+      "cost_3x": {
+        "sharpe": 0.1589358502782141,
+        "max_drawdown": -0.3619070897429886,
+        "fixed_notional_return": 0.07816745053797289,
+        "equity_path_return": 0.07416721774460977,
+        "return_over_drawdown": 0.20493441506570167,
+        "n_trades": 42,
+        "n_stop_exits": 24,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1074167.2177446098
+      }
+    },
+    "offset_7": {
+      "cost_1x": {
+        "sharpe": 0.1738403814559774,
+        "max_drawdown": -0.35475996493693407,
+        "fixed_notional_return": 0.09297923756014807,
+        "equity_path_return": 0.08885207541858442,
+        "return_over_drawdown": 0.25045688409169764,
+        "n_trades": 42,
+        "n_stop_exits": 24,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1088852.0754185845
+      },
+      "cost_2x": {
+        "sharpe": 0.1666034167375658,
+        "max_drawdown": -0.3583346101478512,
+        "fixed_notional_return": 0.08557422838466869,
+        "equity_path_return": 0.081509316370586,
+        "return_over_drawdown": 0.2274670491275033,
+        "n_trades": 42,
+        "n_stop_exits": 24,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1081509.316370586
+      },
+      "cost_3x": {
+        "sharpe": 0.1593726177098578,
+        "max_drawdown": -0.3619070897429886,
+        "fixed_notional_return": 0.07816745053797289,
+        "equity_path_return": 0.07416721774460977,
+        "return_over_drawdown": 0.20493441506570167,
+        "n_trades": 42,
+        "n_stop_exits": 24,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1074167.2177446098
+      }
+    },
+    "offset_14": {
+      "cost_1x": {
+        "sharpe": 0.24062209023301936,
+        "max_drawdown": -0.2944904749374342,
+        "fixed_notional_return": 0.15385234325381136,
+        "equity_path_return": 0.14915505542048613,
+        "return_over_drawdown": 0.5064851603508561,
+        "n_trades": 39,
+        "n_stop_exits": 21,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1149155.055420486
+      },
+      "cost_2x": {
+        "sharpe": 0.2333415966414414,
+        "max_drawdown": -0.2975189401488513,
+        "fixed_notional_return": 0.14699776497929173,
+        "equity_path_return": 0.1423347667092687,
+        "return_over_drawdown": 0.4784057332217485,
+        "n_trades": 39,
+        "n_stop_exits": 21,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1142334.7667092688
+      },
+      "cost_3x": {
+        "sharpe": 0.22605052383620655,
+        "max_drawdown": -0.30054523974448866,
+        "fixed_notional_return": 0.14014177477849463,
+        "equity_path_return": 0.13551506881781128,
+        "return_over_drawdown": 0.45089740543893053,
+        "n_trades": 39,
+        "n_stop_exits": 21,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1135515.0688178113
+      }
+    },
+    "offset_21": {
+      "cost_1x": {
+        "sharpe": 0.3109279856575505,
+        "max_drawdown": -0.24229097073379136,
+        "fixed_notional_return": 0.21080745377039056,
+        "equity_path_return": 0.20519266037412898,
+        "return_over_drawdown": 0.8468852956125104,
+        "n_trades": 36,
+        "n_stop_exits": 18,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1205192.660374129
+      },
+      "cost_2x": {
+        "sharpe": 0.3038298043594051,
+        "max_drawdown": -0.24488508827699418,
+        "fixed_notional_return": 0.2043680588413205,
+        "equity_path_return": 0.1987661200811257,
+        "return_over_drawdown": 0.8116709820089069,
+        "n_trades": 36,
+        "n_stop_exits": 18,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1198766.1200811258
+      },
+      "cost_3x": {
+        "sharpe": 0.2967120272797401,
+        "max_drawdown": -0.2474771071684171,
+        "fixed_notional_return": 0.19792744635120632,
+        "equity_path_return": 0.192340103643883,
+        "return_over_drawdown": 0.7772036203453301,
+        "n_trades": 36,
+        "n_stop_exits": 18,
+        "n_trail_exits": 18,
+        "n_data_end_exits": 0,
+        "final_equity": 1192340.103643883
+      }
+    }
+  },
+  "sharpes_1x_by_offset": {
+    "offset_0": 0.17336395542728184,
+    "offset_7": 0.1738403814559774,
+    "offset_14": 0.24062209023301936,
+    "offset_21": 0.3109279856575505
+  },
+  "positive_every_offset": true,
+  "noise_floor_offset0_1x": {
+    "point_return": 0.0929792375601481,
+    "ci_return": [
+      -0.5265746951948873,
+      1.000740386560829
+    ],
+    "half_width_pp": 76.36575408778582
+  },
+  "ci_excludes_zero": false,
+  "cost_stress_1x_vs_3x_offset0": {
+    "control_point": 0.0929792375601481,
+    "treatment_point": 0.07816745053797285,
+    "delta_point": -0.014811787022175255,
+    "delta_ci": [
+      -0.023692428850170377,
+      -0.007014456727285448
+    ],
+    "delta_excludes_zero": true,
+    "control_ci": [
+      -0.5265746951948873,
+      1.000740386560829
+    ],
+    "n_blocks": 10
+  },
+  "deflated_sharpe_prob": 0.05536891281843318,
+  "dsr_fires": false,
+  "gate_fires": false,
+  "fundable_flag": false,
+  "n_trades_offset0_1x": 42,
+  "n_delisted_trades_offset0_1x": 1,
+  "delisted_symbols_traded": [
+    "LUNAUSDT"
+  ],
+  "delisted_pnl_sum": -20181.808619999996
+}

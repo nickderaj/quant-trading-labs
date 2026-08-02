@@ -1,0 +1,192 @@
+{
+  "gate": "MB-E",
+  "n_trials": 4,
+  "origin_offsets": [
+    0,
+    7,
+    14,
+    21
+  ],
+  "cost_multipliers_reported": [
+    1,
+    2,
+    3
+  ],
+  "by_offset": {
+    "offset_0": {
+      "cost_1x": {
+        "sharpe": -0.021924606839480422,
+        "max_drawdown": -0.3199449476442702,
+        "fixed_notional_return": -0.19622036037468996,
+        "equity_path_return": -0.19609042699695878,
+        "return_over_drawdown": -0.6128880247703781,
+        "n_trades": 401,
+        "n_stop_exits": 133,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 0,
+        "final_equity": 803909.5730030412
+      },
+      "cost_2x": {
+        "sharpe": -0.04638876936967685,
+        "max_drawdown": -0.35016637441029375,
+        "fixed_notional_return": -0.2760175818528578,
+        "equity_path_return": -0.27572368902414734,
+        "return_over_drawdown": -0.7874076701067787,
+        "n_trades": 401,
+        "n_stop_exits": 133,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 0,
+        "final_equity": 724276.3109758527
+      },
+      "cost_3x": {
+        "sharpe": -0.07052371137904549,
+        "max_drawdown": -0.4056856782906063,
+        "fixed_notional_return": -0.35587061925688107,
+        "equity_path_return": -0.35526277677996576,
+        "return_over_drawdown": -0.8757094366182655,
+        "n_trades": 401,
+        "n_stop_exits": 133,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 0,
+        "final_equity": 644737.2232200343
+      }
+    },
+    "offset_7": {
+      "cost_1x": {
+        "sharpe": -0.021933280790185576,
+        "max_drawdown": -0.3199449476442702,
+        "fixed_notional_return": -0.19622036037468996,
+        "equity_path_return": -0.19609042699695878,
+        "return_over_drawdown": -0.6128880247703781,
+        "n_trades": 401,
+        "n_stop_exits": 133,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 0,
+        "final_equity": 803909.5730030412
+      },
+      "cost_2x": {
+        "sharpe": -0.046407122107849044,
+        "max_drawdown": -0.35016637441029375,
+        "fixed_notional_return": -0.2760175818528578,
+        "equity_path_return": -0.27572368902414734,
+        "return_over_drawdown": -0.7874076701067787,
+        "n_trades": 401,
+        "n_stop_exits": 133,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 0,
+        "final_equity": 724276.3109758527
+      },
+      "cost_3x": {
+        "sharpe": -0.07055161291056727,
+        "max_drawdown": -0.4056856782906063,
+        "fixed_notional_return": -0.35587061925688107,
+        "equity_path_return": -0.35526277677996576,
+        "return_over_drawdown": -0.8757094366182655,
+        "n_trades": 401,
+        "n_stop_exits": 133,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 0,
+        "final_equity": 644737.2232200343
+      }
+    },
+    "offset_14": {
+      "cost_1x": {
+        "sharpe": -0.021941965043971993,
+        "max_drawdown": -0.3199449476442702,
+        "fixed_notional_return": -0.19622036037468996,
+        "equity_path_return": -0.19609042699695878,
+        "return_over_drawdown": -0.6128880247703781,
+        "n_trades": 401,
+        "n_stop_exits": 133,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 0,
+        "final_equity": 803909.5730030412
+      },
+      "cost_2x": {
+        "sharpe": -0.04642549664589239,
+        "max_drawdown": -0.35016637441029375,
+        "fixed_notional_return": -0.2760175818528578,
+        "equity_path_return": -0.27572368902414734,
+        "return_over_drawdown": -0.7874076701067787,
+        "n_trades": 401,
+        "n_stop_exits": 133,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 0,
+        "final_equity": 724276.3109758527
+      },
+      "cost_3x": {
+        "sharpe": -0.07057954758464285,
+        "max_drawdown": -0.4056856782906063,
+        "fixed_notional_return": -0.35587061925688107,
+        "equity_path_return": -0.35526277677996576,
+        "return_over_drawdown": -0.8757094366182655,
+        "n_trades": 401,
+        "n_stop_exits": 133,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 0,
+        "final_equity": 644737.2232200343
+      }
+    },
+    "offset_21": {
+      "cost_1x": {
+        "sharpe": -0.027109993599626625,
+        "max_drawdown": -0.3257985579506605,
+        "fixed_notional_return": -0.2192393123869756,
+        "equity_path_return": -0.21760186975577522,
+        "return_over_drawdown": -0.6679031089779386,
+        "n_trades": 402,
+        "n_stop_exits": 135,
+        "n_trail_exits": 267,
+        "n_data_end_exits": 0,
+        "final_equity": 782398.1302442248
+      },
+      "cost_2x": {
+        "sharpe": -0.0511698146524888,
+        "max_drawdown": -0.3570193200010111,
+        "fixed_notional_return": -0.29922794208592796,
+        "equity_path_return": -0.2973633943287758,
+        "return_over_drawdown": -0.8329056095001627,
+        "n_trades": 402,
+        "n_stop_exits": 135,
+        "n_trail_exits": 267,
+        "n_data_end_exits": 0,
+        "final_equity": 702636.6056712242
+      },
+      "cost_3x": {
+        "sharpe": -0.07485371140927835,
+        "max_drawdown": -0.4128275522577489,
+        "fixed_notional_return": -0.37926319517227797,
+        "equity_path_return": -0.3770214732090975,
+        "return_over_drawdown": -0.9132662564481746,
+        "n_trades": 402,
+        "n_stop_exits": 135,
+        "n_trail_exits": 267,
+        "n_data_end_exits": 0,
+        "final_equity": 622978.5267909025
+      }
+    }
+  },
+  "sharpes_1x_by_offset": {
+    "offset_0": -0.021924606839480422,
+    "offset_7": -0.021933280790185576,
+    "offset_14": -0.021941965043971993,
+    "offset_21": -0.027109993599626625
+  },
+  "positive_every_offset": false,
+  "noise_floor_offset0_1x": {
+    "point_return": -0.1962203603746901,
+    "ci_return": [
+      -1.1107436723881314,
+      0.8111486729597915
+    ],
+    "half_width_pp": 96.09461726739615
+  },
+  "ci_excludes_zero": false,
+  "deflated_sharpe_prob": 0.14012782571913185,
+  "dsr_fires": false,
+  "gate_fires": false,
+  "fundable_flag_eligible": false,
+  "fundable_flag_reason": "survivorship-unknown universe cannot support an absolute-performance claim",
+  "n_trades_offset0_1x": 401,
+  "survivorship_caveat": "current-listing yfinance universe; no delisted names present by construction; every number here inherits the same survivorship-unknown caveat as the external programme's own 39-symbol legacy proxy registry"
+}

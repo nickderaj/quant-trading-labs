@@ -833,6 +833,367 @@ def simulate_book(
     }
 
 
+# ---------------------------------------------------------------------------
+# Notebook 11d -- momentum/breakout transfer (NEXT_PROMPT.md sec 7)
+#
+# Unlike the calendar spreads above, these are single-instrument OHLC series
+# (crypto perpetuals, commodity-sector equities/ETFs/futures), so a true ATR
+# is available -- no honest-naming caveat needed here, in contrast to
+# `compute_atr_series` above.
+# ---------------------------------------------------------------------------
+
+
+def true_atr_series(
+    high: np.ndarray, low: np.ndarray, close: np.ndarray, window: int = 14
+) -> np.ndarray:
+    """Wilder's true range, `max(high-low, |high-prev_close|,
+    |low-prev_close|)`, rolling-mean over `window` bars, shift(1) so bar
+    t's ATR uses bars through t-1 only."""
+    high = np.asarray(high, dtype=float)
+    low = np.asarray(low, dtype=float)
+    close = np.asarray(close, dtype=float)
+    prev_close = np.roll(close, 1)
+    prev_close[0] = np.nan
+    tr = np.maximum(
+        high - low, np.maximum(np.abs(high - prev_close), np.abs(low - prev_close))
+    )
+    atr = pl.Series(tr).rolling_mean(window_size=window).shift(1)
+    return atr.to_numpy()
+
+
+def sma_causal(x: np.ndarray, window: int) -> np.ndarray:
+    """Rolling mean, shift(1): bar t's SMA uses bars through t-1 only."""
+    return pl.Series(np.asarray(x, dtype=float)).rolling_mean(
+        window_size=window
+    ).shift(1).to_numpy()
+
+
+def regime_gate(
+    closes: dict[str, np.ndarray],
+    dates: dict[str, np.ndarray],
+    all_dates: np.ndarray,
+    fast: int = 10,
+    slow: int = 20,
+    min_confirm: int = 1,
+) -> np.ndarray:
+    """Fail-closed trend regime gate (NEXT_PROMPT.md sec 7): True on `all_dates[i]`
+    only if at least `min_confirm` of the reference symbols in `closes` have
+    SMA(fast) > SMA(slow) (both shift(1), so no lookahead) on that date.
+    A reference symbol missing a date counts as not-confirming for it (fail
+    closed), never as an omission from the vote.
+    """
+    date_index = {d: i for i, d in enumerate(all_dates)}
+    votes = np.zeros(len(all_dates), dtype=int)
+    for name, px in closes.items():
+        d = dates[name]
+        fast_sma = sma_causal(px, fast)
+        slow_sma = sma_causal(px, slow)
+        ok = (fast_sma > slow_sma) & np.isfinite(fast_sma) & np.isfinite(slow_sma)
+        for j, dt in enumerate(d):
+            i = date_index.get(dt)
+            if i is not None and ok[j]:
+                votes[i] += 1
+    return votes >= min_confirm
+
+
+@dataclass
+class BreakoutParams:
+    """The pre-declared breakout rule (NEXT_PROMPT.md sec 7), taken as a
+    single fixed prior -- not swept -- consistent with sec 0.3's discipline
+    against inflating the DSR count. Only `cost_multiplier` and the origin
+    `offset` vary across Gate MB/MB-E's declared trials."""
+
+    prior_run_lookback: int = 40
+    prior_run_min_return: float = 0.25
+    base_window: int = 10
+    base_max_range_pct: float = 0.15
+    atr_window: int = 14
+    stop_atr_mult: float = 2.0
+    trail_ma_window: int = 20
+    risk_pct: float = 0.02
+    max_position_pct: float = 0.20
+    max_leverage: float = 3.0
+
+
+def compute_breakout_entries(
+    open_: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    p: BreakoutParams,
+) -> np.ndarray:
+    """Prior run + tightening base + breakout, all evaluated as of bar t's
+    close (a real intraday breakout detector would trigger earlier; this
+    daily-bar version waits for confirmation at the close, same convention
+    as `open_[t+1]` execution below). Returns a boolean entry-signal array
+    aligned to `close`; a True at index t means "enter at open_[t+1]"."""
+    n = len(close)
+    high = np.asarray(high, dtype=float)
+    low = np.asarray(low, dtype=float)
+    close = np.asarray(close, dtype=float)
+    bw = p.base_window
+    base_high = pl.Series(high).rolling_max(window_size=bw).to_numpy()
+    base_low = pl.Series(low).rolling_min(window_size=bw).to_numpy()
+    base_range_pct = (base_high - base_low) / close
+    prior_close = np.full(n, np.nan)
+    valid = np.arange(n) - bw - p.prior_run_lookback >= 0
+    idx = np.arange(n)
+    prior_close[valid] = close[idx[valid] - bw - p.prior_run_lookback]
+    base_start_close = np.full(n, np.nan)
+    valid2 = np.arange(n) - bw >= 0
+    base_start_close[valid2] = close[idx[valid2] - bw]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        prior_run_ret = base_start_close / prior_close - 1.0
+
+    base_high_1 = np.roll(base_high, 1)
+    base_high_1[0] = np.nan
+    base_range_1 = np.roll(base_range_pct, 1)
+    base_range_1[0] = np.nan
+    prior_run_1 = np.roll(prior_run_ret, 1)
+    prior_run_1[0] = np.nan
+
+    signal = (
+        (close > base_high_1)
+        & (base_range_1 <= p.base_max_range_pct)
+        & (prior_run_1 >= p.prior_run_min_return)
+    )
+    return np.nan_to_num(signal, nan=False).astype(bool)
+
+
+def simulate_breakout_single(
+    dates: np.ndarray,
+    open_: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    regime_ok: np.ndarray,
+    p: BreakoutParams,
+    cost_bps_per_side: float,
+    start_equity: float = 1_000_000.0,
+) -> dict:
+    """Long-only breakout/base/stop/MA-trail simulation on one symbol's own
+    equity slice, sized against its own `start_equity` copy -- same joint-
+    sizing simplification as `simulate_single_spread`/`simulate_book`
+    (portfolio pooling rescales, does not jointly risk-manage). Stop breach
+    is checked before the trail-exit signal, same declared ordering as the
+    spread engine (NEXT_PROMPT.md sec 4.1)."""
+    n = len(close)
+    open_ = np.asarray(open_, dtype=float)
+    high = np.asarray(high, dtype=float)
+    low = np.asarray(low, dtype=float)
+    close = np.asarray(close, dtype=float)
+    atr = true_atr_series(high, low, close, p.atr_window)
+    trail_ma = sma_causal(close, p.trail_ma_window)
+    entry_signal = compute_breakout_entries(open_, high, low, close, p)
+
+    equity = start_equity
+    equity_curve = np.full(n, np.nan)
+    trades = []
+    position = None  # dict: entry_idx, entry_price, qty, stop_price
+
+    for t in range(n):
+        if position is not None:
+            stop_hit = low[t] <= position["stop_price"]
+            if stop_hit:
+                fill = min(open_[t], position["stop_price"])
+                pnl = (fill - position["entry_price"]) * position["qty"]
+                notional = (position["entry_price"] + fill) * position["qty"]
+                pnl -= notional * cost_bps_per_side
+                equity += pnl
+                trades.append(
+                    {
+                        "entry_date": position["entry_date"],
+                        "exit_date": dates[t],
+                        "entry_price": position["entry_price"],
+                        "exit_price": fill,
+                        "qty": position["qty"],
+                        "pnl": pnl,
+                        "ret_eq": pnl / position["equity_at_open"],
+                        "atr_at_entry": position["atr_at_entry"],
+                        "pnl_atr": pnl_atr(
+                            pnl, position["qty"], position["atr_at_entry"]
+                        ),
+                        "exit_reason": "stop",
+                    }
+                )
+                position = None
+            elif close[t] < trail_ma[t] and np.isfinite(trail_ma[t]):
+                if t + 1 < n:
+                    fill = open_[t + 1]
+                    exit_date = dates[t + 1]
+                else:
+                    fill = close[t]
+                    exit_date = dates[t]
+                pnl = (fill - position["entry_price"]) * position["qty"]
+                notional = (position["entry_price"] + fill) * position["qty"]
+                pnl -= notional * cost_bps_per_side
+                equity += pnl
+                trades.append(
+                    {
+                        "entry_date": position["entry_date"],
+                        "exit_date": exit_date,
+                        "entry_price": position["entry_price"],
+                        "exit_price": fill,
+                        "qty": position["qty"],
+                        "pnl": pnl,
+                        "ret_eq": pnl / position["equity_at_open"],
+                        "atr_at_entry": position["atr_at_entry"],
+                        "pnl_atr": pnl_atr(
+                            pnl, position["qty"], position["atr_at_entry"]
+                        ),
+                        "exit_reason": "trail",
+                    }
+                )
+                position = None
+
+        equity_curve[t] = equity
+
+        if (
+            position is None
+            and t + 1 < n
+            and entry_signal[t]
+            and bool(regime_ok[t])
+            and np.isfinite(atr[t])
+            and atr[t] > 0
+        ):
+            entry_price = open_[t + 1]
+            stop_distance = p.stop_atr_mult * atr[t]
+            risk_qty = np.floor(equity * p.risk_pct / stop_distance)
+            cap_notional_qty = np.floor(equity * p.max_position_pct / entry_price)
+            cap_leverage_qty = np.floor(p.max_leverage * equity / entry_price)
+            qty = min(risk_qty, cap_notional_qty, cap_leverage_qty)
+            if qty > 0:
+                position = {
+                    "entry_date": dates[t + 1],
+                    "entry_price": entry_price,
+                    "qty": float(qty),
+                    "stop_price": entry_price - stop_distance,
+                    "atr_at_entry": float(atr[t]),
+                    "equity_at_open": equity,
+                }
+
+    if position is not None:
+        fill = close[-1]
+        pnl = (fill - position["entry_price"]) * position["qty"]
+        notional = (position["entry_price"] + fill) * position["qty"]
+        pnl -= notional * cost_bps_per_side
+        equity += pnl
+        equity_curve[-1] = equity
+        trades.append(
+            {
+                "entry_date": position["entry_date"],
+                "exit_date": dates[-1],
+                "entry_price": position["entry_price"],
+                "exit_price": fill,
+                "qty": position["qty"],
+                "pnl": pnl,
+                "ret_eq": pnl / position["equity_at_open"],
+                "atr_at_entry": position["atr_at_entry"],
+                "pnl_atr": pnl_atr(pnl, position["qty"], position["atr_at_entry"]),
+                "exit_reason": "data_end",
+            }
+        )
+
+    return {"trades": trades, "equity_curve": equity_curve, "dates": dates}
+
+
+def simulate_breakout_book(
+    symbol_frames: dict[str, dict[str, np.ndarray]],
+    regime_ok_by_symbol: dict[str, np.ndarray],
+    p: BreakoutParams,
+    cost_bps_per_side: float,
+    start_equity: float = 1_000_000.0,
+) -> dict:
+    """Run `simulate_breakout_single` independently per symbol (each sized
+    against its own `start_equity` copy, same dollar-additive pooling
+    simplification as `simulate_book` above -- portfolio-level risk caps are
+    not jointly enforced), then pool into one book."""
+    all_dates_sorted = sorted(
+        set().union(*[set(f["dates"]) for f in symbol_frames.values()])
+    )
+    all_dates = np.array(all_dates_sorted)
+    date_index = {d: i for i, d in enumerate(all_dates)}
+    per_symbol_results = {}
+    all_trades = []
+    for name, f in symbol_frames.items():
+        res = simulate_breakout_single(
+            f["dates"],
+            f["open"],
+            f["high"],
+            f["low"],
+            f["close"],
+            regime_ok_by_symbol[name],
+            p,
+            cost_bps_per_side,
+            start_equity=start_equity,
+        )
+        for t in res["trades"]:
+            t["symbol"] = name
+        per_symbol_results[name] = res
+        all_trades.extend(res["trades"])
+
+    portfolio_delta = np.zeros(len(all_dates))
+    for name, res in per_symbol_results.items():
+        ec = res["equity_curve"]
+        prev = start_equity
+        for j, d in enumerate(res["dates"]):
+            cur = ec[j]
+            if np.isfinite(cur):
+                portfolio_delta[date_index[d]] += (
+                    cur - prev if np.isfinite(prev) else 0.0
+                )
+                prev = cur
+    portfolio_equity = start_equity + np.cumsum(portfolio_delta)
+
+    all_trades.sort(key=lambda t: t["exit_date"])
+    return {
+        "trades": all_trades,
+        "portfolio_equity": portfolio_equity,
+        "dates": all_dates,
+        "per_symbol": per_symbol_results,
+        "start_equity": start_equity,
+    }
+
+
+def breakout_book_metrics(book: dict) -> dict:
+    """Sharpe, max drawdown, fixed-notional and equity-path return, same
+    three-way-risk-gate construction as `book_metrics` above, relabelled
+    for the breakout book's own exit-reason vocabulary
+    (`stop`/`trail`/`data_end` instead of `stop`/`zscore`)."""
+    equity = book["portfolio_equity"]
+    start_equity = book["start_equity"]
+    daily_ret = np.diff(equity) / equity[:-1]
+    daily_ret = daily_ret[np.isfinite(daily_ret)]
+    sharpe = (
+        float(np.mean(daily_ret) / np.std(daily_ret) * np.sqrt(252))
+        if np.std(daily_ret) > 0
+        else float("nan")
+    )
+    running_max = np.maximum.accumulate(equity)
+    drawdown = equity / running_max - 1.0
+    max_dd = float(np.min(drawdown))
+    fixed_notional_return = float(sum(t["ret_eq"] for t in book["trades"]))
+    equity_path_return = float(equity[-1] / start_equity - 1.0)
+    n_trades = len(book["trades"])
+    n_stop = sum(1 for t in book["trades"] if t["exit_reason"] == "stop")
+    n_trail = sum(1 for t in book["trades"] if t["exit_reason"] == "trail")
+    n_data_end = n_trades - n_stop - n_trail
+    return {
+        "sharpe": sharpe,
+        "max_drawdown": max_dd,
+        "fixed_notional_return": fixed_notional_return,
+        "equity_path_return": equity_path_return,
+        "return_over_drawdown": float(equity_path_return / abs(max_dd))
+        if max_dd != 0
+        else float("nan"),
+        "n_trades": n_trades,
+        "n_stop_exits": n_stop,
+        "n_trail_exits": n_trail,
+        "n_data_end_exits": n_data_end,
+        "final_equity": float(equity[-1]),
+    }
+
+
 def book_metrics(book: dict) -> dict:
     """Sharpe, max drawdown, fixed-notional and equity-path return for a
     `simulate_book` result -- the three-way risk gate's required numbers,

@@ -100,6 +100,7 @@ instead — this list has no teaching order, it's a lookup table.
 - [Johnson SU distribution](01-probability-and-distributions.md#johnson-su-distribution)
 - [Kolmogorov-Smirnov test](03-statistical-inference.md#kolmogorov-smirnov-test)
 - [Kruskal-Wallis](03-statistical-inference.md#kruskal-wallis)
+- [Kullamagi-style breakout mechanism](08-research-methodology.md#kullamagi-style-breakout-mechanism)
 - [Kupiec unconditional coverage](06-scoring-rules-and-calibration.md#kupiec-unconditional-coverage)
 - [Kurtosis (and excess kurtosis)](01-probability-and-distributions.md#kurtosis-and-excess-kurtosis)
 - [Label switching](02-estimation-and-fitting.md#label-switching)

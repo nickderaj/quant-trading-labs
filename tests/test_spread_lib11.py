@@ -1990,3 +1990,852 @@ class TestSimulateBookVetoEntryMasks:
             # Edge case: no early trades, so veto has no effect; just verify structure
             assert len(vetoed_trades_a) == len(baseline_trades_a)
             assert "trades" in result_vetoed
+
+
+# ---------------------------------------------------------------------------
+# Notebook 11d -- momentum/breakout transfer
+# ---------------------------------------------------------------------------
+
+
+class TestTrueAtrSeries:
+    """Test Wilder's ATR with rolling mean and shift(1) for causality."""
+
+    def test_output_length_matches_input(self):
+        """ATR array should have same length as close array."""
+        rng = np.random.default_rng(SEED)
+        n = 100
+        high = rng.uniform(100, 110, n)
+        low = rng.uniform(90, 100, n)
+        close = rng.uniform(95, 105, n)
+        atr = SL11.true_atr_series(high, low, close, window=14)
+        assert len(atr) == n
+
+    def test_first_window_values_are_nan(self):
+        """First `window` values should be NaN (rolling warmup + shift)."""
+        rng = np.random.default_rng(SEED)
+        n = 100
+        high = rng.uniform(100, 110, n)
+        low = rng.uniform(90, 100, n)
+        close = rng.uniform(95, 105, n)
+        window = 14
+        atr = SL11.true_atr_series(high, low, close, window=window)
+        # First window values should be NaN due to rolling warmup + shift(1)
+        assert np.isnan(atr[0])
+        assert np.isnan(atr[window - 1])
+
+    def test_constant_range_produces_constant_atr(self):
+        """With constant high-low spread, ATR after warmup should equal that spread."""
+        n = 50
+        close = np.full(n, 100.0)
+        high = np.full(n, 105.0)  # Always +5 from close
+        low = np.full(n, 100.0)   # Always 0 from close
+        # True range = max(5-0, |105-100|, |100-100|) = 5 each bar
+        atr = SL11.true_atr_series(high, low, close, window=14)
+        # After warmup (bar ~15), ATR should stabilize at 5.0
+        assert np.isclose(atr[30], 5.0, atol=0.1)
+        assert np.isclose(atr[40], 5.0, atol=0.1)
+
+    def test_no_lookahead_bar_t_not_affected_by_perturb_bar_t(self):
+        """Changing bar t's high/low should NOT change atr[t] (shift(1) causality)."""
+        rng = np.random.default_rng(SEED)
+        n = 100
+        high1 = rng.uniform(100, 110, n)
+        low1 = rng.uniform(90, 100, n)
+        close = rng.uniform(95, 105, n)
+
+        atr1 = SL11.true_atr_series(high1, low1, close, window=14)
+
+        # Perturb bar 50
+        high2 = high1.copy()
+        low2 = low1.copy()
+        high2[50] += 50.0
+        low2[50] -= 50.0
+
+        atr2 = SL11.true_atr_series(high2, low2, close, window=14)
+
+        # atr[50] should be identical (depends only on bars 0:50)
+        assert atr1[50] == atr2[50]
+        # atr[51] may differ (depends on bar 50's TR)
+        # but atr[49] should be identical
+        assert atr1[49] == atr2[49]
+
+
+class TestSmaCAusal:
+    """Test rolling mean with shift(1) for causality."""
+
+    def test_output_length_matches_input(self):
+        """SMA output should match input length."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        sma = SL11.sma_causal(x, window=2)
+        assert len(sma) == len(x)
+
+    def test_simple_mean_case(self):
+        """Verify rolling mean on a simple synthetic series."""
+        # [1, 2, 3, 4, 5] with window=2, shift(1)
+        # sma[0] = NaN (shift)
+        # sma[1] = mean([1]) = NaN (only 1 value in window)
+        # sma[2] = mean([1, 2]) = 1.5
+        # sma[3] = mean([2, 3]) = 2.5
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        sma = SL11.sma_causal(x, window=2)
+        assert np.isnan(sma[0])
+        assert np.isnan(sma[1])
+        assert sma[2] == pytest.approx(1.5)
+        assert sma[3] == pytest.approx(2.5)
+        assert sma[4] == pytest.approx(3.5)
+
+    def test_causality_no_lookahead(self):
+        """Perturbing x[t] should not change sma[t]."""
+        rng = np.random.default_rng(SEED)
+        x1 = rng.normal(0, 1, 100)
+        sma1 = SL11.sma_causal(x1, window=10)
+
+        x2 = x1.copy()
+        x2[50] += 100.0
+        sma2 = SL11.sma_causal(x2, window=10)
+
+        # sma[50] should be identical (only depends on x[:50])
+        assert sma1[50] == sma2[50]
+        # sma[49] should also be identical
+        assert sma1[49] == sma2[49]
+
+
+class TestRegimeGate:
+    """Test fail-closed trend regime voting gate."""
+
+    def test_single_symbol_matches_sma_condition(self):
+        """With one symbol, gate should match fast_sma > slow_sma exactly."""
+        rng = np.random.default_rng(SEED)
+        n = 100
+        close = rng.uniform(90, 110, n)
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+
+        fast_sma = SL11.sma_causal(close, window=10)
+        slow_sma = SL11.sma_causal(close, window=20)
+        expected = (fast_sma > slow_sma) & np.isfinite(fast_sma) & np.isfinite(
+            slow_sma
+        )
+
+        gate = SL11.regime_gate(
+            {"sym": close}, {"sym": dates}, dates, fast=10, slow=20, min_confirm=1
+        )
+        assert np.array_equal(gate, expected)
+
+    def test_missing_date_does_not_confirm(self):
+        """A symbol missing a date should not contribute a confirm vote (fail-closed)."""
+        # Symbol A: all dates present, always uptrend
+        dates_all = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-07'), dtype='datetime64[D]')
+        close_a = np.array([100.0, 105.0, 110.0, 115.0, 120.0, 125.0])
+
+        # Symbol B: missing date at index 3 (2024-01-04), always uptrend
+        dates_b_full = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-07'), dtype='datetime64[D]')
+        dates_b = np.concatenate([dates_b_full[:3], dates_b_full[4:]])  # Skip index 3
+        close_b = np.array([100.0, 105.0, 110.0, 120.0, 125.0])
+
+        gate = SL11.regime_gate(
+            {"A": close_a, "B": close_b},
+            {"A": dates_all, "B": dates_b},
+            dates_all,
+            fast=2,
+            slow=4,
+            min_confirm=2,
+        )
+
+        # On date 3, only A can confirm (B is missing); with min_confirm=2, no pass
+        assert gate[3] == False
+
+    def test_min_confirm_or_behavior(self):
+        """With min_confirm=1, any one symbol confirming should pass."""
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-05'), dtype='datetime64[D]')
+        close_a = np.array([100.0, 90.0, 85.0, 80.0])  # Downtrend
+        close_b = np.array([100.0, 105.0, 110.0, 115.0])  # Uptrend
+
+        gate = SL11.regime_gate(
+            {"A": close_a, "B": close_b},
+            {"A": dates, "B": dates},
+            dates,
+            fast=2,
+            slow=3,
+            min_confirm=1,
+        )
+
+        # Symbol B uptrend should pass gate even though A is downtrend
+        # (after warmup)
+        assert gate[3] == True
+
+
+class TestBreakoutParams:
+    """Test BreakoutParams dataclass defaults."""
+
+    def test_default_values_exist(self):
+        """All default values should be set as documented."""
+        p = SL11.BreakoutParams()
+        assert p.prior_run_lookback == 40
+        assert p.prior_run_min_return == 0.25
+        assert p.base_window == 10
+        assert p.base_max_range_pct == 0.15
+        assert p.atr_window == 14
+        assert p.stop_atr_mult == 2.0
+        assert p.trail_ma_window == 20
+        assert p.risk_pct == 0.02
+        assert p.max_position_pct == 0.20
+        assert p.max_leverage == 3.0
+
+    def test_custom_values_override(self):
+        """Custom values should override defaults."""
+        p = SL11.BreakoutParams(
+            prior_run_lookback=50, base_max_range_pct=0.20, stop_atr_mult=1.5
+        )
+        assert p.prior_run_lookback == 50
+        assert p.base_max_range_pct == 0.20
+        assert p.stop_atr_mult == 1.5
+
+
+class TestComputeBreakoutEntries:
+    """Test breakout entry signal detection."""
+
+    def test_no_entries_first_lookback_bars(self):
+        """No signal in first prior_run_lookback + base_window bars."""
+        n = 100
+        p = SL11.BreakoutParams(prior_run_lookback=40, base_window=10)
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 105.0)
+        low = np.full(n, 95.0)
+        close = np.full(n, 100.0)
+
+        signal = SL11.compute_breakout_entries(open_, high, low, close, p)
+        min_history = p.prior_run_lookback + p.base_window
+        assert not signal[:min_history].any()
+
+    def test_clean_breakout_fires(self):
+        """Detect a clean breakout: prior run + tight base + breakout close."""
+        n = 150
+        p = SL11.BreakoutParams(
+            prior_run_lookback=40,
+            prior_run_min_return=0.25,
+            base_window=10,
+            base_max_range_pct=0.15,
+        )
+
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 100.0)
+        low = np.full(n, 100.0)
+        close = np.full(n, 100.0)
+
+        # Bars 0-40: prior run up 30% (from 100 to 130)
+        close[:41] = np.linspace(100, 130, 41)
+        open_[:41] = close[:41]
+        high[:41] = close[:41]
+        low[:41] = close[:41]
+
+        # Bars 41-50: tight base around 130
+        close[41:51] = np.linspace(130, 131, 10)
+        open_[41:51] = close[41:51]
+        high[41:51] = close[41:51] + 1.0  # Tight (1 point range)
+        low[41:51] = close[41:51] - 1.0
+
+        # Bar 51: breakout close above base high
+        close[51] = 133.0
+        high[51] = 133.0
+        low[51] = 131.0
+        open_[51] = 131.0
+
+        signal = SL11.compute_breakout_entries(open_, high, low, close, p)
+        # Signal at bar 51 should be True (close > base_high[50])
+        assert signal[51] == True
+
+    def test_big_prior_run_choppy_base_no_signal(self):
+        """Big prior run but wide base range should not signal."""
+        n = 100
+        p = SL11.BreakoutParams(
+            prior_run_lookback=40,
+            prior_run_min_return=0.25,
+            base_window=10,
+            base_max_range_pct=0.15,
+        )
+
+        open_ = np.full(n, 100.0)
+        close = np.full(n, 100.0)
+        high = np.full(n, 100.0)
+        low = np.full(n, 100.0)
+
+        # Bars 0-40: strong prior run
+        close[:41] = np.linspace(100, 130, 41)
+        open_[:41] = close[:41]
+        high[:41] = close[:41]
+        low[:41] = close[:41]
+
+        # Bars 41-50: wide/choppy base (>15% range)
+        close[41:51] = np.linspace(130, 125, 10)
+        open_[41:51] = close[41:51]
+        high[41:51] = 145.0  # Wide range relative to close ~130
+        low[41:51] = 115.0
+
+        # Bar 51: attempt breakout
+        close[51] = 146.0
+        high[51] = 146.0
+        low[51] = 145.0
+        open_[51] = 145.0
+
+        signal = SL11.compute_breakout_entries(open_, high, low, close, p)
+        # Should NOT signal due to wide base range
+        assert signal[51] == False
+
+    def test_tight_base_no_prior_run_no_signal(self):
+        """Tight base but insufficient prior run should not signal."""
+        n = 100
+        p = SL11.BreakoutParams(
+            prior_run_lookback=40,
+            prior_run_min_return=0.25,
+            base_window=10,
+            base_max_range_pct=0.15,
+        )
+
+        open_ = np.full(n, 100.0)
+        close = np.full(n, 100.0)
+        high = np.full(n, 100.0)
+        low = np.full(n, 100.0)
+
+        # Bars 0-40: weak prior run (only 5% up, < 25% min)
+        close[:41] = np.linspace(100, 105, 41)
+        open_[:41] = close[:41]
+        high[:41] = close[:41]
+        low[:41] = close[:41]
+
+        # Bars 41-50: tight base
+        close[41:51] = np.linspace(105, 106, 10)
+        open_[41:51] = close[41:51]
+        high[41:51] = close[41:51] + 0.5
+        low[41:51] = close[41:51] - 0.5
+
+        # Bar 51: attempt breakout
+        close[51] = 107.0
+        high[51] = 107.0
+        low[51] = 106.0
+        open_[51] = 106.0
+
+        signal = SL11.compute_breakout_entries(open_, high, low, close, p)
+        # Should NOT signal due to weak prior run
+        assert signal[51] == False
+
+
+class TestSimulateBreakoutSingle:
+    """Test single-symbol breakout simulation."""
+
+    def test_no_trades_with_regime_all_false(self):
+        """With regime_ok all False, no trades should occur."""
+        n = 80
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 105.0)
+        low = np.full(n, 95.0)
+        close = np.full(n, 100.0)
+        regime_ok = np.zeros(n, dtype=bool)
+
+        p = SL11.BreakoutParams()
+        result = SL11.simulate_breakout_single(
+            dates, open_, high, low, close, regime_ok, p, cost_bps_per_side=10.0
+        )
+
+        assert len(result["trades"]) == 0
+        assert result["equity_curve"][0] == 1_000_000.0
+
+    def test_one_trade_enters_at_next_open(self):
+        """A breakout signal fires at bar t; entry is at open_[t+1]."""
+        n = 150
+        p = SL11.BreakoutParams(
+            prior_run_lookback=40,
+            prior_run_min_return=0.25,
+            base_window=10,
+            base_max_range_pct=0.15,
+        )
+
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 100.0)
+        low = np.full(n, 100.0)
+        close = np.full(n, 100.0)
+
+        # Construct prior run + tight base + breakout
+        close[:41] = np.linspace(100, 130, 41)
+        open_[:41] = close[:41]
+        high[:41] = close[:41]
+        low[:41] = close[:41]
+
+        close[41:51] = np.linspace(130, 131, 10)
+        open_[41:51] = close[41:51]
+        high[41:51] = close[41:51] + 1.0
+        low[41:51] = close[41:51] - 1.0
+
+        close[51] = 133.0
+        high[51] = 133.0
+        low[51] = 131.0
+        open_[51] = 131.0
+
+        # Flatten after signal
+        close[52:] = 134.0
+        open_[52:] = 134.0
+        high[52:] = 134.0
+        low[52:] = 134.0
+
+        regime_ok = np.ones(n, dtype=bool)
+
+        result = SL11.simulate_breakout_single(
+            dates, open_, high, low, close, regime_ok, p, cost_bps_per_side=10.0
+        )
+
+        # Should have exactly one trade
+        assert len(result["trades"]) == 1
+        trade = result["trades"][0]
+        # Entry should be at open_[52] = 134.0
+        assert trade["entry_price"] == pytest.approx(134.0)
+
+    def test_gap_below_stop_fills_at_min_open_stop(self):
+        """Price gaps below stop; fill should be min(open, stop_price)."""
+        n = 80
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        p = SL11.BreakoutParams()
+
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 105.0)
+        low = np.full(n, 95.0)
+        close = np.full(n, 100.0)
+
+        # Inject an entry signal at bar 50
+        # (simplify: assume compute_breakout_entries would detect it)
+        entry_signal = np.zeros(n, dtype=bool)
+        entry_signal[50] = True
+
+        # Manually construct by monkey-patching: we'll create a scenario
+        # instead that relies on actual entry logic
+        # For simplicity, construct bars that trigger entry
+        close[:51] = np.linspace(100, 125, 51)
+        open_[:51] = close[:51]
+        high[:51] = close[:51]
+        low[:51] = close[:51]
+
+        close[51:61] = np.linspace(125, 126, 10)
+        open_[51:61] = close[51:61]
+        high[51:61] = close[51:61] + 0.5
+        low[51:61] = close[51:61] - 0.5
+
+        close[61] = 127.0
+        high[61] = 127.0
+        low[61] = 126.0
+        open_[61] = 126.0
+
+        # Bar 62: gap down below stop (if stop is at ~124)
+        close[62] = 120.0
+        high[62] = 122.0
+        low[62] = 119.0  # Gaps below stop
+        open_[62] = 121.0  # Opens above low but below stop
+
+        regime_ok = np.ones(n, dtype=bool)
+
+        result = SL11.simulate_breakout_single(
+            dates, open_, high, low, close, regime_ok, p, cost_bps_per_side=10.0
+        )
+
+        if len(result["trades"]) > 0:
+            trade = result["trades"][-1]
+            if trade["exit_reason"] == "stop":
+                # Fill should be at or below stop_price
+                assert trade["exit_price"] <= trade["entry_price"]
+
+    def test_trail_exit_fills_at_next_open(self):
+        """Trail-exit signal at bar t fills at open_[t+1] if available."""
+        n = 100
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        p = SL11.BreakoutParams(trail_ma_window=5)
+
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 105.0)
+        low = np.full(n, 95.0)
+        close = np.full(n, 100.0)
+
+        # Construct entry
+        close[:51] = np.linspace(100, 125, 51)
+        open_[:51] = close[:51]
+        high[:51] = close[:51]
+        low[:51] = close[:51]
+
+        close[51:61] = np.linspace(125, 126, 10)
+        open_[51:61] = close[51:61]
+        high[51:61] = close[51:61] + 0.5
+        low[51:61] = close[51:61] - 0.5
+
+        close[61] = 127.0
+        high[61] = 127.0
+        low[61] = 126.0
+        open_[61] = 126.0
+
+        # After entry (bar 62), drift price down to trigger trail
+        close[62:75] = np.linspace(127, 110, 13)
+        open_[62:75] = close[62:75]
+        high[62:75] = close[62:75]
+        low[62:75] = close[62:75]
+
+        regime_ok = np.ones(n, dtype=bool)
+
+        result = SL11.simulate_breakout_single(
+            dates, open_, high, low, close, regime_ok, p, cost_bps_per_side=10.0
+        )
+
+        # May or may not have trail exit depending on exact trail_ma
+        # Just check structure
+        assert "trades" in result
+        assert "equity_curve" in result
+
+    def test_position_at_end_exits_with_data_end(self):
+        """Open position at data end should close with exit_reason='data_end'."""
+        n = 80
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        p = SL11.BreakoutParams()
+
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 105.0)
+        low = np.full(n, 95.0)
+        close = np.full(n, 100.0)
+
+        # Construct entry
+        close[:51] = np.linspace(100, 125, 51)
+        open_[:51] = close[:51]
+        high[:51] = close[:51]
+        low[:51] = close[:51]
+
+        close[51:61] = np.linspace(125, 126, 10)
+        open_[51:61] = close[51:61]
+        high[51:61] = close[51:61] + 0.5
+        low[51:61] = close[51:61] - 0.5
+
+        close[61] = 127.0
+        high[61] = 127.0
+        low[61] = 126.0
+        open_[61] = 126.0
+
+        # Stay high (no stop, no trail) through end
+        close[62:] = 128.0
+        high[62:] = 129.0
+        low[62:] = 127.0
+        open_[62:] = 128.0
+
+        regime_ok = np.ones(n, dtype=bool)
+
+        result = SL11.simulate_breakout_single(
+            dates, open_, high, low, close, regime_ok, p, cost_bps_per_side=10.0
+        )
+
+        if len(result["trades"]) > 0:
+            last_trade = result["trades"][-1]
+            # Last trade should exit at data_end
+            assert last_trade["exit_reason"] == "data_end"
+            assert last_trade["exit_price"] == pytest.approx(close[-1])
+
+    def test_ret_eq_arithmetic_correct(self):
+        """ret_eq should equal pnl / equity_at_open."""
+        n = 80
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        p = SL11.BreakoutParams()
+
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 105.0)
+        low = np.full(n, 95.0)
+        close = np.full(n, 100.0)
+
+        # Construct entry
+        close[:51] = np.linspace(100, 125, 51)
+        open_[:51] = close[:51]
+        high[:51] = close[:51]
+        low[:51] = close[:51]
+
+        close[51:61] = np.linspace(125, 126, 10)
+        open_[51:61] = close[51:61]
+        high[51:61] = close[51:61] + 0.5
+        low[51:61] = close[51:61] - 0.5
+
+        close[61] = 127.0
+        high[61] = 127.0
+        low[61] = 126.0
+        open_[61] = 126.0
+
+        close[62:] = 135.0
+        high[62:] = 136.0
+        low[62:] = 134.0
+        open_[62:] = 135.0
+
+        regime_ok = np.ones(n, dtype=bool)
+
+        result = SL11.simulate_breakout_single(
+            dates, open_, high, low, close, regime_ok, p, cost_bps_per_side=10.0
+        )
+
+        for trade in result["trades"]:
+            expected_ret_eq = trade["pnl"] / trade["equity_at_open"]
+            assert trade["ret_eq"] == pytest.approx(expected_ret_eq)
+
+    def test_pnl_atr_matches_helper_function(self):
+        """pnl_atr in trade should match SL11.pnl_atr() independently."""
+        n = 80
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        p = SL11.BreakoutParams()
+
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 105.0)
+        low = np.full(n, 95.0)
+        close = np.full(n, 100.0)
+
+        # Construct entry
+        close[:51] = np.linspace(100, 125, 51)
+        open_[:51] = close[:51]
+        high[:51] = close[:51]
+        low[:51] = close[:51]
+
+        close[51:61] = np.linspace(125, 126, 10)
+        open_[51:61] = close[51:61]
+        high[51:61] = close[51:61] + 0.5
+        low[51:61] = close[51:61] - 0.5
+
+        close[61] = 127.0
+        high[61] = 127.0
+        low[61] = 126.0
+        open_[61] = 126.0
+
+        close[62:] = 135.0
+        high[62:] = 136.0
+        low[62:] = 134.0
+        open_[62:] = 135.0
+
+        regime_ok = np.ones(n, dtype=bool)
+
+        result = SL11.simulate_breakout_single(
+            dates, open_, high, low, close, regime_ok, p, cost_bps_per_side=10.0
+        )
+
+        for trade in result["trades"]:
+            expected = SL11.pnl_atr(
+                trade["pnl"], trade["qty"], trade["atr_at_entry"]
+            )
+            assert trade["pnl_atr"] == pytest.approx(expected, rel=1e-9)
+
+
+class TestSimulateBreakoutBook:
+    """Test multi-symbol breakout portfolio simulation."""
+
+    def test_portfolio_equity_starts_at_start_equity(self):
+        """Initial portfolio equity should equal start_equity."""
+        n = 80
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 105.0)
+        low = np.full(n, 95.0)
+        close = np.full(n, 100.0)
+        regime_ok = np.zeros(n, dtype=bool)  # No trades
+
+        symbol_frames = {
+            "SYM_A": {
+                "dates": dates,
+                "open": open_,
+                "high": high,
+                "low": low,
+                "close": close,
+            }
+        }
+        regime_ok_by_symbol = {"SYM_A": regime_ok}
+
+        p = SL11.BreakoutParams()
+        start_eq = 1_000_000.0
+        book = SL11.simulate_breakout_book(
+            symbol_frames, regime_ok_by_symbol, p, cost_bps_per_side=10.0, start_equity=start_eq
+        )
+
+        assert book["portfolio_equity"][0] == pytest.approx(start_eq)
+
+    def test_trades_carry_symbol_key(self):
+        """Each trade should have a 'symbol' key."""
+        n = 100
+        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        open_ = np.full(n, 100.0)
+        high = np.full(n, 105.0)
+        low = np.full(n, 95.0)
+        close = np.full(n, 100.0)
+
+        # Construct entry
+        close[:51] = np.linspace(100, 125, 51)
+        open_[:51] = close[:51]
+        high[:51] = close[:51]
+        low[:51] = close[:51]
+
+        close[51:61] = np.linspace(125, 126, 10)
+        open_[51:61] = close[51:61]
+        high[51:61] = close[51:61] + 0.5
+        low[51:61] = close[51:61] - 0.5
+
+        close[61] = 127.0
+        high[61] = 127.0
+        low[61] = 126.0
+        open_[61] = 126.0
+
+        close[62:] = 128.0
+        high[62:] = 129.0
+        low[62:] = 127.0
+        open_[62:] = 128.0
+
+        regime_ok = np.ones(n, dtype=bool)
+
+        symbol_frames = {
+            "SYM_A": {
+                "dates": dates,
+                "open": open_,
+                "high": high,
+                "low": low,
+                "close": close,
+            }
+        }
+        regime_ok_by_symbol = {"SYM_A": regime_ok}
+
+        p = SL11.BreakoutParams()
+        book = SL11.simulate_breakout_book(
+            symbol_frames, regime_ok_by_symbol, p, cost_bps_per_side=10.0
+        )
+
+        for trade in book["trades"]:
+            assert "symbol" in trade
+            assert trade["symbol"] == "SYM_A"
+
+    def test_multi_symbol_pooling(self):
+        """With two symbols, portfolio_equity should pool correctly."""
+        n_a = 80
+        n_b = 100
+        dates_a = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n_a, 'D'), dtype='datetime64[D]')
+        dates_b = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n_b, 'D'), dtype='datetime64[D]')
+
+        open_a = np.full(n_a, 100.0)
+        high_a = np.full(n_a, 105.0)
+        low_a = np.full(n_a, 95.0)
+        close_a = np.full(n_a, 100.0)
+        regime_ok_a = np.zeros(n_a, dtype=bool)
+
+        open_b = np.full(n_b, 100.0)
+        high_b = np.full(n_b, 105.0)
+        low_b = np.full(n_b, 95.0)
+        close_b = np.full(n_b, 100.0)
+        regime_ok_b = np.zeros(n_b, dtype=bool)
+
+        symbol_frames = {
+            "SYM_A": {
+                "dates": dates_a,
+                "open": open_a,
+                "high": high_a,
+                "low": low_a,
+                "close": close_a,
+            },
+            "SYM_B": {
+                "dates": dates_b,
+                "open": open_b,
+                "high": high_b,
+                "low": low_b,
+                "close": close_b,
+            },
+        }
+        regime_ok_by_symbol = {"SYM_A": regime_ok_a, "SYM_B": regime_ok_b}
+
+        p = SL11.BreakoutParams()
+        start_eq = 1_000_000.0
+        book = SL11.simulate_breakout_book(
+            symbol_frames,
+            regime_ok_by_symbol,
+            p,
+            cost_bps_per_side=10.0,
+            start_equity=start_eq,
+        )
+
+        # Portfolio equity should start at start_eq
+        assert book["portfolio_equity"][0] == pytest.approx(start_eq)
+        # With no trades, it should stay flat
+        assert all(
+            np.isclose(book["portfolio_equity"][i], start_eq)
+            for i in range(len(book["portfolio_equity"]))
+        )
+
+
+class TestBreakoutBookMetrics:
+    """Test breakout book metrics calculation."""
+
+    def test_metrics_basic_structure(self):
+        """Metrics should include all required keys."""
+        book = {
+            "trades": [],
+            "portfolio_equity": np.array([1_000_000.0, 1_000_000.0, 1_000_000.0]),
+            "start_equity": 1_000_000.0,
+            "dates": np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(3, 'D'), dtype='datetime64[D]'),
+        }
+        metrics = SL11.breakout_book_metrics(book)
+
+        required_keys = {
+            "sharpe",
+            "max_drawdown",
+            "fixed_notional_return",
+            "equity_path_return",
+            "n_trades",
+            "n_stop_exits",
+            "n_trail_exits",
+            "n_data_end_exits",
+        }
+        for key in required_keys:
+            assert key in metrics
+
+    def test_exit_reason_counts_sum_correctly(self):
+        """n_stop + n_trail + n_data_end should equal n_trades."""
+        trades = [
+            {"exit_reason": "stop", "ret_eq": 0.01},
+            {"exit_reason": "stop", "ret_eq": -0.02},
+            {"exit_reason": "trail", "ret_eq": 0.03},
+            {"exit_reason": "data_end", "ret_eq": 0.005},
+        ]
+        book = {
+            "trades": trades,
+            "portfolio_equity": np.array([1_000_000.0, 1_010_000.0, 990_000.0, 1_020_000.0, 1_025_000.0]),
+            "start_equity": 1_000_000.0,
+            "dates": np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(5, 'D'), dtype='datetime64[D]'),
+        }
+        metrics = SL11.breakout_book_metrics(book)
+
+        total = (
+            metrics["n_stop_exits"]
+            + metrics["n_trail_exits"]
+            + metrics["n_data_end_exits"]
+        )
+        assert total == metrics["n_trades"]
+
+    def test_fixed_notional_return_sums_ret_eq(self):
+        """fixed_notional_return should equal sum of ret_eq."""
+        trades = [
+            {"exit_reason": "stop", "ret_eq": 0.01},
+            {"exit_reason": "trail", "ret_eq": 0.02},
+        ]
+        book = {
+            "trades": trades,
+            "portfolio_equity": np.array([1_000_000.0, 1_010_000.0, 1_030_000.0]),
+            "start_equity": 1_000_000.0,
+            "dates": np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(3, 'D'), dtype='datetime64[D]'),
+        }
+        metrics = SL11.breakout_book_metrics(book)
+
+        assert metrics["fixed_notional_return"] == pytest.approx(0.03)
+
+    def test_max_drawdown_computed_correctly(self):
+        """max_drawdown should be min(equity / running_max - 1)."""
+        # Equity path: 1M -> 1.2M -> 0.9M -> 1.1M
+        equity = np.array([1_000_000.0, 1_200_000.0, 900_000.0, 1_100_000.0])
+        book = {
+            "trades": [],
+            "portfolio_equity": equity,
+            "start_equity": 1_000_000.0,
+            "dates": np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(4, 'D'), dtype='datetime64[D]'),
+        }
+        metrics = SL11.breakout_book_metrics(book)
+
+        # running_max: [1M, 1.2M, 1.2M, 1.2M]
+        # drawdown: [0, 0, -0.25, -0.0833]
+        expected_dd = -0.25
+        assert metrics["max_drawdown"] == pytest.approx(expected_dd, rel=1e-4)

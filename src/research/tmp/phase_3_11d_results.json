@@ -1,0 +1,40 @@
+{
+  "MB": {
+    "claim": "the breakout setup transfers to our 30 crypto perpetuals",
+    "fires_if": "net Sharpe > 0 at every offset AND paired CI excludes zero AND DSR > 0.95, full cost model, 1x/2x/3x cost stress, walk-forward, three-way risk gate, includes delisted pairs",
+    "n_trials": 12,
+    "gate_fires": false,
+    "fundable_flag": false,
+    "deflated_sharpe_prob": 0.05536891281843318,
+    "sharpes_1x_by_offset": {
+      "offset_0": 0.17336395542728184,
+      "offset_7": 0.1738403814559774,
+      "offset_14": 0.24062209023301936,
+      "offset_21": 0.3109279856575505
+    },
+    "noise_floor_ci": [
+      -0.5265746951948873,
+      1.000740386560829
+    ]
+  },
+  "MB-E": {
+    "claim": "the breakout setup on the 69-ticker commodity-equity universe (survivorship-unknown, labelled)",
+    "fires_if": "same construction as MB; NOT eligible for the institutionally-fundable flag (survivorship-unknown universe cannot support an absolute-performance claim)",
+    "n_trials": 4,
+    "gate_fires": false,
+    "fundable_flag": false,
+    "deflated_sharpe_prob": 0.14012782571913185,
+    "sharpes_1x_by_offset": {
+      "offset_0": -0.021924606839480422,
+      "offset_7": -0.021933280790185576,
+      "offset_14": -0.021941965043971993,
+      "offset_21": -0.027109993599626625
+    },
+    "noise_floor_ci": [
+      -1.1107436723881314,
+      0.8111486729597915
+    ]
+  },
+  "total_dsr_trials": 16,
+  "n_gates_fired": 0
+}

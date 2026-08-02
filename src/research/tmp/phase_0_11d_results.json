@@ -1,0 +1,916 @@
+{
+  "dev_end": "2024-12-31",
+  "n_crypto_symbols": 30,
+  "n_equity_symbols": 69,
+  "crypto_symbols": [
+    "AAVEUSDT",
+    "ADAUSDT",
+    "ALGOUSDT",
+    "ATOMUSDT",
+    "AVAXUSDT",
+    "AXSUSDT",
+    "BNBUSDT",
+    "BTCUSDT",
+    "DOGEUSDT",
+    "DOTUSDT",
+    "EOSUSDT",
+    "ETCUSDT",
+    "ETHUSDT",
+    "FILUSDT",
+    "FTMUSDT",
+    "FTTUSDT",
+    "LINKUSDT",
+    "LTCUSDT",
+    "LUNAUSDT",
+    "MANAUSDT",
+    "MATICUSDT",
+    "NEARUSDT",
+    "SANDUSDT",
+    "SOLUSDT",
+    "THETAUSDT",
+    "TRXUSDT",
+    "UNIUSDT",
+    "VETUSDT",
+    "XLMUSDT",
+    "XRPUSDT"
+  ],
+  "equity_symbols": [
+    "6A=F",
+    "6B=F",
+    "6C=F",
+    "6E=F",
+    "6J=F",
+    "6S=F",
+    "AA",
+    "ADM",
+    "AR",
+    "BG",
+    "BHP",
+    "BZ=F",
+    "CEG",
+    "CF",
+    "CL=F",
+    "CORN",
+    "CPER",
+    "CT=F",
+    "CVX",
+    "DBA",
+    "DE",
+    "DINO",
+    "EQT",
+    "ES=F",
+    "FANG",
+    "FCX",
+    "GC=F",
+    "GDX",
+    "GDXJ",
+    "GLD",
+    "HE=F",
+    "HG=F",
+    "HO=F",
+    "IWM",
+    "KC=F",
+    "LE=F",
+    "MOO",
+    "MOS",
+    "MPC",
+    "NEM",
+    "NG=F",
+    "NTR",
+    "OIH",
+    "OXY",
+    "PA=F",
+    "PL=F",
+    "PSX",
+    "QQQ",
+    "RB=F",
+    "RIO",
+    "SB=F",
+    "SCCO",
+    "SI=F",
+    "SLV",
+    "SPY",
+    "UNG",
+    "USO",
+    "VLO",
+    "VST",
+    "WEAT",
+    "XLE",
+    "XME",
+    "XOM",
+    "XOP",
+    "ZC=F",
+    "ZL=F",
+    "ZM=F",
+    "ZS=F",
+    "ZW=F"
+  ],
+  "delisted_crypto_present": [
+    "FTTUSDT",
+    "LUNAUSDT"
+  ],
+  "crypto_date_range": {
+    "AAVEUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "ADAUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "ALGOUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "ATOMUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "AVAXUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "AXSUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "BNBUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "BTCUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "DOGEUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "DOTUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "EOSUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "ETCUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "ETHUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "FILUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "FTMUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "FTTUSDT": [
+      "2022-04-15",
+      "2024-12-31"
+    ],
+    "LINKUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "LTCUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "LUNAUSDT": [
+      "2021-07-01",
+      "2022-05-13"
+    ],
+    "MANAUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "MATICUSDT": [
+      "2021-07-01",
+      "2024-09-11"
+    ],
+    "NEARUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "SANDUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "SOLUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "THETAUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "TRXUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "UNIUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "VETUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "XLMUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ],
+    "XRPUSDT": [
+      "2021-07-01",
+      "2024-12-31"
+    ]
+  },
+  "equity_date_range": {
+    "6A=F": [
+      "2000-11-08",
+      "2024-12-31"
+    ],
+    "6B=F": [
+      "2000-10-05",
+      "2024-12-31"
+    ],
+    "6C=F": [
+      "2000-05-23",
+      "2024-12-31"
+    ],
+    "6E=F": [
+      "2000-09-12",
+      "2024-12-31"
+    ],
+    "6J=F": [
+      "2000-09-13",
+      "2024-12-31"
+    ],
+    "6S=F": [
+      "2000-11-10",
+      "2024-12-31"
+    ],
+    "AA": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "ADM": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "AR": [
+      "2013-10-10",
+      "2024-12-31"
+    ],
+    "BG": [
+      "2001-08-02",
+      "2024-12-31"
+    ],
+    "BHP": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "BZ=F": [
+      "2007-07-30",
+      "2024-12-31"
+    ],
+    "CEG": [
+      "2022-01-19",
+      "2024-12-31"
+    ],
+    "CF": [
+      "2005-08-11",
+      "2024-12-31"
+    ],
+    "CL=F": [
+      "2000-08-23",
+      "2024-12-31"
+    ],
+    "CORN": [
+      "2010-06-09",
+      "2024-12-31"
+    ],
+    "CPER": [
+      "2011-11-15",
+      "2024-12-31"
+    ],
+    "CT=F": [
+      "2000-01-03",
+      "2024-12-31"
+    ],
+    "CVX": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "DBA": [
+      "2007-01-05",
+      "2024-12-31"
+    ],
+    "DE": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "DINO": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "EQT": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "ES=F": [
+      "2000-09-18",
+      "2024-12-31"
+    ],
+    "FANG": [
+      "2012-10-12",
+      "2024-12-31"
+    ],
+    "FCX": [
+      "1995-07-10",
+      "2024-12-31"
+    ],
+    "GC=F": [
+      "2000-08-30",
+      "2024-12-31"
+    ],
+    "GDX": [
+      "2006-05-22",
+      "2024-12-31"
+    ],
+    "GDXJ": [
+      "2009-11-11",
+      "2024-12-31"
+    ],
+    "GLD": [
+      "2004-11-18",
+      "2024-12-31"
+    ],
+    "HE=F": [
+      "2000-12-15",
+      "2024-12-31"
+    ],
+    "HG=F": [
+      "2000-08-30",
+      "2024-12-31"
+    ],
+    "HO=F": [
+      "2000-09-01",
+      "2024-12-31"
+    ],
+    "IWM": [
+      "2000-05-26",
+      "2024-12-31"
+    ],
+    "KC=F": [
+      "2000-01-03",
+      "2024-12-31"
+    ],
+    "LE=F": [
+      "2001-03-01",
+      "2024-12-31"
+    ],
+    "MOO": [
+      "2007-09-05",
+      "2024-12-31"
+    ],
+    "MOS": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "MPC": [
+      "2011-06-24",
+      "2024-12-31"
+    ],
+    "NEM": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "NG=F": [
+      "2000-08-30",
+      "2024-12-31"
+    ],
+    "NTR": [
+      "2018-01-02",
+      "2024-12-31"
+    ],
+    "OIH": [
+      "2001-02-26",
+      "2024-12-31"
+    ],
+    "OXY": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "PA=F": [
+      "1998-09-28",
+      "2024-12-31"
+    ],
+    "PL=F": [
+      "1997-10-29",
+      "2024-12-31"
+    ],
+    "PSX": [
+      "2012-04-12",
+      "2024-12-31"
+    ],
+    "QQQ": [
+      "1999-03-10",
+      "2024-12-31"
+    ],
+    "RB=F": [
+      "2000-11-01",
+      "2024-12-31"
+    ],
+    "RIO": [
+      "1990-06-28",
+      "2024-12-31"
+    ],
+    "SB=F": [
+      "2000-03-01",
+      "2024-12-31"
+    ],
+    "SCCO": [
+      "1996-01-05",
+      "2024-12-31"
+    ],
+    "SI=F": [
+      "2000-08-30",
+      "2024-12-31"
+    ],
+    "SLV": [
+      "2006-04-28",
+      "2024-12-31"
+    ],
+    "SPY": [
+      "1993-01-29",
+      "2024-12-31"
+    ],
+    "UNG": [
+      "2007-04-18",
+      "2024-12-31"
+    ],
+    "USO": [
+      "2006-04-10",
+      "2024-12-31"
+    ],
+    "VLO": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "VST": [
+      "2016-10-05",
+      "2024-12-31"
+    ],
+    "WEAT": [
+      "2011-09-19",
+      "2024-12-31"
+    ],
+    "XLE": [
+      "1998-12-22",
+      "2024-12-31"
+    ],
+    "XME": [
+      "2006-06-22",
+      "2024-12-31"
+    ],
+    "XOM": [
+      "1990-01-02",
+      "2024-12-31"
+    ],
+    "XOP": [
+      "2006-06-22",
+      "2024-12-31"
+    ],
+    "ZC=F": [
+      "2000-07-17",
+      "2024-12-31"
+    ],
+    "ZL=F": [
+      "2000-03-15",
+      "2024-12-31"
+    ],
+    "ZM=F": [
+      "2000-05-15",
+      "2024-12-31"
+    ],
+    "ZS=F": [
+      "2000-09-15",
+      "2024-12-31"
+    ],
+    "ZW=F": [
+      "2000-07-17",
+      "2024-12-31"
+    ]
+  },
+  "crypto_raw_signal_counts": {
+    "AAVEUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 0
+    },
+    "ADAUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 4
+    },
+    "ALGOUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 3
+    },
+    "ATOMUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 2
+    },
+    "AVAXUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 0
+    },
+    "AXSUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 0
+    },
+    "BNBUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 1
+    },
+    "BTCUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 12
+    },
+    "DOGEUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 1
+    },
+    "DOTUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 3
+    },
+    "EOSUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 2
+    },
+    "ETCUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 4
+    },
+    "ETHUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 11
+    },
+    "FILUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 2
+    },
+    "FTMUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 2
+    },
+    "FTTUSDT": {
+      "n_bars": 992,
+      "n_raw_signals": 0
+    },
+    "LINKUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 2
+    },
+    "LTCUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 2
+    },
+    "LUNAUSDT": {
+      "n_bars": 312,
+      "n_raw_signals": 1
+    },
+    "MANAUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 0
+    },
+    "MATICUSDT": {
+      "n_bars": 1169,
+      "n_raw_signals": 3
+    },
+    "NEARUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 1
+    },
+    "SANDUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 1
+    },
+    "SOLUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 0
+    },
+    "THETAUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 1
+    },
+    "TRXUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 3
+    },
+    "UNIUSDT": {
+      "n_bars": 1280,
+      "n_raw_signals": 5
+    },
+    "VETUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 4
+    },
+    "XLMUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 0
+    },
+    "XRPUSDT": {
+      "n_bars": 1275,
+      "n_raw_signals": 1
+    }
+  },
+  "equity_raw_signal_counts": {
+    "6A=F": {
+      "n_bars": 6039,
+      "n_raw_signals": 0
+    },
+    "6B=F": {
+      "n_bars": 6050,
+      "n_raw_signals": 0
+    },
+    "6C=F": {
+      "n_bars": 6156,
+      "n_raw_signals": 0
+    },
+    "6E=F": {
+      "n_bars": 6136,
+      "n_raw_signals": 0
+    },
+    "6J=F": {
+      "n_bars": 6059,
+      "n_raw_signals": 0
+    },
+    "6S=F": {
+      "n_bars": 6044,
+      "n_raw_signals": 0
+    },
+    "AA": {
+      "n_bars": 8817,
+      "n_raw_signals": 30
+    },
+    "ADM": {
+      "n_bars": 8817,
+      "n_raw_signals": 19
+    },
+    "AR": {
+      "n_bars": 2825,
+      "n_raw_signals": 15
+    },
+    "BG": {
+      "n_bars": 5890,
+      "n_raw_signals": 21
+    },
+    "BHP": {
+      "n_bars": 8817,
+      "n_raw_signals": 28
+    },
+    "BZ=F": {
+      "n_bars": 4333,
+      "n_raw_signals": 22
+    },
+    "CEG": {
+      "n_bars": 742,
+      "n_raw_signals": 12
+    },
+    "CF": {
+      "n_bars": 4880,
+      "n_raw_signals": 46
+    },
+    "CL=F": {
+      "n_bars": 6115,
+      "n_raw_signals": 23
+    },
+    "CORN": {
+      "n_bars": 3666,
+      "n_raw_signals": 6
+    },
+    "CPER": {
+      "n_bars": 3302,
+      "n_raw_signals": 0
+    },
+    "CT=F": {
+      "n_bars": 6268,
+      "n_raw_signals": 9
+    },
+    "CVX": {
+      "n_bars": 8817,
+      "n_raw_signals": 5
+    },
+    "DBA": {
+      "n_bars": 4528,
+      "n_raw_signals": 1
+    },
+    "DE": {
+      "n_bars": 8817,
+      "n_raw_signals": 11
+    },
+    "DINO": {
+      "n_bars": 8817,
+      "n_raw_signals": 78
+    },
+    "EQT": {
+      "n_bars": 8817,
+      "n_raw_signals": 16
+    },
+    "ES=F": {
+      "n_bars": 6134,
+      "n_raw_signals": 0
+    },
+    "FANG": {
+      "n_bars": 3073,
+      "n_raw_signals": 19
+    },
+    "FCX": {
+      "n_bars": 7422,
+      "n_raw_signals": 54
+    },
+    "GC=F": {
+      "n_bars": 6106,
+      "n_raw_signals": 0
+    },
+    "GDX": {
+      "n_bars": 4685,
+      "n_raw_signals": 19
+    },
+    "GDXJ": {
+      "n_bars": 3809,
+      "n_raw_signals": 18
+    },
+    "GLD": {
+      "n_bars": 5063,
+      "n_raw_signals": 0
+    },
+    "HE=F": {
+      "n_bars": 6042,
+      "n_raw_signals": 63
+    },
+    "HG=F": {
+      "n_bars": 6111,
+      "n_raw_signals": 12
+    },
+    "HO=F": {
+      "n_bars": 6109,
+      "n_raw_signals": 20
+    },
+    "IWM": {
+      "n_bars": 6188,
+      "n_raw_signals": 3
+    },
+    "KC=F": {
+      "n_bars": 6266,
+      "n_raw_signals": 6
+    },
+    "LE=F": {
+      "n_bars": 5974,
+      "n_raw_signals": 1
+    },
+    "MOO": {
+      "n_bars": 4361,
+      "n_raw_signals": 5
+    },
+    "MOS": {
+      "n_bars": 8817,
+      "n_raw_signals": 44
+    },
+    "MPC": {
+      "n_bars": 3402,
+      "n_raw_signals": 24
+    },
+    "NEM": {
+      "n_bars": 8817,
+      "n_raw_signals": 28
+    },
+    "NG=F": {
+      "n_bars": 6112,
+      "n_raw_signals": 23
+    },
+    "NTR": {
+      "n_bars": 1761,
+      "n_raw_signals": 6
+    },
+    "OIH": {
+      "n_bars": 6000,
+      "n_raw_signals": 16
+    },
+    "OXY": {
+      "n_bars": 8817,
+      "n_raw_signals": 11
+    },
+    "PA=F": {
+      "n_bars": 6147,
+      "n_raw_signals": 45
+    },
+    "PL=F": {
+      "n_bars": 6135,
+      "n_raw_signals": 5
+    },
+    "PSX": {
+      "n_bars": 3201,
+      "n_raw_signals": 12
+    },
+    "QQQ": {
+      "n_bars": 6496,
+      "n_raw_signals": 11
+    },
+    "RB=F": {
+      "n_bars": 6070,
+      "n_raw_signals": 69
+    },
+    "RIO": {
+      "n_bars": 8693,
+      "n_raw_signals": 20
+    },
+    "SB=F": {
+      "n_bars": 6229,
+      "n_raw_signals": 34
+    },
+    "SCCO": {
+      "n_bars": 7297,
+      "n_raw_signals": 44
+    },
+    "SI=F": {
+      "n_bars": 6108,
+      "n_raw_signals": 25
+    },
+    "SLV": {
+      "n_bars": 4701,
+      "n_raw_signals": 21
+    },
+    "SPY": {
+      "n_bars": 8038,
+      "n_raw_signals": 1
+    },
+    "UNG": {
+      "n_bars": 4458,
+      "n_raw_signals": 7
+    },
+    "USO": {
+      "n_bars": 4714,
+      "n_raw_signals": 14
+    },
+    "VLO": {
+      "n_bars": 8817,
+      "n_raw_signals": 55
+    },
+    "VST": {
+      "n_bars": 2073,
+      "n_raw_signals": 8
+    },
+    "WEAT": {
+      "n_bars": 3343,
+      "n_raw_signals": 4
+    },
+    "XLE": {
+      "n_bars": 6548,
+      "n_raw_signals": 13
+    },
+    "XME": {
+      "n_bars": 4663,
+      "n_raw_signals": 16
+    },
+    "XOM": {
+      "n_bars": 8817,
+      "n_raw_signals": 8
+    },
+    "XOP": {
+      "n_bars": 4663,
+      "n_raw_signals": 13
+    },
+    "ZC=F": {
+      "n_bars": 6119,
+      "n_raw_signals": 9
+    },
+    "ZL=F": {
+      "n_bars": 6161,
+      "n_raw_signals": 5
+    },
+    "ZM=F": {
+      "n_bars": 6122,
+      "n_raw_signals": 19
+    },
+    "ZS=F": {
+      "n_bars": 6111,
+      "n_raw_signals": 7
+    },
+    "ZW=F": {
+      "n_bars": 6131,
+      "n_raw_signals": 14
+    }
+  },
+  "total_crypto_raw_signals": 71,
+  "total_equity_raw_signals": 1193,
+  "crypto_regime_ok_frac": 0.5408629839978765,
+  "equity_regime_ok_frac": 0.5887034386589187
+}
