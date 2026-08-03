@@ -348,9 +348,14 @@ def fit_nb_counts(counts: np.ndarray) -> dict | None:
             method="Nelder-Mead",
             options={"maxiter": 2000, "xatol": 1e-6, "fatol": 1e-6},
         )
-    except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
+    except Exception as _e:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
+        print(f"DEBUG fit_nb_counts exception: {_e!r}")
         return None
     if not res.success or not np.all(np.isfinite(res.x)):
+        print(
+            f"DEBUG fit_nb_counts non-success: success={res.success} "
+            f"message={res.message!r} nit={res.nit} x={res.x} fun={res.fun}"
+        )
         return None
     mu, alpha = float(np.exp(res.x[0])), float(np.exp(res.x[1]))
     ll = -float(res.fun)
