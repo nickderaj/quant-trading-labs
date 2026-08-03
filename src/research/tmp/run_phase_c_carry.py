@@ -12,7 +12,7 @@ funding pays shorts when the rate is positive and longs when it is negative,
 so the carry-consistent ranking is pred_col = -funding_rate (long the most
 negative/receiver names, short the most positive/payer names). This also
 matches notebook 3's own Phase 4 screening result
-(src/results/3_cross_sectional_ic.md): raw funding_rate's cross-sectional IC
+(src/results/003_cross_sectional_ic.md): raw funding_rate's cross-sectional IC
 against forward return is NEGATIVE (-0.0095 at 4h) - i.e. ranking directly on
 funding_rate points the wrong way, and the sign must be flipped for the
 prediction to align positively with forward return. Both variants (raw

@@ -1,6 +1,6 @@
 """Phase 6 backtest: at most 3 pre-declared configs, run once each (plus
 origin-shift robustness variants), net of costs. See
-src/results/3_cross_sectional_ic.md's "Backtest configs (pre-declared
+src/results/003_cross_sectional_ic.md's "Backtest configs (pre-declared
 before running)" section for the declaration this implements.
 """
 

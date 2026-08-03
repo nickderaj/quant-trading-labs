@@ -4,7 +4,7 @@ criterion: "a classifier trained walk-forward achieves out-of-sample AUC >
 0.60 on the stop-exit label").
 
 Reuses this repo's own `research.walk_forward_splits` for fold indices
-(same construction 2_walk_forward_multi_asset.ipynb uses for its own
+(same construction 002_walk_forward_multi_asset.ipynb uses for its own
 train/test grid) -- unmodified, just applied over trades instead of daily
 bars, since 57 trades over 14.5 years is this notebook's native sampling
 unit, not bars. The external program's own methodological warning applies

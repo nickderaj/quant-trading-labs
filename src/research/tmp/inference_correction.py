@@ -1,8 +1,8 @@
-"""Task A inference correction for notebook 3 (src/results/3_cross_sectional_ic.md).
+"""Task A inference correction for notebook 3 (src/results/003_cross_sectional_ic.md).
 
 `backtest_configs.py`'s `run_config` never called `research.deflated_sharpe_prob`
 directly - the 3.4%/0.0000005%/0.15% figures quoted in
-`3_cross_sectional_ic.md`'s "Deflated Sharpe" section were computed ad hoc from each
+`003_cross_sectional_ic.md`'s "Deflated Sharpe" section were computed ad hoc from each
 config's offset-0 `stitched_metrics` (sharpe_net, un-annualized, and n_obs) using the
 function's normal-distribution defaults (skew=0, kurtosis=3), matching every other
 call site's mistake. The per-bar net return series that skew/kurtosis need was never
@@ -45,7 +45,7 @@ SLIPPAGE = 0.0001
 BARS_PER_DAY = {"4h": 6, "12h": 2, "1d": 1}
 TRAIN_TEST_DAYS = (365, 91)
 
-TOTAL_TRIALS = 95  # true count from config_log.jsonl, per 3_cross_sectional_ic.md
+TOTAL_TRIALS = 95  # true count from config_log.jsonl, per 003_cross_sectional_ic.md
 
 
 def run_offset0(config: dict, funding_by_symbol: dict) -> dict:

@@ -552,7 +552,7 @@ The parameter $\nu$ controls tail weight, and it also controls which
 | $\nu \to \infty$ | finite | $\to 3$ | becomes exactly the normal distribution |
 
 **Why it is here.** Notebook 4 fit $\nu$ to BTC log returns and got 1.98 (1h) to 2.88
-(1d) — see `src/results/4_distributional_models.md`. Those sit in or near the first row
+(1d) — see `src/results/004_distributional_models.md`. Those sit in or near the first row
 of that table, which is the finding: BTC returns are so heavy-tailed that their variance
 is at the edge of not existing. Used in `dist_lib.fit_garch11(innovation="t")` and
 scored in `dist_lib.density_scores(family="t")`.

@@ -1,8 +1,8 @@
 """Phase B (checkpoint 2): gate Phase A's best turnover-qualifying variant
-(rebalance throttling, k=6 - see src/results/7_alpha_generation.md's Phase A
+(rebalance throttling, k=6 - see src/results/007_alpha_generation.md's Phase A
 section) on predicted tail risk from GARCH-NIG, notebook 6's own
 best-certified density (Gate P fired at 12h: NIG/Johnson-SU/Hansen skew-t
-all beat GARCH-t significantly on 5-6/6 symbols - src/results/6_distribution_zoo.md
+all beat GARCH-t significantly on 5-6/6 symbols - src/results/006_distribution_zoo.md
 Phase 3). The first use of this programme's risk findings as an alpha input
 rather than a risk report.
 

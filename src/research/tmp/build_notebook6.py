@@ -24,7 +24,7 @@ interval, zero exceptions). This notebook is a generalization test of that speci
 prior result - not a new contest - across five more symbols, three more quantile
 levels, and a wider search over what "fat-tailed" can mean.
 
-Full narrative and every number: `src/results/6_distribution_zoo.md`. This notebook
+Full narrative and every number: `src/results/006_distribution_zoo.md`. This notebook
 reloads the heavier rolling-refit artifacts (`phase1_transfer_full_results.json`,
 `phase2_es_universality_results.json`, `phase3_zoo_results.json`,
 `phase4_violation_results.json`, `phase5_evt_density_results.json`,
@@ -314,10 +314,10 @@ majority of cells.
 
 **Gate D fired and Phase 6 ran** - the first time in five notebooks a pre-declared
 application gate has actually cleared. It still found no risk-adjusted edge net of
-costs. Full narrative: `src/results/6_distribution_zoo.md`.
+costs. Full narrative: `src/results/006_distribution_zoo.md`.
 """))
 
-with open("6_distribution_zoo.ipynb", "w") as f:
+with open("006_distribution_zoo.ipynb", "w") as f:
     json.dump({
         "cells": cells,
         "metadata": {
@@ -326,4 +326,4 @@ with open("6_distribution_zoo.ipynb", "w") as f:
         },
         "nbformat": 4, "nbformat_minor": 5,
     }, f, indent=1)
-print("written 6_distribution_zoo.ipynb")
+print("written 006_distribution_zoo.ipynb")

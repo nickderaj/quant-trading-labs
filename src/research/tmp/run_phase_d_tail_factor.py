@@ -5,7 +5,7 @@ the symmetric Student-t exactly at lambda=0, notebook 6's own already-tested
 
 Interval: 4h, the strongest of the two intervals where notebook 6's Gate P
 fired for Hansen skew-t (6/6 symbols significantly beating GARCH-t -
-src/results/6_distribution_zoo.md Phase 3) - the same "when the runbook
+src/results/006_distribution_zoo.md Phase 3) - the same "when the runbook
 doesn't pin an interval, use the one the underlying density result is
 strongest at" precedent run_phase6_application.py already set explicitly for
 Phase 6's own substitution.

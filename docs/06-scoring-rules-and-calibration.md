@@ -606,7 +606,7 @@ $\chi^2_1$ likelihood-ratio test.
 **Why it is here.** Notebook 4 already measured gamma waiting-time shapes of 0.52-0.85
 (direct evidence violations clump on scales a 2-state chain cannot see); Phase 4 of
 notebook 6 (`dist_lib6.fit_geometric_durations` / `fit_discrete_weibull_durations`,
-`src/results/6_distribution_zoo.md`) is the first place this repo actually tests that
+`src/results/006_distribution_zoo.md`) is the first place this repo actually tests that
 observation as a formal calibration failure mode, alongside a complementary count-based
 test (weekly violation counts: Poisson null vs. negative binomial, a
 [boundary likelihood-ratio test](03-statistical-inference.md#boundary-likelihood-ratio-test)

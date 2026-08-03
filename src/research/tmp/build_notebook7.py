@@ -32,7 +32,7 @@ of this programme's risk findings as an alpha input rather than a risk report.
 **(C)** test funding-rate carry as a primary, structurally different signal.
 **(D)** test tail shape itself as a cross-sectional ranking factor.
 
-Full narrative and every number: `src/results/7_alpha_generation.md`. Terminology
+Full narrative and every number: `src/results/007_alpha_generation.md`. Terminology
 grounded in this repo's own numbers, in `docs/` (start at `docs/README.md`) - this
 notebook adds entries for turnover budgeting, hysteresis/no-trade bands, carry/basis,
 and the tail-premium factor.
@@ -326,7 +326,7 @@ sharper, more specific negative result - it is not simply that trading is expens
 evidence about the market, not about this programme's own diligence.
 """))
 
-with open("src/research/7_alpha_generation.ipynb", "w") as f:
+with open("src/research/007_alpha_generation.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
@@ -340,4 +340,4 @@ with open("src/research/7_alpha_generation.ipynb", "w") as f:
         f,
         indent=1,
     )
-print("written src/research/7_alpha_generation.ipynb")
+print("written src/research/007_alpha_generation.ipynb")

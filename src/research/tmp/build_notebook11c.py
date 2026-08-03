@@ -190,7 +190,7 @@ that trigger it.
 """)
 )
 
-with open("src/research/11c_entry_time_loss_classifier.ipynb", "w") as f:
+with open("src/research/011c_entry_time_loss_classifier.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
@@ -208,4 +208,4 @@ with open("src/research/11c_entry_time_loss_classifier.ipynb", "w") as f:
         f,
         indent=1,
     )
-print(f"written src/research/11c_entry_time_loss_classifier.ipynb ({len(cells)} cells)")
+print(f"written src/research/011c_entry_time_loss_classifier.ipynb ({len(cells)} cells)")

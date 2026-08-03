@@ -35,7 +35,7 @@ No walk-forward classification infrastructure existed in this repo — `research
 `walk_forward_run`/`batch_train_reg` are regression-only (hardcoded `MSELoss`, built around a
 continuous-return trading rule, no AUC anywhere). This notebook reuses `research.py`'s
 `walk_forward_splits` unchanged for fold indices (an anchored/expanding window, exactly the
-no-lookahead discipline `2_walk_forward_multi_asset.ipynb` already established) applied over
+no-lookahead discipline `002_walk_forward_multi_asset.ipynb` already established) applied over
 trades rather than daily bars — 55 trades over 14.5 years is this classifier's native
 sampling unit — and adds one new, minimal primitive, `spread_lib11.roc_auc_score` (the
 Mann-Whitney U / rank-sum identity; no `sklearn` in this repo's environment). The model class

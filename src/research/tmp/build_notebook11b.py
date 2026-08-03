@@ -433,7 +433,7 @@ notebook.
 """)
 )
 
-with open("src/research/11b_spread_mechanism_gates.ipynb", "w") as f:
+with open("src/research/011b_spread_mechanism_gates.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
@@ -452,5 +452,5 @@ with open("src/research/11b_spread_mechanism_gates.ipynb", "w") as f:
         indent=1,
     )
 print(
-    f"written src/research/11b_spread_mechanism_gates.ipynb ({len(cells)} cells)"
+    f"written src/research/011b_spread_mechanism_gates.ipynb ({len(cells)} cells)"
 )

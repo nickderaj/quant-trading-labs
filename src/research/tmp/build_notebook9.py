@@ -26,7 +26,7 @@ and does it look anything like what this programme has been testing?
 **This is primarily a literature/practitioner survey, not a modelling notebook.** 36
 sources, tiered 1-4 for trust, filed against five competing explanations for the eight
 nulls. All four pre-declared gates fire. Full narrative:
-`src/results/9_external_research_review.md` (the primary deliverable, more so than this
+`src/results/009_external_research_review.md` (the primary deliverable, more so than this
 notebook, per this notebook's own pre-registration). This notebook loads pre-gathered
 JSON from `tmp/phase_{0..4}*.json` and narrates/tabulates only - the source record itself
 was gathered via WebSearch/WebFetch during construction and is transcribed as data in
@@ -148,7 +148,7 @@ cells.append(md("""\
 ## Phase 2 - The diagnosis (headline deliverable)
 
 Each hypothesis gets an explicit verdict, with the specific Tier 1/2 sources behind it -
-full reasoning text in the JSON and in `src/results/9_external_research_review.md`.
+full reasoning text in the JSON and in `src/results/009_external_research_review.md`.
 Hypothesis (c) additionally carries a specific, sourced, actionable recommendation on
 this repo's own gate criterion, with consequences for the eight existing nulls stated as
 an explicitly labelled hypothetical (not a re-score).
@@ -327,10 +327,10 @@ directionally-consistent signal in this notebook's own first-look probe (5/6 spr
 mean-reverting, 4/6 with significant negative IC) and is this notebook's single concrete,
 actionable, sourced recommendation for notebook 10.
 
-Full narrative, every source, every reasoning chain: `src/results/9_external_research_review.md`.
+Full narrative, every source, every reasoning chain: `src/results/009_external_research_review.md`.
 """))
 
-with open("src/research/9_external_research_review.ipynb", "w") as f:
+with open("src/research/009_external_research_review.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
@@ -344,4 +344,4 @@ with open("src/research/9_external_research_review.ipynb", "w") as f:
         f,
         indent=1,
     )
-print(f"written src/research/9_external_research_review.ipynb ({len(cells)} cells)")
+print(f"written src/research/009_external_research_review.ipynb ({len(cells)} cells)")

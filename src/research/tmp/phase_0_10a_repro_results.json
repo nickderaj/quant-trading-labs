@@ -48,5 +48,5 @@
     "deflated_sharpe_prob": 0.09807055437061196,
     "fires": false
   },
-  "_verdict": "All reproduction checks pass. Phase 4 confirms that 5 of 6 spreads are mean-reverting and 4 of 6 have significant negative forward IC, matching the figures in src/results/9_external_research_review.md. Phase 5 confirms that both Gate AC (carry, DSR 0.997, fires=False) and Gate AM (momentum, DSR 0.098, fires=False) are correctly recorded as null gates, which are the baseline conditions for notebook 10a's own Phase 1 gating investigation."
+  "_verdict": "All reproduction checks pass. Phase 4 confirms that 5 of 6 spreads are mean-reverting and 4 of 6 have significant negative forward IC, matching the figures in src/results/009_external_research_review.md. Phase 5 confirms that both Gate AC (carry, DSR 0.997, fires=False) and Gate AM (momentum, DSR 0.098, fires=False) are correctly recorded as null gates, which are the baseline conditions for notebook 10a's own Phase 1 gating investigation."
 }

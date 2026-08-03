@@ -2,7 +2,7 @@
 
 Notebook 2 found no validated edge on single-asset trend/mean-reversion models, and never
 charged transaction costs while doing it (`add_tx_fees*` was called zero times in that
-notebook - every number in `2_walk_forward_multi_asset.md` is gross). This notebook fixes
+notebook - every number in `002_walk_forward_multi_asset.md` is gross). This notebook fixes
 both root causes at once: adds real transaction costs everywhere, and switches from
 "search many single-asset configs, backtest whichever wins" to "screen a cross-sectional
 panel on rank correlation (IC), backtest at most 3 things that survive screening." The
@@ -67,8 +67,8 @@ didn't.
 
 ## Bugs found
 
-- None specific to this phase beyond the one already documented in `2_walk_forward_multi_asset.md` (klines schema inference). Re-verified: `describe_linear_model`'s
-  degenerate-bet check and the fee math from `1_simple_linear.md` are unaffected by
+- None specific to this phase beyond the one already documented in `002_walk_forward_multi_asset.md` (klines schema inference). Re-verified: `describe_linear_model`'s
+  degenerate-bet check and the fee math from `001_simple_linear.md` are unaffected by
   this change - `add_trading_costs` is additive on top of existing gross columns, not
   a replacement.
 
@@ -389,7 +389,7 @@ of model-based ranking) is *always* substantially worse than the real strategy -
 model is doing something, just not enough to turn a profit net of costs except
 transiently at one config/offset combination. Buy-and-hold's own basket Sharpe is
 near zero over these particular OOS windows (unlike the full-history BTC B&H numbers
-in `2_walk_forward_multi_asset.md` - a dollar-neutral book's fair comparison is a
+in `002_walk_forward_multi_asset.md` - a dollar-neutral book's fair comparison is a
 diversified basket, not a single levered-beta bet, and this basket happened to be
 roughly flat over these specific windows).
 
@@ -437,7 +437,7 @@ intervals) - these bars carry no usable vol-normalized signal anyway.
 
 ## Bottom line so far
 
-**No validated edge**, matching `2_walk_forward_multi_asset.md`'s conclusion, now
+**No validated edge**, matching `002_walk_forward_multi_asset.md`'s conclusion, now
 demonstrated cross-sectionally across 30 symbols with real transaction costs rather
 than on one symbol gross of fees. The IC-screened mean-reversion/realized-vol signal
 is real enough to be gross-profitable at every interval tried, but costs erase it at
@@ -499,7 +499,7 @@ realized-vol signal exists in the cross-sectional panel and is gross-profitable 
 every interval and in the holdout year, but transaction costs consistently erase it,
 the one config that looked good net of costs at its headline setting didn't survive
 an origin shift of a single week, and the holdout - spent once, unchanged, no
-retuning - came back Sharpe -0.47. This matches `2_walk_forward_multi_asset.md`'s
+retuning - came back Sharpe -0.47. This matches `002_walk_forward_multi_asset.md`'s
 conclusion and extends it: the fix for single-asset noise (more breadth via a
 cross-sectional book) and the fix for gross-return blindness (Phase 0's cost model)
 were both real improvements to the methodology, and neither one turned up a tradeable
@@ -534,7 +534,7 @@ edge.
 
 ## Inference correction
 
-Same two fixes as `2_walk_forward_multi_asset.md`: real skew/kurtosis instead of the
+Same two fixes as `002_walk_forward_multi_asset.md`: real skew/kurtosis instead of the
 normal-distribution default in `deflated_sharpe_prob`, and a block bootstrap
 alongside the i.i.d. one for the excess-return CIs.
 

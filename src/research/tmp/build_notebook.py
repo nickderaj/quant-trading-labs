@@ -25,14 +25,14 @@ cells.append(
     md("""\
 # Cross-Sectional Crypto IC Pipeline
 
-Notebook 2 (`2_walk_forward_multi_asset.ipynb`) found no validated edge on single-asset
+Notebook 2 (`002_walk_forward_multi_asset.ipynb`) found no validated edge on single-asset
 trend/mean-reversion models, and never charged transaction costs while doing it. This
 notebook fixes both root causes: real transaction costs everywhere, and a
 screen-first-backtest-last methodology (rank-correlation IC screening across a
 30-symbol cross-sectional panel, at most 3 backtests total) instead of "search many
 single-asset configs, keep whichever wins."
 
-Full narrative, numbers, and bug list: `src/results/3_cross_sectional_ic.md`. This
+Full narrative, numbers, and bug list: `src/results/003_cross_sectional_ic.md`. This
 notebook reruns the lightweight parts live and reloads the heavier artifacts
 (`src/research/tmp/config_log.jsonl`, `backtest_results.json`, `holdout_results.json`)
 that a Raspberry Pi shouldn't recompute on every notebook run.
@@ -478,10 +478,10 @@ The one config that looked good net of costs at its headline setting (`cfg2_12h`
 true 95-config search count is 3.4%, its bootstrap CI on excess return includes zero,
 and its one-shot holdout result came back Sharpe -0.47.
 
-This matches `2_walk_forward_multi_asset.md`'s conclusion and extends it: neither the
+This matches `002_walk_forward_multi_asset.md`'s conclusion and extends it: neither the
 fix for single-asset noise (30-symbol cross-sectional breadth) nor the fix for
 gross-return blindness (real transaction costs everywhere) turned up a tradeable edge.
-Full bug list, every number, and "what to test next" in `src/results/3_cross_sectional_ic.md`.
+Full bug list, every number, and "what to test next" in `src/results/003_cross_sectional_ic.md`.
 """)
 )
 
@@ -507,7 +507,7 @@ nb = {
     "nbformat_minor": 5,
 }
 
-with open("3_cross_sectional_ic.ipynb", "w") as f:
+with open("003_cross_sectional_ic.ipynb", "w") as f:
     json.dump(nb, f, indent=1)
 
 print("written")

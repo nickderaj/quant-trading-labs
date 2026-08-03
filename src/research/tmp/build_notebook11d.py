@@ -264,7 +264,7 @@ promising (Gate MB) or plainly do not (Gate MB-E).
 """)
 )
 
-with open("src/research/11d_momentum_breakout_transfer.ipynb", "w") as f:
+with open("src/research/011d_momentum_breakout_transfer.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
@@ -282,4 +282,4 @@ with open("src/research/11d_momentum_breakout_transfer.ipynb", "w") as f:
         f,
         indent=1,
     )
-print(f"written src/research/11d_momentum_breakout_transfer.ipynb ({len(cells)} cells)")
+print(f"written src/research/011d_momentum_breakout_transfer.ipynb ({len(cells)} cells)")

@@ -29,7 +29,7 @@ deliberately basic, and asks the two questions those notebooks never asked:
 Both are judged as forecasting contests, not backtests - a backtest happens only in
 Phase 5, only if something won its contest first.
 
-Full narrative and numbers: `src/results/4_distributional_models.md`. This notebook
+Full narrative and numbers: `src/results/004_distributional_models.md`. This notebook
 recomputes the lightweight parts live and reloads the heavier rolling-refit artifacts
 (`phase1_results.json`, `phase3_results.json`, `phase4_results.json` in
 `src/research/tmp/`) that a Raspberry Pi shouldn't recompute on every notebook run -
@@ -133,7 +133,7 @@ Gaussianity, but crypto starts and stays far from Gaussian. Count dispersion ind
 in the hundreds of thousands at every interval (Poisson predicts 1) - trade arrivals are
 massively overdispersed. Run lengths reject the geometric null at 3 of 4 intervals - a
 distributional echo of notebook 3's short-horizon mean-reversion finding. Full table
-with beta/gap/clustering numbers: `src/results/4_distributional_models.md`.
+with beta/gap/clustering numbers: `src/results/004_distributional_models.md`.
 """))
 
 cells.append(md("""\
@@ -381,7 +381,7 @@ knowledge: crypto's tails, clustering, and regime structure are real, extreme, a
 measured with proper scoring rules, even though none of it clears this notebook's own
 bar for calling something a winner.
 
-Full numbers, all bugs found, and "what to test next": `src/results/4_distributional_models.md`.
+Full numbers, all bugs found, and "what to test next": `src/results/004_distributional_models.md`.
 """))
 
 nb = {
@@ -398,6 +398,6 @@ nb = {
     "nbformat_minor": 5,
 }
 
-with open("4_distributional_models.ipynb", "w") as f:
+with open("004_distributional_models.ipynb", "w") as f:
     json.dump(nb, f, indent=1)
 print(f"total cells: {len(cells)}")

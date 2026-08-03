@@ -25,7 +25,7 @@ documented risk premia (carry, momentum) produce alpha where crypto did not?
 **Both risk-side findings replicate cleanly across 16 commodities and an equity-index
 control, holdout included. Both alpha attempts (carry, momentum) come back null, exactly
 as crypto's did.** Full narrative, every number, and eight caught-and-fixed bugs:
-`src/results/8_commodity_tails_and_risk.md`. New terminology in `docs/`
+`src/results/008_commodity_tails_and_risk.md`. New terminology in `docs/`
 (`09-market-data-and-microstructure.md`, `01-probability-and-distributions.md`), indexed
 in `GLOSSARY.md`. This notebook loads pre-computed JSON from `tmp/phase_{0..8}*.json`
 and plots/narrates only - all heavy computation lives in `tmp/run_phase_*.py`.
@@ -834,10 +834,10 @@ the literature's own favoured factors here, both fail this repo's bootstrap-CI b
 exactly as crypto's factors did. Two genuinely open questions from the pre-registration
 - tail-asymmetry sign flip (CA) and inventory-state conditioning (CI) - came back
 negative, at the same rigor as everything that fired. Full detail, every number, and
-eight caught-and-fixed bugs: `src/results/8_commodity_tails_and_risk.md`.
+eight caught-and-fixed bugs: `src/results/008_commodity_tails_and_risk.md`.
 """))
 
-with open("src/research/8_commodity_tails_and_risk.ipynb", "w") as f:
+with open("src/research/008_commodity_tails_and_risk.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
@@ -851,4 +851,4 @@ with open("src/research/8_commodity_tails_and_risk.ipynb", "w") as f:
         f,
         indent=1,
     )
-print(f"written src/research/8_commodity_tails_and_risk.ipynb ({len(cells)} cells)")
+print(f"written src/research/008_commodity_tails_and_risk.ipynb ({len(cells)} cells)")

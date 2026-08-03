@@ -11,7 +11,7 @@ frozen signal (the model's predictions), generated ONCE per origin offset
 with a fixed seed (`research.set_seed`). Retraining per band would silently
 reintroduce cfg2_12h's own well-documented problem (the model is never
 seeded in backtest_configs.py, so two "identical" runs disagree - see
-3_cross_sectional_ic.md's inference-correction section) and would confound a
+003_cross_sectional_ic.md's inference-correction section) and would confound a
 trading-mechanics change with fresh training noise, making the whole
 experiment uninterpretable. So: predictions are generated once per origin
 offset (the only genuinely compute-costly step - four small walk-forward

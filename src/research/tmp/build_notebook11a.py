@@ -480,7 +480,7 @@ completely. That is the empirical foundation 11c's entry-time loss classifier is
 """)
 )
 
-with open("src/research/11a_methodology_transfer_and_reproduction.ipynb", "w") as f:
+with open("src/research/011a_methodology_transfer_and_reproduction.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
@@ -499,5 +499,5 @@ with open("src/research/11a_methodology_transfer_and_reproduction.ipynb", "w") a
         indent=1,
     )
 print(
-    f"written src/research/11a_methodology_transfer_and_reproduction.ipynb ({len(cells)} cells)"
+    f"written src/research/011a_methodology_transfer_and_reproduction.ipynb ({len(cells)} cells)"
 )

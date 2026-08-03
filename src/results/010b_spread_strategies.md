@@ -110,7 +110,7 @@ unlucky multiple-testing search would produce by chance.
 
 Same trading rule, same universe, with position zeroed on any day the term-structure
 regime is not a "definite" state. Primary definition = deadband (10a Phase 5's own
-correction from raw sign — see `src/results/10a_term_structure_regimes_and_spreads.md`).
+correction from raw sign — see `src/results/010a_term_structure_regimes_and_spreads.md`).
 Full detail — including the two secondary definitions (raw sign, persistence), both run
 and both counted in the n_trials=12 total — in `phase_2_10b_results.json`.
 

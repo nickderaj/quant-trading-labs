@@ -193,10 +193,10 @@ raw `funding_rate` as one of eight features inside a fitted model). The sign con
 above is a pre-declared correction to notebook 7's own runbook, decided from two
 independent sources before any Phase C number was seen: the economic mechanism itself,
 and notebook 3's own screening result that raw `funding_rate`'s IC against forward
-return is *negative* (`src/results/3_cross_sectional_ic.md` Phase 4) — ranking directly
+return is *negative* (`src/results/003_cross_sectional_ic.md` Phase 4) — ranking directly
 on funding_rate points the wrong way for a book that wants to profit from the payment.
 
-**Worked example.** `src/results/7_alpha_generation.md`'s Phase C: ranking the frozen
+**Worked example.** `src/results/007_alpha_generation.md`'s Phase C: ranking the frozen
 30-symbol universe by $-\text{funding\_rate}$ (long the most negative-funding names,
 short the most positive-funding ones) at 4h/12h/1d, all four origin offsets — full
 funding coverage (30/30 symbols, 100% of panel rows), so this is not a
@@ -1002,7 +1002,7 @@ zero, leaving only the basis convergence (futures) or the accumulated funding pa
 unusually consistent Tier 1 (peer-reviewed/regulatory) evidence for this category at
 institutional scale — the Treasury cash-futures basis trade alone represented roughly
 $4 trillion of hedge funds' gross Treasury exposure by late 2025 (Federal Reserve, Office
-of Financial Research, Dallas Fed, CFTC sources, `src/results/9_external_research_review.md`)
+of Financial Research, Dallas Fed, CFTC sources, `src/results/009_external_research_review.md`)
 — a real, large, structurally-motivated (not directional) return source this research
 programme has never tested in any form. Notebook 7's own Gate CY tested funding rate only
 as a *ranking* signal (§ above) and found the resulting book's own turnover exceeded the
@@ -1018,7 +1018,7 @@ financial-stability question, not a return-prediction one.
 
 **Pitfalls.** "Delta-neutral" only cancels *price* risk from the underlying, not every
 risk in the trade — the Treasury version's real risk is repo-funding-rate and dealer
-intermediation-capacity risk (Dallas Fed, `src/results/9_external_research_review.md`
+intermediation-capacity risk (Dallas Fed, `src/results/009_external_research_review.md`
 Gate FA discussion), and a crypto spot-vs-perpetual version of the same idea carries
 exchange-counterparty risk and the possibility that funding turns negative, reversing the
 trade from collecting a payment to making one. A cash-and-carry trade being "structural"
@@ -1044,7 +1044,7 @@ less attractive to buy into (not adding to it).
 
 **Why it is here.** Notebook 9's external research review lists this among the
 structural/mechanical return sources this research programme has never tested at all
-(`src/results/9_external_research_review.md`, Gate MM) — and, unusually for that
+(`src/results/009_external_research_review.md`, Gate MM) — and, unusually for that
 notebook's shortlist, explicitly could NOT be made testable with this repo's existing
 data: every backtest in this programme runs on OHLCV bars, but a market maker's entire
 risk (inventory versus the *actual order book*, fill probability at a given quote

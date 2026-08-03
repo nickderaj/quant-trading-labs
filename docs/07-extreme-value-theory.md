@@ -383,7 +383,7 @@ rescaling of the spliced whole is ever needed.
 log-score contest because normalizing a GPD-tails-plus-empirical-body density proved too
 fiddly to trust — "an honest partial entry beats a hand-waved density" was its stated
 fallback. `dist_lib6.fit_spliced_evt_density` / `spliced_evt_logpdf`
-(`src/results/6_distribution_zoo.md`) fix the *normalization* half of that problem
+(`src/results/006_distribution_zoo.md`) fix the *normalization* half of that problem
 structurally rather than iteratively — but **not** the *continuity* half: nothing here
 forces the density's height to match exactly where the pieces meet, only that each
 piece integrates to its own known weight.

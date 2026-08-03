@@ -1,7 +1,7 @@
 """Phase 6 (GATED): risk-limit overlay on buy-and-hold BTC, evaluated on the
 frozen holdout - the only place in this notebook the holdout is touched, run
 once, unchanged, no retuning against the result, per notebook 3's own Phase 7
-discipline (src/results/3_cross_sectional_ic.md).
+discipline (src/results/003_cross_sectional_ic.md).
 
 Runs ONLY because Gate D fired (checkpoint 4: Gate P at 4h/12h, GARCH-NIG/
 Johnson-SU/Hansen-skew-t all beat GARCH-t significantly on 5-6/6 symbols).

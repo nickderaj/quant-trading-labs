@@ -9,7 +9,7 @@ it and stop.
 Re-derives, directly from the already-committed
 src/research/tmp/backtest_results.json (notebook 3's own artifact, never
 regenerated here), the headline net Sharpe / gross Sharpe / turnover numbers
-`src/results/3_cross_sectional_ic.md` reports for cfg2_12h - the signal
+`src/results/003_cross_sectional_ic.md` reports for cfg2_12h - the signal
 Phase A trades differently but never re-fits.
 """
 

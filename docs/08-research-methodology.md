@@ -500,7 +500,7 @@ computed and checked for significance BEFORE any portfolio is built — the pre-
 rule specifically to stop a non-significant IC from being backtested into a spurious
 Sharpe.
 
-**Worked example.** `src/results/7_alpha_generation.md`'s D2 factor (long high-$\nu$/
+**Worked example.** `src/results/007_alpha_generation.md`'s D2 factor (long high-$\nu$/
 thin-tail, short low-$\nu$/fat-tail) found a significant but NEGATIVE full-sample IC
 (NW t=-3.26) — the opposite sign from its own "long thin tails" hypothesis — yet its
 top/bottom-quintile portfolio backtested net-Sharpe-positive at all four origin offsets.
@@ -595,13 +595,13 @@ before/after the intervention on an *otherwise identical* signal (same predictio
 different trading mechanics).
 
 **Why it is here.** Notebook 7's whole starting premise, stated directly in
-`src/results/3_cross_sectional_ic.md` and `6_distribution_zoo.md`: every alpha attempt
+`src/results/003_cross_sectional_ic.md` and `006_distribution_zoo.md`: every alpha attempt
 in this research programme so far has been gross-profitable and net-negative, i.e. cost,
 not signal absence, is the thing that keeps failing. Phase A tests three independent
 turnover-budgeting mechanisms — [hysteresis bands](#hysteresis-no-trade-band), weight
 quantization (rounding position sizes to a coarse grid so sub-grid rebalances never
 trigger a trade), and rebalance throttling (recomputing positions only every $k$-th
-bar) — against the *same frozen predictions* used in `3_cross_sectional_ic.md`'s
+bar) — against the *same frozen predictions* used in `003_cross_sectional_ic.md`'s
 cfg2_12h, specifically so a Sharpe change can only be attributed to trading mechanics,
 never to a re-fit signal.
 
@@ -611,7 +611,7 @@ of every bar cut turnover 71% and moved net Sharpe from roughly flat/negative to
 consistently positive across all four origin offsets — but the bootstrap 95% CI on
 excess return over basket still included zero at every offset, so the point-estimate
 improvement did not clear the pre-declared bar for a genuine edge (Gate TC, see
-`src/results/7_alpha_generation.md`).
+`src/results/007_alpha_generation.md`).
 
 **Pitfalls.** A turnover-budgeting change that also happens to alter *which* predictions
 get acted on (e.g. retraining a model per intervention, or reusing an unseeded model fit)
@@ -780,7 +780,7 @@ strategies.
 **Why it is here.** Notebook 9's external research review surveyed this literature
 directly to adjudicate whether this programme's own eight-notebook run of nulls looks
 like genuine market efficiency or an artifact of an unusually strict internal bar
-(`src/results/9_external_research_review.md`, hypotheses (c) and (d)). The literature
+(`src/results/009_external_research_review.md`, hypotheses (c) and (d)). The literature
 itself does not agree with itself: McLean & Pontiff (2016, Journal of Finance) find
 published factor returns 26% lower out-of-sample and 58% lower post-publication; Jensen,
 Kelly & Pedersen (2023, Journal of Finance) find over 80% of factors remain significant

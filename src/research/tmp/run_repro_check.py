@@ -2,7 +2,7 @@
 
 Before extending notebook 5's tail-risk work, confirm the numbers being
 extended are actually what the committed JSONs say. Re-derives three
-published headline numbers from src/results/5_tail_risk_evt.md directly from
+published headline numbers from src/results/005_tail_risk_evt.md directly from
 the committed notebook-5 result JSONs (not recomputed from scratch - this is
 a check that the write-up matches the artifact, not a re-run of the
 underlying models) and asserts each. Per NEXT_RUN_PROMPT.md section 1's own

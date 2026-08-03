@@ -33,7 +33,7 @@ notebook exists. The question changes from "who forecasts variance best" to:
 > the best-calibrated conditional tail - and can that be certified with the same rigor
 > the variance ladder was?
 
-Full narrative and every number: `src/results/5_tail_risk_evt.md`. This notebook
+Full narrative and every number: `src/results/005_tail_risk_evt.md`. This notebook
 recomputes the lightweight, cheap-to-demonstrate pieces live and reloads the heavier
 rolling-refit artifacts (`phase1_tails_results.json`, `phase3_density_results.json`,
 `phase4_coverage_results.json`, `phase5_transfer_results.json` in `src/research/tmp/`)
@@ -107,7 +107,7 @@ pl.DataFrame(rows)
 
 cells.append(md("""\
 The corrected numbers (this table) replace notebook 4's originally-reported ones - see
-`src/results/4_distributional_models.md`'s own "Correction" section for the old-vs-new
+`src/results/004_distributional_models.md`'s own "Correction" section for the old-vs-new
 comparison. Both halves of the original claim moved, in different directions: the
 log-score win **strengthened** to all 4 intervals (was 3 of 4); the VaR-coverage claim
 **weakened** - Kupiec now rejects at 1h/4h (was never rejected anywhere).
@@ -528,7 +528,7 @@ cells.append(md("""\
    against Phase 1's independent Hill estimate.
 
 Full detail, and the two mandatory notebook-4 corrections that landed before any of
-this: `src/results/5_tail_risk_evt.md`.
+this: `src/results/005_tail_risk_evt.md`.
 """))
 
 cells.append(md("""\
@@ -554,7 +554,7 @@ risk-unaware models measurable accuracy on the outcomes that matter most - estab
 with the same pre-declared, multiple-testing-corrected rigor the variance ladder was
 held to, even though no tradeable application clears the bar this notebook set for it.
 
-Full numbers, every table, and "what to test next": `src/results/5_tail_risk_evt.md`.
+Full numbers, every table, and "what to test next": `src/results/005_tail_risk_evt.md`.
 """))
 
 nb = {
@@ -571,6 +571,6 @@ nb = {
     "nbformat_minor": 5,
 }
 
-with open("5_tail_risk_evt.ipynb", "w") as f:
+with open("005_tail_risk_evt.ipynb", "w") as f:
     json.dump(nb, f, indent=1)
 print(f"total cells: {len(cells)}")

@@ -10,7 +10,7 @@ Reproduces:
      spreads have ar1_mean_reversion.mean_reverting == True; exactly 4 of 6 have
      both zscore_5d_forward_ic.p_value < 0.05 AND zscore_5d_forward_ic.ic < 0.
      This is the "5 of 6 spreads mean-reverting, 4 of 6 with significant negative IC"
-     figure cited in src/results/9_external_research_review.md.
+     figure cited in src/results/009_external_research_review.md.
   2. From phase_5_results.json (notebook 8 Phase 5): Gate AC (carry) does not fire
      (fires == False), deflated Sharpe prob approx 0.997, excess-return CI includes
      zero, net Sharpe 0.90-0.95 at every offset. Gate AM (momentum) does not fire,
@@ -177,7 +177,7 @@ def main():
         results["_verdict"] = (
             "All reproduction checks pass. Phase 4 confirms that 5 of 6 spreads "
             "are mean-reverting and 4 of 6 have significant negative forward IC, "
-            "matching the figures in src/results/9_external_research_review.md. "
+            "matching the figures in src/results/009_external_research_review.md. "
             "Phase 5 confirms that both Gate AC (carry, DSR 0.997, fires=False) "
             "and Gate AM (momentum, DSR 0.098, fires=False) are correctly recorded "
             "as null gates, which are the baseline conditions for notebook 10a's "

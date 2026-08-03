@@ -646,7 +646,7 @@ def acerbi_szekely_z(actual: np.ndarray, var_forecast: np.ndarray, es_forecast: 
        corrections are exactly the kind of "read the actual numbers, don't
        trust pseudocode blindly" check this repo's own history has
        repeatedly needed (see the six bugs documented in
-       src/results/4_distributional_models.md).
+       src/results/004_distributional_models.md).
     """
     mask = np.isfinite(actual) & np.isfinite(var_forecast) & np.isfinite(es_forecast) & (es_forecast != 0)
     a, v, e = actual[mask], var_forecast[mask], es_forecast[mask]

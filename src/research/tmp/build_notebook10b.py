@@ -526,7 +526,7 @@ here.
 # ============================================================================
 # Write the notebook
 # ============================================================================
-with open("src/research/10b_spread_strategies.ipynb", "w") as f:
+with open("src/research/010b_spread_strategies.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
@@ -540,4 +540,4 @@ with open("src/research/10b_spread_strategies.ipynb", "w") as f:
         f,
         indent=1,
     )
-print(f"written src/research/10b_spread_strategies.ipynb ({len(cells)} cells)")
+print(f"written src/research/010b_spread_strategies.ipynb ({len(cells)} cells)")

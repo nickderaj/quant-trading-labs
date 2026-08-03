@@ -6,7 +6,7 @@ It assumes **high-school algebra and nothing else** — no prior statistics, no 
 probability, no prior finance. If you have never seen the word "distribution" used in a
 mathematical sense, start at the top of `01-probability-and-distributions.md` and read in
 order; by the end of `07-extreme-value-theory.md` you should be able to follow the
-argument in `src/results/5_tail_risk_evt.md` ("why GARCH-t beats GARCH-normal on tail
+argument in `src/results/005_tail_risk_evt.md` ("why GARCH-t beats GARCH-normal on tail
 calibration") without leaving this folder.
 
 ## How to read this

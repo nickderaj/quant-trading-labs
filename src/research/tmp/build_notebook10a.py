@@ -594,7 +594,7 @@ at full strength on 66.2% of trading days when the legs agree. This tension is u
 as Gate SPR-BW's own secondary check for 10b to settle with a real, costed backtest.
 """))
 
-with open("src/research/10a_term_structure_regimes_and_spreads.ipynb", "w") as f:
+with open("src/research/010a_term_structure_regimes_and_spreads.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
@@ -608,4 +608,4 @@ with open("src/research/10a_term_structure_regimes_and_spreads.ipynb", "w") as f
         f,
         indent=1,
     )
-print(f"written src/research/10a_term_structure_regimes_and_spreads.ipynb ({len(cells)} cells)")
+print(f"written src/research/010a_term_structure_regimes_and_spreads.ipynb ({len(cells)} cells)")

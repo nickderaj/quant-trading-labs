@@ -475,7 +475,7 @@ sits at exactly 0 and never contributes to the upper tail at all.
 parameter $\alpha \ge 0$ (Poisson is the $\alpha=0$ boundary — variance cannot be *less*
 than the Poisson mean, so $\alpha$ cannot go negative); `dist_lib6.boundary_lr_test`
 applies the 0.5-mixture correction when testing NB against the Poisson null in Phase 4's
-violation-count analysis (`src/results/6_distribution_zoo.md`). The companion
+violation-count analysis (`src/results/006_distribution_zoo.md`). The companion
 discrete-Weibull-vs-geometric comparison ($\beta=1$) is **not** this case — $\beta=1$ is
 an *interior* point of $\beta>0$'s range (a duration hazard can rise or fall from
 $\beta=1$ in either direction), so `dist_lib6.fit_discrete_weibull_durations` uses a
