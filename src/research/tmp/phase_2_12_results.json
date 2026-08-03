@@ -1,0 +1,392 @@
+{
+  "gate": "VB",
+  "n_trials": 12,
+  "thresholds": {
+    "n_calibration_bars": {
+      "base_range": 75581,
+      "prior_run": 72511,
+      "vol_ratio": 66645
+    },
+    "base_max_range_atr_mult_raw": 2.7562028047464997,
+    "prior_run_min_atr_mult_raw": 4.470222098197327,
+    "vol_k_raw": 1.3857334371197465,
+    "base_max_range_atr_mult": 2.8,
+    "prior_run_min_atr_mult": 4.5,
+    "vol_k": 1.39
+  },
+  "origin_offsets": [
+    0,
+    7,
+    14,
+    21
+  ],
+  "cost_multipliers": [
+    1,
+    2,
+    3
+  ],
+  "gated_by_offset": {
+    "offset_0": {
+      "cost_1x": {
+        "sharpe": 0.11498752595934925,
+        "max_drawdown": -0.42572247097349014,
+        "fixed_notional_return": 0.27376930228419066,
+        "equity_path_return": 0.28444596829028335,
+        "return_over_drawdown": 0.6681488239036268,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1284445.9682902833
+      },
+      "cost_2x": {
+        "sharpe": 0.09387338266186089,
+        "max_drawdown": -0.4456552716896589,
+        "fixed_notional_return": 0.19340567600100522,
+        "equity_path_return": 0.20457026904047115,
+        "return_over_drawdown": 0.4590325348668327,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1204570.2690404712
+      },
+      "cost_3x": {
+        "sharpe": 0.07426964311692681,
+        "max_drawdown": -0.4655633288993348,
+        "fixed_notional_return": 0.11296334505794728,
+        "equity_path_return": 0.12476528586098357,
+        "return_over_drawdown": 0.26798778622867137,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1124765.2858609837
+      }
+    },
+    "offset_7": {
+      "cost_1x": {
+        "sharpe": 0.11504584208653416,
+        "max_drawdown": -0.42572247097349014,
+        "fixed_notional_return": 0.27376930228419066,
+        "equity_path_return": 0.28444596829028335,
+        "return_over_drawdown": 0.6681488239036268,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1284445.9682902833
+      },
+      "cost_2x": {
+        "sharpe": 0.09392098988020911,
+        "max_drawdown": -0.4456552716896589,
+        "fixed_notional_return": 0.19340567600100522,
+        "equity_path_return": 0.20457026904047115,
+        "return_over_drawdown": 0.4590325348668327,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1204570.2690404712
+      },
+      "cost_3x": {
+        "sharpe": 0.07430730794516441,
+        "max_drawdown": -0.4655633288993348,
+        "fixed_notional_return": 0.11296334505794728,
+        "equity_path_return": 0.12476528586098357,
+        "return_over_drawdown": 0.26798778622867137,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1124765.2858609837
+      }
+    },
+    "offset_14": {
+      "cost_1x": {
+        "sharpe": 0.11509840253180273,
+        "max_drawdown": -0.42572247097349014,
+        "fixed_notional_return": 0.27376930228419066,
+        "equity_path_return": 0.28444596829028335,
+        "return_over_drawdown": 0.6681488239036268,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1284445.9682902833
+      },
+      "cost_2x": {
+        "sharpe": 0.09396389836285039,
+        "max_drawdown": -0.4456552716896589,
+        "fixed_notional_return": 0.19340567600100522,
+        "equity_path_return": 0.20457026904047115,
+        "return_over_drawdown": 0.4590325348668327,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1204570.2690404712
+      },
+      "cost_3x": {
+        "sharpe": 0.07434125533075227,
+        "max_drawdown": -0.4655633288993348,
+        "fixed_notional_return": 0.11296334505794728,
+        "equity_path_return": 0.12476528586098357,
+        "return_over_drawdown": 0.26798778622867137,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1124765.2858609837
+      }
+    },
+    "offset_21": {
+      "cost_1x": {
+        "sharpe": 0.1151510350820783,
+        "max_drawdown": -0.42572247097349014,
+        "fixed_notional_return": 0.27376930228419066,
+        "equity_path_return": 0.28444596829028335,
+        "return_over_drawdown": 0.6681488239036268,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1284445.9682902833
+      },
+      "cost_2x": {
+        "sharpe": 0.09400686570842838,
+        "max_drawdown": -0.4456552716896589,
+        "fixed_notional_return": 0.19340567600100522,
+        "equity_path_return": 0.20457026904047115,
+        "return_over_drawdown": 0.4590325348668327,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1204570.2690404712
+      },
+      "cost_3x": {
+        "sharpe": 0.07437524928560753,
+        "max_drawdown": -0.4655633288993348,
+        "fixed_notional_return": 0.11296334505794728,
+        "equity_path_return": 0.12476528586098357,
+        "return_over_drawdown": 0.26798778622867137,
+        "n_trades": 406,
+        "n_stop_exits": 137,
+        "n_trail_exits": 268,
+        "n_data_end_exits": 1,
+        "final_equity": 1124765.2858609837
+      }
+    }
+  },
+  "ungated_by_offset": {
+    "offset_0": {
+      "cost_1x": {
+        "sharpe": 0.129379019664118,
+        "max_drawdown": -0.49202922277958305,
+        "fixed_notional_return": 0.4557561706630104,
+        "equity_path_return": 0.4725184212883371,
+        "return_over_drawdown": 0.9603462546776692,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1472518.421288337
+      },
+      "cost_2x": {
+        "sharpe": 0.10196668846019574,
+        "max_drawdown": -0.537304088421303,
+        "fixed_notional_return": 0.2383837337705937,
+        "equity_path_return": 0.2568207955091546,
+        "return_over_drawdown": 0.47798034863970745,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1256820.7955091547
+      },
+      "cost_3x": {
+        "sharpe": 0.08282611246412264,
+        "max_drawdown": -0.5825626100414332,
+        "fixed_notional_return": 0.02093121546458089,
+        "equity_path_return": 0.04199351075417734,
+        "return_over_drawdown": 0.0720841159908815,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1041993.5107541773
+      }
+    },
+    "offset_7": {
+      "cost_1x": {
+        "sharpe": 0.129444635379131,
+        "max_drawdown": -0.49202922277958305,
+        "fixed_notional_return": 0.4557561706630104,
+        "equity_path_return": 0.4725184212883371,
+        "return_over_drawdown": 0.9603462546776692,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1472518.421288337
+      },
+      "cost_2x": {
+        "sharpe": 0.10201840046650126,
+        "max_drawdown": -0.537304088421303,
+        "fixed_notional_return": 0.2383837337705937,
+        "equity_path_return": 0.2568207955091546,
+        "return_over_drawdown": 0.47798034863970745,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1256820.7955091547
+      },
+      "cost_3x": {
+        "sharpe": 0.08286811681234954,
+        "max_drawdown": -0.5825626100414332,
+        "fixed_notional_return": 0.02093121546458089,
+        "equity_path_return": 0.04199351075417734,
+        "return_over_drawdown": 0.0720841159908815,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1041993.5107541773
+      }
+    },
+    "offset_14": {
+      "cost_1x": {
+        "sharpe": 0.12950377495910367,
+        "max_drawdown": -0.49202922277958305,
+        "fixed_notional_return": 0.4557561706630104,
+        "equity_path_return": 0.4725184212883371,
+        "return_over_drawdown": 0.9603462546776692,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1472518.421288337
+      },
+      "cost_2x": {
+        "sharpe": 0.10206500860329411,
+        "max_drawdown": -0.537304088421303,
+        "fixed_notional_return": 0.2383837337705937,
+        "equity_path_return": 0.2568207955091546,
+        "return_over_drawdown": 0.47798034863970745,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1256820.7955091547
+      },
+      "cost_3x": {
+        "sharpe": 0.08290597541634037,
+        "max_drawdown": -0.5825626100414332,
+        "fixed_notional_return": 0.02093121546458089,
+        "equity_path_return": 0.04199351075417734,
+        "return_over_drawdown": 0.0720841159908815,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1041993.5107541773
+      }
+    },
+    "offset_21": {
+      "cost_1x": {
+        "sharpe": 0.12956299567079937,
+        "max_drawdown": -0.49202922277958305,
+        "fixed_notional_return": 0.4557561706630104,
+        "equity_path_return": 0.4725184212883371,
+        "return_over_drawdown": 0.9603462546776692,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1472518.421288337
+      },
+      "cost_2x": {
+        "sharpe": 0.10211168067870549,
+        "max_drawdown": -0.537304088421303,
+        "fixed_notional_return": 0.2383837337705937,
+        "equity_path_return": 0.2568207955091546,
+        "return_over_drawdown": 0.47798034863970745,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1256820.7955091547
+      },
+      "cost_3x": {
+        "sharpe": 0.08294388595531385,
+        "max_drawdown": -0.5825626100414332,
+        "fixed_notional_return": 0.02093121546458089,
+        "equity_path_return": 0.04199351075417734,
+        "return_over_drawdown": 0.0720841159908815,
+        "n_trades": 1105,
+        "n_stop_exits": 288,
+        "n_trail_exits": 813,
+        "n_data_end_exits": 4,
+        "final_equity": 1041993.5107541773
+      }
+    }
+  },
+  "sharpes_gated_1x_by_offset": {
+    "offset_0": 0.11498752595934925,
+    "offset_7": 0.11504584208653416,
+    "offset_14": 0.11509840253180273,
+    "offset_21": 0.1151510350820783
+  },
+  "positive_every_offset": true,
+  "gated_vs_ungated_bootstrap_offset0_1x": {
+    "control_point": 0.4557561706630108,
+    "treatment_point": 0.2737693022841906,
+    "delta_point": -0.18198686837882017,
+    "delta_ci": [
+      -1.4894776079121892,
+      0.8701524111255903
+    ],
+    "delta_excludes_zero": false,
+    "control_ci": [
+      -1.310115878912957,
+      2.6004321319351145
+    ],
+    "n_blocks": 98
+  },
+  "ci_excludes_zero": false,
+  "cost_stress_1x_vs_3x_gated_offset0": {
+    "control_point": 0.2737693022841906,
+    "treatment_point": 0.11296334505794686,
+    "delta_point": -0.16080595722624375,
+    "delta_ci": [
+      -0.18698175379823875,
+      -0.13675653508537114
+    ],
+    "delta_excludes_zero": true,
+    "control_ci": [
+      -0.5791862641966189,
+      1.3113616177338105
+    ],
+    "n_blocks": 92
+  },
+  "cost_stress_correctly_signed": true,
+  "deflated_sharpe_prob": 0.06437621329977364,
+  "dsr_fires": false,
+  "gate_fires": false,
+  "fundable_flag": false,
+  "n_trades_gated_offset0_1x": 406,
+  "n_trades_ungated_offset0_1x": 1105,
+  "trade_counts_by_asset_class_gated": {
+    "crypto": 8,
+    "equity": 383,
+    "futures": 15
+  },
+  "trade_counts_by_asset_class_ungated": {
+    "crypto": 15,
+    "equity": 936,
+    "futures": 154
+  },
+  "max_drawdown_offset0_1x_gated": -0.42572247097349014
+}

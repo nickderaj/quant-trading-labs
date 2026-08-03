@@ -1233,3 +1233,332 @@ def book_metrics(book: dict) -> dict:
         "n_zscore_exits": n_zscore,
         "final_equity": float(equity[-1]),
     }
+
+
+# ---------------------------------------------------------------------------
+# Notebook 12 -- Gate VB: volume-confirmed breakout, symmetric long/short,
+# one fixed rule across the pooled basket (NEXT_PROMPT.md sec 2/3).
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class VolBreakoutParams:
+    """The bull-flag breakout rule generalized two ways from 11d's
+    `BreakoutParams`: (1) symmetric long AND short (11d was long-only), and
+    (2) an optional breakout-bar volume confirmation, `use_volume` (the
+    ungated control is the byte-identical rule with `use_volume=False`).
+
+    Thresholds are expressed scale-free -- ATR multiples, not %-of-price --
+    and frozen once from a calibration window before any pooled backtest
+    runs (`derive_vb_thresholds`), never re-tuned per instrument or asset
+    class (NEXT_PROMPT.md sec 2's binding constraint against importing
+    11d's crypto-calibrated 25%/15%/2.0x numbers unchanged)."""
+
+    prior_run_lookback: int = 40
+    base_window: int = 10
+    atr_window: int = 14
+    stop_atr_mult: float = 2.0
+    trail_ma_window: int = 20
+    vol_window: int = 20
+    risk_pct: float = 0.02
+    max_position_pct: float = 0.20
+    max_leverage: float = 3.0
+    prior_run_min_atr_mult: float = 6.0
+    base_max_range_atr_mult: float = 3.0
+    vol_k: float = 1.5
+    use_volume: bool = True
+
+
+def _bars_since_roll(is_roll: np.ndarray) -> np.ndarray:
+    """Count of bars since (and including, as 0) the last `is_roll` bar --
+    used to keep the trailing volume window from straddling a contract
+    roll (NEXT_PROMPT.md sec 1's two roll-volume hazards)."""
+    n = len(is_roll)
+    out = np.zeros(n, dtype=int)
+    c = -1
+    for i in range(n):
+        c = 0 if is_roll[i] else c + 1
+        out[i] = c
+    return out
+
+
+def compute_vol_breakout_entries(
+    open_: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    volume: np.ndarray | None,
+    p: VolBreakoutParams,
+    is_roll: np.ndarray | None = None,
+) -> dict[str, np.ndarray]:
+    """Prior run + tightening base + breakout, evaluated as of bar t's
+    close (entry fills at t+1's open, same one-bar-wait convention as
+    `compute_breakout_entries`), mirrored for both directions. Returns
+    `{"long": bool array, "short": bool array}` aligned to `close`.
+
+    Thresholds are ATR multiples rather than %-of-price: `base_range_atr`
+    is the base's high-low range in units of that bar's own ATR;
+    `prior_run_atr_mult` is the prior-run return divided by the %-move
+    the base-start bar's own ATR implies (`atr/close`) -- both scale-free
+    across instruments with very different price levels and volatility.
+
+    Volume confirmation (`use_volume`): breakout-bar volume must be >=
+    `vol_k` times the trailing (shift(1), so bar t's own print is never in
+    its own baseline) median volume over `vol_window` bars, computed
+    within-contract only. When `is_roll` is given, any bar whose trailing
+    window would straddle a roll, or that is itself a roll bar, is
+    disqualified from firing on the volume leg (never on the ungated
+    leg) -- this is the "suppress near a roll" declared choice from
+    NEXT_PROMPT.md sec 1, not the alternative within-contract-z-score
+    choice.
+    """
+    n = len(close)
+    high = np.asarray(high, dtype=float)
+    low = np.asarray(low, dtype=float)
+    close = np.asarray(close, dtype=float)
+    atr = true_atr_series(high, low, close, p.atr_window)
+    bw = p.base_window
+
+    base_high = pl.Series(high).rolling_max(window_size=bw).to_numpy()
+    base_low = pl.Series(low).rolling_min(window_size=bw).to_numpy()
+    with np.errstate(invalid="ignore", divide="ignore"):
+        base_range_atr = (base_high - base_low) / atr
+
+    idx = np.arange(n)
+    prior_close = np.full(n, np.nan)
+    valid = idx - bw - p.prior_run_lookback >= 0
+    prior_close[valid] = close[idx[valid] - bw - p.prior_run_lookback]
+    base_start_close = np.full(n, np.nan)
+    base_start_atr = np.full(n, np.nan)
+    valid2 = idx - bw >= 0
+    base_start_close[valid2] = close[idx[valid2] - bw]
+    base_start_atr[valid2] = atr[idx[valid2] - bw]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        prior_run_ret = base_start_close / prior_close - 1.0
+        expected_pct_move = base_start_atr / base_start_close
+        prior_run_atr_mult = prior_run_ret / expected_pct_move
+
+    def _shift1(x: np.ndarray) -> np.ndarray:
+        y = np.roll(x, 1)
+        y[0] = np.nan
+        return y
+
+    base_high_1 = _shift1(base_high)
+    base_low_1 = _shift1(base_low)
+    base_range_atr_1 = _shift1(base_range_atr)
+    prior_run_atr_mult_1 = _shift1(prior_run_atr_mult)
+
+    base_ok = base_range_atr_1 <= p.base_max_range_atr_mult
+    long_base = base_ok & (prior_run_atr_mult_1 >= p.prior_run_min_atr_mult)
+    short_base = base_ok & (prior_run_atr_mult_1 <= -p.prior_run_min_atr_mult)
+
+    long_raw = (close > base_high_1) & long_base
+    short_raw = (close < base_low_1) & short_base
+
+    if p.use_volume:
+        volume = np.asarray(volume, dtype=float)
+        median_vol_1 = (
+            pl.Series(volume)
+            .rolling_median(window_size=p.vol_window)
+            .shift(1)
+            .to_numpy()
+        )
+        with np.errstate(invalid="ignore", divide="ignore"):
+            vol_ok = volume >= p.vol_k * median_vol_1
+        vol_ok = np.nan_to_num(vol_ok, nan=False).astype(bool)
+        if is_roll is not None:
+            since_roll = _bars_since_roll(np.asarray(is_roll, dtype=bool))
+            clean = (since_roll > p.vol_window) & ~np.asarray(is_roll, dtype=bool)
+            vol_ok = vol_ok & clean
+        long_raw = long_raw & vol_ok
+        short_raw = short_raw & vol_ok
+
+    return {
+        "long": np.nan_to_num(long_raw, nan=False).astype(bool),
+        "short": np.nan_to_num(short_raw, nan=False).astype(bool),
+    }
+
+
+def simulate_vol_breakout_single(
+    dates: np.ndarray,
+    open_: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    volume: np.ndarray | None,
+    regime_ok: np.ndarray,
+    p: VolBreakoutParams,
+    cost_bps_per_side: float,
+    is_roll: np.ndarray | None = None,
+    start_equity: float = 1_000_000.0,
+) -> dict:
+    """Symmetric long/short breakout/base/stop/MA-trail simulation on one
+    symbol's own equity slice (same joint-sizing simplification as
+    `simulate_breakout_single`: portfolio pooling rescales, does not
+    jointly risk-manage). Stop breach is checked before the trail-exit
+    signal, same declared bar-ordering as every other engine in this
+    programme. At most one position at a time; on the (structurally near-
+    impossible, since long/short conditions are mutually exclusive by
+    construction) bar where both signals fire, neither is taken."""
+    n = len(close)
+    open_ = np.asarray(open_, dtype=float)
+    high = np.asarray(high, dtype=float)
+    low = np.asarray(low, dtype=float)
+    close = np.asarray(close, dtype=float)
+    atr = true_atr_series(high, low, close, p.atr_window)
+    trail_ma = sma_causal(close, p.trail_ma_window)
+    entries = compute_vol_breakout_entries(open_, high, low, close, volume, p, is_roll)
+    long_signal, short_signal = entries["long"], entries["short"]
+    both = long_signal & short_signal
+    long_signal = long_signal & ~both
+    short_signal = short_signal & ~both
+
+    equity = start_equity
+    equity_curve = np.full(n, np.nan)
+    trades: list[dict] = []
+    position = None  # dict: side, entry_idx, entry_price, qty, stop_price
+
+    def _close_trade(fill: float, exit_date, reason: str) -> None:
+        nonlocal equity
+        assert position is not None
+        sign = 1.0 if position["side"] == "long" else -1.0
+        pnl = (fill - position["entry_price"]) * position["qty"] * sign
+        notional = (position["entry_price"] + fill) * position["qty"]
+        pnl -= notional * cost_bps_per_side
+        equity += pnl
+        trades.append(
+            {
+                "entry_date": position["entry_date"],
+                "exit_date": exit_date,
+                "side": position["side"],
+                "entry_price": position["entry_price"],
+                "exit_price": fill,
+                "qty": position["qty"],
+                "pnl": pnl,
+                "ret_eq": pnl / position["equity_at_open"],
+                "atr_at_entry": position["atr_at_entry"],
+                "pnl_atr": pnl_atr(pnl, position["qty"], position["atr_at_entry"]),
+                "exit_reason": reason,
+            }
+        )
+
+    for t in range(n):
+        if position is not None:
+            if position["side"] == "long":
+                stop_hit = low[t] <= position["stop_price"]
+                stop_fill = min(open_[t], position["stop_price"])
+                trail_hit = close[t] < trail_ma[t] and np.isfinite(trail_ma[t])
+            else:
+                stop_hit = high[t] >= position["stop_price"]
+                stop_fill = max(open_[t], position["stop_price"])
+                trail_hit = close[t] > trail_ma[t] and np.isfinite(trail_ma[t])
+
+            if stop_hit:
+                _close_trade(stop_fill, dates[t], "stop")
+                position = None
+            elif trail_hit:
+                if t + 1 < n:
+                    fill, exit_date = open_[t + 1], dates[t + 1]
+                else:
+                    fill, exit_date = close[t], dates[t]
+                _close_trade(fill, exit_date, "trail")
+                position = None
+
+        equity_curve[t] = equity
+
+        if (
+            position is None
+            and t + 1 < n
+            and bool(regime_ok[t])
+            and np.isfinite(atr[t])
+            and atr[t] > 0
+            and (long_signal[t] or short_signal[t])
+        ):
+            side = "long" if long_signal[t] else "short"
+            entry_price = open_[t + 1]
+            stop_distance = p.stop_atr_mult * atr[t]
+            stop_price = (
+                entry_price - stop_distance
+                if side == "long"
+                else entry_price + stop_distance
+            )
+            risk_qty = np.floor(equity * p.risk_pct / stop_distance)
+            cap_notional_qty = np.floor(equity * p.max_position_pct / entry_price)
+            cap_leverage_qty = np.floor(p.max_leverage * equity / entry_price)
+            qty = min(risk_qty, cap_notional_qty, cap_leverage_qty)
+            if qty > 0:
+                position = {
+                    "side": side,
+                    "entry_date": dates[t + 1],
+                    "entry_price": entry_price,
+                    "qty": float(qty),
+                    "stop_price": stop_price,
+                    "atr_at_entry": float(atr[t]),
+                    "equity_at_open": equity,
+                }
+
+    if position is not None:
+        _close_trade(close[-1], dates[-1], "data_end")
+        equity_curve[-1] = equity
+
+    return {"trades": trades, "equity_curve": equity_curve, "dates": dates}
+
+
+def simulate_vol_breakout_book(
+    symbol_frames: dict[str, dict[str, np.ndarray]],
+    regime_ok_by_symbol: dict[str, np.ndarray],
+    p: VolBreakoutParams,
+    cost_bps_per_side: float,
+    start_equity: float = 1_000_000.0,
+) -> dict:
+    """Run `simulate_vol_breakout_single` independently per symbol (each
+    sized against its own `start_equity` copy, same dollar-additive
+    pooling simplification as `simulate_breakout_book`), then pool into
+    one book across the whole instrument basket."""
+    all_dates_sorted = sorted(
+        set().union(*[set(f["dates"]) for f in symbol_frames.values()])
+    )
+    all_dates = np.array(all_dates_sorted)
+    date_index = {d: i for i, d in enumerate(all_dates)}
+    per_symbol_results = {}
+    all_trades = []
+    for name, f in symbol_frames.items():
+        res = simulate_vol_breakout_single(
+            f["dates"],
+            f["open"],
+            f["high"],
+            f["low"],
+            f["close"],
+            f.get("volume"),
+            regime_ok_by_symbol[name],
+            p,
+            cost_bps_per_side,
+            is_roll=f.get("is_roll"),
+            start_equity=start_equity,
+        )
+        for tr in res["trades"]:
+            tr["symbol"] = name
+        per_symbol_results[name] = res
+        all_trades.extend(res["trades"])
+
+    portfolio_delta = np.zeros(len(all_dates))
+    for name, res in per_symbol_results.items():
+        ec = res["equity_curve"]
+        prev = start_equity
+        for j, d in enumerate(res["dates"]):
+            cur = ec[j]
+            if np.isfinite(cur):
+                portfolio_delta[date_index[d]] += (
+                    cur - prev if np.isfinite(prev) else 0.0
+                )
+                prev = cur
+    portfolio_equity = start_equity + np.cumsum(portfolio_delta)
+
+    all_trades.sort(key=lambda t: t["exit_date"])
+    return {
+        "trades": all_trades,
+        "portfolio_equity": portfolio_equity,
+        "dates": all_dates,
+        "per_symbol": per_symbol_results,
+        "start_equity": start_equity,
+    }

@@ -2917,3 +2917,194 @@ class TestBreakoutBookMetrics:
         # drawdown: [0, 0, -0.25, -0.0833]
         expected_dd = -0.25
         assert metrics["max_drawdown"] == pytest.approx(expected_dd, rel=1e-4)
+
+
+def _uptrend_base_breakout_ohlcv(n=150, rng_half_width=1.0):
+    """Shared fixture: prior run up, tight base, breakout on bar 51 --
+    same shape as TestComputeBreakoutEntries's clean_breakout fixture but
+    with a nonzero daily range (needed for a finite ATR) and a volume
+    series, used by the Gate VB (volume-confirmed) tests below."""
+    open_ = np.full(n, 100.0)
+    close = np.full(n, 100.0)
+    high = np.full(n, 100.0)
+    low = np.full(n, 100.0)
+    volume = np.full(n, 1000.0)
+
+    close[:41] = np.linspace(100, 130, 41)
+    open_[:41] = close[:41]
+    high[:41] = close[:41] + rng_half_width
+    low[:41] = close[:41] - rng_half_width
+
+    close[41:51] = np.linspace(130, 131, 10)
+    open_[41:51] = close[41:51]
+    high[41:51] = close[41:51] + rng_half_width
+    low[41:51] = close[41:51] - rng_half_width
+
+    close[51] = 133.0
+    high[51] = 133.0 + rng_half_width
+    low[51] = 131.0
+    open_[51] = 131.0
+
+    close[52:] = np.linspace(133, 140, n - 52)
+    open_[52:] = close[52:]
+    high[52:] = close[52:] + rng_half_width
+    low[52:] = close[52:] - rng_half_width
+
+    return open_, high, low, close, volume
+
+
+class TestVolBreakoutParams:
+    def test_defaults(self):
+        p = SL11.VolBreakoutParams()
+        assert p.use_volume is True
+        assert p.vol_k == 1.5
+        assert p.vol_window == 20
+        assert p.prior_run_min_atr_mult == 6.0
+        assert p.base_max_range_atr_mult == 3.0
+
+    def test_ungated_control_flag(self):
+        p = SL11.VolBreakoutParams(use_volume=False)
+        assert p.use_volume is False
+
+
+class TestComputeVolBreakoutEntries:
+    def test_ungated_long_breakout_fires(self):
+        open_, high, low, close, _volume = _uptrend_base_breakout_ohlcv()
+        p = SL11.VolBreakoutParams(use_volume=False)
+        entries = SL11.compute_vol_breakout_entries(open_, high, low, close, None, p)
+        assert entries["long"][51]
+        assert not entries["short"][51]
+
+    def test_volume_gate_blocks_low_volume_breakout(self):
+        open_, high, low, close, volume = _uptrend_base_breakout_ohlcv()
+        volume[51] = 500.0  # below vol_k(1.5) x trailing median(1000)
+        p = SL11.VolBreakoutParams(use_volume=True)
+        entries = SL11.compute_vol_breakout_entries(open_, high, low, close, volume, p)
+        assert not entries["long"][51]
+
+    def test_volume_gate_allows_confirmed_breakout(self):
+        open_, high, low, close, volume = _uptrend_base_breakout_ohlcv()
+        volume[51] = 2000.0  # 2x trailing median(1000) clears vol_k=1.5
+        p = SL11.VolBreakoutParams(use_volume=True)
+        entries = SL11.compute_vol_breakout_entries(open_, high, low, close, volume, p)
+        assert entries["long"][51]
+
+    def test_short_side_mirrors_long(self):
+        open_, high, low, close, _volume = _uptrend_base_breakout_ohlcv()
+        # mirror the fixture: downtrend, tight base, breakdown
+        open_, high, low, close = (
+            200.0 - open_ + 100.0,
+            200.0 - low + 100.0,
+            200.0 - high + 100.0,
+            200.0 - close + 100.0,
+        )
+        p = SL11.VolBreakoutParams(use_volume=False)
+        entries = SL11.compute_vol_breakout_entries(open_, high, low, close, None, p)
+        assert entries["short"][51]
+        assert not entries["long"][51]
+
+    def test_roll_bar_disqualified_from_volume_leg(self):
+        open_, high, low, close, volume = _uptrend_base_breakout_ohlcv()
+        volume[51] = 2000.0
+        is_roll = np.zeros(len(close), dtype=bool)
+        is_roll[51] = True
+        p = SL11.VolBreakoutParams(use_volume=True)
+        entries = SL11.compute_vol_breakout_entries(
+            open_, high, low, close, volume, p, is_roll=is_roll
+        )
+        assert not entries["long"][51]
+
+
+class TestSimulateVolBreakoutSingle:
+    def test_long_trade_stop_exit(self):
+        open_, high, low, close, volume = _uptrend_base_breakout_ohlcv()
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(len(close), "D"),
+            dtype="datetime64[D]",
+        )
+        p = SL11.VolBreakoutParams(use_volume=False)
+        regime_ok = np.ones(len(close), dtype=bool)
+        # crash the price right after entry to force a stop-exit
+        close_crash = close.copy()
+        high_crash = high.copy()
+        low_crash = low.copy()
+        low_crash[53:] = 50.0
+        close_crash[53:] = 55.0
+        high_crash[53:] = 60.0
+
+        res = SL11.simulate_vol_breakout_single(
+            dates,
+            open_,
+            high_crash,
+            low_crash,
+            close_crash,
+            volume,
+            regime_ok,
+            p,
+            cost_bps_per_side=0.0,
+        )
+        assert len(res["trades"]) >= 1
+        assert res["trades"][0]["side"] == "long"
+        assert res["trades"][0]["exit_reason"] == "stop"
+        assert res["trades"][0]["pnl"] < 0
+
+    def test_no_trades_with_regime_all_false(self):
+        open_, high, low, close, volume = _uptrend_base_breakout_ohlcv()
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(len(close), "D"),
+            dtype="datetime64[D]",
+        )
+        p = SL11.VolBreakoutParams(use_volume=False)
+        regime_ok = np.zeros(len(close), dtype=bool)
+        res = SL11.simulate_vol_breakout_single(
+            dates,
+            open_,
+            high,
+            low,
+            close,
+            volume,
+            regime_ok,
+            p,
+            cost_bps_per_side=0.0,
+        )
+        assert len(res["trades"]) == 0
+
+
+class TestSimulateVolBreakoutBook:
+    def test_pools_two_symbols(self):
+        open_, high, low, close, volume = _uptrend_base_breakout_ohlcv()
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(len(close), "D"),
+            dtype="datetime64[D]",
+        )
+        frames = {
+            "A": {
+                "dates": dates,
+                "open": open_,
+                "high": high,
+                "low": low,
+                "close": close,
+                "volume": volume,
+            },
+            "B": {
+                "dates": dates,
+                "open": open_,
+                "high": high,
+                "low": low,
+                "close": close,
+                "volume": volume,
+            },
+        }
+        regime = {
+            "A": np.ones(len(close), dtype=bool),
+            "B": np.ones(len(close), dtype=bool),
+        }
+        p = SL11.VolBreakoutParams(use_volume=False)
+        book = SL11.simulate_vol_breakout_book(frames, regime, p, cost_bps_per_side=0.0)
+        symbols_traded = {t["symbol"] for t in book["trades"]}
+        assert symbols_traded == {"A", "B"}
+        metrics = SL11.breakout_book_metrics(book)
+        assert metrics["n_trades"] == len(book["trades"])

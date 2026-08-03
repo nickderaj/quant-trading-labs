@@ -443,6 +443,101 @@ def build_continuous_series(
     return curve
 
 
+def build_continuous_series_ohlcv(
+    ohlcv: pl.DataFrame,
+    contracts: pl.DataFrame,
+    roll_calendar: pl.DataFrame,
+    product: str,
+    roll_days_before: int = 5,
+    min_contract_volume: int = 5000,
+) -> pl.DataFrame:
+    """F1-only continuous OHLCV series -- `build_continuous_series` above
+    drops open/high/low/volume entirely (it exists for spread/return work,
+    which only ever needed `close_f{leg}`). A volume-gated breakout needs
+    genuine bars, so this reuses the identical roll schedule and
+    `searchsorted` F1-selection logic and joins the full OHLCV row instead
+    of `close` alone.
+
+    `volume` is raw, per-traded-contract and therefore discontinuous at
+    rolls by construction (front-month volume ramps down into expiry and
+    the new F1 starts mid-life) -- callers must treat it as relative to its
+    own trailing, within-contract history only, never as an absolute
+    level. `is_roll` (True on the first bar of a new front-month contract)
+    is provided so callers can suppress the roll-date volume spike rather
+    than mistake it for a breakout confirmation.
+    """
+    prod_ohlcv = ohlcv.filter(pl.col("product") == product).sort(
+        ["contract_id", "date"]
+    )
+    prod_contracts = contracts.filter(pl.col("product") == product).select(
+        ["contract_id", "contract_month", "expiry"]
+    )
+    valid_months = set(prod_contracts["contract_month"].to_list())
+    if min_contract_volume > 0:
+        valid_months &= liquid_contract_months(
+            ohlcv, contracts, product, min_contract_volume
+        )
+    schedule = build_roll_schedule(
+        roll_calendar, product, roll_days_before, valid_contract_months=valid_months
+    ).sort("expiry")
+
+    px = prod_ohlcv.join(prod_contracts, on="contract_id", how="inner")
+    px = px.join(
+        schedule.select(["contract_month", "roll_date"]),
+        on="contract_month",
+        how="left",
+    )
+    px = px.filter(pl.col("roll_date").is_not_null()).sort(["expiry", "date"])
+
+    sched_sorted = schedule.filter(pl.col("roll_date").is_not_null()).sort("expiry")
+    months = sched_sorted["contract_month"].to_list()
+    roll_dates = sched_sorted["roll_date"].to_numpy().astype("datetime64[D]")
+
+    dates_list = px.select("date").unique().sort("date")["date"].to_list()
+    dates_arr = np.array(dates_list, dtype="datetime64[D]")
+    f1_idx = np.searchsorted(roll_dates, dates_arr, side="right")
+
+    px_lookup = px.select(
+        ["date", "contract_month", "open", "high", "low", "close", "volume"]
+    )
+    n_months = len(months)
+    valid = f1_idx < n_months
+    sel_dates = dates_arr[valid].astype("datetime64[ms]")
+    sel_months = [months[i] for i in f1_idx[valid]]
+    leg_map = pl.DataFrame(
+        {"date": sel_dates, "contract_month": sel_months}
+    ).with_columns(pl.col("date").cast(pl.Date))
+    curve = leg_map.join(px_lookup, on=["date", "contract_month"], how="left")
+    curve = curve.sort("date")
+    curve = curve.with_columns(
+        pl.col("contract_month")
+        .ne(pl.col("contract_month").shift(1))
+        .fill_null(False)
+        .alias("is_roll")
+    )
+
+    # Back-adjust open/high/low/close by the same additive Panama offset
+    # (identical construction to `_add_return_conventions`'s `close_backadj`)
+    # so the breakout rule sees a gap-free price level -- raw per-contract
+    # `close` jumps at every roll and would manufacture spurious breakouts.
+    # `volume` is left raw: it is a traded quantity, not a price, and
+    # additive adjustment would be meaningless for it.
+    close = curve["close"].to_numpy()
+    is_roll = curve["is_roll"].to_numpy()
+    n = len(close)
+    offset = np.zeros(n)
+    cum_offset = 0.0
+    for i in range(1, n):
+        if is_roll[i] and not np.isnan(close[i]) and not np.isnan(close[i - 1]):
+            cum_offset += close[i] - close[i - 1]
+        offset[i] = cum_offset
+    for col in ["open", "high", "low", "close"]:
+        curve = curve.with_columns(
+            (pl.col(col) - pl.Series(offset)).alias(f"{col}_backadj")
+        )
+    return curve
+
+
 def _add_return_conventions(curve: pl.DataFrame) -> pl.DataFrame:
     """Given a curve frame with close_f1 and contract_month_f1, add the three
     return conventions defined in `build_continuous_series`'s docstring.

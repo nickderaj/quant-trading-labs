@@ -1,0 +1,27 @@
+{
+  "gates": {
+    "VB": {
+      "notebook": "012",
+      "claim": "a volume-confirmed bull-flag breakout (11d's prior-run + tightening-base + breakout rule, made symmetric long/short and gated on breakout-bar volume) earns its keep over the identical rule with the volume condition switched off, on a pooled ~85-instrument basket across crypto/equity-ETF/futures, at a small honestly-counted DSR trial count",
+      "fires_if": "net Sharpe > 0 at every origin offset (0/7/14/21) on the volume-gated 1x-cost book AND paired block-bootstrap 95% CI on (volume-gated minus ungated) offset-0 1x-cost returns excludes zero AND DSR > 0.95 at n_trials=12 (4 offsets x 3 cost multipliers, single fixed rule and single fixed k -- no other parameter swept) AND cost stress at 3x shows a real, correctly-signed degradation AND the three-way risk gate / fail-closed regime gate carry over unchanged from 11a/11d",
+      "n_trials": 12,
+      "origin_offsets": [
+        0,
+        7,
+        14,
+        21
+      ],
+      "cost_multipliers": [
+        1,
+        2,
+        3
+      ],
+      "one_rule_one_k": true,
+      "control": "the byte-identical breakout rule (same signals, stops, exits, costs, bars, regime gate) with the volume condition switched off -- not buy-and-hold, not a random-entry null",
+      "fundable_flag_if": "Gate VB fires AND net Sharpe > 0.5 at every offset AND max drawdown (offset 0, 1x cost, volume-gated book) <= 25% of peak",
+      "holdout": "2025-01-01 to 2026-07-28, untouched and unspent",
+      "report_per_asset_class_trade_counts": true,
+      "second_pattern_declared": false
+    }
+  }
+}

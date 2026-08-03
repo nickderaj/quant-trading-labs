@@ -162,6 +162,103 @@ class TestContinuousSeries:
         assert np.all(np.diff(dte) <= 0)
 
 
+class TestContinuousSeriesOhlcv:
+    """`build_continuous_series_ohlcv` -- notebook 12's OHLCV extension,
+    which `build_continuous_series` never provided (close-only)."""
+
+    def _tiny_universe_ohlcv(self):
+        contracts = pl.DataFrame(
+            {
+                "contract_id": [1, 2],
+                "ticker": ["CL202001", "CL202002"],
+                "product": ["CL", "CL"],
+                "contract_month": ["2020-01", "2020-02"],
+                "expiry": [date(2020, 1, 20), date(2020, 2, 20)],
+            }
+        )
+        roll_cal = pl.DataFrame(
+            {
+                "product": ["CL", "CL"],
+                "contract_month": ["2020-01", "2020-02"],
+                "expiry": [date(2020, 1, 20), date(2020, 2, 20)],
+                "first_notice_date": [date(2020, 1, 21), date(2020, 2, 21)],
+                "last_trade_date": [date(2020, 1, 20), date(2020, 2, 20)],
+            }
+        )
+        dates = [date(2020, 1, d) for d in range(13, 18)]
+        close = [50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.5, 58.0, 59.5, 61.0]
+        ohlcv = pl.DataFrame(
+            {
+                "product": ["CL"] * 10,
+                "contract_id": [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
+                "date": dates + dates,
+                "open": [c - 0.5 for c in close],
+                "high": [c + 1.0 for c in close],
+                "low": [c - 1.0 for c in close],
+                "close": close,
+                # contract 2's volume spike sits on 2020-01-17 (its last row
+                # here, since both contracts' rows cover the same 5 calendar
+                # dates and the roll-date row is the one actually selected).
+                "volume": [1000, 1100, 1200, 1300, 1400, 900, 950, 1000, 1100, 5000],
+            }
+        )
+        return ohlcv, contracts, roll_cal
+
+    def test_carries_ohlcv_and_flags_roll(self):
+        ohlcv, contracts, roll_cal = self._tiny_universe_ohlcv()
+        curve = C.build_continuous_series_ohlcv(
+            ohlcv, contracts, roll_cal, "CL", roll_days_before=2
+        )
+        assert set(curve.columns) >= {
+            "date",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+            "is_roll",
+            "open_backadj",
+            "high_backadj",
+            "low_backadj",
+            "close_backadj",
+        }
+        # same roll_days_before=2 convention as the close-only test above:
+        # rolls into contract 2 on 2020-01-17
+        months = curve["contract_month"].to_list()
+        assert "2020-01" in months and "2020-02" in months
+        roll_idx = months.index("2020-02")
+        assert bool(curve["is_roll"][roll_idx]) is True
+        assert not any(curve["is_roll"].to_list()[:roll_idx])
+        # raw volume is untouched, including the roll-date spike (5000)
+        assert curve["volume"][roll_idx] == 5000
+        assert roll_idx == len(months) - 1
+
+    def test_backadj_ohlc_continuous_across_roll(self):
+        ohlcv, contracts, roll_cal = self._tiny_universe_ohlcv()
+        curve = C.build_continuous_series_ohlcv(
+            ohlcv, contracts, roll_cal, "CL", roll_days_before=2
+        )
+        months = curve["contract_month"].to_list()
+        roll_idx = months.index("2020-02")
+        for col in ["open_backadj", "high_backadj", "low_backadj", "close_backadj"]:
+            adj = curve[col].to_numpy()
+            raw = curve[col.replace("_backadj", "")].to_numpy()
+            assert abs(adj[roll_idx] - adj[roll_idx - 1]) < abs(
+                raw[roll_idx] - raw[roll_idx - 1]
+            )
+
+    def test_no_roll_no_adjustment(self):
+        ohlcv, contracts, roll_cal = self._tiny_universe_ohlcv()
+        curve = C.build_continuous_series_ohlcv(
+            ohlcv, contracts, roll_cal, "CL", roll_days_before=0
+        )
+        # roll_days_before=0 keeps the whole 5-day test window on contract 1
+        assert not any(curve["is_roll"].to_list())
+        np.testing.assert_allclose(
+            curve["close_backadj"].to_numpy(), curve["close"].to_numpy()
+        )
+
+
 # --------------------------------------------------------------------------
 # Hygiene filter -- accept CL 2020-04-20, reject GC-style junk
 # --------------------------------------------------------------------------
