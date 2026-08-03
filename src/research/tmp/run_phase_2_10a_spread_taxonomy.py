@@ -41,13 +41,36 @@ OUT_PATH = "src/research/tmp/phase_2_10a_results.json"
 DEV_END = "2024-12-31"
 
 SPREAD_NAMES = [
-    "bean_corn", "brent_calendar", "brent_wti", "bz_cal_m1m3", "cl_cal_m2m3",
-    "corn_wheat", "crack_321", "crush_soy", "es_calendar", "gasheat_rbho",
-    "gasoline_crack", "gc_cal_m1m2", "gc_cal_m2m3", "gold_silver",
-    "heating_oil_crack", "ho_cal_m1m2", "ho_cal_m2m3", "kc_chicago_wheat",
-    "ke_cal_m1m2", "ng_cal_m1m2", "ng_cal_m2m3", "ng_calendar",
-    "platinum_palladium", "rb_cal_m1m2", "rb_cal_m2m3", "wti_calendar",
-    "zc_cal_m1m2", "zl_cal_m1m2", "zm_cal_m1m2", "zw_cal_m1m2",
+    "bean_corn",
+    "brent_calendar",
+    "brent_wti",
+    "bz_cal_m1m3",
+    "cl_cal_m2m3",
+    "corn_wheat",
+    "crack_321",
+    "crush_soy",
+    "es_calendar",
+    "gasheat_rbho",
+    "gasoline_crack",
+    "gc_cal_m1m2",
+    "gc_cal_m2m3",
+    "gold_silver",
+    "heating_oil_crack",
+    "ho_cal_m1m2",
+    "ho_cal_m2m3",
+    "kc_chicago_wheat",
+    "ke_cal_m1m2",
+    "ng_cal_m1m2",
+    "ng_cal_m2m3",
+    "ng_calendar",
+    "platinum_palladium",
+    "rb_cal_m1m2",
+    "rb_cal_m2m3",
+    "wti_calendar",
+    "zc_cal_m1m2",
+    "zl_cal_m1m2",
+    "zm_cal_m1m2",
+    "zw_cal_m1m2",
 ]
 
 ADF_MIN_ROWS = 60
@@ -68,11 +91,17 @@ def main():
         value_clean = clean["value"].to_numpy()
 
         desc = {
-            "mean": float(np.nanmean(value_clean)), "std": float(np.nanstd(value_clean)),
-            "min": float(np.nanmin(value_clean)), "max": float(np.nanmax(value_clean)),
+            "mean": float(np.nanmean(value_clean)),
+            "std": float(np.nanstd(value_clean)),
+            "min": float(np.nanmin(value_clean)),
+            "max": float(np.nanmax(value_clean)),
         }
 
-        ar1 = R9.ols_ar1_diff(value_clean[np.isfinite(value_clean)]) if len(value_clean) >= 30 else None
+        ar1 = (
+            R9.ols_ar1_diff(value_clean[np.isfinite(value_clean)])
+            if len(value_clean) >= 30
+            else None
+        )
         ic = R9.zscore_ic(value_clean) if len(value_clean) >= 90 else None
         adf = S.adf_test(value_clean) if len(value_clean) >= ADF_MIN_ROWS else None
         include_10b = bool(adf is not None and adf.get("stationary_5pct") is True)
@@ -81,20 +110,25 @@ def main():
         leg2 = clean["leg2_price"].to_numpy()
         r1 = np.diff(np.log(leg1), prepend=np.nan)
         r2 = np.diff(np.log(leg2), prepend=np.nan)
-        leg_corr_full = float(np.corrcoef(r1[1:], r2[1:])[0, 1]) if len(r1) > 30 else None
+        leg_corr_full = (
+            float(np.corrcoef(r1[1:], r2[1:])[0, 1]) if len(r1) > 30 else None
+        )
         rolling_corr = S.rolling_leg_correlation(r1, r2, window=60)
         roll_corr_finite = rolling_corr[np.isfinite(rolling_corr)]
         rolling_corr_summary = {
             "mean": float(np.mean(roll_corr_finite)) if len(roll_corr_finite) else None,
             "min": float(np.min(roll_corr_finite)) if len(roll_corr_finite) else None,
-            "p10": float(np.percentile(roll_corr_finite, 10)) if len(roll_corr_finite) else None,
+            "p10": float(np.percentile(roll_corr_finite, 10))
+            if len(roll_corr_finite)
+            else None,
         }
 
         dates_clean = clean["date"].to_list()
         rolling_corr_series = {
             str(dates_clean[i]): float(rolling_corr[i])
             for i in range(len(dates_clean))
-            if np.isfinite(rolling_corr[i]) and i % 5 == 0  # thinned to every 5th day for JSON/plot size
+            if np.isfinite(rolling_corr[i])
+            and i % 5 == 0  # thinned to every 5th day for JSON/plot size
         }
 
         per_spread[name] = {
@@ -118,18 +152,31 @@ def main():
     n_inter = sum(1 for v in per_spread.values() if v["taxonomy"] == "inter_commodity")
     n_cal = sum(1 for v in per_spread.values() if v["taxonomy"] == "calendar")
     n_pass_adf = sum(1 for v in per_spread.values() if v["include_in_10b"])
-    n_ar1_mr = sum(1 for v in per_spread.values() if v["ar1_mean_reversion"] and v["ar1_mean_reversion"]["mean_reverting"])
+    n_ar1_mr = sum(
+        1
+        for v in per_spread.values()
+        if v["ar1_mean_reversion"] and v["ar1_mean_reversion"]["mean_reverting"]
+    )
     n_ic_sig = sum(
-        1 for v in per_spread.values()
-        if v["zscore_5d_forward_ic"] and v["zscore_5d_forward_ic"]["ic"] is not None
-        and v["zscore_5d_forward_ic"]["p_value"] < 0.05 and v["zscore_5d_forward_ic"]["ic"] < 0
+        1
+        for v in per_spread.values()
+        if v["zscore_5d_forward_ic"]
+        and v["zscore_5d_forward_ic"]["ic"] is not None
+        and v["zscore_5d_forward_ic"]["p_value"] < 0.05
+        and v["zscore_5d_forward_ic"]["ic"] < 0
     )
 
     disagreements = [
-        name for name, v in per_spread.items()
-        if v["ar1_mean_reversion"] and v["ar1_mean_reversion"]["mean_reverting"]
-        and not (v["zscore_5d_forward_ic"] and v["zscore_5d_forward_ic"]["ic"] is not None
-                 and v["zscore_5d_forward_ic"]["p_value"] < 0.05 and v["zscore_5d_forward_ic"]["ic"] < 0)
+        name
+        for name, v in per_spread.items()
+        if v["ar1_mean_reversion"]
+        and v["ar1_mean_reversion"]["mean_reverting"]
+        and not (
+            v["zscore_5d_forward_ic"]
+            and v["zscore_5d_forward_ic"]["ic"] is not None
+            and v["zscore_5d_forward_ic"]["p_value"] < 0.05
+            and v["zscore_5d_forward_ic"]["ic"] < 0
+        )
     ]
 
     results = {
@@ -156,7 +203,9 @@ def main():
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
     print(f"written {OUT_PATH}")
-    print(f"inter_commodity={n_inter} calendar={n_cal} pass_adf={n_pass_adf}/{len(SPREAD_NAMES)}")
+    print(
+        f"inter_commodity={n_inter} calendar={n_cal} pass_adf={n_pass_adf}/{len(SPREAD_NAMES)}"
+    )
     print(f"ar1_mr={n_ar1_mr} ic_sig_neg={n_ic_sig} disagreements={disagreements}")
 
 

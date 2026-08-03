@@ -93,7 +93,7 @@ def build_trade_features(name: str, df: pl.DataFrame, trades: list[dict]) -> lis
     full_carry = S11.compute_carry_fv(leg2, STORAGE_MID, financing)
     # Sign convention resolved in 11b: their "+1 at contango ceiling"
     # requires negating this repo's literal carry_ratio.
-    carry_corrected = -S11.carry_ratio(value, full_carry)
+    carry_corrected = -np.asarray(S11.carry_ratio(value, full_carry))
 
     log_leg1 = np.concatenate([[np.nan], np.diff(np.log(leg1))])
     log_leg2 = np.concatenate([[np.nan], np.diff(np.log(leg2))])

@@ -51,9 +51,14 @@ research.set_seed(0)
 def load_full_series(product: str) -> tuple[np.ndarray, np.ndarray]:
     curve = pl.read_parquet(f"{CURVE_DIR}/{product}.parquet")
     dev_start = DEV_START.get(product, DEV_START["__default__"])
-    sub = curve.select(["date", pl.col("log_return_ratioadj").alias("ret")]).drop_nulls()
+    sub = curve.select(
+        ["date", pl.col("log_return_ratioadj").alias("ret")]
+    ).drop_nulls()
     sub = sub.filter(pl.col("ret").is_finite())
-    sub = sub.filter((pl.col("date") >= pl.lit(dev_start).str.to_date()) & (pl.col("date") <= pl.lit(HOLDOUT_END).str.to_date()))
+    sub = sub.filter(
+        (pl.col("date") >= pl.lit(dev_start).str.to_date())
+        & (pl.col("date") <= pl.lit(HOLDOUT_END).str.to_date())
+    )
     sub = sub.sort("date")
     return sub["ret"].to_numpy(), sub["date"].to_numpy()
 
@@ -65,7 +70,9 @@ def ct_holdout_check(ret: np.ndarray, dates: np.ndarray) -> dict:
         return {"note": "insufficient holdout observations"}
     out = {}
     for tail in ["upper", "lower"]:
-        path = L5.hill_alpha_path(r_hold, tail=tail, k_min=15, k_max=min(150, len(r_hold) // 3))
+        path = L5.hill_alpha_path(
+            r_hold, tail=tail, k_min=15, k_max=min(150, len(r_hold) // 3)
+        )
         plateau = L5.find_hill_plateau(path["alpha"], path["k"], window=20)
         out[tail] = plateau
     return out
@@ -98,7 +105,9 @@ def ce_holdout_check(ret: np.ndarray, dates: np.ndarray) -> dict:
     return out
 
 
-def re_holdout_check(ret: np.ndarray, dates: np.ndarray, family: str, product: str) -> dict:
+def re_holdout_check(
+    ret: np.ndarray, dates: np.ndarray, family: str, product: str
+) -> dict:
     dev_mask = dates < np.datetime64(HOLDOUT_START)
     model = C.fit_risk_model(ret[dev_mask], product, family)
     if model is None:
@@ -108,17 +117,22 @@ def re_holdout_check(ret: np.ndarray, dates: np.ndarray, family: str, product: s
     r_hold = ret[holdout_mask]
     sigma_hold = sigma_path[holdout_mask]
     valid = np.isfinite(sigma_hold)
-    hits = np.array([
-        float(r_hold[i] < -model.var_conditional(0.01, sigma_t=sigma_hold[i]))
-        for i in range(len(r_hold)) if valid[i]
-    ])
+    hits = np.array(
+        [
+            float(r_hold[i] < -model.var_conditional(0.01, sigma_t=sigma_hold[i]))
+            for i in range(len(r_hold))
+            if valid[i]
+        ]
+    )
     if len(hits) < 30:
         return {"note": "insufficient holdout observations"}
     _, kp = dist.kupiec_test(hits.astype(int), 0.01)
     _, ip = dist.christoffersen_independence_test(hits.astype(int))
     return {
-        "n": len(hits), "observed_rate": float(np.mean(hits)),
-        "kupiec_p": float(kp), "christoffersen_independence_p": float(ip),
+        "n": len(hits),
+        "observed_rate": float(np.mean(hits)),
+        "kupiec_p": float(kp),
+        "christoffersen_independence_p": float(ip),
         "pass": bool(kp > 0.05 and ip > 0.05),
     }
 
@@ -143,8 +157,10 @@ def main():
 
     n_re_pass = sum(1 for r in results.values() if r["RE_holdout"].get("pass"))
     n_ce_reject_01 = sum(
-        1 for r in results.values()
-        if r["CE_holdout"].get("0.01", {}).get("p") is not None and r["CE_holdout"]["0.01"]["p"] < 0.05
+        1
+        for r in results.values()
+        if r["CE_holdout"].get("0.01", {}).get("p") is not None
+        and r["CE_holdout"]["0.01"]["p"] < 0.05
     )
     summary = {
         "n_products": len(results),
@@ -152,10 +168,14 @@ def main():
         "CE_holdout_reject_1pct_count": n_ce_reject_01,
     }
 
-    out = {"per_product": results, "summary": summary, "_config": {"holdout_start": HOLDOUT_START, "holdout_end": HOLDOUT_END}}
+    out = {
+        "per_product": results,
+        "summary": summary,
+        "_config": {"holdout_start": HOLDOUT_START, "holdout_end": HOLDOUT_END},
+    }
     with open(OUT_PATH, "w") as f:
         json.dump(out, f, indent=2, default=str)
-    print(f"\nwritten {OUT_PATH} in {time.time()-t0:.1f}s")
+    print(f"\nwritten {OUT_PATH} in {time.time() - t0:.1f}s")
 
 
 if __name__ == "__main__":

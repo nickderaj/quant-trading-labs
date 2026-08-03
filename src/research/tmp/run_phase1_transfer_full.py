@@ -27,10 +27,10 @@ import time
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
-import numpy as np  # noqa: E402
 
-import dist_lib6 as L6  # noqa: E402
-import research  # noqa: E402
+import dist_lib6 as L6
+
+import research
 
 DM_BOOTSTRAP_N = 500
 INTERVAL_ORDER = ["12h", "4h", "1h"]
@@ -48,15 +48,23 @@ def run_one(symbol: str, interval: str) -> dict:
     log_score_full, scores = L6.score_gate_a_models(ret, variance_fc, nu_paths)
 
     model_names = L6.GATE_A_MODEL_IDS
-    all_pairs_dm = L6.all_pairs_dm_bh(model_names, log_score_full, dm_bootstrap_n=DM_BOOTSTRAP_N, seed=0)
+    all_pairs_dm = L6.all_pairs_dm_bh(
+        model_names, log_score_full, dm_bootstrap_n=DM_BOOTSTRAP_N, seed=0
+    )
 
     mean_log_score = {name: scores[name]["log_score_mean"] for name in model_names}
-    best_name = max(mean_log_score, key=mean_log_score.get)
-    gate_fires_boot = L6.beats_all_significantly(best_name, model_names, all_pairs_dm, "bh_bootstrap")
-    gate_fires_normal = L6.beats_all_significantly(best_name, model_names, all_pairs_dm, "bh_normal")
+    best_name = max(mean_log_score, key=lambda n: mean_log_score[n])
+    gate_fires_boot = L6.beats_all_significantly(
+        best_name, model_names, all_pairs_dm, "bh_bootstrap"
+    )
+    gate_fires_normal = L6.beats_all_significantly(
+        best_name, model_names, all_pairs_dm, "bh_normal"
+    )
 
     return {
-        "n_obs": n, "scores": scores, "all_pairs_dm": all_pairs_dm,
+        "n_obs": n,
+        "scores": scores,
+        "all_pairs_dm": all_pairs_dm,
         "best_by_log_score": best_name,
         "beats_every_other_significantly_bootstrap_bh": gate_fires_boot,
         "beats_every_other_significantly_normal_bh": gate_fires_normal,
@@ -75,10 +83,12 @@ def main():
     for interval in intervals:
         res = run_one(symbol, interval)
         out["intervals"][interval] = res
-        print(f"{symbol} {interval}: n={res['n_obs']} elapsed={res['elapsed_sec']:.1f}s "
-              f"best={res['best_by_log_score']} "
-              f"gate(boot)={res['beats_every_other_significantly_bootstrap_bh']} "
-              f"gate(normal)={res['beats_every_other_significantly_normal_bh']}")
+        print(
+            f"{symbol} {interval}: n={res['n_obs']} elapsed={res['elapsed_sec']:.1f}s "
+            f"best={res['best_by_log_score']} "
+            f"gate(boot)={res['beats_every_other_significantly_bootstrap_bh']} "
+            f"gate(normal)={res['beats_every_other_significantly_normal_bh']}"
+        )
         out_path = f"src/research/tmp/phase1_transfer_{symbol}.json"
         with open(out_path, "w") as f:
             json.dump(out, f, indent=1, default=float)

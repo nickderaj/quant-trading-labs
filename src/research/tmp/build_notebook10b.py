@@ -2,12 +2,19 @@ import json
 
 
 def md(src):
-    return {"cell_type": "markdown", "metadata": {}, "source": src.splitlines(keepends=True)}
+    return {
+        "cell_type": "markdown",
+        "metadata": {},
+        "source": src.splitlines(keepends=True),
+    }
 
 
 def code(src):
     return {
-        "cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [],
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
         "source": src.splitlines(keepends=True),
     }
 
@@ -21,7 +28,8 @@ cells = []
 # ============================================================================
 # Intro
 # ============================================================================
-cells.append(md("""\
+cells.append(
+    md("""\
 # Notebook 10b — Spread Strategies: Costed Backtests
 
 **Five gates, five nulls, and the two most informative near-misses in this programme's
@@ -40,12 +48,14 @@ a finding this notebook would have missed had it stopped at Sharpe and DSR. Gate
 (blended momentum) is unambiguous: negative Sharpe at every offset. **No gate fires. No
 gate clears the §3 fundable flag either.** This notebook reports that verdict with real
 texture, not flatly.
-"""))
+""")
+)
 
 # ============================================================================
 # Setup
 # ============================================================================
-cells.append(code("""\
+cells.append(
+    code("""\
 import sys
 
 sys.path.insert(0, "..")
@@ -70,12 +80,14 @@ def show(fig, caption):
     print(f"Figure {fig_n[0]}: {caption}")
     plt.tight_layout()
     plt.show()
-"""))
+""")
+)
 
 # ============================================================================
 # Gate Verdict Table
 # ============================================================================
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Gate verdicts — the full table
 
 | gate | claim | fires? | §3 fundable flag | number behind it |
@@ -87,21 +99,25 @@ cells.append(md("""\
 | **VS** | vol-scaled carry closes Gate AC's gap | **NO** | **NO — fails on drawdown alone** | net Sharpe 1.16–1.23 at every offset (up sharply from Gate AC's 0.90–0.95), DSR 0.9997 (n_trials=8) — both individually clear the fundable-flag bar — but the excess-vs-basket CI [−0.0022, +0.0098] still includes zero (fails the tradeable-alpha gate, same shape as Gate AC) AND cumulative log-drawdown corresponds to ≈99.6% of peak equity, nowhere near the 25%-of-peak bound (fails the fundable flag on its own, independent criterion) |
 | **BM** | blended momentum is sign-consistent and survives cost | **NO** | **NO** | net Sharpe **negative** at every offset (−0.015 to −0.033) — sign-consistent, but consistently negative, not positive; DSR 0.025 (n_trials=20) |
 | **FA-data** | this repo caches a crypto spot series distinct from perpetuals | **resolved FALSE** | n/a | every Binance URL `src/data.py` calls is a USDS-M perpetual-futures endpoint; every cached klines/ohlc symbol has a matching funding file (funding only exists for perpetuals) — no proxy built, Gate FA deferred with this note |
-"""))
+""")
+)
 
 # ============================================================================
 # Phase 0 — Reproduction Check
 # ============================================================================
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 0 — Reproduction check
 
 Fifteen assertions against 10a's own committed JSON (spread counts, taxonomy split,
 ADF-exclusion of gold_silver/platinum_palladium, the deadband-primary declaration, all
 five gates' exact DSR n_trials, and the FA-data resolution) — all passed before this
 notebook's own backtests ran.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase0 = load("phase_0_10b_repro_results.json")
 print("Phase 2 spread selection:")
 print(f"  Total spreads: {phase0['phase_2_spread_selection']['n_spreads']}")
@@ -119,12 +135,14 @@ print(f"  Resolved: {phase0['phase_4_10b_fa_data']['resolved']}")
 print(f"  FA data available: {phase0['phase_4_10b_fa_data']['fa_data_available']}")
 print()
 print("Verdict:", phase0['_verdict'])
-"""))
+""")
+)
 
 # ============================================================================
 # Phase 1 — Gate SP
 # ============================================================================
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 1 — Gate SP: Unconditional Spread Mean-Reversion
 
 Trading rule (declared in 10a's pre-registration, not re-derived here): 60-day rolling
@@ -139,9 +157,11 @@ directionally exactly what notebook 9's cheap first-look probe predicted. **Neit
 DSR at the honestly-counted n_trials=8**: 0.562 for inter-commodity, 0.680 for calendar.
 The calendar book's bootstrap CI on net return does exclude zero on its own, but DSR alone
 is enough to keep Gate SP from firing on either group.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase1 = load("phase_1_10b_results.json")
 
 # Extract data for both books and all offsets
@@ -196,9 +216,11 @@ print(f"  Net Sharpe by offset: {[phase1['calendar']['by_offset'][o]['sharpe'] f
 print(f"  Bootstrap CI (vs zero): {phase1['calendar']['excess_return_ci_vs_zero']}")
 print(f"  CI excludes zero: {phase1['calendar']['ci_excludes_zero']}")
 print(f"  Deflated Sharpe prob (DSR): {phase1['calendar']['deflated_sharpe_prob']:.4f}")
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 # Bootstrap CI bar chart for Gate SP: both books' CI vs zero
 fig, ax = plt.subplots(figsize=(10, 5))
 
@@ -225,12 +247,14 @@ ax.set_xticklabels(books)
 ax.set_title('Gate SP: Bootstrap CI on net return vs zero, both books')
 ax.grid(True, alpha=0.3, axis='y')
 show(fig, "Gate SP bootstrap confidence intervals on net return vs zero (log scale) — Inter-commodity CI includes zero, calendar excludes zero but DSR kills the verdict anyway.")
-"""))
+""")
+)
 
 # ============================================================================
 # Phase 2 — Gates SPR and SPR-BW
 # ============================================================================
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 2 — Gates SPR and SPR-BW: Regime-Gating and brent_wti
 
 Same trading rule, same universe, with position zeroed on any day the term-structure
@@ -242,9 +266,11 @@ pre-declared primary (BZ-leg-only) definition, brent_wti does NOT show gated > u
 (0.604 vs 0.614). Under the secondary (both-legs-agree) definition, the picture flips:
 0.694 vs 0.614 — but this is a post-hoc robustness check, not the pre-registered primary.
 Gate SPR-BW correctly does not fire on the primary definition, as it must.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase2 = load("phase_2_10b_results.json")
 
 # Regime-gated vs unconditional Sharpe across offsets
@@ -279,9 +305,11 @@ print(f"  Gated exceeds unconditional at every offset: {deadband_data['gated_exc
 print(f"  Gated-vs-zero CI: {deadband_data['gated_vs_zero_ci']}")
 print(f"  Gated-minus-unconditional CI: {deadband_data['gated_minus_unconditional_ci']}")
 print(f"  Deflated Sharpe prob: {deadband_data['deflated_sharpe_prob']:.4f}")
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 # Per-spread SPR-BW analysis with brent_wti highlighted
 per_spread = phase2['gate_SPR_bw']['per_spread_offset_0']
 spreads = list(per_spread.keys())
@@ -328,12 +356,14 @@ print(f"  brent_wti gated > unconditional (both-legs-agree): {bw_both['gated_exc
 print()
 print(f"Other spreads exceeding unconditional: {phase2['gate_SPR_bw']['n_spreads_gated_exceeds_unconditional']} of {phase2['gate_SPR_bw']['n_eligible_spreads']}")
 print(f"  Gate SPR-BW fires: {phase2['gate_SPR_bw']['fires']}")
-"""))
+""")
+)
 
 # ============================================================================
 # Phase 3 — Gates VS and BM
 # ============================================================================
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 3 — Gates VS and BM: Vol-Scaled Carry and Blended Momentum
 
 **Gate VS is this notebook's most consequential result precisely because it does NOT
@@ -348,9 +378,11 @@ completely independent criterion**.
 
 **Gate BM is an unambiguous null.** The equal-weighted blend of notebook 8's four momentum
 lookbacks is net-**negative** at every origin offset (−0.015 to −0.033).
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase3 = load("phase_3_10b_results.json")
 
 # Gate VS net Sharpe across offsets (the vol-scaling lift)
@@ -384,9 +416,11 @@ print("Gate BM Summary:")
 print(f"  Net Sharpe by offset: {[f'{s:.4f}' for s in bm_sharpes]}")
 print(f"  Deflated Sharpe prob (DSR): {phase3['gate_BM']['gate']['deflated_sharpe_prob']:.4f}")
 print(f"  Fires: {phase3['gate_BM']['gate']['fires']}")
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 # Gate VS drawdown analysis - the critical finding
 # Log-drawdown from offset 0: -5.408560804595988
 # Convert to percentage: 1 - exp(log_drawdown)
@@ -421,9 +455,11 @@ print(f"  Log-drawdown at offset 0: {log_dd_vs:.4f}")
 print(f"  Percentage of peak (1-exp(dd)): {pct_dd_vs:.2f}%")
 print(f"  Fundable bound: 25%")
 print(f"  FAILS fundable flag: {pct_dd_vs > 25}")
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 # Cost drag comparison: VS vs BM
 fig, ax = plt.subplots(figsize=(11, 5))
 
@@ -447,12 +483,14 @@ show(fig, "Cost drag from turnover is similar for VS and BM (~2.0–2.3% annuall
 print("Annual Fee Drag (turnover cost):")
 print(f"  Gate VS: {annual_fee_drag[0]:.4f}%")
 print(f"  Gate BM: {annual_fee_drag[1]:.4f}%")
-"""))
+""")
+)
 
 # ============================================================================
 # Phase 4 — FA-data Check
 # ============================================================================
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 4 — FA-data: Data-Availability Check
 
 Resolved **FALSE**, without a proxy. Every Binance URL `src/data.py` calls is a
@@ -463,9 +501,11 @@ series would have none. Gate FA is deferred with this data-acquisition note; bui
 proxy would manufacture a spread mechanically guaranteed to look small (perp vs. its own
 mark) rather than measuring the real opportunity (perp vs. independent spot), exactly
 what NEXT_PROMPT.md sec 2 warns against.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase4 = load("phase_4_10b_results.json")
 print("Phase 4 — FA-data Availability Check")
 print()
@@ -483,12 +523,14 @@ for key, val in phase4['evidence'].items():
         print(f"  {key}: {val}")
 print()
 print("Verdict:", phase4['verdict'][:150], "...")
-"""))
+""")
+)
 
 # ============================================================================
 # Bottom Line
 # ============================================================================
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Bottom line: Cross-spread regime hypothesis
 
 **Regime-gating does not survive as tradeable alpha, but the direction is genuinely,
@@ -501,9 +543,11 @@ to clear zero, and the DSR at the honestly-counted 12-configuration bar (three r
 definitions × four offsets) comes in at 0.484 — essentially "no better than random search
 would produce this often." A real but too-small-to-trade directional signal, not a
 tradeable improvement.
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Bottom line: brent_wti-specific finding
 
 **Genuinely unresolved, and reported as exactly that — not smoothed into either
@@ -521,7 +565,8 @@ the pre-declared primary definition, as it must be to mean anything) correctly d
 fire on this basis. A future notebook with its own fresh pre-registration is the
 legitimate way to test the both-legs-agree definition as primary, not a retroactive edit
 here.
-"""))
+""")
+)
 
 # ============================================================================
 # Write the notebook
@@ -531,7 +576,11 @@ with open("src/research/010b_spread_strategies.ipynb", "w") as f:
         {
             "cells": cells,
             "metadata": {
-                "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+                "kernelspec": {
+                    "display_name": "Python 3",
+                    "language": "python",
+                    "name": "python3",
+                },
                 "language_info": {"name": "python", "version": "3.12"},
             },
             "nbformat": 4,

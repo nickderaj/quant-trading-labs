@@ -21,10 +21,9 @@ import sys
 sys.path.insert(0, "src")
 sys.path.insert(0, "src/research/tmp")
 
-import numpy as np  # noqa: E402
-
-import dist_lib as L  # noqa: E402  (path must be set up first)
-import dist_lib5 as L5  # noqa: E402
+import dist_lib as L
+import dist_lib5 as L5
+import numpy as np
 
 # --------------------------------------------------------------------------
 # Shared constants (unchanged from notebook 5's own drivers - reused, not
@@ -43,22 +42,34 @@ MLE_MAX_TRAIN = 500
 # The 8-model Phase 1/Gate-A competitor set, unchanged from notebook 5's
 # Phase 3 (NEXT_RUN_PROMPT.md's own instruction: "do not add models here").
 GATE_A_MODEL_IDS = [
-    "d0_trailing_std", "d1_har_rv", "d2_har_log_rv", "d3_range",
-    "d4_garch_normal", "d5_garch_t", "d6_gjr_normal", "d7_gjr_t",
+    "d0_trailing_std",
+    "d1_har_rv",
+    "d2_har_log_rv",
+    "d3_range",
+    "d4_garch_normal",
+    "d5_garch_t",
+    "d6_gjr_normal",
+    "d7_gjr_t",
 ]
 T_MODEL_IDS = {"d5_garch_t", "d7_gjr_t"}
 
 # Thin-tailed model set for Gate U (ES universality), per NEXT_RUN_PROMPT.md
 # section 3's exact list.
 THIN_TAILED_MODEL_IDS = {
-    "d0_trailing_std", "d1_har_rv", "d2_har_log_rv", "d3_range",
-    "d4_garch_normal", "d6_gjr_normal",
+    "d0_trailing_std",
+    "d1_har_rv",
+    "d2_har_log_rv",
+    "d3_range",
+    "d4_garch_normal",
+    "d6_gjr_normal",
 }
 FAT_TAILED_MODEL_IDS = {"d5_garch_t", "d7_gjr_t"}
 EVT_MODEL_IDS = {"d8_garch_evt", "d9_gjr_evt"}
 
 
-def build_gate_a_forecasts(df, interval: str, ret: np.ndarray) -> tuple[dict, dict]:
+def build_gate_a_forecasts(
+    df, interval: str, ret: np.ndarray
+) -> tuple[dict, dict, dict]:
     """Rebuild the identical 8-model variance-forecast set notebook 5's
     Phase 3 used, on whatever (symbol, interval) frame is passed in.
 
@@ -78,38 +89,71 @@ def build_gate_a_forecasts(df, interval: str, ret: np.ndarray) -> tuple[dict, di
     variance_fc: dict[str, np.ndarray] = {}
     nu_paths: dict[str, np.ndarray] = {}
 
-    trailing_candidates = {f"trailing_{w}": L.rung0_trailing_std(df, w).to_numpy() for w in [8, 24, 96]}
+    trailing_candidates = {
+        f"trailing_{w}": L.rung0_trailing_std(df, w).to_numpy() for w in [8, 24, 96]
+    }
 
     def _q(fc):
         m = np.isfinite(fc) & (fc > 0) & (rv > 0)
         return np.nanmean(dist.qlike(rv[m], fc[m])) if m.sum() > 10 else np.inf
 
-    _, variance_fc["d0_trailing_std"] = min(trailing_candidates.items(), key=lambda kv: _q(kv[1]))
+    _, variance_fc["d0_trailing_std"] = min(
+        trailing_candidates.items(), key=lambda kv: _q(kv[1])
+    )
 
     har_df = L.make_har_features(df, interval)
     variance_fc["d1_har_rv"] = L.rolling_ols_refit(
-        har_df, ["rv_d", "rv_w", "rv_m"], "rv_target", refit_every=cheap_refit_every, min_train=min_train,
+        har_df,
+        ["rv_d", "rv_w", "rv_m"],
+        "rv_target",
+        refit_every=cheap_refit_every,
+        min_train=min_train,
     )
-    variance_fc["d2_har_log_rv"] = L5.har_log_rv_forecast(df, interval, cheap_refit_every, min_train)
+    variance_fc["d2_har_log_rv"] = L5.har_log_rv_forecast(
+        df, interval, cheap_refit_every, min_train
+    )
 
     range_df = L.range_estimator_forecasts(df, window=bpd if bpd > 1 else 24)
-    range_candidates = {name: range_df[col].to_numpy() for name, col in
-                        [("parkinson", "fc_parkinson"), ("gk", "fc_gk"), ("rs", "fc_rs"), ("yz", "fc_yz")]}
+    range_candidates = {
+        name: range_df[col].to_numpy()
+        for name, col in [
+            ("parkinson", "fc_parkinson"),
+            ("gk", "fc_gk"),
+            ("rs", "fc_rs"),
+            ("yz", "fc_yz"),
+        ]
+    }
     _, variance_fc["d3_range"] = min(range_candidates.items(), key=lambda kv: _q(kv[1]))
 
     variance_fc["d4_garch_normal"], fits_d4 = L.rolling_garch_forecast(
-        ret, refit_every=mle_refit_every, min_train=min_train, innovation="normal", max_train=MLE_MAX_TRAIN,
+        ret,
+        refit_every=mle_refit_every,
+        min_train=min_train,
+        innovation="normal",
+        max_train=MLE_MAX_TRAIN,
     )
     variance_fc["d5_garch_t"], fits_d5 = L.rolling_garch_forecast(
-        ret, refit_every=mle_refit_every, min_train=min_train, innovation="t", max_train=MLE_MAX_TRAIN,
+        ret,
+        refit_every=mle_refit_every,
+        min_train=min_train,
+        innovation="t",
+        max_train=MLE_MAX_TRAIN,
     )
     nu_paths["d5_garch_t"] = L.nu_path_from_fits(fits_d5, n, param_index=3)
 
     variance_fc["d6_gjr_normal"], fits_d6 = L5.rolling_gjr_forecast(
-        ret, refit_every=mle_refit_every, min_train=min_train, innovation="normal", max_train=MLE_MAX_TRAIN,
+        ret,
+        refit_every=mle_refit_every,
+        min_train=min_train,
+        innovation="normal",
+        max_train=MLE_MAX_TRAIN,
     )
     variance_fc["d7_gjr_t"], fits_d7 = L5.rolling_gjr_forecast(
-        ret, refit_every=mle_refit_every, min_train=min_train, innovation="t", max_train=MLE_MAX_TRAIN,
+        ret,
+        refit_every=mle_refit_every,
+        min_train=min_train,
+        innovation="t",
+        max_train=MLE_MAX_TRAIN,
     )
     nu_paths["d7_gjr_t"] = L.nu_path_from_fits(fits_d7, n, param_index=4)
 
@@ -117,7 +161,9 @@ def build_gate_a_forecasts(df, interval: str, ret: np.ndarray) -> tuple[dict, di
     return variance_fc, nu_paths, fits
 
 
-def score_gate_a_models(ret: np.ndarray, variance_fc: dict, nu_paths: dict) -> tuple[dict, dict]:
+def score_gate_a_models(
+    ret: np.ndarray, variance_fc: dict, nu_paths: dict
+) -> tuple[dict, dict]:
     """log_score_full (per-model, NaN-padded to len(ret)) and summary scores,
     exactly matching run_phase3_density.py's own scoring loop."""
     n = len(ret)
@@ -136,7 +182,12 @@ def score_gate_a_models(ret: np.ndarray, variance_fc: dict, nu_paths: dict) -> t
     return log_score_full, scores
 
 
-def all_pairs_dm_bh(model_names: list[str], log_score_full: dict, dm_bootstrap_n: int = 500, seed: int = 0) -> dict:
+def all_pairs_dm_bh(
+    model_names: list[str],
+    log_score_full: dict,
+    dm_bootstrap_n: int = 500,
+    seed: int = 0,
+) -> dict:
     """All-pairs Diebold-Mariano + BH adjustment on log-score loss
     differentials, identical machinery/convention to run_phase3_density.py's
     own inline loop, factored out here so Phase 1/Phase 3 drivers share one
@@ -154,11 +205,18 @@ def all_pairs_dm_bh(model_names: list[str], log_score_full: dict, dm_bootstrap_n
             continue
         d = (loss_a - loss_b)[both]
         tstat, p_normal = L.diebold_mariano(loss_a[both], loss_b[both])
-        p_boot = research.block_bootstrap_pvalue(d, null_value=0.0, n_boot=dm_bootstrap_n, seed=seed)
+        p_boot = research.block_bootstrap_pvalue(
+            d, null_value=0.0, n_boot=dm_bootstrap_n, seed=seed
+        )
         key = f"{a}_vs_{b}"
         all_pairs_dm[key] = {
-            "a": a, "b": b, "tstat": tstat, "normal_pvalue": p_normal, "bootstrap_pvalue": p_boot,
-            "log_score_a": float(np.nanmean(-loss_a[both])), "log_score_b": float(np.nanmean(-loss_b[both])),
+            "a": a,
+            "b": b,
+            "tstat": tstat,
+            "normal_pvalue": p_normal,
+            "bootstrap_pvalue": p_boot,
+            "log_score_a": float(np.nanmean(-loss_a[both])),
+            "log_score_b": float(np.nanmean(-loss_b[both])),
             "n": int(both.sum()),
         }
         normal_pvalues[key] = p_normal
@@ -166,20 +224,26 @@ def all_pairs_dm_bh(model_names: list[str], log_score_full: dict, dm_bootstrap_n
 
     bh_normal = L5.benjamini_hochberg(normal_pvalues, alpha=0.05)
     bh_boot = L5.benjamini_hochberg(boot_pvalues, alpha=0.05)
-    for key in all_pairs_dm:
-        all_pairs_dm[key]["bh_normal"] = bh_normal[key]
-        all_pairs_dm[key]["bh_bootstrap"] = bh_boot[key]
+    for key, entry in all_pairs_dm.items():
+        entry["bh_normal"] = bh_normal[key]
+        entry["bh_bootstrap"] = bh_boot[key]
     return all_pairs_dm
 
 
-def beats_all_significantly(best_name: str, model_names: list[str], all_pairs_dm: dict, bh_field: str) -> bool:
+def beats_all_significantly(
+    best_name: str, model_names: list[str], all_pairs_dm: dict, bh_field: str
+) -> bool:
     """Same "does best beat every other competitor, significantly" check as
     run_phase3_density.py's own inline closure, factored out so Phase 1 and
     Phase 3 share the identical Gate A / Gate P decision logic."""
     for other in model_names:
         if other == best_name:
             continue
-        key = f"{best_name}_vs_{other}" if f"{best_name}_vs_{other}" in all_pairs_dm else f"{other}_vs_{best_name}"
+        key = (
+            f"{best_name}_vs_{other}"
+            if f"{best_name}_vs_{other}" in all_pairs_dm
+            else f"{other}_vs_{best_name}"
+        )
         entry = all_pairs_dm.get(key)
         if entry is None:
             continue
@@ -187,7 +251,9 @@ def beats_all_significantly(best_name: str, model_names: list[str], all_pairs_dm
         bh = entry[bh_field]
         if not bh["significant"]:
             return False
-        best_wins_sig = (a_is_best and entry["tstat"] < 0) or (not a_is_best and entry["tstat"] > 0)
+        best_wins_sig = (a_is_best and entry["tstat"] < 0) or (
+            not a_is_best and entry["tstat"] > 0
+        )
         if not best_wins_sig:
             return False
     return True
@@ -202,11 +268,13 @@ def beats_all_significantly(best_name: str, model_names: list[str], all_pairs_dm
 # of what the forecasts' own failures look like), not new rolling-refit code.
 # --------------------------------------------------------------------------
 
-from scipy import stats as _st  # noqa: E402
-from scipy.optimize import minimize as _minimize  # noqa: E402
+from scipy import stats as _st
+from scipy.optimize import minimize as _minimize
 
 
-def violation_blocks_and_durations(hit: np.ndarray, block_size: int) -> tuple[np.ndarray, np.ndarray]:
+def violation_blocks_and_durations(
+    hit: np.ndarray, block_size: int
+) -> tuple[np.ndarray, np.ndarray]:
     """hit: boolean/0-1 violation indicator, one entry per bar (already
     masked to finite/valid bars only by the caller). Returns:
       - counts: violation count in each non-overlapping block of `block_size`
@@ -273,9 +341,14 @@ def fit_nb_counts(counts: np.ndarray) -> dict | None:
     alpha0 = max((var - mean) / (mean**2), 1e-4) if var > mean else 1e-4
     x0 = np.array([np.log(mean), np.log(alpha0)])
     try:
-        res = _minimize(_nb2_negloglik, x0, args=(counts,), method="Nelder-Mead",
-                         options={"maxiter": 500, "xatol": 1e-8, "fatol": 1e-8})
-    except Exception:
+        res = _minimize(
+            _nb2_negloglik,
+            x0,
+            args=(counts,),
+            method="Nelder-Mead",
+            options={"maxiter": 500, "xatol": 1e-8, "fatol": 1e-8},
+        )
+    except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
         return None
     if not res.success or not np.all(np.isfinite(res.x)):
         return None
@@ -304,7 +377,9 @@ def boundary_lr_test(ll_full: float, ll_null: float) -> tuple[float, float]:
     return lr, p
 
 
-def _discrete_weibull_negloglik(params: np.ndarray, durations: np.ndarray, fix_beta1: bool) -> float:
+def _discrete_weibull_negloglik(
+    params: np.ndarray, durations: np.ndarray, fix_beta1: bool
+) -> float:
     if fix_beta1:
         (logit_q,) = params
         beta = 1.0
@@ -342,7 +417,9 @@ def fit_geometric_durations(durations: np.ndarray) -> dict | None:
     q = mean / (mean + 1.0)
     if not (0.0 < q < 1.0):
         return None
-    ll = -_discrete_weibull_negloglik(np.array([np.log(q / (1 - q))]), durations, fix_beta1=True)
+    ll = -_discrete_weibull_negloglik(
+        np.array([np.log(q / (1 - q))]), durations, fix_beta1=True
+    )
     return {"q": q, "beta": 1.0, "loglik": float(ll), "n": len(durations)}
 
 
@@ -360,9 +437,14 @@ def fit_discrete_weibull_durations(durations: np.ndarray) -> dict | None:
         return None
     x0 = np.array([np.log(geo["q"] / (1 - geo["q"])), 0.0])
     try:
-        res = _minimize(_discrete_weibull_negloglik, x0, args=(durations, False), method="Nelder-Mead",
-                         options={"maxiter": 1000, "xatol": 1e-8, "fatol": 1e-8})
-    except Exception:
+        res = _minimize(
+            _discrete_weibull_negloglik,
+            x0,
+            args=(durations, False),
+            method="Nelder-Mead",
+            options={"maxiter": 1000, "xatol": 1e-8, "fatol": 1e-8},
+        )
+    except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
         return None
     if not res.success or not np.all(np.isfinite(res.x)):
         return None
@@ -408,14 +490,21 @@ def fit_garch_zoo_two_stage(r: np.ndarray, family_module) -> dict | None:
         return None
     next_sig2 = omega + alpha * r[-1] ** 2 + beta * sig2[-1]
     return {
-        "omega": float(omega), "alpha": float(alpha), "beta": float(beta),
-        "shape": tuple(float(s) for s in shape), "next_var": float(next_sig2),
+        "omega": float(omega),
+        "alpha": float(alpha),
+        "beta": float(beta),
+        "shape": tuple(float(s) for s in shape),
+        "next_var": float(next_sig2),
         "family": family_module.NAME,
     }
 
 
 def rolling_garch_forecast_zoo(
-    returns: np.ndarray, refit_every: int, min_train: int, family_module, max_train: int = 500,
+    returns: np.ndarray,
+    refit_every: int,
+    min_train: int,
+    family_module,
+    max_train: int = 500,
 ) -> tuple[np.ndarray, list[dict]]:
     """Structurally identical to dist_lib.rolling_garch_forecast /
     dist_lib5.rolling_gjr_forecast's own refit-then-forward-fill loop,
@@ -438,11 +527,17 @@ def rolling_garch_forecast_zoo(
         if fit is not None:
             forecast[t] = sig2_state
             if t + 1 < n and np.isfinite(returns[t]):
-                sig2_state = fit["omega"] + fit["alpha"] * returns[t] ** 2 + fit["beta"] * sig2_state
+                sig2_state = (
+                    fit["omega"]
+                    + fit["alpha"] * returns[t] ** 2
+                    + fit["beta"] * sig2_state
+                )
     return forecast, fits
 
 
-def zoo_quantile_forecast(variance_forecast: np.ndarray, fits: list[dict], family_module, q: float) -> np.ndarray:
+def zoo_quantile_forecast(
+    variance_forecast: np.ndarray, fits: list[dict], family_module, q: float
+) -> np.ndarray:
     """VaR forecast at level q for a zoo GARCH model: sigma_t * family_module.ppf(q,
     shape_t), forward-filled step-function shape exactly like score_zoo_model's own
     per-refit-segment convention (used by Phase 6's risk-limit overlay)."""
@@ -462,7 +557,9 @@ def zoo_quantile_forecast(variance_forecast: np.ndarray, fits: list[dict], famil
     return out
 
 
-def score_zoo_model(actual: np.ndarray, variance_forecast: np.ndarray, fits: list[dict], family_module) -> np.ndarray:
+def score_zoo_model(
+    actual: np.ndarray, variance_forecast: np.ndarray, fits: list[dict], family_module
+) -> np.ndarray:
     """Per-bar log score for a zoo GARCH model: family_module.logpdf(z,
     shape) - log(sigma) (change-of-variables from the unit-variance-
     standardized density to the actual-return scale, same convention as
@@ -504,8 +601,8 @@ def score_zoo_model(actual: np.ndarray, variance_forecast: np.ndarray, fits: lis
 # with no post-hoc rescaling of the spliced whole ever needed.
 # --------------------------------------------------------------------------
 
-from scipy import integrate as _integrate  # noqa: E402
-from scipy import stats as _st2  # noqa: E402
+from scipy import integrate as _integrate
+from scipy import stats as _st2
 
 
 def fit_spliced_evt_density(z: np.ndarray, tail_frac: float = 0.10) -> dict | None:
@@ -537,17 +634,23 @@ def fit_spliced_evt_density(z: np.ndarray, tail_frac: float = 0.10) -> dict | No
         return None
     try:
         kde = _st2.gaussian_kde(body, bw_method="silverman")
-    except Exception:
+    except Exception:  # noqa: BLE001 - kde fit can raise arbitrary errors; convention is None on any failure
         return None
     body_mass, _err = _integrate.quad(lambda x: kde(x)[0], u_lower, u_upper, limit=100)
     if not np.isfinite(body_mass) or body_mass <= 1e-8:
         return None
 
     return {
-        "lower_fit": lower_fit, "upper_fit": upper_fit,
-        "u_lower": float(u_lower), "u_upper": float(u_upper),
-        "w_lower": float(w_lower), "w_upper": float(w_upper), "w_interior": float(w_interior),
-        "kde": kde, "body_mass": float(body_mass), "n": n,
+        "lower_fit": lower_fit,
+        "upper_fit": upper_fit,
+        "u_lower": float(u_lower),
+        "u_upper": float(u_upper),
+        "w_lower": float(w_lower),
+        "w_upper": float(w_upper),
+        "w_interior": float(w_interior),
+        "kde": kde,
+        "body_mass": float(body_mass),
+        "n": n,
     }
 
 
@@ -560,7 +663,11 @@ def spliced_evt_logpdf(z: np.ndarray, spliced_fit: dict) -> np.ndarray:
     """
     z = np.asarray(z, dtype=float)
     u_lower, u_upper = spliced_fit["u_lower"], spliced_fit["u_upper"]
-    w_lower, w_upper, w_interior = spliced_fit["w_lower"], spliced_fit["w_upper"], spliced_fit["w_interior"]
+    w_lower, w_upper, w_interior = (
+        spliced_fit["w_lower"],
+        spliced_fit["w_upper"],
+        spliced_fit["w_interior"],
+    )
     lower_fit, upper_fit = spliced_fit["lower_fit"], spliced_fit["upper_fit"]
     kde, body_mass = spliced_fit["kde"], spliced_fit["body_mass"]
 
@@ -593,13 +700,19 @@ def spliced_evt_logpdf(z: np.ndarray, spliced_fit: dict) -> np.ndarray:
         kde_vals = kde(z[interior_mask])
         normalized = kde_vals / body_mass
         with np.errstate(divide="ignore"):
-            out[interior_mask] = np.log(w_interior) + np.log(np.where(normalized > 0, normalized, 1e-300))
+            out[interior_mask] = np.log(w_interior) + np.log(
+                np.where(normalized > 0, normalized, 1e-300)
+            )
 
     return out
 
 
 def rolling_spliced_evt_fits(
-    returns: np.ndarray, variance_fits: list[dict], model: str, max_train: int, tail_frac: float = 0.10,
+    returns: np.ndarray,
+    variance_fits: list[dict],
+    model: str,
+    max_train: int,
+    tail_frac: float = 0.10,
 ) -> list[dict]:
     """Same refit cadence/training-window convention as
     dist_lib5.rolling_gpd_paths (refit exactly when the underlying variance
@@ -625,7 +738,9 @@ def rolling_spliced_evt_fits(
     return fits_out
 
 
-def score_spliced_evt_model(actual: np.ndarray, variance_forecast: np.ndarray, spliced_fits: list[dict]) -> np.ndarray:
+def score_spliced_evt_model(
+    actual: np.ndarray, variance_forecast: np.ndarray, spliced_fits: list[dict]
+) -> np.ndarray:
     """Per-bar log score for the spliced EVT density, same segment-batched
     forward-fill convention as score_zoo_model."""
     n = len(actual)

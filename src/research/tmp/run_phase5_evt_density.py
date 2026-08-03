@@ -15,12 +15,11 @@ import time
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
-import numpy as np  # noqa: E402
+import dist_lib as L
+import dist_lib6 as L6
+import numpy as np
 
-import dist_lib as L  # noqa: E402
-import dist_lib5 as L5  # noqa: E402
-import dist_lib6 as L6  # noqa: E402
-import research  # noqa: E402
+import research
 
 DM_BOOTSTRAP_N = 500
 INTERVAL_ORDER = ["12h", "4h", "1h", "1d"]
@@ -35,27 +34,45 @@ def run_one_interval(symbol: str, interval: str) -> dict:
     variance_fc, nu_paths, fits = L6.build_gate_a_forecasts(df, interval, ret)
     log_score_full, scores = L6.score_gate_a_models(ret, variance_fc, nu_paths)
 
-    spliced_fits_d8 = L6.rolling_spliced_evt_fits(ret, fits["d4"], model="garch", max_train=L6.MLE_MAX_TRAIN)
-    spliced_fits_d9 = L6.rolling_spliced_evt_fits(ret, fits["d6"], model="gjr", max_train=L6.MLE_MAX_TRAIN)
+    spliced_fits_d8 = L6.rolling_spliced_evt_fits(
+        ret, fits["d4"], model="garch", max_train=L6.MLE_MAX_TRAIN
+    )
+    spliced_fits_d9 = L6.rolling_spliced_evt_fits(
+        ret, fits["d6"], model="gjr", max_train=L6.MLE_MAX_TRAIN
+    )
 
     n_refits_attempted_d8 = len(fits["d4"])
     n_refits_succeeded_d8 = len(spliced_fits_d8)
     n_refits_attempted_d9 = len(fits["d6"])
     n_refits_succeeded_d9 = len(spliced_fits_d9)
 
-    ls_d8 = L6.score_spliced_evt_model(ret, variance_fc["d4_garch_normal"], spliced_fits_d8)
-    ls_d9 = L6.score_spliced_evt_model(ret, variance_fc["d6_gjr_normal"], spliced_fits_d9)
+    ls_d8 = L6.score_spliced_evt_model(
+        ret, variance_fc["d4_garch_normal"], spliced_fits_d8
+    )
+    ls_d9 = L6.score_spliced_evt_model(
+        ret, variance_fc["d6_gjr_normal"], spliced_fits_d9
+    )
     log_score_full["d8_garch_evt"] = ls_d8
     log_score_full["d9_gjr_evt"] = ls_d9
-    scores["d8_garch_evt"] = {"log_score_mean": float(np.nanmean(ls_d8)), "n": int(np.isfinite(ls_d8).sum())}
-    scores["d9_gjr_evt"] = {"log_score_mean": float(np.nanmean(ls_d9)), "n": int(np.isfinite(ls_d9).sum())}
+    scores["d8_garch_evt"] = {
+        "log_score_mean": float(np.nanmean(ls_d8)),
+        "n": int(np.isfinite(ls_d8).sum()),
+    }
+    scores["d9_gjr_evt"] = {
+        "log_score_mean": float(np.nanmean(ls_d9)),
+        "n": int(np.isfinite(ls_d9).sum()),
+    }
 
     model_names = list(log_score_full.keys())
-    all_pairs_dm = L6.all_pairs_dm_bh(model_names, log_score_full, dm_bootstrap_n=DM_BOOTSTRAP_N, seed=0)
+    all_pairs_dm = L6.all_pairs_dm_bh(
+        model_names, log_score_full, dm_bootstrap_n=DM_BOOTSTRAP_N, seed=0
+    )
 
     mean_log_score = {name: scores[name]["log_score_mean"] for name in model_names}
-    best_name = max(mean_log_score, key=mean_log_score.get)
-    gate_a_fires_boot = L6.beats_all_significantly(best_name, model_names, all_pairs_dm, "bh_bootstrap")
+    best_name = max(mean_log_score, key=lambda n: mean_log_score[n])
+    gate_a_fires_boot = L6.beats_all_significantly(
+        best_name, model_names, all_pairs_dm, "bh_bootstrap"
+    )
 
     # spliced-density health diagnostics, reported per NEXT_RUN_PROMPT.md's
     # own "an honest partial entry beats a hand-waved density" standard
@@ -66,26 +83,43 @@ def run_one_interval(symbol: str, interval: str) -> dict:
         for f in spliced_fits:
             sp = f["spliced"]
             eps = 1e-4
-            lo_left = np.exp(L6.spliced_evt_logpdf(np.array([sp["u_lower"] - eps]), sp)[0])
-            lo_right = np.exp(L6.spliced_evt_logpdf(np.array([sp["u_lower"] + eps]), sp)[0])
-            hi_left = np.exp(L6.spliced_evt_logpdf(np.array([sp["u_upper"] - eps]), sp)[0])
-            hi_right = np.exp(L6.spliced_evt_logpdf(np.array([sp["u_upper"] + eps]), sp)[0])
+            lo_left = np.exp(
+                L6.spliced_evt_logpdf(np.array([sp["u_lower"] - eps]), sp)[0]
+            )
+            lo_right = np.exp(
+                L6.spliced_evt_logpdf(np.array([sp["u_lower"] + eps]), sp)[0]
+            )
+            hi_left = np.exp(
+                L6.spliced_evt_logpdf(np.array([sp["u_upper"] - eps]), sp)[0]
+            )
+            hi_right = np.exp(
+                L6.spliced_evt_logpdf(np.array([sp["u_upper"] + eps]), sp)[0]
+            )
             gaps.append(abs(lo_left - lo_right) / max(lo_left, lo_right))
             gaps.append(abs(hi_left - hi_right) / max(hi_left, hi_right))
         return float(np.mean(gaps))
 
     return {
-        "n_obs": n, "scores": scores, "all_pairs_dm": all_pairs_dm,
-        "best_by_log_score": best_name, "gate_a_fires_bootstrap": gate_a_fires_boot,
+        "n_obs": n,
+        "scores": scores,
+        "all_pairs_dm": all_pairs_dm,
+        "best_by_log_score": best_name,
+        "gate_a_fires_bootstrap": gate_a_fires_boot,
         "spliced_density_health": {
             "d8_garch_evt": {
-                "n_refits_attempted": n_refits_attempted_d8, "n_refits_succeeded": n_refits_succeeded_d8,
-                "frac_succeeded": n_refits_succeeded_d8 / n_refits_attempted_d8 if n_refits_attempted_d8 else None,
+                "n_refits_attempted": n_refits_attempted_d8,
+                "n_refits_succeeded": n_refits_succeeded_d8,
+                "frac_succeeded": n_refits_succeeded_d8 / n_refits_attempted_d8
+                if n_refits_attempted_d8
+                else None,
                 "mean_relative_continuity_gap": _continuity_gap(spliced_fits_d8),
             },
             "d9_gjr_evt": {
-                "n_refits_attempted": n_refits_attempted_d9, "n_refits_succeeded": n_refits_succeeded_d9,
-                "frac_succeeded": n_refits_succeeded_d9 / n_refits_attempted_d9 if n_refits_attempted_d9 else None,
+                "n_refits_attempted": n_refits_attempted_d9,
+                "n_refits_succeeded": n_refits_succeeded_d9,
+                "frac_succeeded": n_refits_succeeded_d9 / n_refits_attempted_d9
+                if n_refits_attempted_d9
+                else None,
                 "mean_relative_continuity_gap": _continuity_gap(spliced_fits_d9),
             },
         },
@@ -105,10 +139,12 @@ def main():
         res = run_one_interval(symbol, interval)
         out["intervals"][interval] = res
         h8 = res["spliced_density_health"]["d8_garch_evt"]
-        print(f"{symbol} {interval}: n={res['n_obs']} elapsed={res['elapsed_sec']:.1f}s "
-              f"best={res['best_by_log_score']} gate_a={res['gate_a_fires_bootstrap']} "
-              f"d8_score={res['scores']['d8_garch_evt']['log_score_mean']:.3f} "
-              f"d8_frac_succeeded={h8['frac_succeeded']:.2f} d8_continuity_gap={h8['mean_relative_continuity_gap']:.3f}")
+        print(
+            f"{symbol} {interval}: n={res['n_obs']} elapsed={res['elapsed_sec']:.1f}s "
+            f"best={res['best_by_log_score']} gate_a={res['gate_a_fires_bootstrap']} "
+            f"d8_score={res['scores']['d8_garch_evt']['log_score_mean']:.3f} "
+            f"d8_frac_succeeded={h8['frac_succeeded']:.2f} d8_continuity_gap={h8['mean_relative_continuity_gap']:.3f}"
+        )
         out_path = f"src/research/tmp/phase5_evt_density_{symbol}.json"
         with open(out_path, "w") as f:
             json.dump(out, f, indent=1, default=float)

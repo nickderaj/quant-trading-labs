@@ -9,10 +9,10 @@ import time
 
 sys.path.insert(0, "src/research/tmp")
 
+import dist_lib as L
 import numpy as np
 from scipy import stats as st
 
-import dist_lib as L
 import distributions as dist
 import research
 
@@ -54,7 +54,9 @@ for interval in INTERVALS:
         res["ks_t"] = list(dist.pit_ks_test(st.t(df=df_t, loc=loc_t, scale=scale_t), r))
     if skewt_p is not None:
         a, b, loc_s, scale_s = skewt_p
-        res["ks_skewt"] = list(dist.pit_ks_test(st.jf_skew_t(a=a, b=b, loc=loc_s, scale=scale_s), r))
+        res["ks_skewt"] = list(
+            dist.pit_ks_test(st.jf_skew_t(a=a, b=b, loc=loc_s, scale=scale_s), r)
+        )
 
     # Gaussian scale mixture (2-component, weights/vars): reuse fit_gmm_em
     gsm = L.fit_gmm_em(r, k=2, n_iter=80)
@@ -92,15 +94,29 @@ for interval in INTERVALS:
     if pois_p is not None:
         res["ks_poisson"] = list(dist.pit_ks_test(st.poisson(mu=pois_p[0]), counts))
     if nb_p is not None:
-        res["ks_nbinom"] = list(dist.pit_ks_test(st.nbinom(n=nb_p[0], p=nb_p[1]), counts))
+        res["ks_nbinom"] = list(
+            dist.pit_ks_test(st.nbinom(n=nb_p[0], p=nb_p[1]), counts)
+        )
 
     # ---- bounded observables: beta fits
-    tbr = df["taker_buy_ratio"].drop_nulls().filter(
-        (df["taker_buy_ratio"].drop_nulls() > 0) & (df["taker_buy_ratio"].drop_nulls() < 1)
-    ).to_numpy()
-    icp = df["intrabar_close_pos"].drop_nulls().filter(
-        (df["intrabar_close_pos"].drop_nulls() > 0) & (df["intrabar_close_pos"].drop_nulls() < 1)
-    ).to_numpy()
+    tbr = (
+        df["taker_buy_ratio"]
+        .drop_nulls()
+        .filter(
+            (df["taker_buy_ratio"].drop_nulls() > 0)
+            & (df["taker_buy_ratio"].drop_nulls() < 1)
+        )
+        .to_numpy()
+    )
+    icp = (
+        df["intrabar_close_pos"]
+        .drop_nulls()
+        .filter(
+            (df["intrabar_close_pos"].drop_nulls() > 0)
+            & (df["intrabar_close_pos"].drop_nulls() < 1)
+        )
+        .to_numpy()
+    )
     beta_tbr = L.fit_once(df, "taker_buy_ratio", "beta")
     beta_icp = L.fit_once(df, "intrabar_close_pos", "beta")
     res["beta_taker_buy_ratio"] = beta_tbr
@@ -117,13 +133,19 @@ for interval in INTERVALS:
     # descriptive). Brownian E[range/sigma] = 2*sqrt(2/pi) for driftless BM
     # over the sampling interval (Parkinson's constant).
     sigma_full = float(np.std(r))
-    hl = df["hl_log"].drop_nulls().to_numpy()  # this is ln(high/low), a proxy range in log space
+    hl = (
+        df["hl_log"].drop_nulls().to_numpy()
+    )  # this is ln(high/low), a proxy range in log space
     norm_range = hl / sigma_full if sigma_full > 0 else np.array([])
     brownian_expected = 2 * np.sqrt(2 / np.pi)
-    res["normalized_range_mean"] = float(np.mean(norm_range)) if len(norm_range) else np.nan
+    res["normalized_range_mean"] = (
+        float(np.mean(norm_range)) if len(norm_range) else np.nan
+    )
     res["normalized_range_brownian_expected"] = float(brownian_expected)
     res["normalized_range_excess_pct"] = (
-        float((np.mean(norm_range) / brownian_expected - 1) * 100) if len(norm_range) else np.nan
+        float((np.mean(norm_range) / brownian_expected - 1) * 100)
+        if len(norm_range)
+        else np.nan
     )
 
     # ---- gap vs intrabar decomposition
@@ -150,8 +172,10 @@ for interval in INTERVALS:
 
     res["elapsed_sec"] = time.time() - t0
     out["intervals"][interval] = res
-    print(f"{interval}: n={n} elapsed={res['elapsed_sec']:.1f}s "
-          f"t_df={t_p[0] if t_p else None} 5sigma_ratio={res.get('5sigma_ratio_obs_to_normal')}")
+    print(
+        f"{interval}: n={n} elapsed={res['elapsed_sec']:.1f}s "
+        f"t_df={t_p[0] if t_p else None} 5sigma_ratio={res.get('5sigma_ratio_obs_to_normal')}"
+    )
 
 with open("src/research/tmp/phase1_results.json", "w") as f:
     json.dump(out, f, indent=1, default=float)

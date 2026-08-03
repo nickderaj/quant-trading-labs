@@ -11,11 +11,11 @@ import time
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
-import numpy as np
-
 import dist_lib as L
-import research
+import numpy as np
 from scipy import stats as st
+
+import research
 
 # Inlined from run_phase4.py rather than imported: that module runs its full
 # BTC 4-interval driver at import time (script-style, not `if __name__`-
@@ -28,7 +28,9 @@ MAX_TRAIN = 500
 THRESH_WINDOW_DAYS = 90
 
 
-def rolling_refit_states(x, k, refit_every, min_train, max_train, emission="gaussian", fit_fn=None):
+def rolling_refit_states(
+    x, k, refit_every, min_train, max_train, emission="gaussian", fit_fn=None
+):
     n = len(x)
     hard = np.full(n, np.nan)
     fit_log = []
@@ -71,8 +73,11 @@ def geometric_duration_test(hard_state):
     runs = np.array(runs, dtype=float)
     p_geom = 1.0 / np.mean(runs)
     ks = st.kstest(runs, "geom", args=(p_geom,))
-    return {"n_runs": len(runs), "mean_duration": float(np.mean(runs)),
-            "ks_pvalue": float(ks.pvalue)}
+    return {
+        "n_runs": len(runs),
+        "mean_duration": float(np.mean(runs)),
+        "ks_pvalue": float(ks.pvalue),
+    }
 
 
 def predicts_vol_and_direction(returns, rv_fwd, hard_state, k):
@@ -111,7 +116,12 @@ for symbol in SYMBOLS:
     rv_fwd = np.concatenate([rv[1:], [np.nan]])
     ret_fwd = np.concatenate([ret[1:], [np.nan]])
 
-    med = df["rv_target"].rolling_median(window_size=thresh_window, min_samples=thresh_window // 2).shift(1).to_numpy()
+    med = (
+        df["rv_target"]
+        .rolling_median(window_size=thresh_window, min_samples=thresh_window // 2)
+        .shift(1)
+        .to_numpy()
+    )
     thr_state = np.where(np.isfinite(med), (rv > med).astype(float), np.nan)
     baseline = {
         "geometric_duration": geometric_duration_test(thr_state),
@@ -120,8 +130,15 @@ for symbol in SYMBOLS:
 
     def fit_fn(window, k):
         return L.fit_hmm(window, k=k, n_iter=15, emission="gaussian", t_df=None)
+
     probs, hard, fit_log = rolling_refit_states(
-        ret, 2, refit_every, min_train, MAX_TRAIN, emission="hmm", fit_fn=fit_fn,
+        ret,
+        2,
+        refit_every,
+        min_train,
+        MAX_TRAIN,
+        emission="hmm",
+        fit_fn=fit_fn,
     )
     hmm = {
         "n_refits": len(fit_log),
@@ -130,14 +147,18 @@ for symbol in SYMBOLS:
     }
 
     out["symbols"][symbol] = {
-        "n_obs": n, "baseline_threshold": baseline, "hmm_gaussian": hmm,
+        "n_obs": n,
+        "baseline_threshold": baseline,
+        "hmm_gaussian": hmm,
         "elapsed_sec": time.time() - t0,
     }
-    print(f"{symbol}: n={n} elapsed={time.time()-t0:.1f}s "
-          f"baseline_vol_p={baseline['predicts']['vol_kruskal'].get('pvalue')} "
-          f"hmm_vol_p={hmm['predicts']['vol_kruskal'].get('pvalue')} "
-          f"baseline_dir_p={baseline['predicts']['direction_anova'].get('pvalue')} "
-          f"hmm_dir_p={hmm['predicts']['direction_anova'].get('pvalue')}")
+    print(
+        f"{symbol}: n={n} elapsed={time.time() - t0:.1f}s "
+        f"baseline_vol_p={baseline['predicts']['vol_kruskal'].get('pvalue')} "
+        f"hmm_vol_p={hmm['predicts']['vol_kruskal'].get('pvalue')} "
+        f"baseline_dir_p={baseline['predicts']['direction_anova'].get('pvalue')} "
+        f"hmm_dir_p={hmm['predicts']['direction_anova'].get('pvalue')}"
+    )
 
 with open("src/research/tmp/phase4_transfer_results.json", "w") as f:
     json.dump(out, f, indent=1, default=float)

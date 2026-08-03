@@ -40,13 +40,20 @@ research.set_seed(0)
 def load_ret(product: str) -> np.ndarray:
     curve = pl.read_parquet(f"{CURVE_DIR}/{product}.parquet")
     dev_start = DEV_START.get(product, DEV_START["__default__"])
-    sub = curve.select(["date", pl.col("log_return_ratioadj").alias("ret")]).drop_nulls()
+    sub = curve.select(
+        ["date", pl.col("log_return_ratioadj").alias("ret")]
+    ).drop_nulls()
     sub = sub.filter(pl.col("ret").is_finite())
-    sub = sub.filter((pl.col("date") >= pl.lit(dev_start).str.to_date()) & (pl.col("date") <= pl.lit(DEV_END).str.to_date()))
+    sub = sub.filter(
+        (pl.col("date") >= pl.lit(dev_start).str.to_date())
+        & (pl.col("date") <= pl.lit(DEV_END).str.to_date())
+    )
     return sub["ret"].to_numpy()
 
 
-def make_upper_normal_acerbi_simulate_fn(sigma: np.ndarray, es_forecast_upper: np.ndarray, q: float):
+def make_upper_normal_acerbi_simulate_fn(
+    sigma: np.ndarray, es_forecast_upper: np.ndarray, q: float
+):
     """Upper-tail mirror of dist_lib5.make_normal_acerbi_simulate_fn: reflect
     both the simulated draws and the ES forecast, run the same lower-tail
     machinery on the reflected series (upper-tail test on X == lower-tail
@@ -63,7 +70,13 @@ def make_upper_normal_acerbi_simulate_fn(sigma: np.ndarray, es_forecast_upper: n
 
 def process_product(product: str) -> dict:
     ret = load_ret(product)
-    fc, _fits = L.rolling_garch_forecast(ret, refit_every=REFIT_EVERY, min_train=MIN_TRAIN, innovation="normal", max_train=MAX_TRAIN)
+    fc, _fits = L.rolling_garch_forecast(
+        ret,
+        refit_every=REFIT_EVERY,
+        min_train=MIN_TRAIN,
+        innovation="normal",
+        max_train=MAX_TRAIN,
+    )
     sigma = np.sqrt(np.where(fc > 0, fc, np.nan))
 
     out = {}
@@ -91,7 +104,7 @@ def main():
         t1 = time.time()
         print(f"processing {p}...", flush=True)
         results[p] = process_product(p)
-        print(f"  {p} done in {time.time()-t1:.1f}s", flush=True)
+        print(f"  {p} done in {time.time() - t1:.1f}s", flush=True)
 
     # BH correction across the 16 products, separately per (level, tail)
     for level in ["0.01", "0.025"]:
@@ -102,8 +115,10 @@ def main():
                 results[p][level][tail]["bh"] = bh[p]
 
     n_reject_1pct_both_tails = sum(
-        1 for p in results
-        if results[p]["0.01"]["lower"]["bh"]["significant"] and results[p]["0.01"]["upper"]["bh"]["significant"]
+        1
+        for p in results
+        if results[p]["0.01"]["lower"]["bh"]["significant"]
+        and results[p]["0.01"]["upper"]["bh"]["significant"]
     )
     gate_ce = {
         "n_products_rejecting_1pct_both_tails_bh": n_reject_1pct_both_tails,
@@ -112,10 +127,14 @@ def main():
         "fires": n_reject_1pct_both_tails >= 14,
     }
 
-    out = {"per_product": results, "gate_CE": gate_ce, "_config": {"n_boot": N_BOOT, "model": "garch_normal"}}
+    out = {
+        "per_product": results,
+        "gate_CE": gate_ce,
+        "_config": {"n_boot": N_BOOT, "model": "garch_normal"},
+    }
     with open(OUT_PATH, "w") as f:
         json.dump(out, f, indent=2, default=str)
-    print(f"\nwritten {OUT_PATH} in {time.time()-t0:.1f}s")
+    print(f"\nwritten {OUT_PATH} in {time.time() - t0:.1f}s")
 
 
 if __name__ == "__main__":

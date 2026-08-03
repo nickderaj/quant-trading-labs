@@ -43,7 +43,9 @@ def load_klines(symbol: str, interval: str, end: datetime = FULL_END) -> pl.Data
     )
 
 
-def realized_variance_from_subbars(symbol: str, interval: str, end: datetime = FULL_END) -> pl.DataFrame:
+def realized_variance_from_subbars(
+    symbol: str, interval: str, end: datetime = FULL_END
+) -> pl.DataFrame:
     """RV proxy for a coarse bar built from higher-frequency (1h) sub-bars
     where available, per NEW_PROMPT's "computed from higher-frequency bars
     where available" - a materially less noisy proxy than the coarse bar's
@@ -53,20 +55,29 @@ def realized_variance_from_subbars(symbol: str, interval: str, end: datetime = F
     """
     hrs = INTERVAL_HOURS[interval]
     if hrs == 1:
-        raise ValueError("1h has no finer sub-bar series cached; use bar_squared_return instead")
+        raise ValueError(
+            "1h has no finer sub-bar series cached; use bar_squared_return instead"
+        )
     base = load_klines(symbol, "1h", end).sort("datetime")
-    base = base.with_columns((pl.col("close") / pl.col("close").shift(1)).log().alias("r1h"))
     base = base.with_columns(
-        pl.col("datetime").dt.truncate(f"{hrs}h").alias("bucket")
+        (pl.col("close") / pl.col("close").shift(1)).log().alias("r1h")
     )
-    rv = base.group_by("bucket").agg(
-        (pl.col("r1h") ** 2).sum().alias("rv_subbar"),
-        pl.col("r1h").count().alias("n_subbars"),
-    ).rename({"bucket": "datetime"}).sort("datetime")
+    base = base.with_columns(pl.col("datetime").dt.truncate(f"{hrs}h").alias("bucket"))
+    rv = (
+        base.group_by("bucket")
+        .agg(
+            (pl.col("r1h") ** 2).sum().alias("rv_subbar"),
+            pl.col("r1h").count().alias("n_subbars"),
+        )
+        .rename({"bucket": "datetime"})
+        .sort("datetime")
+    )
     return rv
 
 
-def build_asset_frame(symbol: str, interval: str, end: datetime = FULL_END) -> pl.DataFrame:
+def build_asset_frame(
+    symbol: str, interval: str, end: datetime = FULL_END
+) -> pl.DataFrame:
     """One symbol/interval's causal feature frame: returns, gap/intrabar
     decomposition, range-estimator per-bar components, activity variables,
     and the RV target (from sub-bars where available). Everything here is a
@@ -93,15 +104,19 @@ def build_asset_frame(symbol: str, interval: str, end: datetime = FULL_END) -> p
             - (2.0 * ln2 - 1.0) * pl.col("intrabar_return") ** 2
         ).alias("gk_var"),
         (
-            (pl.col("high") / pl.col("close")).log() * (pl.col("high") / pl.col("open")).log()
-            + (pl.col("low") / pl.col("close")).log() * (pl.col("low") / pl.col("open")).log()
+            (pl.col("high") / pl.col("close")).log()
+            * (pl.col("high") / pl.col("open")).log()
+            + (pl.col("low") / pl.col("close")).log()
+            * (pl.col("low") / pl.col("open")).log()
         ).alias("rs_var"),
         (pl.col("log_return") ** 2).alias("bar_squared_return"),
     )
     if INTERVAL_HOURS[interval] > 1:
         rv = realized_variance_from_subbars(symbol, interval, end)
         df = df.join(rv, on="datetime", how="left")
-        df = df.with_columns(pl.coalesce(["rv_subbar", "bar_squared_return"]).alias("rv_target"))
+        df = df.with_columns(
+            pl.coalesce(["rv_subbar", "bar_squared_return"]).alias("rv_target")
+        )
     else:
         df = df.with_columns(pl.col("bar_squared_return").alias("rv_target"))
     return df
@@ -171,7 +186,8 @@ def rung0_trailing_std(df: pl.DataFrame, window: int) -> pl.Series:
     """Trailing rolling std of log_return, variance forecast = std^2,
     causal (shifted by 1 so bar t's forecast uses data < t)."""
     return (
-        df["log_return"].rolling_std(window_size=window, min_periods=window // 2 + 1) ** 2
+        df["log_return"].rolling_std(window_size=window, min_samples=window // 2 + 1)
+        ** 2
     ).shift(1)
 
 
@@ -191,7 +207,6 @@ def rung1_ewma(df: pl.DataFrame, lam: float = 0.94) -> pl.Series:
 def har_rv_features(df: pl.DataFrame) -> pl.DataFrame:
     """Daily/weekly/monthly RV components in the bar's own units (window
     sizes scaled by how many bars/day this interval has)."""
-    bars_per_day = 24 // INTERVAL_HOURS[list(INTERVAL_HOURS.keys())[0]]  # placeholder unused
     return df
 
 
@@ -211,9 +226,9 @@ def make_har_features(df: pl.DataFrame, interval: str) -> pl.DataFrame:
     bpd = max(1, 24 // INTERVAL_HOURS[interval])
     rv = pl.col("rv_target")
     return df.with_columns(
-        rv.rolling_mean(window_size=bpd, min_periods=1).shift(1).alias("rv_d"),
-        rv.rolling_mean(window_size=bpd * 5, min_periods=bpd).shift(1).alias("rv_w"),
-        rv.rolling_mean(window_size=bpd * 22, min_periods=bpd).shift(1).alias("rv_m"),
+        rv.rolling_mean(window_size=bpd, min_samples=1).shift(1).alias("rv_d"),
+        rv.rolling_mean(window_size=bpd * 5, min_samples=bpd).shift(1).alias("rv_w"),
+        rv.rolling_mean(window_size=bpd * 22, min_samples=bpd).shift(1).alias("rv_m"),
     )
 
 
@@ -259,11 +274,26 @@ def range_estimator_forecasts(df: pl.DataFrame, window: int) -> pl.DataFrame:
     n = window
     k = 0.34 / (1.34 + (n + 1) / max(n - 1, 1))
     out = df.with_columns(
-        pl.col("pk_var").rolling_mean(window_size=n, min_periods=n // 2 + 1).shift(1).alias("fc_parkinson"),
-        pl.col("gk_var").rolling_mean(window_size=n, min_periods=n // 2 + 1).shift(1).alias("fc_gk"),
-        pl.col("rs_var").rolling_mean(window_size=n, min_periods=n // 2 + 1).shift(1).alias("fc_rs"),
-        pl.col("gap_return").rolling_var(window_size=n, min_periods=n // 2 + 1).shift(1).alias("v_o"),
-        pl.col("intrabar_return").rolling_var(window_size=n, min_periods=n // 2 + 1).shift(1).alias("v_c"),
+        pl.col("pk_var")
+        .rolling_mean(window_size=n, min_samples=n // 2 + 1)
+        .shift(1)
+        .alias("fc_parkinson"),
+        pl.col("gk_var")
+        .rolling_mean(window_size=n, min_samples=n // 2 + 1)
+        .shift(1)
+        .alias("fc_gk"),
+        pl.col("rs_var")
+        .rolling_mean(window_size=n, min_samples=n // 2 + 1)
+        .shift(1)
+        .alias("fc_rs"),
+        pl.col("gap_return")
+        .rolling_var(window_size=n, min_samples=n // 2 + 1)
+        .shift(1)
+        .alias("v_o"),
+        pl.col("intrabar_return")
+        .rolling_var(window_size=n, min_samples=n // 2 + 1)
+        .shift(1)
+        .alias("v_c"),
     )
     out = out.with_columns(
         (pl.col("v_o") + k * pl.col("v_c") + (1 - k) * pl.col("fc_rs")).alias("fc_yz")
@@ -276,7 +306,9 @@ def range_estimator_forecasts(df: pl.DataFrame, window: int) -> pl.DataFrame:
 # --------------------------------------------------------------------------
 
 
-def _garch_variance_path(omega: float, alpha: float, beta: float, r: np.ndarray, sig2_0: float) -> np.ndarray:
+def _garch_variance_path(
+    omega: float, alpha: float, beta: float, r: np.ndarray, sig2_0: float
+) -> np.ndarray:
     n = len(r)
     sig2 = np.empty(n)
     sig2[0] = sig2_0
@@ -286,19 +318,20 @@ def _garch_variance_path(omega: float, alpha: float, beta: float, r: np.ndarray,
 
 
 def _garch_negloglik(params: np.ndarray, r: np.ndarray, innovation: str) -> float:
+    extra: list[float]
     if innovation == "normal":
         omega, alpha, beta = params
-        extra = ()
+        extra = []
     elif innovation == "t":
         omega, alpha, beta, nu = params
         if nu <= 2.1:
             return 1e10
-        extra = (nu,)
+        extra = [nu]
     else:  # skewt: jf_skew_t(a, b), standardized innovations
         omega, alpha, beta, a, b = params
         if a <= 0.5 or b <= 0.5:
             return 1e10
-        extra = (a, b)
+        extra = [a, b]
 
     if omega <= 1e-12 or alpha < 0 or beta < 0 or alpha + beta >= 0.999:
         return 1e10
@@ -312,13 +345,13 @@ def _garch_negloglik(params: np.ndarray, r: np.ndarray, innovation: str) -> floa
     if innovation == "normal":
         ll = -0.5 * np.log(2 * np.pi * sig2) - 0.5 * z**2
     elif innovation == "t":
-        (nu,) = extra
+        nu = extra[0]
         # standardized (unit-variance) Student-t density
         c = np.sqrt(nu / (nu - 2))
         zt = z * c
         ll = st.t.logpdf(zt, df=nu) + np.log(c) - 0.5 * np.log(sig2)
     else:
-        a, b = extra
+        a, b = extra[0], extra[1]
         d = st.jf_skew_t(a=a, b=b)
         m, v = d.mean(), d.var()
         if not (np.isfinite(m) and np.isfinite(v) and v > 1e-8):
@@ -357,10 +390,14 @@ def fit_garch11(r: np.ndarray, innovation: str = "normal") -> dict | None:
 
     try:
         res = minimize(
-            _garch_negloglik, x0, args=(r, innovation), method="L-BFGS-B",
-            bounds=bounds, options={"maxiter": 200},
+            _garch_negloglik,
+            x0,
+            args=(r, innovation),
+            method="L-BFGS-B",
+            bounds=bounds,
+            options={"maxiter": 200},
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
         return None
     if not res.success and res.status not in (0, 1):
         # status 1 = max iterations reached but often still usable; anything else -> reject
@@ -378,14 +415,20 @@ def fit_garch11(r: np.ndarray, innovation: str = "normal") -> dict | None:
     sig2 = _garch_variance_path(omega, alpha, beta, r, uncond)
     next_sig2 = omega + alpha * r[-1] ** 2 + beta * sig2[-1]
     return {
-        "omega": float(omega), "alpha": float(alpha), "beta": float(beta),
-        "params": params.tolist(), "next_var": float(next_sig2),
+        "omega": float(omega),
+        "alpha": float(alpha),
+        "beta": float(beta),
+        "params": params.tolist(),
+        "next_var": float(next_sig2),
         "innovation": innovation,
     }
 
 
 def rolling_garch_forecast(
-    returns: np.ndarray, refit_every: int, min_train: int, innovation: str = "normal",
+    returns: np.ndarray,
+    refit_every: int,
+    min_train: int,
+    innovation: str = "normal",
     max_train: int = 1500,
 ) -> tuple[np.ndarray, list[dict]]:
     """Rolling-refit GARCH(1,1) one-step-ahead variance forecast. Refits
@@ -411,7 +454,11 @@ def rolling_garch_forecast(
         if fit is not None:
             forecast[t] = sig2_state
             if t + 1 < n and np.isfinite(returns[t]):
-                sig2_state = fit["omega"] + fit["alpha"] * returns[t] ** 2 + fit["beta"] * sig2_state
+                sig2_state = (
+                    fit["omega"]
+                    + fit["alpha"] * returns[t] ** 2
+                    + fit["beta"] * sig2_state
+                )
     # forecast[t] currently holds the variance *used to forecast bar t's own
     # realization*; that's exactly the causal one-step-ahead forecast wanted.
     return forecast, fits
@@ -422,7 +469,9 @@ def rolling_garch_forecast(
 # --------------------------------------------------------------------------
 
 
-def rolling_rv_dist_forecast(rv: np.ndarray, family: str, refit_every: int, min_train: int, max_train: int = 2000) -> np.ndarray:
+def rolling_rv_dist_forecast(
+    rv: np.ndarray, family: str, refit_every: int, min_train: int, max_train: int = 2000
+) -> np.ndarray:
     """Rolling-refit scipy MLE fit of `family` to trailing RV history;
     forecast = fitted distribution's mean, forward-filled between refits."""
     n = len(rv)
@@ -436,19 +485,19 @@ def rolling_rv_dist_forecast(rv: np.ndarray, family: str, refit_every: int, min_
             if len(window) >= 30:
                 try:
                     if family == "gamma":
-                        a, loc, scale = st.gamma.fit(window, floc=0)
+                        a, _loc, scale = st.gamma.fit(window, floc=0)
                         mean_val = a * scale
                     elif family == "invgamma":
-                        a, loc, scale = st.invgamma.fit(window, floc=0)
+                        a, _loc, scale = st.invgamma.fit(window, floc=0)
                         mean_val = scale / (a - 1) if a > 1 else np.nan
                     elif family == "lognorm":
-                        s, loc, scale = st.lognorm.fit(window, floc=0)
+                        s, _loc, scale = st.lognorm.fit(window, floc=0)
                         mean_val = scale * np.exp(s**2 / 2)
                     else:
                         raise ValueError(family)
                     if not (np.isfinite(mean_val) and mean_val > 0):
                         mean_val = np.nan
-                except Exception:
+                except Exception:  # noqa: BLE001 - fit can raise arbitrary errors; convention is NaN on any failure
                     mean_val = np.nan
         forecast[t] = mean_val
     return forecast
@@ -464,13 +513,25 @@ def activity_forecast(df: pl.DataFrame, window: int) -> pl.Series:
     count-dispersion-index (mean-forward-filled coefficients between
     refits, same rolling_ols_refit machinery as HAR)."""
     feats = df.with_columns(
-        pl.col("count").rolling_mean(window_size=window, min_periods=window // 2).shift(1).alias("count_mean"),
+        pl.col("count")
+        .rolling_mean(window_size=window, min_samples=window // 2)
+        .shift(1)
+        .alias("count_mean"),
         (
-            pl.col("count").rolling_std(window_size=window, min_periods=window // 2) ** 2
-            / pl.col("count").rolling_mean(window_size=window, min_periods=window // 2)
-        ).shift(1).alias("count_dispersion"),
+            pl.col("count").rolling_std(window_size=window, min_samples=window // 2)
+            ** 2
+            / pl.col("count").rolling_mean(window_size=window, min_samples=window // 2)
+        )
+        .shift(1)
+        .alias("count_dispersion"),
     )
-    fc = rolling_ols_refit(feats, ["count_mean", "count_dispersion"], "rv_target", refit_every=window, min_train=window * 3)
+    fc = rolling_ols_refit(
+        feats,
+        ["count_mean", "count_dispersion"],
+        "rv_target",
+        refit_every=window,
+        min_train=window * 3,
+    )
     return pl.Series("fc_activity", fc)
 
 
@@ -489,7 +550,9 @@ def qlike_mse(actual: np.ndarray, forecast: np.ndarray) -> dict:
     # to +inf for every rung at 1h. MSE has no such issue (a zero-actual bar
     # is a perfectly normal, finite squared-error term), so it's masked
     # separately with the original (actual >= 0) condition.
-    mse_mask = np.isfinite(actual) & np.isfinite(forecast) & (forecast > 0) & (actual >= 0)
+    mse_mask = (
+        np.isfinite(actual) & np.isfinite(forecast) & (forecast > 0) & (actual >= 0)
+    )
     qlike_mask = mse_mask & (actual > 0)
     a_mse, f_mse = actual[mse_mask], forecast[mse_mask]
     a_q, f_q = actual[qlike_mask], forecast[qlike_mask]
@@ -499,7 +562,12 @@ def qlike_mse(actual: np.ndarray, forecast: np.ndarray) -> dict:
     if len(a_q) < 10:
         return {"n": len(a_mse), "n_qlike": len(a_q), "qlike": np.nan, "mse": mse}
     q = dist.qlike(a_q, f_q)
-    return {"n": len(a_mse), "n_qlike": len(a_q), "qlike": float(np.mean(q)), "mse": mse}
+    return {
+        "n": len(a_mse),
+        "n_qlike": len(a_q),
+        "qlike": float(np.mean(q)),
+        "mse": mse,
+    }
 
 
 def diebold_mariano(loss_a: np.ndarray, loss_b: np.ndarray) -> tuple[float, float]:
@@ -520,7 +588,7 @@ def diebold_mariano(loss_a: np.ndarray, loss_b: np.ndarray) -> tuple[float, floa
     n = len(d)
     if n < 20:
         return float("nan"), float("nan")
-    lag = max(1, int(round(n ** (1 / 3))))
+    lag = max(1, round(n ** (1 / 3)))
     _mean, tstat = research.newey_west_tstat(d, lag)
     if not np.isfinite(tstat):
         return float(tstat), float("nan")
@@ -555,11 +623,16 @@ def nu_path_from_fits(fits: list[dict], n: int, param_index: int = 3) -> np.ndar
     """
     path = np.full(n, np.nan)
     for f in fits:
-        path[f["t"]:] = f["params"][param_index]
+        path[f["t"] :] = f["params"][param_index]
     return path
 
 
-def density_scores(actual_returns: np.ndarray, variance_forecast: np.ndarray, family: str = "normal", extra_params=None) -> dict:
+def density_scores(
+    actual_returns: np.ndarray,
+    variance_forecast: np.ndarray,
+    family: str = "normal",
+    extra_params=None,
+) -> dict:
     """CRPS/log score of the return itself under N(0, forecast_var) (or a
     scaled-t if extra_params=(df,) given), plus 5%/95% quantile coverage
     (Kupiec + Christoffersen independence).
@@ -571,31 +644,48 @@ def density_scores(actual_returns: np.ndarray, variance_forecast: np.ndarray, fa
     for a causal score, since bar t must only ever be scored under a shape
     parameter estimable from data strictly before t).
     """
-    mask = np.isfinite(actual_returns) & np.isfinite(variance_forecast) & (variance_forecast > 0)
+    mask = (
+        np.isfinite(actual_returns)
+        & np.isfinite(variance_forecast)
+        & (variance_forecast > 0)
+    )
     nu_arr = None
     if family != "normal":
-        nu_arr = np.broadcast_to(np.asarray(extra_params[0], dtype=float), actual_returns.shape)
+        nu_arr = np.broadcast_to(
+            np.asarray(extra_params[0], dtype=float), actual_returns.shape
+        )
         mask = mask & np.isfinite(nu_arr) & (nu_arr > 2)
     a, v = actual_returns[mask], variance_forecast[mask]
     if len(a) < 20:
-        return {"log_score": np.nan, "crps": np.nan, "kupiec_p": np.nan, "christoffersen_p": np.nan}
+        return {
+            "log_score": np.nan,
+            "crps": np.nan,
+            "kupiec_p": np.nan,
+            "christoffersen_p": np.nan,
+        }
     if family == "normal":
         dists = [st.norm(loc=0, scale=np.sqrt(vi)) for vi in v]
         q05 = st.norm(loc=0, scale=np.sqrt(v)).ppf(0.05)
     else:
+        assert nu_arr is not None
         nu = nu_arr[mask]
         c = np.sqrt(nu / (nu - 2))
-        dists = [st.t(df=nu_i, loc=0, scale=np.sqrt(vi) / ci) for nu_i, vi, ci in zip(nu, v, c)]
+        dists = [
+            st.t(df=nu_i, loc=0, scale=np.sqrt(vi) / ci)
+            for nu_i, vi, ci in zip(nu, v, c)
+        ]
         q05 = st.t(df=nu, loc=0, scale=np.sqrt(v) / c).ppf(0.05)
     ls = dist.log_score(dists, a)
     cr = dist.crps(dists, a, n_points=400)
-    hits = dist.exceedances(a, q05, side="lower")
+    hits = dist.exceedances(a, np.asarray(q05), side="lower")
     _, kp = dist.kupiec_test(hits, 0.05)
     _, cp = dist.christoffersen_independence_test(hits)
     return {
-        "log_score": float(np.nanmean(ls)), "crps": float(np.nanmean(cr)),
-        "kupiec_p": float(kp), "christoffersen_p": float(cp),
-        "n": int(len(a)),
+        "log_score": float(np.nanmean(ls)),
+        "crps": float(np.nanmean(cr)),
+        "kupiec_p": float(kp),
+        "christoffersen_p": float(cp),
+        "n": len(a),
     }
 
 
@@ -626,20 +716,36 @@ def fit_gmm_em(x: np.ndarray, k: int, n_iter: int = 50) -> dict | None:
         resp = resp / s
         nk = np.maximum(resp.sum(axis=0), 1e-8)
         means = (resp * x[:, None]).sum(axis=0) / nk
-        vars_ = np.maximum((resp * (x[:, None] - means[None, :]) ** 2).sum(axis=0) / nk, 1e-12)
+        vars_ = np.maximum(
+            (resp * (x[:, None] - means[None, :]) ** 2).sum(axis=0) / nk, 1e-12
+        )
         weights = nk / n
     order = np.argsort(vars_)
-    return {"means": means[order].tolist(), "vars": vars_[order].tolist(), "weights": weights[order].tolist()}
+    return {
+        "means": means[order].tolist(),
+        "vars": vars_[order].tolist(),
+        "weights": weights[order].tolist(),
+    }
 
 
 def gmm_posterior(x: float, fit: dict) -> np.ndarray:
-    means, vars_, weights = np.array(fit["means"]), np.array(fit["vars"]), np.array(fit["weights"])
+    means, vars_, weights = (
+        np.array(fit["means"]),
+        np.array(fit["vars"]),
+        np.array(fit["weights"]),
+    )
     p = weights * st.norm.pdf(x, means, np.sqrt(vars_))
     s = p.sum()
     return p / s if s > 1e-300 else np.full(len(means), 1.0 / len(means))
 
 
-def fit_hmm(x: np.ndarray, k: int = 2, n_iter: int = 30, emission: str = "gaussian", t_df: float | None = None) -> dict | None:
+def fit_hmm(
+    x: np.ndarray,
+    k: int = 2,
+    n_iter: int = 30,
+    emission: str = "gaussian",
+    t_df: float | None = None,
+) -> dict | None:
     """2/3-state HMM via Baum-Welch (forward-backward EM), from scratch
     (no hmmlearn in this environment). Gaussian emissions: exact EM M-step.
     Student-t emissions: `t_df` is estimated once (globally, held fixed -
@@ -661,10 +767,16 @@ def fit_hmm(x: np.ndarray, k: int = 2, n_iter: int = 30, emission: str = "gaussi
 
     def emis(xv):
         if emission == "gaussian":
-            return np.column_stack([st.norm.pdf(xv, means[j], np.sqrt(vars_[j])) for j in range(k)])
+            return np.column_stack(
+                [st.norm.pdf(xv, means[j], np.sqrt(vars_[j])) for j in range(k)]
+            )
         c = np.sqrt(t_df / (t_df - 2))
         return np.column_stack(
-            [st.t.pdf(xv * c, df=t_df, loc=means[j] * c, scale=np.sqrt(vars_[j]) * c) * c for j in range(k)]
+            [
+                st.t.pdf(xv * c, df=t_df, loc=means[j] * c, scale=np.sqrt(vars_[j]) * c)
+                * c
+                for j in range(k)
+            ]
         )
 
     for _ in range(n_iter):
@@ -686,23 +798,35 @@ def fit_hmm(x: np.ndarray, k: int = 2, n_iter: int = 30, emission: str = "gaussi
         gamma = gamma / np.maximum(gamma.sum(axis=1, keepdims=True), 1e-300)
         xi_sum = np.zeros((k, k))
         for t in range(n - 1):
-            xi_sum += (alpha[t][:, None] * A * B[t + 1][None, :] * beta[t + 1][None, :]) / c_scale[t + 1]
+            xi_sum += (
+                alpha[t][:, None] * A * B[t + 1][None, :] * beta[t + 1][None, :]
+            ) / c_scale[t + 1]
         pi = gamma[0]
         row_sums = np.maximum(xi_sum.sum(axis=1, keepdims=True), 1e-8)
         A = xi_sum / row_sums
         nk = np.maximum(gamma.sum(axis=0), 1e-8)
         means = (gamma * x[:, None]).sum(axis=0) / nk
-        vars_ = np.maximum((gamma * (x[:, None] - means[None, :]) ** 2).sum(axis=0) / nk, 1e-12)
+        vars_ = np.maximum(
+            (gamma * (x[:, None] - means[None, :]) ** 2).sum(axis=0) / nk, 1e-12
+        )
 
-    if not (np.all(np.isfinite(means)) and np.all(np.isfinite(vars_)) and np.all(np.isfinite(A))):
+    if not (
+        np.all(np.isfinite(means))
+        and np.all(np.isfinite(vars_))
+        and np.all(np.isfinite(A))
+    ):
         return None
     order = np.argsort(vars_)
     means, vars_ = means[order], vars_[order]
     A = A[np.ix_(order, order)]
     pi = pi[order]
     return {
-        "means": means.tolist(), "vars": vars_.tolist(), "A": A.tolist(), "pi": pi.tolist(),
-        "emission": emission, "t_df": t_df,
+        "means": means.tolist(),
+        "vars": vars_.tolist(),
+        "A": A.tolist(),
+        "pi": pi.tolist(),
+        "emission": emission,
+        "t_df": t_df,
     }
 
 

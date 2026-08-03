@@ -25,7 +25,7 @@ from scipy.integrate import quad
 _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT / "src" / "research" / "tmp" / "densities"))
 
-import nig as N
+import nig as N  # type: ignore[import-not-found]
 
 SEED = 0
 

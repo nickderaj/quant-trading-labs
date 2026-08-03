@@ -25,15 +25,16 @@ regardless of outcome.
 import json
 import sys
 import time
+from typing import Any
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
+import dist_lib as L
+import dist_lib5 as L5
 import numpy as np
 import polars as pl
 
-import dist_lib as L
-import dist_lib5 as L5
 import distributions as dist
 import research
 
@@ -71,7 +72,6 @@ def build_rung_forecast(name: str, df, rv, ret, bpd) -> np.ndarray:
     """Recompute a single named Phase-3 rung's forecast, for the DM-validity
     check's loss-differential series - not persisted by run_phase3.py, so
     it's rebuilt here with the exact same construction/cadence."""
-    cheap_refit_every = CHEAP_REFIT_DAYS * bpd
     mle_refit_every = MLE_REFIT_DAYS * bpd
     min_train = MIN_TRAIN_DAYS * bpd
     if name.startswith("rung0_trailing_"):
@@ -81,13 +81,20 @@ def build_rung_forecast(name: str, df, rv, ret, bpd) -> np.ndarray:
         return L.rung1_ewma(df).to_numpy()
     if name.startswith("rung3_"):
         range_df = L.range_estimator_forecasts(df, window=bpd if bpd > 1 else 24)
-        col = {"rung3_fc_parkinson": "fc_parkinson", "rung3_fc_gk": "fc_gk",
-               "rung3_fc_rs": "fc_rs", "rung3_fc_yz": "fc_yz"}[name]
+        col = {
+            "rung3_fc_parkinson": "fc_parkinson",
+            "rung3_fc_gk": "fc_gk",
+            "rung3_fc_rs": "fc_rs",
+            "rung3_fc_yz": "fc_yz",
+        }[name]
         return range_df[col].to_numpy()
     if name.startswith("rung5_garch_"):
         innov = name.rsplit("_", 1)[1]
         fc, _fits = L.rolling_garch_forecast(
-            ret, refit_every=mle_refit_every, min_train=min_train, innovation=innov,
+            ret,
+            refit_every=mle_refit_every,
+            min_train=min_train,
+            innovation=innov,
             max_train=MLE_MAX_TRAIN,
         )
         return fc
@@ -107,18 +114,26 @@ for interval in INTERVALS:
     res: dict = {}
 
     # ---- 1a. Hill estimator, both tails ----
-    hill = {}
+    hill: dict[str, dict[str, Any]] = {}
     for tail in ["upper", "lower"]:
         path = L5.hill_alpha_path(ret, tail=tail, k_min=20, k_max=max(20, n // 10))
-        plateau = L5.find_hill_plateau(path["alpha"], path["k"], window=50, rel_tol=0.10)
-        entry = {"k_grid_min": int(path["k"].min()) if len(path["k"]) else None,
-                  "k_grid_max": int(path["k"].max()) if len(path["k"]) else None,
-                  "plateau": plateau}
+        plateau = L5.find_hill_plateau(
+            path["alpha"], path["k"], window=50, rel_tol=0.10
+        )
+        entry: dict[str, Any] = {
+            "k_grid_min": int(path["k"].min()) if len(path["k"]) else None,
+            "k_grid_max": int(path["k"].max()) if len(path["k"]) else None,
+            "plateau": plateau,
+        }
         if plateau.get("found"):
             k_chosen = plateau["k_chosen"]
             lo, hi = research.block_bootstrap_ci(
-                ret, n_boot=1000, seed=0,
-                statistic=lambda x, k=k_chosen, t=tail: L5.hill_estimator(x, k=k, tail=t),
+                ret,
+                n_boot=1000,
+                seed=0,
+                statistic=lambda x, k=k_chosen, t=tail: L5.hill_estimator(
+                    x, k=k, tail=t
+                ),
             )
             entry["k_chosen"] = k_chosen
             entry["alpha_point"] = L5.hill_estimator(ret, k_chosen, tail=tail)
@@ -144,15 +159,28 @@ for interval in INTERVALS:
     both = np.isfinite(la) & np.isfinite(lb)
     d = (la - lb)[both]
     tstat, normal_pvalue = L.diebold_mariano(la[both], lb[both])
-    boot_pvalue = research.block_bootstrap_pvalue(d, null_value=0.0, n_boot=2000, seed=0)
-    d_hill_upper = L5.hill_estimator(d - np.mean(d), k=max(20, int(len(d) * 0.05)), tail="upper")
-    d_hill_lower = L5.hill_estimator(d - np.mean(d), k=max(20, int(len(d) * 0.05)), tail="lower")
+    boot_pvalue = research.block_bootstrap_pvalue(
+        d, null_value=0.0, n_boot=2000, seed=0
+    )
+    d_hill_upper = L5.hill_estimator(
+        d - np.mean(d), k=max(20, int(len(d) * 0.05)), tail="upper"
+    )
+    d_hill_lower = L5.hill_estimator(
+        d - np.mean(d), k=max(20, int(len(d) * 0.05)), tail="lower"
+    )
     res["dm_validity"] = {
-        "pair": [name_a, name_b], "n": int(both.sum()),
-        "tstat": tstat, "normal_pvalue": normal_pvalue, "bootstrap_pvalue": boot_pvalue,
-        "materially_disagree": bool(np.isfinite(normal_pvalue) and np.isfinite(boot_pvalue)
-                                     and abs(normal_pvalue - boot_pvalue) > 0.05),
-        "loss_diff_hill_alpha_upper": d_hill_upper, "loss_diff_hill_alpha_lower": d_hill_lower,
+        "pair": [name_a, name_b],
+        "n": int(both.sum()),
+        "tstat": tstat,
+        "normal_pvalue": normal_pvalue,
+        "bootstrap_pvalue": boot_pvalue,
+        "materially_disagree": bool(
+            np.isfinite(normal_pvalue)
+            and np.isfinite(boot_pvalue)
+            and abs(normal_pvalue - boot_pvalue) > 0.05
+        ),
+        "loss_diff_hill_alpha_upper": d_hill_upper,
+        "loss_diff_hill_alpha_lower": d_hill_lower,
     }
 
     # ---- 1c. log-RV vs RV calibration ----
@@ -163,6 +191,8 @@ for interval in INTERVALS:
     for fam in ["normal", "t", "skewt"]:
         p_log = L.fit_once(log_rv_frame, "log_rv", fam)
         p_rv = L.fit_once(rv_frame, "rv", fam)
+        ks_p_log: float | None
+        ks_p_rv: float | None
         if p_log is not None:
             d_log = dist.frozen_dist(fam, p_log)
             _, ks_p_log = dist.pit_ks_test(d_log, np.log(rv_pos))
@@ -179,18 +209,23 @@ for interval in INTERVALS:
 
     res["elapsed_sec"] = time.time() - t0
     out["intervals"][interval] = res
-    print(f"{interval}: n={n} elapsed={res['elapsed_sec']:.1f}s "
-          f"hill_upper_alpha={hill['upper'].get('alpha_point')} "
-          f"gate_e_fires={gate_e_fires_here} "
-          f"dm_validity(normal={normal_pvalue:.4f}, boot={boot_pvalue:.4f})")
+    print(
+        f"{interval}: n={n} elapsed={res['elapsed_sec']:.1f}s "
+        f"hill_upper_alpha={hill['upper'].get('alpha_point')} "
+        f"gate_e_fires={gate_e_fires_here} "
+        f"dm_validity(normal={normal_pvalue:.4f}, boot={boot_pvalue:.4f})"
+    )
 
 n_fire = sum(1 for iv in out["intervals"].values() if iv["gate_e_fires_here"])
 out["gate_e_verdict"] = {
-    "n_intervals_firing": n_fire, "n_intervals_total": len(INTERVALS),
+    "n_intervals_firing": n_fire,
+    "n_intervals_total": len(INTERVALS),
     "fires_at_most_intervals": n_fire > len(INTERVALS) / 2,
 }
-print(f"Gate E: fires at {n_fire}/{len(INTERVALS)} intervals -> "
-      f"{'CAVEAT REQUIRED' if out['gate_e_verdict']['fires_at_most_intervals'] else 'no prominent caveat triggered'}")
+print(
+    f"Gate E: fires at {n_fire}/{len(INTERVALS)} intervals -> "
+    f"{'CAVEAT REQUIRED' if out['gate_e_verdict']['fires_at_most_intervals'] else 'no prominent caveat triggered'}"
+)
 
 with open("src/research/tmp/phase1_tails_results.json", "w") as f:
     json.dump(out, f, indent=1, default=float)

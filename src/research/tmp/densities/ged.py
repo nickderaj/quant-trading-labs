@@ -43,7 +43,7 @@ def logpdf(z: np.ndarray, shape: tuple[float, ...]) -> np.ndarray:
 def ppf(q: float | np.ndarray, shape: tuple[float, ...]) -> np.ndarray:
     (kappa,) = shape
     s = _unit_scale(kappa)
-    return st.gennorm.ppf(q, beta=kappa, scale=s)
+    return np.asarray(st.gennorm.ppf(q, beta=kappa, scale=s))
 
 
 def fit(z: np.ndarray) -> tuple[float, ...] | None:
@@ -66,7 +66,9 @@ def fit(z: np.ndarray) -> tuple[float, ...] | None:
         return -np.sum(ll)
 
     res = minimize_scalar(
-        negloglik, bounds=_KAPPA_BOUNDS, method="bounded",
+        negloglik,
+        bounds=_KAPPA_BOUNDS,
+        method="bounded",
         options={"xatol": 1e-6},
     )
     if not res.success:

@@ -2028,7 +2028,7 @@ class TestTrueAtrSeries:
         n = 50
         close = np.full(n, 100.0)
         high = np.full(n, 105.0)  # Always +5 from close
-        low = np.full(n, 100.0)   # Always 0 from close
+        low = np.full(n, 100.0)  # Always 0 from close
         # True range = max(5-0, |105-100|, |100-100|) = 5 each bar
         atr = SL11.true_atr_series(high, low, close, window=14)
         # After warmup (bar ~15), ATR should stabilize at 5.0
@@ -2108,13 +2108,15 @@ class TestRegimeGate:
         rng = np.random.default_rng(SEED)
         n = 100
         close = rng.uniform(90, 110, n)
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
 
         fast_sma = SL11.sma_causal(close, window=10)
         slow_sma = SL11.sma_causal(close, window=20)
-        expected = (fast_sma > slow_sma) & np.isfinite(fast_sma) & np.isfinite(
-            slow_sma
-        )
+        expected = (fast_sma > slow_sma) & np.isfinite(fast_sma) & np.isfinite(slow_sma)
 
         gate = SL11.regime_gate(
             {"sym": close}, {"sym": dates}, dates, fast=10, slow=20, min_confirm=1
@@ -2124,11 +2126,19 @@ class TestRegimeGate:
     def test_missing_date_does_not_confirm(self):
         """A symbol missing a date should not contribute a confirm vote (fail-closed)."""
         # Symbol A: all dates present, always uptrend
-        dates_all = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-07'), dtype='datetime64[D]')
+        dates_all = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-07"),
+            dtype="datetime64[D]",
+        )
         close_a = np.array([100.0, 105.0, 110.0, 115.0, 120.0, 125.0])
 
         # Symbol B: missing date at index 3 (2024-01-04), always uptrend
-        dates_b_full = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-07'), dtype='datetime64[D]')
+        dates_b_full = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-07"),
+            dtype="datetime64[D]",
+        )
         dates_b = np.concatenate([dates_b_full[:3], dates_b_full[4:]])  # Skip index 3
         close_b = np.array([100.0, 105.0, 110.0, 120.0, 125.0])
 
@@ -2146,7 +2156,11 @@ class TestRegimeGate:
 
     def test_min_confirm_or_behavior(self):
         """With min_confirm=1, any one symbol confirming should pass."""
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-05'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-05"),
+            dtype="datetime64[D]",
+        )
         close_a = np.array([100.0, 90.0, 85.0, 80.0])  # Downtrend
         close_b = np.array([100.0, 105.0, 110.0, 115.0])  # Uptrend
 
@@ -2325,7 +2339,11 @@ class TestSimulateBreakoutSingle:
     def test_no_trades_with_regime_all_false(self):
         """With regime_ok all False, no trades should occur."""
         n = 80
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
         open_ = np.full(n, 100.0)
         high = np.full(n, 105.0)
         low = np.full(n, 95.0)
@@ -2350,7 +2368,11 @@ class TestSimulateBreakoutSingle:
             base_max_range_pct=0.15,
         )
 
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
         open_ = np.full(n, 100.0)
         high = np.full(n, 100.0)
         low = np.full(n, 100.0)
@@ -2393,7 +2415,11 @@ class TestSimulateBreakoutSingle:
     def test_gap_below_stop_fills_at_min_open_stop(self):
         """Price gaps below stop; fill should be min(open, stop_price)."""
         n = 80
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
         p = SL11.BreakoutParams()
 
         open_ = np.full(n, 100.0)
@@ -2445,7 +2471,11 @@ class TestSimulateBreakoutSingle:
     def test_trail_exit_fills_at_next_open(self):
         """Trail-exit signal at bar t fills at open_[t+1] if available."""
         n = 100
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
         p = SL11.BreakoutParams(trail_ma_window=5)
 
         open_ = np.full(n, 100.0)
@@ -2489,7 +2519,11 @@ class TestSimulateBreakoutSingle:
     def test_position_at_end_exits_with_data_end(self):
         """Open position at data end should close with exit_reason='data_end'."""
         n = 80
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
         p = SL11.BreakoutParams()
 
         open_ = np.full(n, 100.0)
@@ -2534,7 +2568,11 @@ class TestSimulateBreakoutSingle:
     def test_ret_eq_arithmetic_correct(self):
         """ret_eq should equal pnl / equity_at_open."""
         n = 80
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
         p = SL11.BreakoutParams()
 
         open_ = np.full(n, 100.0)
@@ -2576,7 +2614,11 @@ class TestSimulateBreakoutSingle:
     def test_pnl_atr_matches_helper_function(self):
         """pnl_atr in trade should match SL11.pnl_atr() independently."""
         n = 80
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
         p = SL11.BreakoutParams()
 
         open_ = np.full(n, 100.0)
@@ -2612,9 +2654,7 @@ class TestSimulateBreakoutSingle:
         )
 
         for trade in result["trades"]:
-            expected = SL11.pnl_atr(
-                trade["pnl"], trade["qty"], trade["atr_at_entry"]
-            )
+            expected = SL11.pnl_atr(trade["pnl"], trade["qty"], trade["atr_at_entry"])
             assert trade["pnl_atr"] == pytest.approx(expected, rel=1e-9)
 
 
@@ -2624,7 +2664,11 @@ class TestSimulateBreakoutBook:
     def test_portfolio_equity_starts_at_start_equity(self):
         """Initial portfolio equity should equal start_equity."""
         n = 80
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
         open_ = np.full(n, 100.0)
         high = np.full(n, 105.0)
         low = np.full(n, 95.0)
@@ -2645,7 +2689,11 @@ class TestSimulateBreakoutBook:
         p = SL11.BreakoutParams()
         start_eq = 1_000_000.0
         book = SL11.simulate_breakout_book(
-            symbol_frames, regime_ok_by_symbol, p, cost_bps_per_side=10.0, start_equity=start_eq
+            symbol_frames,
+            regime_ok_by_symbol,
+            p,
+            cost_bps_per_side=10.0,
+            start_equity=start_eq,
         )
 
         assert book["portfolio_equity"][0] == pytest.approx(start_eq)
@@ -2653,7 +2701,11 @@ class TestSimulateBreakoutBook:
     def test_trades_carry_symbol_key(self):
         """Each trade should have a 'symbol' key."""
         n = 100
-        dates = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n, 'D'), dtype='datetime64[D]')
+        dates = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n, "D"),
+            dtype="datetime64[D]",
+        )
         open_ = np.full(n, 100.0)
         high = np.full(n, 105.0)
         low = np.full(n, 95.0)
@@ -2706,8 +2758,16 @@ class TestSimulateBreakoutBook:
         """With two symbols, portfolio_equity should pool correctly."""
         n_a = 80
         n_b = 100
-        dates_a = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n_a, 'D'), dtype='datetime64[D]')
-        dates_b = np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(n_b, 'D'), dtype='datetime64[D]')
+        dates_a = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n_a, "D"),
+            dtype="datetime64[D]",
+        )
+        dates_b = np.arange(
+            np.datetime64("2024-01-01"),
+            np.datetime64("2024-01-01") + np.timedelta64(n_b, "D"),
+            dtype="datetime64[D]",
+        )
 
         open_a = np.full(n_a, 100.0)
         high_a = np.full(n_a, 105.0)
@@ -2767,7 +2827,11 @@ class TestBreakoutBookMetrics:
             "trades": [],
             "portfolio_equity": np.array([1_000_000.0, 1_000_000.0, 1_000_000.0]),
             "start_equity": 1_000_000.0,
-            "dates": np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(3, 'D'), dtype='datetime64[D]'),
+            "dates": np.arange(
+                np.datetime64("2024-01-01"),
+                np.datetime64("2024-01-01") + np.timedelta64(3, "D"),
+                dtype="datetime64[D]",
+            ),
         }
         metrics = SL11.breakout_book_metrics(book)
 
@@ -2794,9 +2858,15 @@ class TestBreakoutBookMetrics:
         ]
         book = {
             "trades": trades,
-            "portfolio_equity": np.array([1_000_000.0, 1_010_000.0, 990_000.0, 1_020_000.0, 1_025_000.0]),
+            "portfolio_equity": np.array(
+                [1_000_000.0, 1_010_000.0, 990_000.0, 1_020_000.0, 1_025_000.0]
+            ),
             "start_equity": 1_000_000.0,
-            "dates": np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(5, 'D'), dtype='datetime64[D]'),
+            "dates": np.arange(
+                np.datetime64("2024-01-01"),
+                np.datetime64("2024-01-01") + np.timedelta64(5, "D"),
+                dtype="datetime64[D]",
+            ),
         }
         metrics = SL11.breakout_book_metrics(book)
 
@@ -2817,7 +2887,11 @@ class TestBreakoutBookMetrics:
             "trades": trades,
             "portfolio_equity": np.array([1_000_000.0, 1_010_000.0, 1_030_000.0]),
             "start_equity": 1_000_000.0,
-            "dates": np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(3, 'D'), dtype='datetime64[D]'),
+            "dates": np.arange(
+                np.datetime64("2024-01-01"),
+                np.datetime64("2024-01-01") + np.timedelta64(3, "D"),
+                dtype="datetime64[D]",
+            ),
         }
         metrics = SL11.breakout_book_metrics(book)
 
@@ -2831,7 +2905,11 @@ class TestBreakoutBookMetrics:
             "trades": [],
             "portfolio_equity": equity,
             "start_equity": 1_000_000.0,
-            "dates": np.arange(np.datetime64('2024-01-01'), np.datetime64('2024-01-01') + np.timedelta64(4, 'D'), dtype='datetime64[D]'),
+            "dates": np.arange(
+                np.datetime64("2024-01-01"),
+                np.datetime64("2024-01-01") + np.timedelta64(4, "D"),
+                dtype="datetime64[D]",
+            ),
         }
         metrics = SL11.breakout_book_metrics(book)
 

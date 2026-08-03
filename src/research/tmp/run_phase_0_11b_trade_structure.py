@@ -95,7 +95,9 @@ def continuous_returns_at_offset(offset: int) -> pl.DataFrame:
         if offset > 0 and offset < len(dates):
             ret = ret.filter(pl.col("date") >= pl.lit(dates[offset]))
         rows.append(ret.select(["date", "net_return"]))
-    pooled = pl.concat(rows).group_by("date").agg(pl.col("net_return").mean()).sort("date")
+    pooled = (
+        pl.concat(rows).group_by("date").agg(pl.col("net_return").mean()).sort("date")
+    )
     return pooled
 
 
@@ -127,7 +129,9 @@ def main() -> None:
     s_book0 = structured_book_at_offset(0)
     c_ret0 = continuous_returns_at_offset(0)
     treatment_pnl = np.array([t["ret_eq"] for t in s_book0["trades"]])
-    treatment_blocks = S11.trade_blocks(np.array([t["exit_date"] for t in s_book0["trades"]]))
+    treatment_blocks = S11.trade_blocks(
+        np.array([t["exit_date"] for t in s_book0["trades"]])
+    )
     control_pnl = c_ret0["net_return"].to_numpy()
     control_blocks = S11.trade_blocks(c_ret0["date"].to_numpy())
     ts_bootstrap = S11.paired_block_bootstrap(
@@ -145,7 +149,9 @@ def main() -> None:
         else float("nan")
     )
     ts_fires = bool(
-        ts_positive_every_offset and ts_bootstrap["delta_excludes_zero"] and ts_dsr > 0.95
+        ts_positive_every_offset
+        and ts_bootstrap["delta_excludes_zero"]
+        and ts_dsr > 0.95
     )
 
     # Gate TS-S: stop-disabled variant, offset 0 only, diagnostic.
@@ -185,7 +191,7 @@ def main() -> None:
         json.dump(out, f, indent=2, default=str)
 
     print(
-        f"Gate TS: fires={ts_fires} sharpes={[round(s,3) for s in ts_sharpes]} "
+        f"Gate TS: fires={ts_fires} sharpes={[round(s, 3) for s in ts_sharpes]} "
         f"dsr={ts_dsr:.4f} delta_ci={ts_bootstrap['delta_ci']} | "
         f"Gate TS-S: fires={ts_s_fires} stop_disabled_ci_excludes_zero={ts_s_bootstrap['delta_excludes_zero']}"
     )

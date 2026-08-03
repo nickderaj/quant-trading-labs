@@ -24,6 +24,7 @@ Writes phase_5_11b_results.json.
 
 import json
 import sys
+from typing import Any
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
@@ -102,9 +103,11 @@ def single_name_binding(name: str, df: pl.DataFrame, p: S11.TradingRuleParams) -
 
 def main() -> None:
     with open(GATE_TS_PATH) as f:
-        control_dd = json.load(f)["gate_TS"]["structured_by_offset"]["offset_0"]["max_drawdown"]
+        control_dd = json.load(f)["gate_TS"]["structured_by_offset"]["offset_0"][
+            "max_drawdown"
+        ]
 
-    results = {}
+    results: dict[str, Any] = {}
     for name in SPREADS:
         df = load_frame(name)
         p = S11.TradingRuleParams()

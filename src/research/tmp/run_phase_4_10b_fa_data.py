@@ -40,9 +40,17 @@ CACHE_DIR = "src/research/cache"
 
 def main():
     data_py_src = Path(DATA_PY).read_text()
-    binance_urls = sorted(set(re.findall(r"https://[a-zA-Z0-9./_-]+binance[a-zA-Z0-9./_-]*", data_py_src)))
-    futures_host_used = any("data.binance.vision/data/futures" in u or "fapi.binance.com" in u for u in binance_urls)
-    spot_host_used = any("data.binance.vision/data/spot" in u or "//api.binance.com" in u for u in binance_urls)
+    binance_urls = sorted(
+        set(re.findall(r"https://[a-zA-Z0-9./_-]+binance[a-zA-Z0-9./_-]*", data_py_src))
+    )
+    futures_host_used = any(
+        "data.binance.vision/data/futures" in u or "fapi.binance.com" in u
+        for u in binance_urls
+    )
+    spot_host_used = any(
+        "data.binance.vision/data/spot" in u or "//api.binance.com" in u
+        for u in binance_urls
+    )
 
     cache_files = [f.name for f in Path(CACHE_DIR).glob("*.parquet")]
     klines_or_ohlc = [f for f in cache_files if "-klines-" in f or "-ohlc-" in f]
@@ -92,7 +100,9 @@ def main():
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
     print(f"written {OUT_PATH}")
-    print(f"FA-data resolved: FALSE (spot_host_used={spot_host_used}, symbols_without_funding={symbols_without_funding})")
+    print(
+        f"FA-data resolved: FALSE (spot_host_used={spot_host_used}, symbols_without_funding={symbols_without_funding})"
+    )
 
 
 if __name__ == "__main__":

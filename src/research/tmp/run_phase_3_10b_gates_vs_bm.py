@@ -50,18 +50,31 @@ def build_extended_panel() -> pl.DataFrame:
     panel = A.build_panel(C.PRODUCTS)
     panel = panel.sort(["symbol", "date"])
     panel = panel.with_columns(
-        pl.col("log_return_ratioadj").rolling_std(window_size=VOL_WINDOW).over("symbol").alias("vol_20d")
+        pl.col("log_return_ratioadj")
+        .rolling_std(window_size=VOL_WINDOW)
+        .over("symbol")
+        .alias("vol_20d")
     )
-    panel = panel.with_columns((1.0 / pl.col("vol_20d").clip(lower_bound=1e-6)).alias("inv_vol_20d"))
+    panel = panel.with_columns(
+        (1.0 / pl.col("vol_20d").clip(lower_bound=1e-6)).alias("inv_vol_20d")
+    )
     blend = pl.mean_horizontal([pl.col(c) for c in A.MOM_LOOKBACKS])
     panel = panel.with_columns(blend.alias("mom_blend"))
     return panel
 
 
-def run_strategy_sized(panel: pl.DataFrame, pred_col: str, target_col: str, size_col: str | None, label: str, origin_offset: int):
-    sub = panel.select(["date", "symbol", pred_col, target_col, "close"] + ([size_col] if size_col else [])).drop_nulls(
-        subset=[pred_col, target_col] + ([size_col] if size_col else [])
-    )
+def run_strategy_sized(
+    panel: pl.DataFrame,
+    pred_col: str,
+    target_col: str,
+    size_col: str | None,
+    label: str,
+    origin_offset: int,
+):
+    sub = panel.select(
+        ["date", "symbol", pred_col, target_col, "close"]
+        + ([size_col] if size_col else [])
+    ).drop_nulls(subset=[pred_col, target_col] + ([size_col] if size_col else []))
     sub = sub.filter(pl.col(pred_col).is_finite() & pl.col(target_col).is_finite())
     if origin_offset > 0:
         dates = sub["date"].unique().sort().to_list()
@@ -69,34 +82,68 @@ def run_strategy_sized(panel: pl.DataFrame, pred_col: str, target_col: str, size
         sub = sub.filter(pl.col("date").is_in(list(keep_dates)))
 
     weights = research.dollar_neutral_weights(
-        sub.rename({"date": "datetime"}), pred_col=pred_col, datetime_col="datetime",
-        top_frac=A.TOP_FRAC, size_col=size_col, gross_exposure=A.GROSS_EXPOSURE, max_position_per_symbol=A.MAX_POSITION,
+        sub.rename({"date": "datetime"}),
+        pred_col=pred_col,
+        datetime_col="datetime",
+        top_frac=A.TOP_FRAC,
+        size_col=size_col,
+        gross_exposure=A.GROSS_EXPOSURE,
+        max_position_per_symbol=A.MAX_POSITION,
     )
-    returns_df = sub.rename({"date": "datetime"}).select(["datetime", "symbol", target_col])
-    trade_frame = research.portfolio_trade_frame(weights, returns_df, target_col=target_col, datetime_col="datetime")
+    returns_df = sub.rename({"date": "datetime"}).select(
+        ["datetime", "symbol", target_col]
+    )
+    trade_frame = research.portfolio_trade_frame(
+        weights, returns_df, target_col=target_col, datetime_col="datetime"
+    )
 
     prices = sub.rename({"date": "datetime"}).select(["datetime", "symbol", "close"])
     costs = C.portfolio_costs_futures(weights, prices, datetime_col="datetime")
-    metrics = C.futures_portfolio_metrics(trade_frame, costs, annualized_rate=ANNUALIZED_RATE, datetime_col="datetime", label=f"{label}_offset{origin_offset}")
+    metrics = C.futures_portfolio_metrics(
+        trade_frame,
+        costs,
+        annualized_rate=ANNUALIZED_RATE,
+        datetime_col="datetime",
+        label=f"{label}_offset{origin_offset}",
+    )
     costed = C.add_portfolio_costs_futures(trade_frame, costs, datetime_col="datetime")
     return metrics, costed.select(["datetime", "trade_log_return_net"])
 
 
-def gate_verdict(metrics_by_offset: dict, headline_net_returns: pl.DataFrame, basket_returns: pl.DataFrame, n_trials: int) -> dict:
+def gate_verdict(
+    metrics_by_offset: dict,
+    headline_net_returns: pl.DataFrame,
+    basket_returns: pl.DataFrame,
+    n_trials: int,
+) -> dict:
     sharpes_net = [m["sharpe_net"] for m in metrics_by_offset.values()]
     all_positive = all(s > 0 for s in sharpes_net)
 
     joined = headline_net_returns.join(basket_returns, on="datetime", how="inner")
-    excess = (joined["trade_log_return_net"] - joined["basket_return"]).drop_nulls().to_numpy()
-    ci_lo, ci_hi = research.block_bootstrap_ci(excess, n_boot=2000, seed=0) if len(excess) > 30 else (None, None)
-    ci_excludes_zero = ci_lo is not None and ci_hi is not None and (ci_lo > 0 or ci_hi < 0)
+    excess = (
+        (joined["trade_log_return_net"] - joined["basket_return"])
+        .drop_nulls()
+        .to_numpy()
+    )
+    ci_lo, ci_hi = (
+        research.block_bootstrap_ci(excess, n_boot=2000, seed=0)
+        if len(excess) > 30
+        else (None, None)
+    )
+    ci_excludes_zero = (
+        ci_lo is not None and ci_hi is not None and (ci_lo > 0 or ci_hi < 0)
+    )
 
     headline = metrics_by_offset["offset_0"]
     n_obs = headline["no_bars"]
-    dsr = research.deflated_sharpe_prob(headline["sharpe_net"] / ANNUALIZED_RATE, n_trials=n_trials, n_obs=n_obs)
+    dsr = research.deflated_sharpe_prob(
+        headline["sharpe_net"] / ANNUALIZED_RATE, n_trials=n_trials, n_obs=n_obs
+    )
     return {
         "net_sharpe_positive_at_every_offset": all_positive,
-        "sharpes_net_by_offset": {k: v["sharpe_net"] for k, v in metrics_by_offset.items()},
+        "sharpes_net_by_offset": {
+            k: v["sharpe_net"] for k, v in metrics_by_offset.items()
+        },
         "excess_return_ci": [ci_lo, ci_hi],
         "excess_ci_excludes_zero": ci_excludes_zero,
         "deflated_sharpe_prob": dsr,
@@ -112,22 +159,34 @@ def main():
     print("Gate VS: vol-scaled carry...", flush=True)
     vs_by_offset, vs_returns_by_offset = {}, {}
     for offset in ORIGIN_OFFSETS:
-        m, ret = run_strategy_sized(panel, "carry_signal", "fwd_return_carry", "inv_vol_20d", "carry_vs", offset)
+        m, ret = run_strategy_sized(
+            panel, "carry_signal", "fwd_return_carry", "inv_vol_20d", "carry_vs", offset
+        )
         vs_by_offset[f"offset_{offset}"] = m
         vs_returns_by_offset[offset] = ret
-    carry_basket = research.equal_weight_basket_returns(panel_dt, target_col="fwd_return_carry", datetime_col="datetime")
+    carry_basket = research.equal_weight_basket_returns(
+        panel_dt, target_col="fwd_return_carry", datetime_col="datetime"
+    )
     carry_basket = carry_basket.rename({"trade_log_return": "basket_return"})
-    gate_vs = gate_verdict(vs_by_offset, vs_returns_by_offset[0], carry_basket, n_trials=N_TRIALS_VS)
+    gate_vs = gate_verdict(
+        vs_by_offset, vs_returns_by_offset[0], carry_basket, n_trials=N_TRIALS_VS
+    )
 
     print("Gate BM: blended momentum...", flush=True)
     bm_by_offset, bm_returns_by_offset = {}, {}
     for offset in ORIGIN_OFFSETS:
-        m, ret = run_strategy_sized(panel, "mom_blend", "fwd_return_1", None, "mom_blend", offset)
+        m, ret = run_strategy_sized(
+            panel, "mom_blend", "fwd_return_1", None, "mom_blend", offset
+        )
         bm_by_offset[f"offset_{offset}"] = m
         bm_returns_by_offset[offset] = ret
-    mom_basket = research.equal_weight_basket_returns(panel_dt, target_col="fwd_return_1", datetime_col="datetime")
+    mom_basket = research.equal_weight_basket_returns(
+        panel_dt, target_col="fwd_return_1", datetime_col="datetime"
+    )
     mom_basket = mom_basket.rename({"trade_log_return": "basket_return"})
-    gate_bm = gate_verdict(bm_by_offset, bm_returns_by_offset[0], mom_basket, n_trials=N_TRIALS_BM)
+    gate_bm = gate_verdict(
+        bm_by_offset, bm_returns_by_offset[0], mom_basket, n_trials=N_TRIALS_BM
+    )
 
     results = {
         "gate_VS": {"by_offset": vs_by_offset, "gate": gate_vs},
@@ -137,8 +196,12 @@ def main():
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
     print(f"written {OUT_PATH}")
-    print(f"Gate VS fires={gate_vs['fires']} dsr={gate_vs['deflated_sharpe_prob']:.4f} sharpes={gate_vs['sharpes_net_by_offset']}")
-    print(f"Gate BM fires={gate_bm['fires']} dsr={gate_bm['deflated_sharpe_prob']:.4f} sharpes={gate_bm['sharpes_net_by_offset']}")
+    print(
+        f"Gate VS fires={gate_vs['fires']} dsr={gate_vs['deflated_sharpe_prob']:.4f} sharpes={gate_vs['sharpes_net_by_offset']}"
+    )
+    print(
+        f"Gate BM fires={gate_bm['fires']} dsr={gate_bm['deflated_sharpe_prob']:.4f} sharpes={gate_bm['sharpes_net_by_offset']}"
+    )
 
 
 if __name__ == "__main__":

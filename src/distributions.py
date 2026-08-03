@@ -97,12 +97,12 @@ def _mle_fit_with_convergence_check(
 
     try:
         params = dist.fit(x, optimizer=_optimizer)
-    except Exception:
+    except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
         return None
 
     if state.get("warnflag") != 0:
         return None
-    x0, xopt = state["x0"], state["xopt"]
+    x0, xopt = np.asarray(state["x0"]), np.asarray(state["xopt"])
     if x0.shape == xopt.shape and np.allclose(x0, xopt, atol=1e-8, rtol=1e-8):
         return None
     if not np.all(np.isfinite(params)):
@@ -430,11 +430,15 @@ def crps_normal_closed_form(
     """
     actual = np.asarray(actual, dtype=float)
     z = (actual - loc) / scale
-    return scale * (z * (2.0 * st.norm.cdf(z) - 1.0) + 2.0 * st.norm.pdf(z) - 1.0 / np.sqrt(np.pi))
+    return scale * (
+        z * (2.0 * st.norm.cdf(z) - 1.0) + 2.0 * st.norm.pdf(z) - 1.0 / np.sqrt(np.pi)
+    )
 
 
 def crps_t_closed_form(
-    actual: np.ndarray, df: np.ndarray | float, loc: np.ndarray | float = 0.0,
+    actual: np.ndarray,
+    df: np.ndarray | float,
+    loc: np.ndarray | float = 0.0,
     scale: np.ndarray | float = 1.0,
 ) -> np.ndarray:
     """Closed-form CRPS for a (non-standardized) Student-t predictive
@@ -463,8 +467,12 @@ def crps_t_closed_form(
     Fz = st.t.cdf(z, df=nu)
     fz = st.t.pdf(z, df=nu)
     with np.errstate(invalid="ignore", divide="ignore"):
-        const = (2.0 * np.sqrt(nu) / (nu - 1.0)) * (_betafn(0.5, nu - 0.5) / _betafn(0.5, nu / 2.0) ** 2)
-        out = scale * (z * (2.0 * Fz - 1.0) + 2.0 * fz * (nu + z**2) / (nu - 1.0) - const)
+        const = (2.0 * np.sqrt(nu) / (nu - 1.0)) * (
+            _betafn(0.5, nu - 0.5) / _betafn(0.5, nu / 2.0) ** 2
+        )
+        out = scale * (
+            z * (2.0 * Fz - 1.0) + 2.0 * fz * (nu + z**2) / (nu - 1.0) - const
+        )
     return np.where(nu > 1.0, out, np.nan)
 
 
@@ -510,7 +518,9 @@ def qlike(actual_variance, predicted_variance) -> np.ndarray:
 # --------------------------------------------------------------------------
 
 
-def exceedances(actual: np.ndarray, quantile_forecast: np.ndarray, side: str = "lower") -> np.ndarray:
+def exceedances(
+    actual: np.ndarray, quantile_forecast: np.ndarray, side: str = "lower"
+) -> np.ndarray:
     """Boolean exceedance indicator for VaR-style backtesting: True where
     the realized value breached the forecast quantile. side="lower" (the
     usual VaR case) flags actual < quantile_forecast; side="upper" flags
@@ -523,6 +533,7 @@ def exceedances(actual: np.ndarray, quantile_forecast: np.ndarray, side: str = "
     if side == "upper":
         return actual > quantile_forecast
     raise ValueError("side must be 'lower' or 'upper'")
+
 
 def kupiec_test(hits: np.ndarray, expected_rate: float) -> tuple[float, float]:
     """Kupiec (1995) unconditional coverage test: a likelihood-ratio test of

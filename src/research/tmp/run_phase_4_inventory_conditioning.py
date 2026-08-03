@@ -70,11 +70,17 @@ def hill_by_state(ret: np.ndarray, states: np.ndarray) -> dict:
         plateau_lo = L5.find_hill_plateau(path_lo["alpha"], path_lo["k"])
         plateau_hi = L5.find_hill_plateau(path_hi["alpha"], path_hi["k"])
         es_1pct = float(np.mean(np.sort(r)[: max(1, int(0.01 * len(r)))]))
-        ci_lo, ci_hi = research.block_bootstrap_ci(r[r < np.percentile(r, 5)], n_boot=1000, seed=0) if (r < np.percentile(r, 5)).sum() > 20 else (None, None)
+        ci_lo, ci_hi = (
+            research.block_bootstrap_ci(r[r < np.percentile(r, 5)], n_boot=1000, seed=0)
+            if (r < np.percentile(r, 5)).sum() > 20
+            else (None, None)
+        )
         out[state] = {
             "n": len(r),
-            "hill_left": plateau_lo, "hill_right": plateau_hi,
-            "es_1pct": es_1pct, "es_1pct_ci": [ci_lo, ci_hi],
+            "hill_left": plateau_lo,
+            "hill_right": plateau_hi,
+            "es_1pct": es_1pct,
+            "es_1pct_ci": [ci_lo, ci_hi],
         }
     return out
 
@@ -83,7 +89,10 @@ def process_product(product: str, fred: dict) -> dict | None:
     curve = pl.read_parquet(f"{CURVE_DIR}/{product}.parquet")
     dev_start = DEV_START.get(product, DEV_START["__default__"])
     sub = curve.filter(pl.col("log_return_ratioadj").is_finite())
-    sub = sub.filter((pl.col("date") >= pl.lit(dev_start).str.to_date()) & (pl.col("date") <= pl.lit(DEV_END).str.to_date()))
+    sub = sub.filter(
+        (pl.col("date") >= pl.lit(dev_start).str.to_date())
+        & (pl.col("date") <= pl.lit(DEV_END).str.to_date())
+    )
     if sub.height < MIN_TRAIN + REFIT_EVERY:
         print(f"  {product}: too few obs, skipping")
         return None
@@ -92,28 +101,54 @@ def process_product(product: str, fred: dict) -> dict | None:
     dates = sub["date"]
     n = len(ret)
 
-    ts_state = C.term_structure_state(sub.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"]))
+    ts_state = C.term_structure_state(
+        sub.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"])
+    )
     seasonal = C.seasonal_state(dates.to_list(), product)
     macro = C.macro_regime(fred, dates)
 
     # reference VaR model: GARCH-t, rolling
-    fc, fits = L.rolling_garch_forecast(ret, refit_every=REFIT_EVERY, min_train=MIN_TRAIN, innovation="t", max_train=MAX_TRAIN)
+    fc, fits = L.rolling_garch_forecast(
+        ret,
+        refit_every=REFIT_EVERY,
+        min_train=MIN_TRAIN,
+        innovation="t",
+        max_train=MAX_TRAIN,
+    )
     nu_path = L.nu_path_from_fits(fits, n, param_index=3)
     var_01 = L5.t_quantile_forecasts(fc, nu_path, quantiles=[0.01])[0.01]
     mask = np.isfinite(ret) & np.isfinite(var_01)
     hits = dist.exceedances(ret[mask], var_01[mask], side="lower").astype(int)
 
-    ts_arr = np.array(["na" if v is None else v for v in ts_state["term_structure_state"].to_list()])[mask]
+    ts_arr = np.array(
+        ["na" if v is None else v for v in ts_state["term_structure_state"].to_list()]
+    )[mask]
     seasonal_arr = np.array(seasonal)[mask]
-    vix_arr = np.array(["na" if v is None else v for v in macro["vix_regime"].to_list()])[mask]
-    yc_arr = np.array(["na" if v is None else v for v in macro["yield_curve_regime"].to_list()])[mask]
+    vix_arr = np.array(
+        ["na" if v is None else v for v in macro["vix_regime"].to_list()]
+    )[mask]
+    yc_arr = np.array(
+        ["na" if v is None else v for v in macro["yield_curve_regime"].to_list()]
+    )[mask]
 
     kupiec_ts = C.kupiec_by_state(hits, ts_arr, expected_rate=0.01)
-    kupiec_season = C.kupiec_by_state(hits, seasonal_arr, expected_rate=0.01) if product in C._SEASONAL_WINDOWS else None
+    kupiec_season = (
+        C.kupiec_by_state(hits, seasonal_arr, expected_rate=0.01)
+        if product in C._SEASONAL_WINDOWS
+        else None
+    )
     kupiec_vix = C.kupiec_by_state(hits, vix_arr, expected_rate=0.01)
     kupiec_yc = C.kupiec_by_state(hits, yc_arr, expected_rate=0.01)
 
-    hill_ts = hill_by_state(ret, np.array(["na" if v is None else v for v in ts_state["term_structure_state"].to_list()]))
+    hill_ts = hill_by_state(
+        ret,
+        np.array(
+            [
+                "na" if v is None else v
+                for v in ts_state["term_structure_state"].to_list()
+            ]
+        ),
+    )
 
     return {
         "n_obs": n,
@@ -141,14 +176,28 @@ def gate_ci_verdict(results: dict) -> dict:
             continue
         pooled = r["term_structure"]["kupiec"].get("_pooled", {})
         pooled_p = pooled.get("kupiec_p")
-        state_ps = [v["kupiec_p"] for k, v in r["term_structure"]["kupiec"].items() if k != "_pooled" and v.get("kupiec_p") is not None]
-        fires_here = pooled_p is not None and pooled_p > 0.05 and any(sp < 0.05 for sp in state_ps)
+        state_ps = [
+            v["kupiec_p"]
+            for k, v in r["term_structure"]["kupiec"].items()
+            if k != "_pooled" and v.get("kupiec_p") is not None
+        ]
+        fires_here = (
+            pooled_p is not None
+            and pooled_p > 0.05
+            and any(sp < 0.05 for sp in state_ps)
+        )
         if fires_here:
             n_products_with_signal += 1
-        details[p] = {"pooled_p": pooled_p, "state_ps": state_ps, "conditioning_adds_information": fires_here}
+        details[p] = {
+            "pooled_p": pooled_p,
+            "state_ps": state_ps,
+            "conditioning_adds_information": fires_here,
+        }
     return {
         "n_products_with_signal": n_products_with_signal,
-        "n_products_total": len([p for p in results if not p.startswith("_") and results[p] is not None]),
+        "n_products_total": len(
+            [p for p in results if not p.startswith("_") and results[p] is not None]
+        ),
         "threshold": 10,
         "fires": n_products_with_signal >= 10,
         "details": details,
@@ -165,14 +214,19 @@ def main():
         out = process_product(p, fred)
         if out is not None:
             results[p] = out
-        print(f"  {p} done in {time.time()-t1:.1f}s", flush=True)
+        print(f"  {p} done in {time.time() - t1:.1f}s", flush=True)
 
     results["_gate_CI"] = gate_ci_verdict(results)
-    results["_config"] = {"min_train": MIN_TRAIN, "refit_every": REFIT_EVERY, "max_train": MAX_TRAIN, "reference_model": "garch_t"}
+    results["_config"] = {
+        "min_train": MIN_TRAIN,
+        "refit_every": REFIT_EVERY,
+        "max_train": MAX_TRAIN,
+        "reference_model": "garch_t",
+    }
 
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\nwritten {OUT_PATH} in {time.time()-t0:.1f}s")
+    print(f"\nwritten {OUT_PATH} in {time.time() - t0:.1f}s")
 
 
 if __name__ == "__main__":

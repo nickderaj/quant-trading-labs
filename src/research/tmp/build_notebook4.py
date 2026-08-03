@@ -2,19 +2,27 @@ import json
 
 
 def md(src):
-    return {"cell_type": "markdown", "metadata": {}, "source": src.splitlines(keepends=True)}
+    return {
+        "cell_type": "markdown",
+        "metadata": {},
+        "source": src.splitlines(keepends=True),
+    }
 
 
 def code(src):
     return {
-        "cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [],
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
         "source": src.splitlines(keepends=True),
     }
 
 
 cells = []
 
-cells.append(md("""\
+cells.append(
+    md("""\
 # Notebook 4 - Distributional Models for Volatility and Regime
 
 Notebooks 1-3 all asked distributions (implicitly) to predict the **first moment** - the
@@ -35,9 +43,11 @@ recomputes the lightweight parts live and reloads the heavier rolling-refit arti
 `src/research/tmp/`) that a Raspberry Pi shouldn't recompute on every notebook run -
 those were produced by `run_phase1.py`/`run_phase3.py`/`run_phase4.py` in the same
 directory, which this notebook's cells mirror at smaller scale for a live demonstration.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 import sys
 from datetime import UTC, datetime
 
@@ -60,18 +70,22 @@ pl.Config.set_tbl_width_chars(220)
 
 SYMBOL = "BTCUSDT"
 INTERVALS = ["1h", "4h", "12h", "1d"]
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 1 - Descriptive: what these series actually look like
 
 Fit once on the full pre-holdout history (causal-to-date, not rolling - Phase 1
 characterizes the data; Phase 3/4 are the rolling, out-of-sample forecasts). Full
 numbers for all 4 intervals: `phase1_results.json` (produced by `run_phase1.py`); this
 cell reproduces the fat-tails fit live for 1d as a demonstration and loads the rest.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 df_1d = L.build_asset_frame(SYMBOL, "1d", end=research.HOLDOUT_START)
 r = df_1d["log_return"].drop_nulls().to_numpy()
 
@@ -89,9 +103,11 @@ n_5sigma_obs = int(np.sum(np.abs(z) >= 5))
 print(f"observed frac |z|>=5sigma: {n_5sigma_obs / len(r):.6%}  "
       f"normal-implied: {p_5sigma_normal:.9%}  "
       f"ratio: {(n_5sigma_obs / len(r)) / p_5sigma_normal:.0f}x")
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 xs = np.linspace(r.min(), r.max(), 400)
 fig, axes = plt.subplots(1, 2, figsize=(11, 4))
 axes[0].hist(r, bins=80, density=True, alpha=0.5, label="observed")
@@ -105,9 +121,11 @@ st.probplot(r, dist=st.t, sparams=t_p, plot=axes[1])
 axes[1].set_title("QQ plot vs fitted Student-t")
 plt.tight_layout()
 plt.show()
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 with open("tmp/phase1_results.json") as f:
     phase1 = json.load(f)
 
@@ -125,18 +143,22 @@ for iv in INTERVALS:
     })
 stylized_facts = pl.DataFrame(rows)
 stylized_facts
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 Fitted t-df rises monotonically from 1h (1.98) to 1d (2.88) - aggregational
 Gaussianity, but crypto starts and stays far from Gaussian. Count dispersion index is
 in the hundreds of thousands at every interval (Poisson predicts 1) - trade arrivals are
 massively overdispersed. Run lengths reject the geometric null at 3 of 4 intervals - a
 distributional echo of notebook 3's short-horizon mean-reversion finding. Full table
 with beta/gap/clustering numbers: `src/results/004_distributional_models.md`.
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 2 - Machinery
 
 `src/distributions.py` (families normal/t/skewt/poisson/nbinom/beta via `fit_rolling`;
@@ -148,9 +170,11 @@ from-scratch GARCH(1,1)/Gaussian-mixture/HMM fits (no `arch`/`hmmlearn`/`sklearn
 environment). One bug found and fixed while building it: `fit_once` looked up fitted
 parameter columns by their bare name instead of `fit_rolling`'s actual
 `f"{col}_{family}_{name}"` naming - see the results doc for detail.
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 3 - Volatility forecasting contest
 
 Full 7-rung ladder, BTC, all 4 intervals - every rung implemented and scored, no
@@ -167,9 +191,11 @@ BTC 1h's 13 frozen-price bars (the same *class* of bug as notebook 3's
 `realized_vol_24==0`), and a Diebold-Mariano p-value that was actually a raw t-statistic
 due to a return-value mislabeling in `research.newey_west_tstat`'s caller. All three are
 fixed in the numbers below.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 with open("tmp/phase3_results.json") as f:
     phase3 = json.load(f)
 
@@ -180,9 +206,11 @@ for iv, r in phase3["intervals"].items():
         rows.append({"interval": iv, "rung": rung, "rep": rep, "qlike": s["qlike"], "mse": s["mse"]})
 qlike_table = pl.DataFrame(rows).pivot("interval", index=["rung", "rep"], values="qlike")
 qlike_table
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 fig, axes = plt.subplots(1, 4, figsize=(16, 4), sharey=False)
 for ax, iv in zip(axes, ["1h", "4h", "12h", "1d"]):
     r = phase3["intervals"][iv]
@@ -193,33 +221,41 @@ for ax, iv in zip(axes, ["1h", "4h", "12h", "1d"]):
     ax.tick_params(axis="x", rotation=45)
 plt.tight_layout()
 plt.show()
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 Lower is better. HAR-RV (rung2) has the lowest QLIKE at every interval, with the range
 estimators (rung3) and GARCH-normal (rung5) close behind - but the all-pairs
 Diebold-Mariano test (21 pairs per interval, not just adjacent-rung comparisons) shows
 **no rung beats every other rung with significance at any interval** - see
 `winner_verdict` below and the results doc for the full pairwise table.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 for iv, r in phase3["intervals"].items():
     wv = r["winner_verdict"]
     print(f"{iv}: best-by-QLIKE={wv['best_by_qlike']} ({wv['best_rep']}), "
           f"beats every other rung significantly = {wv['beats_every_other_rung_significantly']}")
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ### Density scoring: where a real (narrower) result shows up
 
 Point-forecast QLIKE found no ladder winner, but scoring GARCH-t under its **own**
 fitted Student-t innovation distribution (rather than forcing every rung through a
 normal density) shows a real calibration edge - best log score at 3 of 4 intervals, and
 its 5% VaR exceedance rate is never rejected by the Kupiec coverage test.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 rows = []
 for iv, r in phase3["intervals"].items():
     d = r["density"]
@@ -235,13 +271,17 @@ for iv, r in phase3["intervals"].items():
         row["garch_t_kupiec_p"] = d["rung5_garch_t_own_dist"]["kupiec_p"]
     rows.append(row)
 pl.DataFrame(rows)
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ### Frozen transfer check (ETH/SOL/DOGE/BNB/XRP, 1d only - scoped down for wall-clock)
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 with open("tmp/phase3_transfer_results.json") as f:
     phase3_transfer = json.load(f)
 
@@ -253,16 +293,20 @@ for sym, r in phase3_transfer["symbols"].items():
         "beats_every_other_rung": r["beats_every_other_rung_significantly"],
     })
 pl.DataFrame(rows)
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 HAR-RV is the best-by-QLIKE rung at 5 of 6 symbols, but whether it's a *significant*
 all-beating winner flips symbol by symbol (yes on ETH/SOL, no on BTC/BNB/XRP/DOGE) -
 per notebook 3's "stability outranks magnitude" standard, this is **not a stable
 winner**.
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 4 - Regime estimation
 
 Threshold baseline, Gaussian mixture (K=2,3), HMM (Gaussian/Student-t emissions),
@@ -275,9 +319,11 @@ Produced by `run_phase4.py`.
 `min_train` (90 days x 24 bars/day = 2160) made `min_train // 2` (1080) unreachable by
 a 500-bar-capped window, so every GMM/HMM refit at 1h silently no-opped for the entire
 series. Fixed by flooring the check at `min(min_train, max_train) // 2`.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 with open("tmp/phase4_results.json") as f:
     phase4 = json.load(f)
 
@@ -295,9 +341,11 @@ for iv, r in phase4["intervals"].items():
         })
 regime_table = pl.DataFrame(rows)
 regime_table.filter(pl.col("model").is_in(["baseline_threshold", "hmm_gaussian"]))
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(8, 4))
 piv = regime_table.filter(pl.col("model").is_in(["baseline_threshold", "hmm_gaussian"]))
 for model, color in [("baseline_threshold", "#999999"), ("hmm_gaussian", "#C44E52")]:
@@ -308,9 +356,11 @@ ax.set_title("BTC regime persistence: threshold baseline vs HMM-Gaussian")
 ax.legend()
 plt.tight_layout()
 plt.show()
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 **Every model at every interval predicts next-bar volatility with overwhelming
 significance and shows no consistent direction-prediction effect** - regimes predict
 risk, not return, exactly the clean expected finding NEW_PROMPT called likely. HMM-
@@ -319,9 +369,11 @@ interval (more persistent, less flip-floppy regimes) and a comparable-or-better 
 discrimination statistic at 3 of 4 intervals - real structure, but no formal
 significance test was built to certify it as beating the baseline (unlike Phase 3's
 DM-test apparatus), so it is not reported as a certified Phase 4 "winner."
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 with open("tmp/phase4_transfer_results.json") as f:
     phase4_transfer = json.load(f)
 
@@ -335,14 +387,18 @@ for sym, r in phase4_transfer["symbols"].items():
         "hmm_dir_p": r["hmm_gaussian"]["predicts"]["direction_anova"].get("pvalue"),
     })
 pl.DataFrame(rows)
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 "Predicts vol overwhelmingly, direction inconsistently" replicates at all 5 transfer
 symbols - the single most stable finding in this notebook.
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 5 - Does any of it pay?
 
 **Not run.** Pre-declared to run only if Phase 3 or Phase 4 produced a certified
@@ -355,9 +411,11 @@ a forecast this notebook itself declined to certify - the "no tuning until the b
 looks good" failure mode NEW_PROMPT explicitly warns against. Full reasoning (including
 why the GARCH-t density-calibration result and the HMM persistence result each still
 fall short of what Phase 5's own pre-declared gates require) is in the results doc.
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Bottom line
 
 **Volatility**: no single rung wins the mandatory 7-rung ladder outright on BTC at any
@@ -382,16 +440,25 @@ measured with proper scoring rules, even though none of it clears this notebook'
 bar for calling something a winner.
 
 Full numbers, all bugs found, and "what to test next": `src/results/004_distributional_models.md`.
-"""))
+""")
+)
 
 nb = {
     "cells": cells,
     "metadata": {
-        "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+        "kernelspec": {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3",
+        },
         "language_info": {
             "codemirror_mode": {"name": "ipython", "version": 3},
-            "file_extension": ".py", "mimetype": "text/x-python", "name": "python",
-            "nbconvert_exporter": "python", "pygments_lexer": "ipython3", "version": "3.12.13",
+            "file_extension": ".py",
+            "mimetype": "text/x-python",
+            "name": "python",
+            "nbconvert_exporter": "python",
+            "pygments_lexer": "ipython3",
+            "version": "3.12.13",
         },
     },
     "nbformat": 4,

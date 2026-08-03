@@ -18,6 +18,7 @@ Writes phase_1_results.json.
 import json
 import sys
 import time
+from typing import Any
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
@@ -58,15 +59,25 @@ def max_drawdown(ret: np.ndarray) -> float:
 
 
 def hill_block(ret: np.ndarray) -> dict:
-    out = {}
+    out: dict[str, Any] = {}
     for tail in ["upper", "lower"]:
         path = L5.hill_alpha_path(ret, tail=tail, k_min=20)
         plateau = L5.find_hill_plateau(path["alpha"], path["k"])
         out[tail] = plateau
-    alpha_left = out["lower"].get("alpha_median", np.nan) if out["lower"].get("found") else np.nan
-    alpha_right = out["upper"].get("alpha_median", np.nan) if out["upper"].get("found") else np.nan
+    alpha_left = (
+        out["lower"].get("alpha_median", np.nan)
+        if out["lower"].get("found")
+        else np.nan
+    )
+    alpha_right = (
+        out["upper"].get("alpha_median", np.nan)
+        if out["upper"].get("found")
+        else np.nan
+    )
     out["alpha_left_minus_right"] = (
-        float(alpha_left - alpha_right) if np.isfinite(alpha_left) and np.isfinite(alpha_right) else None
+        float(alpha_left - alpha_right)
+        if np.isfinite(alpha_left) and np.isfinite(alpha_right)
+        else None
     )
     return out
 
@@ -88,12 +99,16 @@ def leverage_block(ret: np.ndarray) -> dict:
     vol_next = np.full(len(ret), np.nan)
     window = 5
     for i in range(window, len(ret)):
-        vol_next[i - 1] = np.std(ret[i - window + 1 : i + 1])  # forward-looking vol proxy at t+1
+        vol_next[i - 1] = np.std(
+            ret[i - window + 1 : i + 1]
+        )  # forward-looking vol proxy at t+1
     return C.leverage_correlation(ret[:-1], vol_next[:-1])
 
 
-def process_series(dates: list, ret: np.ndarray, dte: np.ndarray | None, product: str) -> dict:
-    block = {}
+def process_series(
+    dates: list, ret: np.ndarray, dte: np.ndarray | None, product: str
+) -> dict:
+    block: dict[str, Any] = {}
     block["moments"] = moments_block(ret)
     block["max_drawdown"] = max_drawdown(ret)
     block["hill"] = hill_block(ret)
@@ -114,7 +129,9 @@ def main():
 
     for p in C.PRODUCTS:
         curve = pl.read_parquet(f"{CURVE_DIR}/{p}.parquet")
-        sub = curve.select(["date", "log_return_ratioadj", "dte_f1"]).drop_nulls(subset=["log_return_ratioadj"])
+        sub = curve.select(["date", "log_return_ratioadj", "dte_f1"]).drop_nulls(
+            subset=["log_return_ratioadj"]
+        )
         sub = sub.filter(pl.col("log_return_ratioadj").is_finite())
         dates = sub["date"].to_list()
         ret = sub["log_return_ratioadj"].to_numpy()
@@ -127,7 +144,9 @@ def main():
 
     print("processing BTCUSDT bridge series...")
     btc = pl.read_parquet(BTC_PATH).sort("datetime")
-    btc = btc.with_columns((pl.col("close") / pl.col("close").shift(1)).log().alias("ret"))
+    btc = btc.with_columns(
+        (pl.col("close") / pl.col("close").shift(1)).log().alias("ret")
+    )
     btc = btc.drop_nulls(subset=["ret"])
     btc_dates = btc["datetime"].dt.date().to_list()
     btc_ret = btc["ret"].to_numpy()
@@ -141,7 +160,7 @@ def main():
 
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\nwritten {OUT_PATH} in {time.time()-t0:.1f}s")
+    print(f"\nwritten {OUT_PATH} in {time.time() - t0:.1f}s")
 
 
 if __name__ == "__main__":

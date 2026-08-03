@@ -98,7 +98,9 @@ def main() -> None:
             }
             for off in by_offset_by_cost
         },
-        "sharpes_1x_by_offset": dict(zip([f"offset_{o}" for o in ORIGIN_OFFSETS], sharpes_1x, strict=True)),
+        "sharpes_1x_by_offset": dict(
+            zip([f"offset_{o}" for o in ORIGIN_OFFSETS], sharpes_1x, strict=True)
+        ),
         "positive_every_offset": positive_every_offset,
         "noise_floor_offset0_1x": floor0,
         "ci_excludes_zero": ci_excludes_zero,
@@ -115,10 +117,12 @@ def main() -> None:
             "39-symbol legacy proxy registry"
         ),
     }
-    Path("src/research/tmp/phase_2_11d_results.json").write_text(json.dumps(out, indent=2))
+    Path("src/research/tmp/phase_2_11d_results.json").write_text(
+        json.dumps(out, indent=2)
+    )
     print(
         f"Gate MB-E: fires={fires} (fundable_flag_eligible=False, always) "
-        f"sharpes_1x={[round(s,3) for s in sharpes_1x]} "
+        f"sharpes_1x={[round(s, 3) for s in sharpes_1x]} "
         f"noise_floor=[{floor0['ci_return'][0]:.3f},{floor0['ci_return'][1]:.3f}] "
         f"dsr={dsr:.3f} n_trades={n_trades0} "
         f"maxDD_1x_offset0={by_offset_by_cost['offset_0']['cost_1x']['max_drawdown']:.4f}"

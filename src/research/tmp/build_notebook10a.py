@@ -2,19 +2,27 @@ import json
 
 
 def md(src):
-    return {"cell_type": "markdown", "metadata": {}, "source": src.splitlines(keepends=True)}
+    return {
+        "cell_type": "markdown",
+        "metadata": {},
+        "source": src.splitlines(keepends=True),
+    }
 
 
 def code(src):
     return {
-        "cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [],
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
         "source": src.splitlines(keepends=True),
     }
 
 
 cells = []
 
-cells.append(md("""\
+cells.append(
+    md("""\
 # Notebook 10a - Term-Structure Regimes and the Spread Taxonomy
 
 This notebook is purely descriptive — no Sharpe ratios, no cost model, no strategy verdicts.
@@ -22,9 +30,11 @@ Its purpose is to build the term-structure regime atlas for 16 commodities, clas
 pre-built spread series by taxonomy, apply the cointegration precondition that notebook 9
 never checked, and pre-register the full gate table, regime definitions, and trading rules
 for notebook 10b's backtest — all before any backtest exists.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 import sys
 
 sys.path.insert(0, "..")
@@ -49,21 +59,25 @@ def show(fig, caption):
     print(f"Figure {fig_n[0]}: {caption}")
     plt.tight_layout()
     plt.show()
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 0
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 0 - Reproduction check
 
 Re-derives notebook 9's Phase 4 spread probe (5 of 6 spreads mean-reverting, 4 of 6 with
 significant negative IC) and notebook 8's Gate AC/AM headline numbers (both null gates,
 carry deflated Sharpe probability 0.9972, momentum 0.098). All assertions passed on the
 first run — no new work was required before Phase 1 could begin.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase0 = load("phase_0_10a_repro_results.json")
 print("Phase 4 spread probe (notebook 9):")
 print(f"  Mean-reverting spreads: {phase0['phase_4_spread_probe']['mean_reverting_count']}/6 = {phase0['phase_4_spread_probe']['mean_reverting_spreads']}")
@@ -78,12 +92,14 @@ print("Gate AM (notebook 8 momentum):")
 print(f"  Net Sharpe by offset: {phase0['gate_AM_repro']['sharpes_net_by_offset']}")
 print(f"  Deflated Sharpe probability: {phase0['gate_AM_repro']['deflated_sharpe_prob']:.3f}")
 print(f"  Fires: {phase0['gate_AM_repro']['fires']}")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 1
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 1 - The term-structure regime atlas
 
 Annualised F1→F2 roll slope, state label, state persistence, and month-of-year patterns for all
@@ -92,14 +108,20 @@ backwardation-prone (ranging from NG 20.5% to RB 67.5%), metals sit near-permane
 (13–32% backwardated), and grains span the full spectrum (ZW 5.7% to ZM 52.3%). State persistence
 ranges from days (thin products) to 50–95 days (CL contango ~58d, ZC contango ~95d) — long enough
 that a regime-gated strategy's turnover is plausible.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase1 = load("phase_1_10a_results.json")
-"""))
+""")
+)
 
-cells.append(md("**Backwardation fraction by product, grouped and coloured by sector.**"))
-cells.append(code("""\
+cells.append(
+    md("**Backwardation fraction by product, grouped and coloured by sector.**")
+)
+cells.append(
+    code("""\
 PRODUCTS = C.PRODUCTS
 sectors_by_product = C.SECTOR
 
@@ -129,10 +151,14 @@ ax.set_title("Backwardation frequency by product (2010–2024)")
 ax.tick_params(axis='x', rotation=45)
 ax.axhline(0.5, color="grey", lw=0.8, ls="--", alpha=0.5)
 show(fig, "Backwardation frequency varies by 4× across products: energy ranges RB 67.5% to NG 20.5%; metals cluster near 15–32%; grains span ZW 5.7% to ZM 52.3% — no single regime fits 'commodities' as a whole.")
-"""))
+""")
+)
 
-cells.append(md("**Mean run length (persistence) by product and state, sorted within sector.**"))
-cells.append(code("""\
+cells.append(
+    md("**Mean run length (persistence) by product and state, sorted within sector.**")
+)
+cells.append(
+    code("""\
 # Mean run length for each product
 mrl_data = []
 for sector in sector_order:
@@ -173,10 +199,16 @@ for idx, sector in enumerate(sector_order):
 
 plt.tight_layout()
 show(fig, "State persistence by product — contango runs 57d (CL) to 95d (ZC); backwardation shorter, 10–40d — comparable to spread mean-reversion half-lives, so regime flips mid-position are rare.")
-"""))
+""")
+)
 
-cells.append(md("**Term-structure curve snapshots: deepest contango vs backwardation days for CL, NG, ZC.**"))
-cells.append(code("""\
+cells.append(
+    md(
+        "**Term-structure curve snapshots: deepest contango vs backwardation days for CL, NG, ZC.**"
+    )
+)
+cells.append(
+    code("""\
 snapshots = phase1["curve_snapshots"]
 snap_products = ["CL", "NG", "ZC"]
 
@@ -200,12 +232,14 @@ for row, prod in enumerate(snap_products):
 
 plt.tight_layout()
 show(fig, "F1/F2/F3 term structure on extreme regime days — the visual concrete for backwardation (downward slope) vs contango (upward slope); NG's heating-season contango is particularly pronounced.")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 2
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 2 - Spread taxonomy, cointegration, and mean-reversion probe
 
 All 30 pre-built spreads classified by taxonomy: **11 inter-commodity (two distinct underlyings),
@@ -217,9 +251,11 @@ AR(1) mean-reversion extends cleanly from notebook 9's 6 spreads to all 30: **27
 **16/30 with significant (p<0.05) negative 5-day-forward IC**. The 11 spreads where the two tests disagree
 (AR(1) positive, IC not) include calendar spreads and bean_corn / gasheat_rbho — reported here in full
 rather than smoothed away.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase2 = load("phase_2_10a_results.json")
 spreads = list(phase2["per_spread"].keys())
 print(f"Total spreads: {len(spreads)}")
@@ -239,10 +275,14 @@ for spread in spreads:
 print(f"Inter-commodity spreads ({len(inter_commodity)}): {inter_commodity}")
 print()
 print(f"Calendar spreads ({len(calendar)}): {calendar}")
-"""))
+""")
+)
 
-cells.append(md("**Ranked AR(1) t-statistic across all 30 spreads, coloured by taxonomy.**"))
-cells.append(code("""\
+cells.append(
+    md("**Ranked AR(1) t-statistic across all 30 spreads, coloured by taxonomy.**")
+)
+cells.append(
+    code("""\
 # Gather AR(1) t-stats
 ar1_data = []
 for spread in spreads:
@@ -285,10 +325,12 @@ legend_elements = [
 ax.legend(handles=legend_elements, fontsize=9)
 
 show(fig, "AR(1) t-stats ranked by magnitude — 27/30 spreads cross the |t|>2 threshold; inter-commodity and calendar spreads show similar distributions, but the IC (information coefficient) test reveals more disagreement in calendar spreads.")
-"""))
+""")
+)
 
 cells.append(md("**ADF cointegration test results, with 5% critical value line.**"))
-cells.append(code("""\
+cells.append(
+    code("""\
 # Gather ADF t-stats
 adf_data = []
 for spread in spreads:
@@ -323,12 +365,14 @@ ax.set_xlabel("spread rank (sorted by t-stat)")
 ax.set_title("ADF cointegration test, all 30 spreads (green=pass at 5%, red=fail)")
 ax.legend(fontsize=9)
 show(fig, "23 of 30 spreads pass the ADF cointegration test at 5% — 4 of 11 inter-commodity spreads fail (gold_silver, platinum_palladium, heating_oil_crack, kc_chicago_wheat), along with 3 calendar spreads; these failures are excluded from 10b's backtest universe per the Phase 2 decision.")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 3
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 3 - Regime-conditional structure: does the spread mean-revert harder in one state?
 
 Inter-commodity spreads only (calendar spreads cannot test the regime hypothesis — conditioning on
@@ -342,16 +386,24 @@ shorter) than backwardation — opposite to the operator's prior. But under the 
 variant, the picture flips sharply: 9.5d half-life in backwardation vs 18.3d in contango, versus
 47.5d when the legs disagree and 79.3d pooled. This is reported as an open, pre-registered tension for
 10b to settle empirically.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase3 = load("phase_3_10a_results.json")
 inter_commodity_spreads = list(phase3["per_spread_inter_commodity"].keys())
 print(f"Inter-commodity spreads: {inter_commodity_spreads}")
-"""))
+""")
+)
 
-cells.append(md("**AR(1) half-life by regime (deadband definition) for inter-commodity spreads, all shown together.**"))
-cells.append(code("""\
+cells.append(
+    md(
+        "**AR(1) half-life by regime (deadband definition) for inter-commodity spreads, all shown together.**"
+    )
+)
+cells.append(
+    code("""\
 # Extract half-lives by regime
 regime_data = []
 for spread in inter_commodity_spreads:
@@ -393,10 +445,16 @@ ax.set_title("Mean-reversion half-life by regime (deadband), inter-commodity spr
 ax.legend(fontsize=9)
 ax.set_ylim(0, max([r["half_life"] for r in regime_data if r["half_life"]] or [100]))
 show(fig, "Half-lives by regime for all inter-commodity spreads — most show longer half-lives in contango; brent_wti (to be detailed next) shows the opposite pattern under the both-legs-agree variant.")
-"""))
+""")
+)
 
-cells.append(md("**brent_wti: primary (BZ-only) vs both-legs-agree regime definitions, showing the critical difference.**"))
-cells.append(code("""\
+cells.append(
+    md(
+        "**brent_wti: primary (BZ-only) vs both-legs-agree regime definitions, showing the critical difference.**"
+    )
+)
+cells.append(
+    code("""\
 # Extract brent_wti detailed breakdown
 bw_both = phase3["brent_wti_both_legs_agree_variant"]
 bw_primary = phase3["per_spread_inter_commodity"]["brent_wti"]
@@ -433,10 +491,12 @@ ax.set_ylabel("mean-reversion half-life (days)")
 ax.set_title("brent_wti: both-legs-agree regime definition (primary for 10b)")
 ax.set_ylim(0, max(half_lives) * 1.15)
 show(fig, "brent_wti under the both-legs-agree rule: backwardation (9.5d) is the fastest-reverting state by far, vs contango (18.3d), disagreement (47.5d), and unconditional (79.3d) — the single most important figure for this notebook, showing the operator's hypothesis holds under one leg rule but not the other.")
-"""))
+""")
+)
 
 cells.append(md("**Rolling 60-day leg correlation for brent_wti, if available.**"))
-cells.append(code("""\
+cells.append(
+    code("""\
 # Check if rolling leg correlation series exists
 bw_spread_phase2 = phase2["per_spread"].get("brent_wti", {})
 rolling_leg_corr = bw_spread_phase2.get("rolling_leg_correlation_60d_series")
@@ -468,12 +528,14 @@ if rolling_leg_corr and isinstance(rolling_leg_corr, list) and len(rolling_leg_c
         print("Rolling leg correlation data structure not as expected; skipping chart.")
 else:
     print("Rolling leg correlation series not available in phase 2 JSON; skipping chart.")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 4
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 4 - Inventory positioning (CL only)
 
 This repo's CFTC data holds exactly one series (067651, light sweet crude, NYMEX) — a single-product
@@ -482,9 +544,11 @@ label for CL: 18.8% in backwardation vs 15.9% in contango (Welch t-test, p ≈ 8
 ~3,600 joined days). Corr(roll slope, net non-commercial fraction) = −0.073, the theory-consistent sign
 (speculators run net-long when the market is backwardated, as Keynes' normal-backwardation theory predicts).
 The correlation's magnitude is modest — corroborating but not independently decisive evidence.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase4 = load("phase_4_10a_results.json")
 print("CL CFTC net non-commercial positioning by regime:")
 net_noncomm = phase4["net_noncomm_frac_by_regime"]
@@ -502,10 +566,12 @@ print(f"  p-value: {ttest.get('p_value', 'N/A'):.2e}")
 print()
 print(f"Correlation (roll slope vs net noncomm): {phase4['corr_roll_slope_vs_net_noncomm_frac']:.3f}")
 print(f"Theory-consistent (negative): {phase4['corr_roll_slope_vs_net_noncomm_frac'] < 0}")
-"""))
+""")
+)
 
 cells.append(md("**Net non-commercial positioning by regime, CL.**"))
-cells.append(code("""\
+cells.append(
+    code("""\
 regimes = ["backwardation", "contango"]
 fracs = [net_noncomm_means.get(r, 0) for r in regimes]
 
@@ -525,12 +591,14 @@ ax.set_title("CL: CFTC net non-commercial positioning by regime")
 ax.text(0.5, 0.02, f"Welch t-test p-value: {ttest.get('p_value', 'N/A'):.2e}",
         ha='center', transform=ax.transAxes, fontsize=9, color="grey")
 show(fig, "Speculators (net non-commercial) hold 18.8% of open interest in backwardation vs 15.9% in contango (p≈8e-73), the sign predicted by Keynes' normal-backwardation theory, though the effect size is modest.")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 5
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 5 - Pre-registration for notebook 10b
 
 All decisions and configuration counts are committed here, before any 10b backtest. The gate table
@@ -539,9 +607,11 @@ restates NEXT_PROMPT.md sec 4 verbatim. Three regime definitions are computed (r
 sign is almost always defined, so gating on it barely differs from unconditional trading). ADF-failing
 spreads are excluded from 10b's backtest universe — a mechanical decision applied here before any
 backtest result was seen. DSR (Deflated Sharpe Ratio) configuration counts are tabulated below.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase5 = load("phase_5_10a_results.json")
 print("Gate table (restated from NEXT_PROMPT.md sec 4, unedited):")
 print()
@@ -550,10 +620,12 @@ for gate_name, gate_info in phase5["gate_table"].items():
     print(f"  Claim: {gate_info['claim']}")
     print(f"  Fires if: {gate_info['fires_if']}")
     print()
-"""))
+""")
+)
 
 cells.append(md("**DSR configuration counts (cumulative and per-gate).**"))
-cells.append(code("""\
+cells.append(
+    code("""\
 dsr = phase5["dsr_config_counts"]
 print("DSR configuration counts:")
 print()
@@ -565,12 +637,14 @@ for gate_name in ["SP", "SPR", "SPR-BW", "VS", "BM"]:
 print()
 print(f"Total n_trials: {dsr.get('total_n_trials', 0)}")
 print(f"Total including diagnostics: {dsr.get('total_including_diagnostics', 0)}")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Bottom line
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Bottom line
 
 No strategy verdict belongs here by design — but three findings carry directly into notebook 10b.
@@ -592,14 +666,19 @@ nominally *stronger in contango than backwardation*, opposite to the operator's 
 the picture flips sharply: 9.5-day half-life in backwardation vs 18.3d in contango, the operator's effect
 at full strength on 66.2% of trading days when the legs agree. This tension is unresolved, pre-registered
 as Gate SPR-BW's own secondary check for 10b to settle with a real, costed backtest.
-"""))
+""")
+)
 
 with open("src/research/010a_term_structure_regimes_and_spreads.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
             "metadata": {
-                "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+                "kernelspec": {
+                    "display_name": "Python 3",
+                    "language": "python",
+                    "name": "python3",
+                },
                 "language_info": {"name": "python", "version": "3.12"},
             },
             "nbformat": 4,
@@ -608,4 +687,6 @@ with open("src/research/010a_term_structure_regimes_and_spreads.ipynb", "w") as 
         f,
         indent=1,
     )
-print(f"written src/research/010a_term_structure_regimes_and_spreads.ipynb ({len(cells)} cells)")
+print(
+    f"written src/research/010a_term_structure_regimes_and_spreads.ipynb ({len(cells)} cells)"
+)

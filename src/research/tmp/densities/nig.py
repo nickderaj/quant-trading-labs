@@ -121,8 +121,12 @@ def ppf(q: float | np.ndarray, shape: tuple[float, ...]) -> np.ndarray:
     for i, qi in enumerate(q_arr):
         qi = float(qi)
         out[i] = brentq(
-            lambda x: _cdf_scalar(x, shape) - qi,
-            _X_LO, _X_HI, xtol=1e-8, rtol=1e-10, maxiter=200,
+            lambda x, qi=qi: _cdf_scalar(x, shape) - qi,
+            _X_LO,
+            _X_HI,
+            xtol=1e-8,
+            rtol=1e-10,
+            maxiter=200,
         )
     return out[0] if scalar_input else out
 
@@ -154,11 +158,13 @@ def fit(z: np.ndarray) -> tuple[float, ...] | None:
     x0 = np.array([3.0, 0.0])
     try:
         res = minimize(
-            negloglik, x0, method="L-BFGS-B",
+            negloglik,
+            x0,
+            method="L-BFGS-B",
             bounds=[_ALPHA_BOUNDS, _BETA_FRAC_BOUNDS],
             options={"maxiter": 200},
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
         return None
     if not res.success or not np.all(np.isfinite(res.x)):
         return None

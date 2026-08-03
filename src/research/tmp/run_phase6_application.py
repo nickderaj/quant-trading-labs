@@ -35,14 +35,14 @@ import sys
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
-import numpy as np  # noqa: E402
-import polars as pl  # noqa: E402
+import dist_lib as L
+import dist_lib6 as L6
+import numpy as np
+import polars as pl
+from backtest_configs import SLIPPAGE, TAKER_FEE
+from densities import nig
 
-import dist_lib as L  # noqa: E402
-import dist_lib6 as L6  # noqa: E402
-import research  # noqa: E402
-from backtest_configs import TAKER_FEE, SLIPPAGE  # noqa: E402
-from densities import nig  # noqa: E402
+import research
 
 SYMBOL = "BTCUSDT"
 INTERVAL = "4h"
@@ -58,7 +58,9 @@ def build_overlay_weight(var_forecast: np.ndarray) -> np.ndarray:
     abs_var = np.abs(var_forecast)
     s = pl.Series("abs_var", abs_var)
     trailing_median = (
-        s.rolling_median(window_size=TRAILING_MEDIAN_WINDOW, min_periods=TRAILING_MEDIAN_WINDOW // 2)
+        s.rolling_median(
+            window_size=TRAILING_MEDIAN_WINDOW, min_samples=TRAILING_MEDIAN_WINDOW // 2
+        )
         .shift(1)
         .to_numpy()
     )
@@ -69,7 +71,9 @@ def build_overlay_weight(var_forecast: np.ndarray) -> np.ndarray:
     return weight
 
 
-def backtest_overlay(ret: np.ndarray, weight: np.ndarray, holdout_mask: np.ndarray) -> dict:
+def backtest_overlay(
+    ret: np.ndarray, weight: np.ndarray, holdout_mask: np.ndarray
+) -> dict:
     valid = np.isfinite(weight) & holdout_mask
     w = np.where(np.isfinite(weight), weight, 0.0)
     trade_lr = w * ret
@@ -79,15 +83,27 @@ def backtest_overlay(ret: np.ndarray, weight: np.ndarray, holdout_mask: np.ndarr
         cost_lr = np.log(np.clip(1 - cost_frac * turnover, 1e-12, None))
     trade_lr_net = trade_lr + cost_lr
 
-    gross = research._series_metrics(pl.Series(trade_lr[valid]), research.sharpe_to_annualized_rate(INTERVAL), "gross")
-    net = research._series_metrics(pl.Series(trade_lr_net[valid]), research.sharpe_to_annualized_rate(INTERVAL), "net")
+    gross = research._series_metrics(
+        pl.Series(trade_lr[valid]),
+        research.sharpe_to_annualized_rate(INTERVAL),
+        "gross",
+    )
+    net = research._series_metrics(
+        pl.Series(trade_lr_net[valid]),
+        research.sharpe_to_annualized_rate(INTERVAL),
+        "net",
+    )
     return {
-        "gross_sharpe": gross["sharpe"], "gross_total_log_return": gross["total_log_return"],
+        "gross_sharpe": gross["sharpe"],
+        "gross_total_log_return": gross["total_log_return"],
         "gross_max_drawdown": gross["max_drawdown"],
-        "net_sharpe": net["sharpe"], "net_total_log_return": net["total_log_return"],
+        "net_sharpe": net["sharpe"],
+        "net_total_log_return": net["total_log_return"],
         "net_max_drawdown": net["max_drawdown"],
         "mean_turnover_per_bar": float(np.mean(turnover[valid])),
-        "annualized_fee_drag": float(np.mean(cost_lr[valid]) * -1 * (365 * 6)),  # 6 bars/day at 4h
+        "annualized_fee_drag": float(
+            np.mean(cost_lr[valid]) * -1 * (365 * 6)
+        ),  # 6 bars/day at 4h
         "n_bars": int(valid.sum()),
     }
 
@@ -99,8 +115,10 @@ def main():
     dates = df["datetime"].to_numpy()
     holdout_mask = dates >= np.datetime64(research.HOLDOUT_START.replace(tzinfo=None))
 
-    print(f"n_obs={n}, n_holdout_bars={holdout_mask.sum()}, "
-          f"holdout starts {dates[holdout_mask][0] if holdout_mask.any() else 'N/A'}")
+    print(
+        f"n_obs={n}, n_holdout_bars={holdout_mask.sum()}, "
+        f"holdout starts {dates[holdout_mask][0] if holdout_mask.any() else 'N/A'}"
+    )
 
     bpd = L6.BARS_PER_DAY[INTERVAL]
     mle_refit_every = L6.MLE_REFIT_DAYS * bpd
@@ -108,15 +126,24 @@ def main():
 
     # GARCH-NIG: the best-certified-density-conditional model at this interval
     variance_fc_nig, fits_nig = L6.rolling_garch_forecast_zoo(
-        ret, refit_every=mle_refit_every, min_train=min_train, family_module=nig, max_train=L6.MLE_MAX_TRAIN,
+        ret,
+        refit_every=mle_refit_every,
+        min_train=min_train,
+        family_module=nig,
+        max_train=L6.MLE_MAX_TRAIN,
     )
     var_nig = L6.zoo_quantile_forecast(variance_fc_nig, fits_nig, nig, Q)
 
     # GARCH-normal: the spec's own explicit second comparator
-    variance_fc_norm, fits_norm = L.rolling_garch_forecast(
-        ret, refit_every=mle_refit_every, min_train=min_train, innovation="normal", max_train=L6.MLE_MAX_TRAIN,
+    variance_fc_norm, _fits_norm = L.rolling_garch_forecast(
+        ret,
+        refit_every=mle_refit_every,
+        min_train=min_train,
+        innovation="normal",
+        max_train=L6.MLE_MAX_TRAIN,
     )
     import scipy.stats as st
+
     sigma_norm = np.sqrt(np.where(variance_fc_norm > 0, variance_fc_norm, np.nan))
     var_norm = sigma_norm * st.norm.ppf(Q)
 
@@ -127,7 +154,9 @@ def main():
     result_norm = backtest_overlay(ret, weight_norm, holdout_mask)
 
     bh_lr = ret[holdout_mask]
-    bh = research._series_metrics(pl.Series(bh_lr), research.sharpe_to_annualized_rate(INTERVAL), "buy_and_hold")
+    bh = research._series_metrics(
+        pl.Series(bh_lr), research.sharpe_to_annualized_rate(INTERVAL), "buy_and_hold"
+    )
 
     def _exceedance_count(var_forecast):
         mask = holdout_mask & np.isfinite(var_forecast)
@@ -138,16 +167,28 @@ def main():
     exc_norm, n_norm = _exceedance_count(var_norm)
 
     out = {
-        "symbol": SYMBOL, "interval": INTERVAL, "level": Q,
+        "symbol": SYMBOL,
+        "interval": INTERVAL,
+        "level": Q,
         "n_holdout_bars": int(holdout_mask.sum()),
         "buy_and_hold": {
-            "sharpe": bh["sharpe"], "total_log_return": bh["total_log_return"],
-            "compound_return": bh["compound_return"], "max_drawdown": bh["max_drawdown"],
+            "sharpe": bh["sharpe"],
+            "total_log_return": bh["total_log_return"],
+            "compound_return": bh["compound_return"],
+            "max_drawdown": bh["max_drawdown"],
         },
-        "garch_nig_overlay": {**result_nig, "n_1pct_exceedances": exc_nig, "n_var_valid": n_nig,
-                               "expected_exceedances": round(0.01 * n_nig, 1)},
-        "garch_normal_overlay": {**result_norm, "n_1pct_exceedances": exc_norm, "n_var_valid": n_norm,
-                                  "expected_exceedances": round(0.01 * n_norm, 1)},
+        "garch_nig_overlay": {
+            **result_nig,
+            "n_1pct_exceedances": exc_nig,
+            "n_var_valid": n_nig,
+            "expected_exceedances": round(0.01 * n_nig, 1),
+        },
+        "garch_normal_overlay": {
+            **result_norm,
+            "n_1pct_exceedances": exc_norm,
+            "n_var_valid": n_norm,
+            "expected_exceedances": round(0.01 * n_norm, 1),
+        },
     }
 
     print("\n--- buy-and-hold (holdout) ---")
@@ -158,6 +199,7 @@ def main():
     print(out["garch_normal_overlay"])
 
     import json
+
     with open("src/research/tmp/phase6_application_results.json", "w") as f:
         json.dump(out, f, indent=1, default=float)
     print("\nwritten phase6_application_results.json")

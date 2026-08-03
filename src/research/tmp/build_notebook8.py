@@ -2,19 +2,27 @@ import json
 
 
 def md(src):
-    return {"cell_type": "markdown", "metadata": {}, "source": src.splitlines(keepends=True)}
+    return {
+        "cell_type": "markdown",
+        "metadata": {},
+        "source": src.splitlines(keepends=True),
+    }
 
 
 def code(src):
     return {
-        "cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [],
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
         "source": src.splitlines(keepends=True),
     }
 
 
 cells = []
 
-cells.append(md("""\
+cells.append(
+    md("""\
 # Notebook 8 - Commodity Tails, Density Selection, and a Cross-Asset Risk Engine
 
 Notebooks 1-7 were entirely crypto. Two questions follow directly and neither can be
@@ -29,9 +37,11 @@ as crypto's did.** Full narrative, every number, and eight caught-and-fixed bugs
 (`09-market-data-and-microstructure.md`, `01-probability-and-distributions.md`), indexed
 in `GLOSSARY.md`. This notebook loads pre-computed JSON from `tmp/phase_{0..8}*.json`
 and plots/narrates only - all heavy computation lives in `tmp/run_phase_*.py`.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 import sys
 
 sys.path.insert(0, "..")
@@ -70,12 +80,14 @@ def show(fig, caption):
     print(f"Figure {fig_n[0]}: {caption}")
     plt.tight_layout()
     plt.show()
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 0
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 0 - Hygiene, construction, and reproduction
 
 The duplicate tree `src/research/market/` described in the pre-registration does not
@@ -84,9 +96,11 @@ tail statistic was trusted: a volume-only hygiene rule, a liquidity screen appli
 upstream of curve construction, `roll_calendar.parquet` listing dead months for
 seasonal-cycle products, and back-adjusted prices drifting negative over a long
 multi-roll history. Full detail in the results MD.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase0 = load("phase_0_results.json")
 print("Duplicate tree check:", phase0["duplicate_tree_check"]["verdict"])
 print()
@@ -98,10 +112,16 @@ for k, v in tw["vs_metrics_vol"].items():
     print(f"  vs metrics_vol     {k}: {v['pct_within_tolerance']*100:.1f}% within tolerance  pass={v['pass']}")
 for k, v in tw["vs_yfinance"].items():
     print(f"  vs yfinance        {k}: corr={v['corr']:.3f}  pass={v['pass']}")
-"""))
+""")
+)
 
-cells.append(md("**data coverage** - contract span per product, from the built continuous curves."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**data coverage** - contract span per product, from the built continuous curves."
+    )
+)
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(11, 6))
 for i, p in enumerate(PRODUCTS):
     c = curve(p)
@@ -111,10 +131,16 @@ ax.set_yticklabels(PRODUCTS)
 ax.set_title("Data coverage: continuous F1 series span per product")
 ax.set_xlabel("date")
 show(fig, "Data coverage Gantt - all 16 products span the full 2010-2026 development+holdout window (KE/ES start later).")
-"""))
+""")
+)
 
-cells.append(md("**hygiene before/after** - the GC junk contract vs a legitimate GC outright, same period."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**hygiene before/after** - the GC junk contract vs a legitimate GC outright, same period."
+    )
+)
+cells.append(
+    code("""\
 ohlcv_gc = pl.read_parquet("data/market/databento/ohlcv/GC.parquet").filter(pl.col("product") == "GC")
 junk = ohlcv_gc.filter(pl.col("contract_id") == 2542).sort("date")
 legit = ohlcv_gc.filter((pl.col("date") >= junk['date'].min()) & (pl.col("date") <= junk['date'].max()) & (pl.col("volume") > 1000)).sort("date")
@@ -132,10 +158,14 @@ axes[1].set_title("A legitimate GC outright, same window")
 for ax in axes:
     ax.tick_params(axis='x', rotation=30)
 show(fig, "Before/after hygiene: the flagged junk contract prints near-zero/negative while a real outright trades at real gold spot levels the same week.")
-"""))
+""")
+)
 
-cells.append(md("**continuous price panel**, all 16 products, log scale, roll dates marked."))
-cells.append(code("""\
+cells.append(
+    md("**continuous price panel**, all 16 products, log scale, roll dates marked.")
+)
+cells.append(
+    code("""\
 fig, axes = plt.subplots(4, 4, figsize=(18, 14), sharex=False)
 for ax, p in zip(axes.flat, PRODUCTS):
     c = curve(p)
@@ -146,10 +176,16 @@ for ax, p in zip(axes.flat, PRODUCTS):
     ax.set_title(p, fontsize=10)
     ax.tick_params(labelsize=7)
 show(fig, "Continuous F1 price panel (log scale), all 16 products; black dots mark roll dates.")
-"""))
+""")
+)
 
-cells.append(md("**adjusted vs unadjusted divergence** - CL's raw front-month price vs its ratio-adjusted continuous series."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**adjusted vs unadjusted divergence** - CL's raw front-month price vs its ratio-adjusted continuous series."
+    )
+)
+cells.append(
+    code("""\
 c = curve("CL")
 fig, ax = plt.subplots(figsize=(11, 4.5))
 ax.plot(c["date"], c["close_f1"], label="raw front-month (jumps at every roll)", lw=0.7, color="#8c1f30")
@@ -157,10 +193,16 @@ ax.plot(c["date"], c["close_ratioadj"], label="ratio-adjusted (continuous)", lw=
 ax.legend()
 ax.set_title("CL: raw front-month vs ratio-adjusted continuous price")
 show(fig, "Why the adjustment convention matters: the raw series jumps at every roll; the ratio-adjusted series does not, and never crosses zero.")
-"""))
+""")
+)
 
-cells.append(md("**validation scatters** - our CL/GC curve vs the ready-made `research/*_curve.parquet`."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**validation scatters** - our CL/GC curve vs the ready-made `research/*_curve.parquet`."
+    )
+)
+cells.append(
+    code("""\
 fig, axes = plt.subplots(1, 2, figsize=(11, 5))
 for ax, p, fname in zip(axes, ["CL", "GC"], ["cl_curve.parquet", "gc_curve.parquet"]):
     built = curve(p).select(["date", "close_f1"])
@@ -171,29 +213,37 @@ for ax, p, fname in zip(axes, ["CL", "GC"], ["cl_curve.parquet", "gc_curve.parqu
     ax.plot(lims, lims, color="black", lw=0.8, ls="--")
     ax.set_xlabel("research/*_curve.parquet F1"); ax.set_ylabel("our built F1"); ax.set_title(p)
 show(fig, "Validation scatter vs the ready-made reference curve - close but not within-1-tick on every date (see Phase 0 writeup for the settlement-vs-close hypothesis).")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 1
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 1 - The tail atlas
 
 Moments, Hill tail index (both tails), volatility clustering, the leverage effect,
 Samuelson effect, and seasonality, on the ratio-adjusted continuous series (never the
 back-adjusted one - see Phase 0 Bug 4).
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase1 = load("phase_1_results.json")
 returns_cache = {}
 for p in PRODUCTS:
     c = curve(p).filter(pl.col("log_return_ratioadj").is_finite())
     returns_cache[p] = c.select(["date", "log_return_ratioadj"]).to_numpy()
-"""))
+""")
+)
 
-cells.append(md("**return-distribution small multiples**, 16 panels, fitted normal overlaid."))
-cells.append(code("""\
+cells.append(
+    md("**return-distribution small multiples**, 16 panels, fitted normal overlaid.")
+)
+cells.append(
+    code("""\
 fig, axes = plt.subplots(4, 4, figsize=(16, 12))
 for ax, p in zip(axes.flat, PRODUCTS):
     r = returns_cache[p][:, 1].astype(float)
@@ -202,10 +252,12 @@ for ax, p in zip(axes.flat, PRODUCTS):
     ax.plot(x, st.norm.pdf(x, r.mean(), r.std()), color="black", lw=1)
     ax.set_title(p, fontsize=10); ax.set_yticks([])
 show(fig, "Return distributions with fitted normal overlaid - every product visibly fatter-tailed/more-peaked than its own best-fit normal.")
-"""))
+""")
+)
 
 cells.append(md("**QQ-plot grid vs normal**."))
-cells.append(code("""\
+cells.append(
+    code("""\
 fig, axes = plt.subplots(4, 4, figsize=(16, 12))
 for ax, p in zip(axes.flat, PRODUCTS):
     r = returns_cache[p][:, 1].astype(float)
@@ -213,10 +265,16 @@ for ax, p in zip(axes.flat, PRODUCTS):
     ax.set_title(p, fontsize=10); ax.get_lines()[0].set_markersize(1.5); ax.get_lines()[0].set_color(C.product_color(p))
     ax.get_lines()[1].set_color("black")
 show(fig, "QQ-plots vs normal - systematic S-curves in every panel, the visual signature of fat tails.")
-"""))
+""")
+)
 
-cells.append(md("**QQ-plot grid vs each product's own best-fit family** (from Phase 3's OOS ranking, fit directly on standardized returns for this illustration)."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**QQ-plot grid vs each product's own best-fit family** (from Phase 3's OOS ranking, fit directly on standardized returns for this illustration)."
+    )
+)
+cells.append(
+    code("""\
 phase3_families = load("phase_3_results.json")
 fig, axes = plt.subplots(4, 4, figsize=(16, 12))
 for ax, p in zip(axes.flat, PRODUCTS):
@@ -234,10 +292,16 @@ for ax, p in zip(axes.flat, PRODUCTS):
     ax.plot(lims, lims, color="black", lw=0.8)
     ax.set_title(f"{p} ({fam})", fontsize=9)
 show(fig, "QQ-plots vs each product's own best-fit family - visibly straighter than the normal QQ grid above, though not perfect (this fits the family on the raw returns, not GARCH-standardized residuals, so it understates how well Phase 3's actual conditional models fit).")
-"""))
+""")
+)
 
-cells.append(md("**Hill plots** (alpha vs k) with the detected plateau marked, both tails, per product."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**Hill plots** (alpha vs k) with the detected plateau marked, both tails, per product."
+    )
+)
+cells.append(
+    code("""\
 fig, axes = plt.subplots(4, 4, figsize=(16, 12))
 for ax, p in zip(axes.flat, PRODUCTS):
     r = returns_cache[p][:, 1].astype(float)
@@ -250,10 +314,16 @@ for ax, p in zip(axes.flat, PRODUCTS):
     ax.set_ylim(0, 8); ax.set_title(p, fontsize=10)
 axes.flat[0].legend(fontsize=7)
 show(fig, "Hill alpha-vs-k plots, both tails; shaded bands mark the detected plateau region used for the alpha estimate.")
-"""))
+""")
+)
 
-cells.append(md("**tail-asymmetry chart** - alpha_left vs alpha_right, the sec 3.1 money plot (Gate CA)."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**tail-asymmetry chart** - alpha_left vs alpha_right, the sec 3.1 money plot (Gate CA)."
+    )
+)
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(7, 7))
 for p in PRODUCTS:
     h = phase1[p]["hill"]
@@ -267,20 +337,28 @@ ax.plot(lims, lims, color="black", lw=0.8, ls="--")
 ax.set_xlabel("alpha_left"); ax.set_ylabel("alpha_right")
 ax.set_title("Tail asymmetry: points above the line = fatter right tail (predicted commodity sign)")
 show(fig, "alpha_left vs alpha_right per product - no clean split above/below the diagonal; Gate CA does not fire (5/14 match the predicted sign).")
-"""))
+""")
+)
 
 cells.append(md("**excess-kurtosis bar chart**, commodities vs ES."))
-cells.append(code("""\
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(11, 4.5))
 vals = [(p, phase1[p]["moments"]["excess_kurtosis"]) for p in PRODUCTS]
 vals.sort(key=lambda x: x[1])
 ax.bar([v[0] for v in vals], [v[1] for v in vals], color=[C.product_color(v[0]) for v in vals])
 ax.set_ylabel("excess kurtosis"); ax.tick_params(axis='x', rotation=45)
 show(fig, "Excess kurtosis by product - every product is decisively non-normal; ES sits mid-pack, not an outlier low end.")
-"""))
+""")
+)
 
-cells.append(md("**ACF grids** of r, |r|, r^2 for one representative product (CL) plus the vol-clustering summary across all 16."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**ACF grids** of r, |r|, r^2 for one representative product (CL) plus the vol-clustering summary across all 16."
+    )
+)
+cells.append(
+    code("""\
 r = returns_cache["CL"][:, 1].astype(float)
 fig, axes = plt.subplots(1, 3, figsize=(14, 3.5))
 for ax, (arr, name) in zip(axes, [(r, "r"), (np.abs(r), "|r|"), (r**2, "r^2")]):
@@ -288,10 +366,12 @@ for ax, (arr, name) in zip(axes, [(r, "r"), (np.abs(r), "|r|"), (r**2, "r^2")]):
     ax.bar(range(1, 21), acf, color="#2a9d8f")
     ax.set_title(f"CL ACF({name})"); ax.axhline(0, color="black", lw=0.5)
 show(fig, "CL's ACF of r (no memory), |r|, and r^2 (both show clear volatility-clustering memory) - the standard stylised-fact triad.")
-"""))
+""")
+)
 
 cells.append(md("**volatility-clustering heatmap** - rolling 20d vol, product x time."))
-cells.append(code("""\
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(13, 6))
 vol_rows = []
 for p in PRODUCTS:
@@ -310,10 +390,12 @@ ax.set_xticks(range(0, len(dates_arr), step))
 ax.set_xticklabels([str(dates_arr[i])[:7] for i in range(0, len(dates_arr), step)], rotation=45, fontsize=7)
 plt.colorbar(im, ax=ax, label="ann. 20d vol")
 show(fig, "Rolling 20-day annualised vol, product x time - visible cross-product spikes at 2020 (COVID/negative WTI) and 2022 (Ukraine).")
-"""))
+""")
+)
 
 cells.append(md("**Samuelson effect** - vol vs days-to-expiry, per product."))
-cells.append(code("""\
+cells.append(
+    code("""\
 fig, axes = plt.subplots(4, 4, figsize=(16, 11))
 for ax, p in zip(axes.flat, PRODUCTS):
     buckets = phase1[p].get("samuelson", {}).get("buckets", [])
@@ -323,10 +405,14 @@ for ax, p in zip(axes.flat, PRODUCTS):
         ax.plot(mids, vols, marker="o", ms=3, color=C.product_color(p))
     ax.set_title(p, fontsize=10)
 show(fig, "Realised vol by days-to-expiry bucket - the Samuelson effect, where present, shows as rising vol toward dte=0.")
-"""))
+""")
+)
 
-cells.append(md("**seasonality heatmap** - month-of-year mean return, product x month."))
-cells.append(code("""\
+cells.append(
+    md("**seasonality heatmap** - month-of-year mean return, product x month.")
+)
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(11, 6))
 mat = np.full((len(PRODUCTS), 12), np.nan)
 for i, p in enumerate(PRODUCTS):
@@ -338,10 +424,16 @@ ax.set_yticks(range(len(PRODUCTS))); ax.set_yticklabels(PRODUCTS, fontsize=8)
 ax.set_xticks(range(12)); ax.set_xticklabels(["J","F","M","A","M","J","J","A","S","O","N","D"])
 plt.colorbar(im, ax=ax, label="mean daily return (bps)")
 show(fig, "Month-of-year mean return heatmap (bps/day) - NG's winter months and the grain growing-season months show visible patterns.")
-"""))
+""")
+)
 
-cells.append(md("**leverage-effect scatter** - corr(return, next-period vol) per product with bootstrap CIs."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**leverage-effect scatter** - corr(return, next-period vol) per product with bootstrap CIs."
+    )
+)
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(11, 5))
 xs = list(range(len(PRODUCTS)))
 corrs = [phase1[p]["leverage"]["corr"] for p in PRODUCTS]
@@ -355,25 +447,31 @@ ax.axhline(0, color="black", lw=0.8, ls="--")
 ax.set_xticks(xs); ax.set_xticklabels(PRODUCTS, rotation=45)
 ax.set_ylabel("corr(r_t, vol_t+1)")
 show(fig, "Leverage-effect correlation with bootstrap CIs - mostly zero-including; where PA is significant, it is the EQUITY sign, not the predicted inverse-leverage sign.")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 2
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 2 - Unconditional density selection
 
 Seven families, expanding-window walk-forward OOS log score. Five distinct families win
 somewhere; no product's win clears BH-significance individually.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase2 = load("phase_2_results.json")
 print(json.dumps(phase2["_family_map_summary"], indent=2))
-"""))
+""")
+)
 
 cells.append(md("**family-map heatmap** - product x family, OOS log-score rank."))
-cells.append(code("""\
+cells.append(
+    code("""\
 families_p2 = phase2["_config"]["families"]
 mat = np.full((len(PRODUCTS), len(families_p2)), np.nan)
 for i, p in enumerate(PRODUCTS):
@@ -387,10 +485,12 @@ ax.set_yticks(range(len(PRODUCTS))); ax.set_yticklabels(PRODUCTS, fontsize=8)
 ax.set_xticks(range(len(families_p2))); ax.set_xticklabels(families_p2, rotation=45, ha="right")
 plt.colorbar(im, ax=ax, label="OOS log-score rank (0=best)")
 show(fig, "Phase 2 family-map heatmap (unconditional): darker = better rank. GED and Hansen skew-t dominate the top ranks.")
-"""))
+""")
+)
 
 cells.append(md("**PIT histograms** for CL's best (t) and worst (normal) family."))
-cells.append(code("""\
+cells.append(
+    code("""\
 fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 for ax, fam in zip(axes, ["t", "normal"]):
     pit = phase2["CL"]["pit_ks"].get(fam, {}).get("pit_sample", [])
@@ -399,29 +499,39 @@ for ax, fam in zip(axes, ["t", "normal"]):
     ax.axhline(len(pit) / 20 if pit else 0, color="black", lw=1, ls="--")
     ax.set_title(f"CL, family={fam}")
 show(fig, "PIT histograms - a flat histogram means well-calibrated; the best family (t) is visibly flatter than normal.")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 3
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 3 - Conditional models and the risk battery (the replication test)
 
 GARCH(1,1)/GJR(1,1,1) x 6 innovations + spliced-EVT, rolling OOS. GARCH-GED dominates (9/16
 products), a genuine departure from crypto's GARCH-t. Gate CE (Acerbi-Szekely) is the
 cleanest result in the notebook: 15/16 reject at 1%, both tails, BH-adjusted.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase3 = load("phase_3_results.json")
 phase3b = load("phase_3b_gate_ce_results.json")
 print(json.dumps(phase3["_summary"], indent=2))
 print()
 print("Gate CE:", json.dumps(phase3b["gate_CE"], indent=2))
-"""))
+""")
+)
 
-cells.append(md("**illustrative rolling GARCH parameter path** (omega/alpha/beta persistence, CL, GARCH-normal) - a fresh, lightweight fit for illustration since Phase 3's full per-refit parameter paths were not persisted to JSON (too large across 13 models x 16 products)."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**illustrative rolling GARCH parameter path** (omega/alpha/beta persistence, CL, GARCH-normal) - a fresh, lightweight fit for illustration since Phase 3's full per-refit parameter paths were not persisted to JSON (too large across 13 models x 16 products)."
+    )
+)
+cells.append(
+    code("""\
 import dist_lib as L
 r = returns_cache["CL"][:, 1].astype(float)
 fc, fits = L.rolling_garch_forecast(r, refit_every=252, min_train=750, innovation="normal", max_train=2000)
@@ -432,10 +542,12 @@ ax.step(ts, persistence, where="post", color="#8c1f30")
 ax.set_ylabel("alpha + beta (persistence)"); ax.set_xlabel("bar index")
 ax.set_title("CL GARCH-normal: refit-to-refit persistence path")
 show(fig, "Rolling GARCH persistence (alpha+beta) across refits - stays high (>0.9), consistent with the slow-decaying vol clustering seen in Figure 12.")
-"""))
+""")
+)
 
 cells.append(md("**GARCH conditional-vol path** with named events annotated (CL)."))
-cells.append(code("""\
+cells.append(
+    code("""\
 dates_cl = returns_cache["CL"][:, 0]
 sigma = np.sqrt(np.where(fc > 0, fc, np.nan)) * np.sqrt(252)
 fig, ax = plt.subplots(figsize=(13, 4.5))
@@ -447,10 +559,16 @@ for ev in C.NAMED_EVENTS:
     ax.axvline(ev_date, color="grey", lw=0.6, ls="--")
 ax.set_ylabel("annualised conditional vol"); ax.set_title("CL GARCH-normal conditional vol, named events marked")
 show(fig, "CL's conditional vol path with named events marked - visible spikes at 2020-04 and 2022-02.")
-"""))
+""")
+)
 
-cells.append(md("**VaR-violation timeline** - CL, GARCH-normal 1% VaR, actual returns and violations."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**VaR-violation timeline** - CL, GARCH-normal 1% VaR, actual returns and violations."
+    )
+)
+cells.append(
+    code("""\
 var01 = L5.normal_quantile_forecasts(fc, quantiles=[0.01])[0.01]
 mask = np.isfinite(r) & np.isfinite(var01)
 hits = r[mask] < var01[mask]
@@ -460,10 +578,16 @@ ax.plot(dates_cl[mask], var01[mask], color="#2a9d8f", lw=0.8, label="1% VaR")
 ax.scatter(dates_cl[mask][hits], r[mask][hits], color="#d1495b", s=8, zorder=3, label="violation")
 ax.legend(); ax.set_title("CL: returns vs GARCH-normal 1% VaR, violations marked")
 show(fig, f"VaR-violation timeline for CL - {hits.sum()} violations out of {mask.sum()} bars ({hits.mean()*100:.2f}%, target 1%).")
-"""))
+""")
+)
 
-cells.append(md("**coverage-battery heatmap** - model x test x product pass/fail, at the 1% level."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**coverage-battery heatmap** - model x test x product pass/fail, at the 1% level."
+    )
+)
+cells.append(
+    code("""\
 models_p3 = list(phase3["CL"]["coverage_battery"].keys())
 mat = np.zeros((len(PRODUCTS), len(models_p3)))
 for i, p in enumerate(PRODUCTS):
@@ -476,10 +600,16 @@ im = ax.imshow(mat, cmap="RdYlGn", aspect="auto", vmin=0, vmax=1)
 ax.set_yticks(range(len(PRODUCTS))); ax.set_yticklabels(PRODUCTS, fontsize=8)
 ax.set_xticks(range(len(models_p3))); ax.set_xticklabels(models_p3, rotation=60, ha="right", fontsize=7)
 show(fig, "Coverage-battery pass/fail (1% level, Kupiec+Christoffersen both pass=green) - most models pass on most products; failures cluster on specific product/model combinations.")
-"""))
+""")
+)
 
-cells.append(md("**Acerbi-Szekely Z-statistics** with significance, 1% lower tail, normal-innovation model - Gate CE."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**Acerbi-Szekely Z-statistics** with significance, 1% lower tail, normal-innovation model - Gate CE."
+    )
+)
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(11, 5))
 zs = [phase3b["per_product"][p]["0.01"]["lower"]["z"] for p in PRODUCTS]
 sig = [phase3b["per_product"][p]["0.01"]["lower"]["bh"]["significant"] for p in PRODUCTS]
@@ -488,10 +618,16 @@ ax.bar(PRODUCTS, zs, color=colors)
 ax.axhline(0, color="black", lw=0.8)
 ax.set_ylabel("Acerbi-Szekely Z (lower tail, 1%)"); ax.tick_params(axis='x', rotation=45)
 show(fig, "Acerbi-Szekely Z at the 1% lower tail - red = BH-significant rejection (15/16); positive Z means the normal model understates tail risk.")
-"""))
+""")
+)
 
-cells.append(md("**GJR sign check** - fraction of refits with gamma>0 (equity sign), per product."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**GJR sign check** - fraction of refits with gamma>0 (equity sign), per product."
+    )
+)
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(11, 5))
 fracs = [phase3[p]["gjr_sign_check"]["frac_positive"] for p in PRODUCTS]
 ax.bar(PRODUCTS, fracs, color=[C.product_color(p) for p in PRODUCTS])
@@ -499,26 +635,34 @@ ax.axhline(0.5, color="black", lw=0.8, ls="--")
 ax.set_ylabel("fraction of refits with gamma > 0 (equity sign)")
 ax.tick_params(axis='x', rotation=45)
 show(fig, "GJR gamma sign - energy/metals sit near 1.0 (equity sign); only grains (ZW/KE/ZM) lean toward the predicted commodity sign.")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 4
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 4 - Conditional tails and the inventory story
 
 Term-structure/seasonal/macro conditioning against a GARCH-t reference VaR. Gate CI does
 not fire under the strict criterion (4/16, not 10/16) - see the results MD for the
 scoring-rule correction made before this was reported.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase4 = load("phase_4_results.json")
 print("Gate CI:", json.dumps({k: v for k, v in phase4["_gate_CI"].items() if k != "details"}, indent=2))
-"""))
+""")
+)
 
-cells.append(md("**conditional-tail comparison** - 1% ES by term-structure state, per product."))
-cells.append(code("""\
+cells.append(
+    md("**conditional-tail comparison** - 1% ES by term-structure state, per product.")
+)
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(12, 5))
 width = 0.35
 x = np.arange(len(PRODUCTS))
@@ -531,10 +675,14 @@ for i, (state, color) in enumerate([("backwardation", "#d1495b"), ("contango", "
 ax.set_xticks(x + width / 2); ax.set_xticklabels(PRODUCTS, rotation=45)
 ax.legend(); ax.set_ylabel("1% ES (log return)")
 show(fig, "1% expected shortfall by term-structure state - backwardation vs contango, per product; no consistent, large gap across the panel (consistent with Gate CI's null).")
-"""))
+""")
+)
 
-cells.append(md("**term-structure evolution** - F1/F2/F3 curve for CL, NG, GC over time."))
-cells.append(code("""\
+cells.append(
+    md("**term-structure evolution** - F1/F2/F3 curve for CL, NG, GC over time.")
+)
+cells.append(
+    code("""\
 fig, axes = plt.subplots(3, 1, figsize=(13, 9), sharex=True)
 for ax, p in zip(axes, ["CL", "NG", "GC"]):
     c = curve(p)
@@ -543,10 +691,16 @@ for ax, p in zip(axes, ["CL", "NG", "GC"]):
     ax.plot(c["date"], c["close_f3"], lw=0.5, label="F3", color="#4b3f96")
     ax.set_title(p); ax.legend(fontsize=8)
 show(fig, "F1/F2/F3 curve evolution for CL, NG, GC - the legs converge/diverge as term structure shifts between contango and backwardation.")
-"""))
+""")
+)
 
-cells.append(md("**curve snapshots at extreme events** - CL term structure just before/at the 2020-04-20 event."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**curve snapshots at extreme events** - CL term structure just before/at the 2020-04-20 event."
+    )
+)
+cells.append(
+    code("""\
 c = curve("CL")
 snap_dates = [date(2020, 4, 15), date(2020, 4, 17), date(2020, 4, 20), date(2020, 4, 21)]
 fig, ax = plt.subplots(figsize=(8, 5))
@@ -559,28 +713,38 @@ for d in snap_dates:
 ax.legend(); ax.set_xlabel("days to expiry"); ax.set_ylabel("price")
 ax.set_title("CL curve snapshots around 2020-04-20")
 show(fig, "CL's F1-F3 curve shape in the days around the negative-WTI event - the front leg (already rolled past by our N=5 rule) is not the leg shown moving here.")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 5
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 5 - Alpha attempts (carry and momentum; C-F declared out of scope)
 
 Gate AC (carry): strong absolute Sharpe (0.90-0.95), deflated Sharpe prob 0.997, but the
 excess-vs-basket CI includes zero - does not fire. Gate AM (momentum): weak and
 sign-inconsistent across lookbacks - does not fire.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase5 = load("phase_5_results.json")
 print("Gate AC:", json.dumps(phase5["strategy_A_carry"]["gate_AC"], indent=2))
 print("\\nGate AM (best lookback):", phase5["strategy_B_momentum"]["best_lookback"])
 print(json.dumps(phase5["strategy_B_momentum"]["gate_AM"], indent=2))
-"""))
+""")
+)
 
-cells.append(md("**equity curves** for carry and each momentum lookback, gross vs net (recomputed live - Phase 5's JSON stores summary metrics only)."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**equity curves** for carry and each momentum lookback, gross vs net (recomputed live - Phase 5's JSON stores summary metrics only)."
+    )
+)
+cells.append(
+    code("""\
 import run_phase_5_alpha as R5
 R5.CURVE_DIR = CURVE_DIR  # R5 assumes repo-root cwd; this notebook runs from src/research
 
@@ -591,10 +755,12 @@ cum_net = ret_carry.sort("datetime")["trade_log_return_net"].cum_sum()
 ax.plot(ret_carry.sort("datetime")["datetime"], cum_net, color="#8c1f30", label="carry, net")
 ax.legend(); ax.set_title("Carry strategy: net cumulative log return")
 show(fig, "Carry's net equity curve over the development window.")
-"""))
+""")
+)
 
 cells.append(md("**drawdown underwater plot** - carry strategy."))
-cells.append(code("""\
+cells.append(
+    code("""\
 cum = cum_net.to_numpy()
 running_max = np.maximum.accumulate(cum)
 dd = cum - running_max
@@ -602,10 +768,14 @@ fig, ax = plt.subplots(figsize=(11, 3.5))
 ax.fill_between(ret_carry.sort('datetime')["datetime"], dd, 0, color="#d1495b", alpha=0.7)
 ax.set_title("Carry strategy: underwater (drawdown) plot")
 show(fig, "Carry's drawdown path - deepest drawdowns align with the 2014-15 OPEC collapse and 2020 COVID windows.")
-"""))
+""")
+)
 
-cells.append(md("**origin-offset sensitivity** - net Sharpe vs offset, carry and momentum."))
-cells.append(code("""\
+cells.append(
+    md("**origin-offset sensitivity** - net Sharpe vs offset, carry and momentum.")
+)
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(9, 4.5))
 offsets = [0, 7, 14, 21]
 carry_sh = [phase5['strategy_A_carry']['by_offset'][f'offset_{o}']['sharpe_net'] for o in offsets]
@@ -616,10 +786,16 @@ for name in phase5["strategy_B_momentum"]["by_lookback"]:
 ax.axhline(0, color="black", lw=0.6)
 ax.legend(fontsize=8); ax.set_xlabel("origin offset (days)"); ax.set_ylabel("net Sharpe")
 show(fig, "Origin-offset sensitivity - carry stays consistently positive; momentum lookbacks are sign-inconsistent with each other, though each is stable across its own offsets.")
-"""))
+""")
+)
 
-cells.append(md("**bootstrap distribution of excess return** (carry vs basket), with the zero line."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**bootstrap distribution of excess return** (carry vs basket), with the zero line."
+    )
+)
+cells.append(
+    code("""\
 basket = research.equal_weight_basket_returns(panel.rename({"date": "datetime"}), target_col="fwd_return_carry", datetime_col="datetime").rename({"trade_log_return": "basket_return"})
 joined = ret_carry.join(basket, on="datetime", how="inner")
 excess = (joined["trade_log_return_net"] - joined["basket_return"]).to_numpy()
@@ -630,12 +806,22 @@ fig, ax = plt.subplots(figsize=(9, 4.5))
 ax.hist(boot_means, bins=50, color="#8c1f30", alpha=0.8)
 ax.axvline(0, color="black", lw=1.2)
 show(fig, "Bootstrap distribution of carry's mean excess return vs the basket - the zero line sits inside the bulk of the distribution, matching the CI-includes-zero result.")
-"""))
+""")
+)
 
-cells.append(md("**Note on Figure 32 (turnover vs Sharpe frontier) and Figure 37 (spread series):** Phase 5's declared scope cut (carry and momentum only; C-F not run) means `alpha_lib7`'s turnover-intervention machinery was never applied here (no throttle/hysteresis sweep exists to plot), and strategy E (spread mean reversion) was not backtested. Both are listed in the required-figure set but are genuinely not applicable to this pass - noted explicitly per this notebook's own standard rather than a fabricated chart."))
+cells.append(
+    md(
+        "**Note on Figure 32 (turnover vs Sharpe frontier) and Figure 37 (spread series):** Phase 5's declared scope cut (carry and momentum only; C-F not run) means `alpha_lib7`'s turnover-intervention machinery was never applied here (no throttle/hysteresis sweep exists to plot), and strategy E (spread mean reversion) was not backtested. Both are listed in the required-figure set but are genuinely not applicable to this pass - noted explicitly per this notebook's own standard rather than a fabricated chart."
+    )
+)
 
-cells.append(md("**a spread series descriptively**, with roll windows shaded (crack_321, no backtest applied)."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**a spread series descriptively**, with roll windows shaded (crack_321, no backtest applied)."
+    )
+)
+cells.append(
+    code("""\
 spread = pl.read_parquet("data/market/spreads/crack_321.parquet").sort("date")
 fig, ax = plt.subplots(figsize=(12, 4))
 ax.plot(spread["date"], spread["value"], lw=0.6, color="#2a9d8f")
@@ -644,23 +830,29 @@ for d in roll_win["date"]:
     ax.axvspan(d, d, color="grey", alpha=0.05)
 ax.set_title("crack_321 spread (descriptive only - not backtested this pass)")
 show(fig, "The 3-2-1 crack spread series, shown descriptively; roll-window dates are the faint shaded bands. No entry/exit backtest was run (Strategy E out of scope).")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 6
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 6 - Intraday appendix (descriptive only, excluded from every conclusion)
 
 CL/BZ/HO/RB 1-minute bars, six months only.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase6 = load("phase_6_results.json")
-"""))
+""")
+)
 
 cells.append(md("**intraday vol U-curve**, per product."))
-cells.append(code("""\
+cells.append(
+    code("""\
 fig, axes = plt.subplots(2, 2, figsize=(12, 7))
 for ax, p in zip(axes.flat, ["CL", "BZ", "HO", "RB"]):
     vs = phase6[p]["vol_seasonality"]
@@ -669,10 +861,16 @@ for ax, p in zip(axes.flat, ["CL", "BZ", "HO", "RB"]):
     ax.plot(hrs, vs["mean_abs_ret"], lw=0.7, color=C.product_color(p))
     ax.set_title(p); ax.set_xlabel("hour of day (ET)")
 show(fig, "Intraday |return| by hour of day (ET) - visible elevation around the NY open/close and the 10:30 ET EIA slot.")
-"""))
+""")
+)
 
-cells.append(md("**EIA-announcement event study** - mean |return| path around the 10:30 ET petroleum status release, Wednesdays only."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**EIA-announcement event study** - mean |return| path around the 10:30 ET petroleum status release, Wednesdays only."
+    )
+)
+cells.append(
+    code("""\
 fig, axes = plt.subplots(1, 3, figsize=(14, 3.5), sharey=False)
 for ax, p in zip(axes, ["CL", "HO", "RB"]):
     ev = phase6[p]["eia_petroleum_status_event_study"]
@@ -680,29 +878,37 @@ for ax, p in zip(axes, ["CL", "HO", "RB"]):
     ax.axvline(0, color="black", lw=0.8, ls="--")
     ax.set_title(f"{p} (ratio={ev['ratio']:.2f}x)")
 show(fig, "Mean |return| in the +-30min window around the Wednesday 10:30 ET EIA petroleum status release - a modest, consistent bump across all three petroleum-relevant products.")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 7
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 7 - The risk engine
 
 Family selection from Phase 3's own OOS ranking. Gate RE fires: 15/16 products pass 1%
 OOS coverage. Portfolio risk under three dependence assumptions quantifies the Gaussian
 copula's tail-dependence understatement.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase7 = load("phase_7_results.json")
 print("Gate RE:", json.dumps(phase7["gate_RE"], indent=2))
 print()
 for dep, v in phase7["portfolio_risk"].items():
     print(dep, {k: round(v[k], 4) for k in ["var_01", "var_05", "es_01", "es_05"]})
-"""))
+""")
+)
 
-cells.append(md("**correlation heatmap**, full sample and 2020 crisis window side by side."))
-cells.append(code("""\
+cells.append(
+    md("**correlation heatmap**, full sample and 2020 crisis window side by side.")
+)
+cells.append(
+    code("""\
 ret_matrix = {}
 for p in PRODUCTS:
     c = curve(p).filter(pl.col("log_return_ratioadj").is_finite()).select(["date", "log_return_ratioadj"])
@@ -728,10 +934,14 @@ for ax, mat, title in zip(axes, [corr_full, corr_crisis], ["full sample", "2020 
     ax.set_title(title)
 plt.colorbar(im, ax=axes, shrink=0.7)
 show(fig, "Correlation heatmap, full sample vs the 2020 crisis window - visible increase in cross-product correlation during the crisis, the 'correlations go to one' phenomenon.")
-"""))
+""")
+)
 
-cells.append(md("**rolling cross-commodity correlation**, CL-BZ and GC-SI, with 2020 marked."))
-cells.append(code("""\
+cells.append(
+    md("**rolling cross-commodity correlation**, CL-BZ and GC-SI, with 2020 marked.")
+)
+cells.append(
+    code("""\
 fig, ax = plt.subplots(figsize=(12, 4.5))
 for pair, color in [(("CL", "BZ"), "#8c1f30"), (("GC", "SI"), "#4b3f96")]:
     a = ret_matrix[pair[0]].sort("date")
@@ -742,10 +952,14 @@ for pair, color in [(("CL", "BZ"), "#8c1f30"), (("GC", "SI"), "#4b3f96")]:
 ax.axvline(date(2020, 3, 1), color="grey", lw=0.8, ls="--")
 ax.legend(); ax.set_ylabel("60d rolling correlation")
 show(fig, "Rolling 60-day correlation for CL-BZ (naturally high) and GC-SI (precious metals) - both show visible instability around 2020.")
-"""))
+""")
+)
 
-cells.append(md("**tail-dependence coefficient matrix**, empirical vs Gaussian-copula-implied."))
-cells.append(code("""\
+cells.append(
+    md("**tail-dependence coefficient matrix**, empirical vs Gaussian-copula-implied.")
+)
+cells.append(
+    code("""\
 pairs = list(phase7["portfolio_risk"]["empirical"]["lower_tail_dependence"].keys())
 prods_in_pairs = sorted({x for pr in pairs for x in pr.split("_")})
 n = len(prods_in_pairs)
@@ -764,10 +978,14 @@ for ax, mat, title in zip(axes, [mat_emp, mat_gauss], ["empirical", "Gaussian co
     ax.set_title(title)
 plt.colorbar(im, ax=axes, shrink=0.7)
 show(fig, "Lower-tail dependence matrix, empirical vs Gaussian-copula-implied - the Gaussian copula is visibly, systematically dimmer (understates tail co-movement).")
-"""))
+""")
+)
 
-cells.append(md("**PCA of the commodity return panel** - scree plot and first two loadings."))
-cells.append(code("""\
+cells.append(
+    md("**PCA of the commodity return panel** - scree plot and first two loadings.")
+)
+cells.append(
+    code("""\
 X = (mat_full - mat_full.mean(axis=0)) / mat_full.std(axis=0)
 U, S, Vt = np.linalg.svd(X, full_matrices=False)
 explained = (S ** 2) / np.sum(S ** 2)
@@ -777,10 +995,16 @@ axes[0].set_title("Scree plot"); axes[0].set_xlabel("component"); axes[0].set_yl
 axes[1].bar(PRODUCTS, Vt[0], color=[C.product_color(p) for p in PRODUCTS])
 axes[1].set_title("PC1 loadings"); axes[1].tick_params(axis='x', rotation=45)
 show(fig, f"PCA of the 16-product return panel - PC1 explains {explained[0]*100:.1f}% of variance, loading broadly positively (a 'commodity market' factor), not sector-specific.")
-"""))
+""")
+)
 
-cells.append(md("**risk-engine dashboard** - VaR/ES path, violations, and OOS coverage summary for CL."))
-cells.append(code("""\
+cells.append(
+    md(
+        "**risk-engine dashboard** - VaR/ES path, violations, and OOS coverage summary for CL."
+    )
+)
+cells.append(
+    code("""\
 cov_cl = phase7["oos_coverage"]["CL"]
 fig, axes = plt.subplots(2, 1, figsize=(12, 7), gridspec_kw={"height_ratios": [3, 1]})
 axes[0].plot(dates_cl[mask], r[mask], color="grey", lw=0.4)
@@ -793,10 +1017,12 @@ axes[1].bar(np.arange(len(levels)) - 0.15, obs, width=0.3, label="observed", col
 axes[1].bar(np.arange(len(levels)) + 0.15, exp, width=0.3, label="expected", color="#adb5bd")
 axes[1].set_xticks(range(len(levels))); axes[1].set_xticklabels(levels); axes[1].legend()
 show(fig, "CL risk-engine dashboard: return/VaR path (illustrative) and observed-vs-expected violation rate at each tested level, from Phase 7's OOS coverage test.")
-"""))
+""")
+)
 
 cells.append(md("**stress-scenario portfolio-loss waterfall**."))
-cells.append(code("""\
+cells.append(
+    code("""\
 stress = phase7["stress_scenarios"]
 names = list(stress.keys())
 pnls = [stress[n]["portfolio_pnl"] for n in names]
@@ -806,24 +1032,30 @@ ax.barh(names, pnls, color=colors)
 ax.axvline(0, color="black", lw=0.8)
 ax.set_xlabel("equal-weighted portfolio P&L")
 show(fig, "Stress-scenario portfolio P&L, named Phase 1 events replayed at the portfolio level - the 2023-24 normalisation window is the largest drawdown (long span, not a single shock).")
-"""))
+""")
+)
 
 # ---------------------------------------------------------------------------
 # Phase 8 + bottom line
 # ---------------------------------------------------------------------------
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 8 - Holdout (spent once, since CT/CE/RE fired)
 
 2025-01-01 to 2026-07-28, touched for the first and only time here. Nothing was
 re-tuned; every model was already fit on the development window.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase8 = load("phase_8_holdout_results.json")
 print(json.dumps(phase8["summary"], indent=2))
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Bottom line
 
 The crypto programme's two risk-side headline findings - fat tails understated by every
@@ -835,14 +1067,19 @@ exactly as crypto's factors did. Two genuinely open questions from the pre-regis
 - tail-asymmetry sign flip (CA) and inventory-state conditioning (CI) - came back
 negative, at the same rigor as everything that fired. Full detail, every number, and
 eight caught-and-fixed bugs: `src/results/008_commodity_tails_and_risk.md`.
-"""))
+""")
+)
 
 with open("src/research/008_commodity_tails_and_risk.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
             "metadata": {
-                "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+                "kernelspec": {
+                    "display_name": "Python 3",
+                    "language": "python",
+                    "name": "python3",
+                },
                 "language_info": {"name": "python", "version": "3.12"},
             },
             "nbformat": 4,

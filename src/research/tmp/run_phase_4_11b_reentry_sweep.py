@@ -23,6 +23,7 @@ Writes phase_4_11b_results.json.
 
 import json
 import sys
+from typing import Any
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
@@ -81,13 +82,15 @@ def build_book(offset: int, half_life_max: float, adf_pmax: float) -> dict:
 
 
 def main() -> None:
-    grid = {}
+    grid: dict[str, Any] = {}
     for hl in HALF_LIFE_MAX_GRID:
         for pmax in ADF_PMAX_GRID:
             key = f"hl{int(hl)}_p{pmax}"
             by_offset = {}
             for offset in ORIGIN_OFFSETS:
-                by_offset[f"offset_{offset}"] = S11.book_metrics(build_book(offset, hl, pmax))
+                by_offset[f"offset_{offset}"] = S11.book_metrics(
+                    build_book(offset, hl, pmax)
+                )
             grid[key] = {"half_life_max": hl, "adf_pmax": pmax, "by_offset": by_offset}
 
     baseline_key = f"hl{int(BASELINE[0])}_p{BASELINE[1]}"
@@ -105,7 +108,9 @@ def main() -> None:
     best_book0 = build_book(0, best["half_life_max"], best["adf_pmax"])
     baseline_book0 = build_book(0, BASELINE[0], BASELINE[1])
     treatment_pnl = np.array([t["ret_eq"] for t in best_book0["trades"]])
-    treatment_blocks = S11.trade_blocks(np.array([t["exit_date"] for t in best_book0["trades"]]))
+    treatment_blocks = S11.trade_blocks(
+        np.array([t["exit_date"] for t in best_book0["trades"]])
+    )
     control_pnl = np.array([t["ret_eq"] for t in baseline_book0["trades"]])
     control_blocks = S11.trade_blocks(
         np.array([t["exit_date"] for t in baseline_book0["trades"]])
@@ -125,7 +130,9 @@ def main() -> None:
     )
 
     re_fires = bool(
-        best_positive_every_offset and re_bootstrap["delta_excludes_zero"] and re_dsr > 0.95
+        best_positive_every_offset
+        and re_bootstrap["delta_excludes_zero"]
+        and re_dsr > 0.95
     )
 
     out = {
@@ -143,8 +150,8 @@ def main() -> None:
 
     print(
         f"Gate RE: fires={re_fires} best={best_key} "
-        f"best_sharpes={[round(best['by_offset'][f'offset_{o}']['sharpe'],3) for o in ORIGIN_OFFSETS]} "
-        f"baseline_sharpes={[round(baseline['by_offset'][f'offset_{o}']['sharpe'],3) for o in ORIGIN_OFFSETS]} "
+        f"best_sharpes={[round(best['by_offset'][f'offset_{o}']['sharpe'], 3) for o in ORIGIN_OFFSETS]} "
+        f"baseline_sharpes={[round(baseline['by_offset'][f'offset_{o}']['sharpe'], 3) for o in ORIGIN_OFFSETS]} "
         f"dsr={re_dsr:.4f} delta_ci={re_bootstrap['delta_ci']}"
     )
 

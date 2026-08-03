@@ -60,7 +60,9 @@ class TestHillEstimator:
         rng = np.random.default_rng(SEED)
         x = rng.standard_t(3, 50_000)
         path = L5.hill_alpha_path(x, tail="upper", k_min=20, k_max=5000)
-        plateau = L5.find_hill_plateau(path["alpha"], path["k"], window=50, rel_tol=0.15)
+        plateau = L5.find_hill_plateau(
+            path["alpha"], path["k"], window=50, rel_tol=0.15
+        )
         assert plateau["found"]
         assert 2.0 < plateau["alpha_median"] < 5.0
 
@@ -122,7 +124,9 @@ class TestGJRGarch:
     def test_rolling_gjr_forecast_is_causal_and_forward_filled(self):
         rng = np.random.default_rng(SEED)
         r = rng.standard_t(5, 4000) * 0.01
-        fc, fits = L5.rolling_gjr_forecast(r, refit_every=500, min_train=1000, innovation="normal", max_train=1000)
+        fc, fits = L5.rolling_gjr_forecast(
+            r, refit_every=500, min_train=1000, innovation="normal", max_train=1000
+        )
         assert len(fits) >= 2
         # forecast must be NaN before the first refit (no lookahead warm-up leak)
         first_refit_t = fits[0]["t"]
@@ -143,7 +147,9 @@ class TestGPD:
     def test_fit_gpd_tail_recovers_known_shape_upper(self):
         rng = np.random.default_rng(SEED)
         true_xi, true_beta = 0.3, 1.0
-        exceedances = st.genpareto.rvs(true_xi, scale=true_beta, size=5000, random_state=rng)
+        exceedances = st.genpareto.rvs(
+            true_xi, scale=true_beta, size=5000, random_state=rng
+        )
         # embed the exceedances above a threshold in a wider body so
         # fit_gpd_tail's own thresholding logic is exercised, not bypassed.
         body = rng.normal(0, 1, 20000)
@@ -180,10 +186,16 @@ class TestGPD:
     def test_rolling_gpd_paths_forward_filled_and_causal(self):
         rng = np.random.default_rng(SEED)
         r = rng.standard_t(4, 4000) * 0.01
-        fc, fits = L.rolling_garch_forecast(
-            r, refit_every=500, min_train=1000, innovation="normal", max_train=1000,
+        _fc, fits = L.rolling_garch_forecast(
+            r,
+            refit_every=500,
+            min_train=1000,
+            innovation="normal",
+            max_train=1000,
         )
-        paths, gpd_fits = L5.rolling_gpd_paths(r, fits, model="garch", max_train=1000, tail_frac=0.10)
+        paths, _gpd_fits = L5.rolling_gpd_paths(
+            r, fits, model="garch", max_train=1000, tail_frac=0.10
+        )
         first_t = fits[0]["t"]
         # before any GPD fit exists, paths must be NaN (no lookahead)
         assert np.all(np.isnan(paths["upper"]["xi"][:first_t]))

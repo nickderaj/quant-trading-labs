@@ -39,44 +39,58 @@ def main():
 
     curve = pl.read_parquet(CURVE_PATH)
     curve = curve.filter(
-        (pl.col("date") >= pl.lit(DEV_START).str.to_date()) & (pl.col("date") <= pl.lit(DEV_END).str.to_date())
+        (pl.col("date") >= pl.lit(DEV_START).str.to_date())
+        & (pl.col("date") <= pl.lit(DEV_END).str.to_date())
     ).sort("date")
-    ts = C.term_structure_state(curve.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"]))
+    ts = C.term_structure_state(
+        curve.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"])
+    )
     curve = curve.join(ts, on="date", how="left")
 
     # as-of join: each daily curve row picks up the most recent COT report
     # already public on or before that date (no lookahead -- public_date is
     # already lagged past the CFTC's own Friday release, sec `cot_net_noncomm_fraction`).
     joined = curve.sort("date").join_asof(
-        cot.sort("public_date"), left_on="date", right_on="public_date", strategy="backward"
+        cot.sort("public_date"),
+        left_on="date",
+        right_on="public_date",
+        strategy="backward",
     )
     joined = joined.drop_nulls(subset=["net_noncomm_frac", "term_structure_state"])
 
     by_regime: dict = {}
     for state in ["backwardation", "contango"]:
-        sel = joined.filter(pl.col("term_structure_state") == state)["net_noncomm_frac"].to_numpy()
+        sel = joined.filter(pl.col("term_structure_state") == state)[
+            "net_noncomm_frac"
+        ].to_numpy()
         by_regime[state] = {
             "n": len(sel),
             "mean_net_noncomm_frac": float(np.mean(sel)) if len(sel) >= 20 else None,
             "std": float(np.std(sel)) if len(sel) >= 20 else None,
         }
 
-    backward_vals = joined.filter(pl.col("term_structure_state") == "backwardation")["net_noncomm_frac"].to_numpy()
-    contango_vals = joined.filter(pl.col("term_structure_state") == "contango")["net_noncomm_frac"].to_numpy()
+    backward_vals = joined.filter(pl.col("term_structure_state") == "backwardation")[
+        "net_noncomm_frac"
+    ].to_numpy()
+    contango_vals = joined.filter(pl.col("term_structure_state") == "contango")[
+        "net_noncomm_frac"
+    ].to_numpy()
     from scipy import stats as st
 
     t_stat, p_value = st.ttest_ind(backward_vals, contango_vals, equal_var=False)
 
     corr = float(
         np.corrcoef(
-            joined["roll_slope_annualized"].to_numpy(), joined["net_noncomm_frac"].to_numpy()
+            joined["roll_slope_annualized"].to_numpy(),
+            joined["net_noncomm_frac"].to_numpy(),
         )[0, 1]
     )
 
     inventory_theory_corroborated = bool(
         by_regime["backwardation"]["mean_net_noncomm_frac"] is not None
         and by_regime["contango"]["mean_net_noncomm_frac"] is not None
-        and by_regime["backwardation"]["mean_net_noncomm_frac"] > by_regime["contango"]["mean_net_noncomm_frac"]
+        and by_regime["backwardation"]["mean_net_noncomm_frac"]
+        > by_regime["contango"]["mean_net_noncomm_frac"]
         and p_value < 0.05
     )
 
@@ -91,7 +105,10 @@ def main():
         ),
         "n_days_joined": joined.height,
         "net_noncomm_frac_by_regime": by_regime,
-        "welch_ttest_backwardation_vs_contango": {"t_stat": float(t_stat), "p_value": float(p_value)},
+        "welch_ttest_backwardation_vs_contango": {
+            "t_stat": float(t_stat),
+            "p_value": float(p_value),
+        },
         "corr_roll_slope_vs_net_noncomm_frac": corr,
         "inventory_theory_corroborated": inventory_theory_corroborated,
         "interpretation": (
@@ -107,8 +124,10 @@ def main():
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
     print(f"written {OUT_PATH}")
-    print(f"backwardation mean_net_noncomm_frac={by_regime['backwardation']['mean_net_noncomm_frac']:.4f} "
-          f"contango={by_regime['contango']['mean_net_noncomm_frac']:.4f} p={p_value:.4g} corr={corr:.3f}")
+    print(
+        f"backwardation mean_net_noncomm_frac={by_regime['backwardation']['mean_net_noncomm_frac']:.4f} "
+        f"contango={by_regime['contango']['mean_net_noncomm_frac']:.4f} p={p_value:.4g} corr={corr:.3f}"
+    )
 
 
 if __name__ == "__main__":

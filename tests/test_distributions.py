@@ -41,7 +41,9 @@ class TestParameterRecovery:
 
     def test_t(self):
         true_df, true_loc, true_scale = 6.0, 0.0, 1.5
-        x = st.t.rvs(df=true_df, loc=true_loc, scale=true_scale, size=5000, random_state=SEED)
+        x = st.t.rvs(
+            df=true_df, loc=true_loc, scale=true_scale, size=5000, random_state=SEED
+        )
         result = dist.fit_rolling(_df(x), "x", "t", window=5000)
         row = result.frame.tail(1)
         assert row["x_t_df"][0] == pytest.approx(true_df, rel=0.35)
@@ -50,7 +52,12 @@ class TestParameterRecovery:
     def test_skewt(self):
         true_a, true_b, true_loc, true_scale = 4.0, 8.0, 0.0, 1.0
         x = st.jf_skew_t.rvs(
-            a=true_a, b=true_b, loc=true_loc, scale=true_scale, size=6000, random_state=SEED
+            a=true_a,
+            b=true_b,
+            loc=true_loc,
+            scale=true_scale,
+            size=6000,
+            random_state=SEED,
         )
         result = dist.fit_rolling(_df(x), "x", "skewt", window=6000)
         row = result.frame.tail(1)
@@ -60,7 +67,12 @@ class TestParameterRecovery:
         assert row["x_skewt_a"][0] is not None
         fitted = dist.frozen_dist(
             "skewt",
-            [row["x_skewt_a"][0], row["x_skewt_b"][0], row["x_skewt_loc"][0], row["x_skewt_scale"][0]],
+            [
+                row["x_skewt_a"][0],
+                row["x_skewt_b"][0],
+                row["x_skewt_loc"][0],
+                row["x_skewt_scale"][0],
+            ],
         )
         assert fitted.mean() == pytest.approx(np.mean(x), abs=0.15)
         assert fitted.std() == pytest.approx(np.std(x), rel=0.15)
@@ -103,10 +115,19 @@ class TestCausalityUnderTruncation:
     @pytest.mark.parametrize(
         "family,rvs",
         [
-            ("normal", lambda n, seed: st.norm.rvs(loc=0, scale=1, size=n, random_state=seed)),
+            (
+                "normal",
+                lambda n, seed: st.norm.rvs(loc=0, scale=1, size=n, random_state=seed),
+            ),
             ("t", lambda n, seed: st.t.rvs(df=5, size=n, random_state=seed)),
-            ("poisson", lambda n, seed: st.poisson.rvs(mu=8, size=n, random_state=seed)),
-            ("nbinom", lambda n, seed: st.nbinom.rvs(n=5, p=0.4, size=n, random_state=seed)),
+            (
+                "poisson",
+                lambda n, seed: st.poisson.rvs(mu=8, size=n, random_state=seed),
+            ),
+            (
+                "nbinom",
+                lambda n, seed: st.nbinom.rvs(n=5, p=0.4, size=n, random_state=seed),
+            ),
             ("beta", lambda n, seed: st.beta.rvs(a=2, b=5, size=n, random_state=seed)),
         ],
     )
@@ -287,14 +308,14 @@ class TestScoringRuleSanity:
     def test_pit_of_true_distribution_is_uniform(self):
         true = dist.frozen_dist("normal", [0.0, 1.0])
         y = true.rvs(size=3000, random_state=SEED)
-        stat, pvalue = dist.pit_ks_test(true, y)
+        _stat, pvalue = dist.pit_ks_test(true, y)
         assert pvalue > 0.05
 
     def test_pit_of_misspecified_distribution_rejects_uniform(self):
         true = dist.frozen_dist("normal", [0.0, 1.0])
         misspecified = dist.frozen_dist("normal", [0.0, 0.2])
         y = true.rvs(size=3000, random_state=SEED)
-        stat, pvalue = dist.pit_ks_test(misspecified, y)
+        _stat, pvalue = dist.pit_ks_test(misspecified, y)
         assert pvalue < 0.01
 
     def test_qlike_minimized_at_true_variance(self):
@@ -310,13 +331,13 @@ class TestScoringRuleSanity:
         rng = np.random.default_rng(SEED)
         # expected 5% exceedance rate, actual ~20% -> should reject strongly
         hits = rng.random(2000) < 0.20
-        lr, pvalue = dist.kupiec_test(hits, expected_rate=0.05)
+        _lr, pvalue = dist.kupiec_test(hits, expected_rate=0.05)
         assert pvalue < 0.01
 
     def test_kupiec_accepts_well_calibrated_exceedance_rate(self):
         rng = np.random.default_rng(SEED)
         hits = rng.random(2000) < 0.05
-        lr, pvalue = dist.kupiec_test(hits, expected_rate=0.05)
+        _lr, pvalue = dist.kupiec_test(hits, expected_rate=0.05)
         assert pvalue > 0.05
 
     def test_christoffersen_rejects_clustered_exceedances(self):
@@ -328,13 +349,13 @@ class TestScoringRuleSanity:
         for i in range(1, n):
             p = 0.6 if hits[i - 1] else 0.03
             hits[i] = rng.random() < p
-        lr, pvalue = dist.christoffersen_independence_test(hits)
+        _lr, pvalue = dist.christoffersen_independence_test(hits)
         assert pvalue < 0.01
 
     def test_christoffersen_accepts_iid_exceedances(self):
         rng = np.random.default_rng(SEED)
         hits = rng.random(3000) < 0.05
-        lr, pvalue = dist.christoffersen_independence_test(hits)
+        _lr, pvalue = dist.christoffersen_independence_test(hits)
         assert pvalue > 0.05
 
 
@@ -387,7 +408,9 @@ class TestClosedFormCRPS:
         """
         df = 2.1
         y = np.array([0.0, 1.0, -2.0, 5.0])
-        reference = dist.crps(dist.frozen_dist("t", [df, 0.0, 1.0]), y, n_points=200_000)
+        reference = dist.crps(
+            dist.frozen_dist("t", [df, 0.0, 1.0]), y, n_points=200_000
+        )
         closed = dist.crps_t_closed_form(y, df=df, loc=0.0, scale=1.0)
         # the closed form must be accurate to 1% of the trustworthy fine-grid reference
         assert closed == pytest.approx(reference, rel=0.01)
@@ -411,8 +434,10 @@ class TestClosedFormCRPS:
         y = np.array([0.5, -0.5, 1.5])
         nu = np.array([3.0, 5.0, 8.0])
         vectorized = dist.crps_t_closed_form(y, df=nu, loc=0.0, scale=1.0)
-        looped = np.array([
-            dist.crps_t_closed_form(np.array([yi]), df=nui, loc=0.0, scale=1.0)[0]
-            for yi, nui in zip(y, nu)
-        ])
+        looped = np.array(
+            [
+                dist.crps_t_closed_form(np.array([yi]), df=nui, loc=0.0, scale=1.0)[0]
+                for yi, nui in zip(y, nu)
+            ]
+        )
         assert vectorized == pytest.approx(looped)

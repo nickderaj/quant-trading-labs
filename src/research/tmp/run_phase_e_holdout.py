@@ -19,10 +19,16 @@ import sys
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
-PHASE_A = json.load(open("src/research/tmp/phase_a_turnover_results.json"))
-PHASE_B = json.load(open("src/research/tmp/phase_b_risk_gated_results.json"))
-PHASE_C = json.load(open("src/research/tmp/phase_c_carry_results.json"))
-PHASE_D = json.load(open("src/research/tmp/phase_d_tail_factor_results.json"))
+
+def _load(path):
+    with open(path) as f:
+        return json.load(f)
+
+
+PHASE_A = _load("src/research/tmp/phase_a_turnover_results.json")
+PHASE_B = _load("src/research/tmp/phase_b_risk_gated_results.json")
+PHASE_C = _load("src/research/tmp/phase_c_carry_results.json")
+PHASE_D = _load("src/research/tmp/phase_d_tail_factor_results.json")
 
 
 def gate_tc_verdict() -> tuple[bool, str]:
@@ -33,7 +39,9 @@ def gate_tc_verdict() -> tuple[bool, str]:
         off: v["A0_baseline_band0"]["turnover_per_year"]
         for off, v in PHASE_A["by_offset"].items()
     }
-    names = {n for v in PHASE_A["by_offset"].values() for n in v if n != "A0_baseline_band0"}
+    names = {
+        n for v in PHASE_A["by_offset"].values() for n in v if n != "A0_baseline_band0"
+    }
     for name in names:
         n_pass = 0
         for off, variants in PHASE_A["by_offset"].items():
@@ -45,25 +53,34 @@ def gate_tc_verdict() -> tuple[bool, str]:
                 n_pass += 1
         if n_pass >= 2:
             return True, f"{name} passes at {n_pass}/4 offsets"
-    return False, "no turnover-qualifying variant clears CI-excludes-zero at >=2/4 offsets"
+    return (
+        False,
+        "no turnover-qualifying variant clears CI-excludes-zero at >=2/4 offsets",
+    )
 
 
 def gate_rg_verdict() -> tuple[bool, str]:
     """Fires if a gated variant improves net Sharpe by >= 0.20 over the
     identical ungated book, on the same folds, at >= 3/4 offsets."""
     names = {
-        n for v in PHASE_B["by_offset"].values() for n in v if n != "ungated_throttle_k6"
+        n
+        for v in PHASE_B["by_offset"].values()
+        for n in v
+        if n != "ungated_throttle_k6"
     }
     for name in names:
         n_pass = 0
-        for off, variants in PHASE_B["by_offset"].items():
+        for variants in PHASE_B["by_offset"].values():
             base = variants["ungated_throttle_k6"]["sharpe_net"]
             delta = variants[name]["sharpe_net"] - base
             if delta >= 0.20:
                 n_pass += 1
         if n_pass >= 3:
             return True, f"{name} improves net Sharpe by >=0.20 at {n_pass}/4 offsets"
-    return False, "no gated variant improves net Sharpe by >=0.20 over ungated at >=3/4 offsets"
+    return (
+        False,
+        "no gated variant improves net Sharpe by >=0.20 over ungated at >=3/4 offsets",
+    )
 
 
 def gate_cy_verdict() -> tuple[bool, str]:
@@ -73,15 +90,25 @@ def gate_cy_verdict() -> tuple[bool, str]:
         for pred_kind, offs in idata["by_pred"].items():
             for variant_key in ("base", "throttled_k6"):
                 n_pass = 0
-                for off, v in offs.items():
+                for v in offs.values():
                     cell = v[variant_key]
                     lo, hi = cell["bootstrap_ci_excess_return"]
                     ci_excludes_zero = lo > 0 or hi < 0
-                    if cell["sharpe_net"] > 0 and ci_excludes_zero and cell["deflated_sharpe_prob"] > 0.50:
+                    if (
+                        cell["sharpe_net"] > 0
+                        and ci_excludes_zero
+                        and cell["deflated_sharpe_prob"] > 0.50
+                    ):
                         n_pass += 1
                 if n_pass >= 3:
-                    return True, f"{interval}/{pred_kind}/{variant_key} passes at {n_pass}/4 offsets"
-    return False, "no carry variant clears net>0 + CI-excludes-zero + DSR>50% at >=3/4 offsets"
+                    return (
+                        True,
+                        f"{interval}/{pred_kind}/{variant_key} passes at {n_pass}/4 offsets",
+                    )
+    return (
+        False,
+        "no carry variant clears net>0 + CI-excludes-zero + DSR>50% at >=3/4 offsets",
+    )
 
 
 def gate_tf_verdict() -> tuple[bool, str]:
@@ -97,7 +124,7 @@ def gate_tf_verdict() -> tuple[bool, str]:
             continue
         n_pass = 0
         single_symbol_artifact = False
-        for off, cell in fr["by_offset"].items():
+        for cell in fr["by_offset"].values():
             if cell["sharpe_net"] > 0:
                 n_pass += 1
                 if cell.get("sign_flips_excl_top_symbol"):
@@ -110,7 +137,10 @@ def gate_tf_verdict() -> tuple[bool, str]:
                 f"but its sign flips when the dominant single symbol is excluded - "
                 f"not counted as a genuine cross-sectional finding"
             )
-    return False, "no factor clears significant-IC + net-Sharpe-positive-at->=3/4-offsets without a single-symbol artifact"
+    return (
+        False,
+        "no factor clears significant-IC + net-Sharpe-positive-at->=3/4-offsets without a single-symbol artifact",
+    )
 
 
 def main():
@@ -126,7 +156,9 @@ def main():
         any_fired = any_fired or fired
 
     result = {
-        "gate_verdicts": {g: {"fired": f, "reason": r} for g, (f, r) in verdicts.items()},
+        "gate_verdicts": {
+            g: {"fired": f, "reason": r} for g, (f, r) in verdicts.items()
+        },
         "any_gate_fired": any_fired,
         "holdout_run": False,
     }

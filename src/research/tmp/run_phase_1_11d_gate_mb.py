@@ -48,7 +48,10 @@ def trim(f: dict, offset: int) -> dict:
 
 
 def build_book(
-    universe: dict[str, dict], regime: dict[str, np.ndarray], offset: int, cost_mult: int
+    universe: dict[str, dict],
+    regime: dict[str, np.ndarray],
+    offset: int,
+    cost_mult: int,
 ) -> dict:
     trimmed = {s: trim(f, offset) for s, f in universe.items()}
     trimmed_regime = {s: r[offset:] if offset else r for s, r in regime.items()}
@@ -134,7 +137,9 @@ def main() -> None:
             }
             for off in by_offset_by_cost
         },
-        "sharpes_1x_by_offset": dict(zip([f"offset_{o}" for o in ORIGIN_OFFSETS], sharpes_1x, strict=True)),
+        "sharpes_1x_by_offset": dict(
+            zip([f"offset_{o}" for o in ORIGIN_OFFSETS], sharpes_1x, strict=True)
+        ),
         "positive_every_offset": positive_every_offset,
         "noise_floor_offset0_1x": floor0,
         "ci_excludes_zero": ci_excludes_zero,
@@ -148,9 +153,11 @@ def main() -> None:
         "delisted_symbols_traded": sorted({t["symbol"] for t in delisted_trades}),
         "delisted_pnl_sum": float(sum(t["pnl"] for t in delisted_trades)),
     }
-    Path("src/research/tmp/phase_1_11d_results.json").write_text(json.dumps(out, indent=2))
+    Path("src/research/tmp/phase_1_11d_results.json").write_text(
+        json.dumps(out, indent=2)
+    )
     print(
-        f"Gate MB: fires={fires} fundable={fundable} sharpes_1x={[round(s,3) for s in sharpes_1x]} "
+        f"Gate MB: fires={fires} fundable={fundable} sharpes_1x={[round(s, 3) for s in sharpes_1x]} "
         f"noise_floor=[{floor0['ci_return'][0]:.3f},{floor0['ci_return'][1]:.3f}] "
         f"dsr={dsr:.3f} n_trades={n_trades0} delisted_trades={len(delisted_trades)} "
         f"maxDD_1x_offset0={by_offset_by_cost['offset_0']['cost_1x']['max_drawdown']:.4f}"

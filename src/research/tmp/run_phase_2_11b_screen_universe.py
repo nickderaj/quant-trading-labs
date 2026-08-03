@@ -79,29 +79,38 @@ def main() -> None:
     screen_by_offset = {}
     noscreen_by_offset = {}
     for offset in ORIGIN_OFFSETS:
-        screen_by_offset[f"offset_{offset}"] = S11.book_metrics(build_book(ADF_PASSING, offset))
+        screen_by_offset[f"offset_{offset}"] = S11.book_metrics(
+            build_book(ADF_PASSING, offset)
+        )
         noscreen_by_offset[f"offset_{offset}"] = S11.book_metrics(
             build_book(FULL_ELIGIBLE, offset)
         )
 
     screen_beats_every_offset = all(
-        screen_by_offset[f"offset_{o}"]["sharpe"] > noscreen_by_offset[f"offset_{o}"]["sharpe"]
+        screen_by_offset[f"offset_{o}"]["sharpe"]
+        > noscreen_by_offset[f"offset_{o}"]["sharpe"]
         for o in ORIGIN_OFFSETS
     )
 
     screen_book0 = build_book(ADF_PASSING, 0)
     noscreen_book0 = build_book(FULL_ELIGIBLE, 0)
     treatment_pnl = np.array([t["ret_eq"] for t in screen_book0["trades"]])
-    treatment_blocks = S11.trade_blocks(np.array([t["exit_date"] for t in screen_book0["trades"]]))
+    treatment_blocks = S11.trade_blocks(
+        np.array([t["exit_date"] for t in screen_book0["trades"]])
+    )
     control_pnl = np.array([t["ret_eq"] for t in noscreen_book0["trades"]])
-    control_blocks = S11.trade_blocks(np.array([t["exit_date"] for t in noscreen_book0["trades"]]))
+    control_blocks = S11.trade_blocks(
+        np.array([t["exit_date"] for t in noscreen_book0["trades"]])
+    )
     scr_bootstrap = S11.paired_block_bootstrap(
         control_pnl, control_blocks, treatment_pnl, treatment_blocks
     )
     scr_positive_delta = scr_bootstrap["delta_point"] > 0
 
     scr_keep = bool(
-        screen_beats_every_offset and scr_bootstrap["delta_excludes_zero"] and scr_positive_delta
+        screen_beats_every_offset
+        and scr_bootstrap["delta_excludes_zero"]
+        and scr_positive_delta
     )
 
     # Per-conflict-spread standalone Sharpe, for the resolution narrative.
@@ -125,8 +134,8 @@ def main() -> None:
         json.dump(out, f, indent=2, default=str)
 
     print(
-        f"Gate SCR: keep_screen={scr_keep} screen_sharpes={[round(screen_by_offset[f'offset_{o}']['sharpe'],3) for o in ORIGIN_OFFSETS]} "
-        f"full_sharpes={[round(noscreen_by_offset[f'offset_{o}']['sharpe'],3) for o in ORIGIN_OFFSETS]} "
+        f"Gate SCR: keep_screen={scr_keep} screen_sharpes={[round(screen_by_offset[f'offset_{o}']['sharpe'], 3) for o in ORIGIN_OFFSETS]} "
+        f"full_sharpes={[round(noscreen_by_offset[f'offset_{o}']['sharpe'], 3) for o in ORIGIN_OFFSETS]} "
         f"delta_ci={scr_bootstrap['delta_ci']}"
     )
 

@@ -89,11 +89,17 @@ def load_frame(name: str, offset: int) -> pl.DataFrame:
 
 
 def dff_frame() -> pl.DataFrame:
-    dff = pl.read_parquet(FRED_DFF_PATH).with_columns(pl.col("date").cast(pl.Date)).sort("date")
+    dff = (
+        pl.read_parquet(FRED_DFF_PATH)
+        .with_columns(pl.col("date").cast(pl.Date))
+        .sort("date")
+    )
     return dff.with_columns((pl.col("DFF").shift(1) / 100.0).alias("financing_rate"))
 
 
-def mild_backwardation_mask(df: pl.DataFrame, dff: pl.DataFrame, storage: float) -> np.ndarray:
+def mild_backwardation_mask(
+    df: pl.DataFrame, dff: pl.DataFrame, storage: float
+) -> np.ndarray:
     joined = df.select(["date", "value", "leg2_price"]).join(
         dff.select(["date", "financing_rate"]), on="date", how="left"
     )
@@ -102,7 +108,7 @@ def mild_backwardation_mask(df: pl.DataFrame, dff: pl.DataFrame, storage: float)
     leg2 = joined["leg2_price"].to_numpy().astype(float)
     financing = joined["financing_rate"].to_numpy().astype(float)
     fv = S11.compute_carry_fv(leg2, storage, financing)
-    c = S11.carry_ratio(value, fv)
+    c = np.asarray(S11.carry_ratio(value, fv))
     lo, hi = MILD_BACKWARDATION_BAND
     return (c > lo) & (c < hi)
 
@@ -116,7 +122,9 @@ def build_book(
     sign_flip_masks = None
     if storage_key is not None:
         storage = STORAGE_CONSTANTS[storage_key]
-        sign_flip_masks = {n: mild_backwardation_mask(frames[n], dff, storage) for n in spreads}
+        sign_flip_masks = {
+            n: mild_backwardation_mask(frames[n], dff, storage) for n in spreads
+        }
     return S11.simulate_book(
         frames,
         params,
@@ -146,7 +154,8 @@ def main() -> None:
             if offset == 0:
                 per_storage_offset0_books[storage_key] = book
         exceeds_every_offset = all(
-            by_offset[f"offset_{o}"]["sharpe"] > unconditional_by_offset[f"offset_{o}"]["sharpe"]
+            by_offset[f"offset_{o}"]["sharpe"]
+            > unconditional_by_offset[f"offset_{o}"]["sharpe"]
             for o in ORIGIN_OFFSETS
         )
         n_bf = by_offset["offset_0"]["n_trades"]
@@ -170,7 +179,9 @@ def main() -> None:
         np.array([t["exit_date"] for t in headline_book["trades"]])
     )
     control_pnl = np.array([t["ret_eq"] for t in uncond_book0["trades"]])
-    control_blocks = S11.trade_blocks(np.array([t["exit_date"] for t in uncond_book0["trades"]]))
+    control_blocks = S11.trade_blocks(
+        np.array([t["exit_date"] for t in uncond_book0["trades"]])
+    )
     bf_bootstrap = S11.paired_block_bootstrap(
         control_pnl, control_blocks, treatment_pnl, treatment_blocks
     )
@@ -241,8 +252,8 @@ def main() -> None:
 
     print(
         f"Gate BF: fires={bf_fires} headline={HEADLINE_STORAGE} "
-        f"sharpes={[round(bf_results[HEADLINE_STORAGE]['by_offset'][f'offset_{o}']['sharpe'],3) for o in ORIGIN_OFFSETS]} "
-        f"vs unconditional={[round(unconditional_by_offset[f'offset_{o}']['sharpe'],3) for o in ORIGIN_OFFSETS]} "
+        f"sharpes={[round(bf_results[HEADLINE_STORAGE]['by_offset'][f'offset_{o}']['sharpe'], 3) for o in ORIGIN_OFFSETS]} "
+        f"vs unconditional={[round(unconditional_by_offset[f'offset_{o}']['sharpe'], 3) for o in ORIGIN_OFFSETS]} "
         f"dsr={bf_dsr:.4f} trade_count_ok={bf_headline['trade_count_within_10pct']} | "
         f"Gate BF-X: fires={bf_x_fires} n_improved={n_spreads_improved}/{len(spreads)}"
     )

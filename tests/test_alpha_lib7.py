@@ -1,20 +1,24 @@
 import sys
 from datetime import datetime, timedelta
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
 import polars as pl
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src" / "research" / "tmp"))
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[1] / "src" / "research" / "tmp")
+)
 
-import research
 from alpha_lib7 import (
+    apply_book_scale,
     hysteresis_weights,
     quantize_weights,
     throttle_weights,
-    apply_book_scale,
 )
+
+import research
 
 
 def _synthetic_panel(n_times=40, n_symbols=20, seed=0) -> pl.DataFrame:
@@ -44,12 +48,21 @@ def _synthetic_panel(n_times=40, n_symbols=20, seed=0) -> pl.DataFrame:
 def test_hysteresis_band_zero_reproduces_dollar_neutral_weights_exactly():
     panel = _synthetic_panel()
     baseline = research.dollar_neutral_weights(
-        panel, "pred", size_col="vol", top_frac=0.2,
-        gross_exposure=1.0, max_position_per_symbol=0.25,
+        panel,
+        "pred",
+        size_col="vol",
+        top_frac=0.2,
+        gross_exposure=1.0,
+        max_position_per_symbol=0.25,
     ).sort(["datetime", "symbol"])
     hysteresis = hysteresis_weights(
-        panel, "pred", band=0.0, size_col="vol", top_frac=0.2,
-        gross_exposure=1.0, max_position_per_symbol=0.25,
+        panel,
+        "pred",
+        band=0.0,
+        size_col="vol",
+        top_frac=0.2,
+        gross_exposure=1.0,
+        max_position_per_symbol=0.25,
     ).sort(["datetime", "symbol"])
     assert baseline.shape == hysteresis.shape
     np.testing.assert_allclose(
@@ -63,8 +76,12 @@ def test_hysteresis_band_zero_reproduces_without_size_col_too():
         panel, "pred", top_frac=0.3, gross_exposure=1.0, max_position_per_symbol=0.5
     ).sort(["datetime", "symbol"])
     hysteresis = hysteresis_weights(
-        panel, "pred", band=0.0, top_frac=0.3,
-        gross_exposure=1.0, max_position_per_symbol=0.5,
+        panel,
+        "pred",
+        band=0.0,
+        top_frac=0.3,
+        gross_exposure=1.0,
+        max_position_per_symbol=0.5,
     ).sort(["datetime", "symbol"])
     np.testing.assert_allclose(
         baseline["weight"].to_numpy(), hysteresis["weight"].to_numpy(), atol=1e-12
@@ -99,9 +116,11 @@ def test_widening_hysteresis_band_reduces_turnover():
         w = hysteresis_weights(panel, "pred", band=band, size_col="vol", top_frac=0.2)
         t = research.portfolio_turnover(w)
         turnovers.append(float(t["turnover"].mean()))
-    for earlier, later in zip(turnovers, turnovers[1:]):
+    for earlier, later in pairwise(turnovers):
         assert later <= earlier + 1e-9, f"turnover rose as band widened: {turnovers}"
-    assert turnovers[-1] < turnovers[0], f"widest band did not reduce turnover at all: {turnovers}"
+    assert turnovers[-1] < turnovers[0], (
+        f"widest band did not reduce turnover at all: {turnovers}"
+    )
 
 
 def test_hysteresis_holds_membership_between_thresholds():
@@ -114,11 +133,6 @@ def test_hysteresis_holds_membership_between_thresholds():
     # the entry cutoff (rank 7/10, i.e. inside a wide keep-band) but not far
     # enough to leave a band=0.5 window -> must remain long. Bar 2: S9 drops
     # to the very bottom -> should flip out of long (and even to short).
-    preds = [
-        list(range(10)),  # bar0: S0..S9 ranked ascending, S9 top
-        [9, 8, 7, 6, 5, 4, 3, 2, 1, 0][::-1],  # placeholder, overwritten below
-        None,
-    ]
     rows = []
     # bar 0
     for i, s in enumerate(symbols):
@@ -137,11 +151,19 @@ def test_hysteresis_holds_membership_between_thresholds():
     w1 = w.filter((pl.col("datetime") == times[1]) & (pl.col("symbol") == "S9"))
     w2 = w.filter((pl.col("datetime") == times[2]) & (pl.col("symbol") == "S9"))
     assert w1["weight"][0] > 0, "S9 should still be held long inside the exit band"
-    assert w2["weight"][0] < 0, "S9 should flip to short once it exits the band entirely"
+    assert w2["weight"][0] < 0, (
+        "S9 should flip to short once it exits the band entirely"
+    )
 
 
 def test_quantize_weights_snaps_to_grid():
-    w = pl.DataFrame({"datetime": [1, 1, 2], "symbol": ["A", "B", "A"], "weight": [0.123, -0.049, 0.026]})
+    w = pl.DataFrame(
+        {
+            "datetime": [1, 1, 2],
+            "symbol": ["A", "B", "A"],
+            "weight": [0.123, -0.049, 0.026],
+        }
+    )
     q = quantize_weights(w, grid=0.05)
     np.testing.assert_allclose(q["weight"].to_numpy(), [0.10, -0.05, 0.05], atol=1e-12)
 
@@ -175,7 +197,9 @@ def test_throttle_holds_weight_between_rebalances():
         weights = g["weight"].to_numpy()
         # bars 1,2 must equal bar 0; bars 4,5 must equal bar 3; etc.
         for start in range(0, len(weights) - 2, 3):
-            np.testing.assert_allclose(weights[start : start + 3], weights[start], atol=1e-12)
+            np.testing.assert_allclose(
+                weights[start : start + 3], weights[start], atol=1e-12
+            )
 
 
 def test_throttle_reduces_or_preserves_turnover():
@@ -185,7 +209,9 @@ def test_throttle_reduces_or_preserves_turnover():
     for k in (2, 3, 6):
         throttled = throttle_weights(w, k=k)
         t = float(research.portfolio_turnover(throttled)["turnover"].mean())
-        assert t <= base_turnover + 1e-9, f"k={k} turnover {t} exceeded k=1 baseline {base_turnover}"
+        assert t <= base_turnover + 1e-9, (
+            f"k={k} turnover {t} exceeded k=1 baseline {base_turnover}"
+        )
 
 
 def test_apply_book_scale_zeroes_out_book_on_standdown_bars():
@@ -202,5 +228,7 @@ def test_apply_book_scale_zeroes_out_book_on_standdown_bars():
         out.filter(pl.col("datetime") == 2)["weight"].to_numpy(), [0.0, 0.0], atol=1e-12
     )
     np.testing.assert_allclose(
-        out.filter(pl.col("datetime") == 1)["weight"].to_numpy(), [0.5, -0.5], atol=1e-12
+        out.filter(pl.col("datetime") == 1)["weight"].to_numpy(),
+        [0.5, -0.5],
+        atol=1e-12,
     )

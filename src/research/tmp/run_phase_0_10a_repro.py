@@ -54,26 +54,26 @@ def main():
 
     # Count mean-reverting spreads
     mean_reverting_spreads = [
-        s for s in spreads
-        if per_spread[s]["ar1_mean_reversion"]["mean_reverting"]
+        s for s in spreads if per_spread[s]["ar1_mean_reversion"]["mean_reverting"]
     ]
     run_check(
         "phase4_mean_reverting_count",
         len(mean_reverting_spreads) == 5,
-        f"Expected 5 mean-reverting spreads, got {len(mean_reverting_spreads)}: {mean_reverting_spreads}"
+        f"Expected 5 mean-reverting spreads, got {len(mean_reverting_spreads)}: {mean_reverting_spreads}",
     )
     print(f"  Mean-reverting: {mean_reverting_spreads}")
 
     # Count spreads with significant negative IC (p_value < 0.05 AND ic < 0)
     sig_neg_ic_spreads = [
-        s for s in spreads
+        s
+        for s in spreads
         if per_spread[s]["zscore_5d_forward_ic"]["p_value"] < 0.05
         and per_spread[s]["zscore_5d_forward_ic"]["ic"] < 0
     ]
     run_check(
         "phase4_sig_negative_ic_count",
         len(sig_neg_ic_spreads) == 4,
-        f"Expected 4 spreads with sig negative IC, got {len(sig_neg_ic_spreads)}: {sig_neg_ic_spreads}"
+        f"Expected 4 spreads with sig negative IC, got {len(sig_neg_ic_spreads)}: {sig_neg_ic_spreads}",
     )
     print(f"  Significant negative IC: {sig_neg_ic_spreads}")
 
@@ -84,10 +84,7 @@ def main():
         p = ic_data["p_value"]
         ic = ic_data["ic"]
         sig_neg = p < 0.05 and ic < 0
-        print(
-            f"    {spread}: p_value={p:.6e}, ic={ic:.6f}, "
-            f"sig_negative_ic={sig_neg}"
-        )
+        print(f"    {spread}: p_value={p:.6e}, ic={ic:.6f}, sig_negative_ic={sig_neg}")
 
     results["phase_4_spread_probe"] = {
         "mean_reverting_count": len(mean_reverting_spreads),
@@ -107,7 +104,7 @@ def main():
     run_check(
         "gate_ac_fires",
         gate_ac["fires"] is False,
-        f"Gate AC fires={gate_ac['fires']}, expected False"
+        f"Gate AC fires={gate_ac['fires']}, expected False",
     )
 
     # Deflated Sharpe prob approx 0.997
@@ -115,7 +112,7 @@ def main():
     run_check(
         "gate_ac_dsr",
         abs(dsr - 0.997) < 0.002,
-        f"Gate AC DSR {dsr} not approx 0.997 (within 0.002)"
+        f"Gate AC DSR {dsr} not approx 0.997 (within 0.002)",
     )
 
     # Excess return CI includes zero
@@ -123,7 +120,7 @@ def main():
     run_check(
         "gate_ac_ci_includes_zero",
         ci_lo <= 0 <= ci_hi,
-        f"Gate AC excess-return CI {gate_ac['excess_return_ci']} does not include zero"
+        f"Gate AC excess-return CI {gate_ac['excess_return_ci']} does not include zero",
     )
 
     # Net Sharpe 0.90-0.95 at every offset
@@ -132,7 +129,7 @@ def main():
     run_check(
         "gate_ac_sharpes_in_range",
         all_in_range,
-        f"carry net Sharpes {sharpes} outside 0.90-0.95 range"
+        f"carry net Sharpes {sharpes} outside 0.90-0.95 range",
     )
     print(f"  Net Sharpes by offset: {sharpes}")
 
@@ -148,7 +145,7 @@ def main():
     run_check(
         "gate_am_fires",
         gate_am["fires"] is False,
-        f"Gate AM fires={gate_am['fires']}, expected False"
+        f"Gate AM fires={gate_am['fires']}, expected False",
     )
 
     # Deflated Sharpe prob approx 0.098
@@ -156,7 +153,7 @@ def main():
     run_check(
         "gate_am_dsr",
         abs(dsr_am - 0.098) < 0.02,
-        f"Gate AM DSR {dsr_am} not approx 0.098 (within 0.02)"
+        f"Gate AM DSR {dsr_am} not approx 0.098 (within 0.02)",
     )
 
     results["gate_AM_repro"] = gate_am
@@ -203,4 +200,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

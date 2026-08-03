@@ -21,24 +21,29 @@ with under 10 violations is marked underpowered here and must be excluded
 from Gate U's primary percentages downstream.
 """
 
+import json
 import sys
 import time
-import json
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
-import numpy as np  # noqa: E402
+import dist_lib as L
+import dist_lib5 as L5
+import dist_lib6 as L6
+import numpy as np
 
-import dist_lib as L  # noqa: E402
-import dist_lib5 as L5  # noqa: E402
-import dist_lib6 as L6  # noqa: E402
-import distributions as dist  # noqa: E402
-import research  # noqa: E402
+import distributions as dist
+import research
 
 ES_BOOTSTRAP_N = 200
 LEVELS = L5.QUANTILES  # [0.01, 0.025, 0.05, 0.95, 0.975, 0.99]
-INTERVAL_ORDER = ["12h", "4h", "1d", "1h"]  # cheapest-ish first; 1h last (most expensive)
+INTERVAL_ORDER = [
+    "12h",
+    "4h",
+    "1d",
+    "1h",
+]  # cheapest-ish first; 1h last (most expensive)
 
 
 def run_one_interval(symbol: str, interval: str) -> dict:
@@ -49,35 +54,50 @@ def run_one_interval(symbol: str, interval: str) -> dict:
 
     variance_fc, nu_paths, fits = L6.build_gate_a_forecasts(df, interval, ret)
 
-    gpd_paths_d8, _ = L5.rolling_gpd_paths(ret, fits["d4"], model="garch", max_train=L6.MLE_MAX_TRAIN, tail_frac=0.10)
-    gpd_paths_d9, _ = L5.rolling_gpd_paths(ret, fits["d6"], model="gjr", max_train=L6.MLE_MAX_TRAIN, tail_frac=0.10)
+    gpd_paths_d8, _ = L5.rolling_gpd_paths(
+        ret, fits["d4"], model="garch", max_train=L6.MLE_MAX_TRAIN, tail_frac=0.10
+    )
+    gpd_paths_d9, _ = L5.rolling_gpd_paths(
+        ret, fits["d6"], model="gjr", max_train=L6.MLE_MAX_TRAIN, tail_frac=0.10
+    )
 
     all_models = dict(variance_fc)
-    all_models["d8_garch_evt"] = variance_fc["d4_garch_normal"]  # sigma path only; tail comes from gpd_paths_d8
+    all_models["d8_garch_evt"] = variance_fc[
+        "d4_garch_normal"
+    ]  # sigma path only; tail comes from gpd_paths_d8
     all_models["d9_gjr_evt"] = variance_fc["d6_gjr_normal"]
 
-    sigma = {name: np.sqrt(np.where(fc > 0, fc, np.nan)) for name, fc in all_models.items()}
+    sigma = {
+        name: np.sqrt(np.where(fc > 0, fc, np.nan)) for name, fc in all_models.items()
+    }
 
     cells = {}
-    for name in all_models:
+    for name, fc in all_models.items():
         for q in LEVELS:
-            fc = all_models[name]
             if name == "d5_garch_t":
                 qf = L5.t_quantile_forecasts(fc, nu_paths["d5_garch_t"], [q])[q]
                 es = L5.t_es_forecast(fc, nu_paths["d5_garch_t"], q)
-                sim_fn = L5.make_t_acerbi_simulate_fn(sigma[name], nu_paths["d5_garch_t"], es, q)
+                sim_fn = L5.make_t_acerbi_simulate_fn(
+                    sigma[name], nu_paths["d5_garch_t"], es, q
+                )
             elif name == "d7_gjr_t":
                 qf = L5.t_quantile_forecasts(fc, nu_paths["d7_gjr_t"], [q])[q]
                 es = L5.t_es_forecast(fc, nu_paths["d7_gjr_t"], q)
-                sim_fn = L5.make_t_acerbi_simulate_fn(sigma[name], nu_paths["d7_gjr_t"], es, q)
+                sim_fn = L5.make_t_acerbi_simulate_fn(
+                    sigma[name], nu_paths["d7_gjr_t"], es, q
+                )
             elif name == "d8_garch_evt":
                 qf = L5.gpd_quantile_forecasts(fc, gpd_paths_d8, [q])[q]
                 es = L5.gpd_es_forecast(fc, gpd_paths_d8, q)
-                sim_fn = L5.make_gpd_acerbi_simulate_fn(sigma[name], gpd_paths_d8, es, q)
+                sim_fn = L5.make_gpd_acerbi_simulate_fn(
+                    sigma[name], gpd_paths_d8, es, q
+                )
             elif name == "d9_gjr_evt":
                 qf = L5.gpd_quantile_forecasts(fc, gpd_paths_d9, [q])[q]
                 es = L5.gpd_es_forecast(fc, gpd_paths_d9, q)
-                sim_fn = L5.make_gpd_acerbi_simulate_fn(sigma[name], gpd_paths_d9, es, q)
+                sim_fn = L5.make_gpd_acerbi_simulate_fn(
+                    sigma[name], gpd_paths_d9, es, q
+                )
             else:
                 qf = L5.normal_quantile_forecasts(fc, [q])[q]
                 es = L5.normal_es_forecast(fc, q)
@@ -89,11 +109,21 @@ def run_one_interval(symbol: str, interval: str) -> dict:
             n_violations = int(hits.sum())
 
             z = L5.acerbi_szekely_z(ret, qf, es, q)
-            p = L5.acerbi_szekely_bootstrap_pvalue(z, sim_fn, n_boot=ES_BOOTSTRAP_N, seed=0) if np.isfinite(z) else float("nan")
+            p = (
+                L5.acerbi_szekely_bootstrap_pvalue(
+                    z, sim_fn, n_boot=ES_BOOTSTRAP_N, seed=0
+                )
+                if np.isfinite(z)
+                else float("nan")
+            )
 
             cells[f"{name}__{q}"] = {
-                "model": name, "level": q, "z": z, "bootstrap_pvalue": p,
-                "n": int(mask.sum()), "n_violations": n_violations,
+                "model": name,
+                "level": q,
+                "z": z,
+                "bootstrap_pvalue": p,
+                "n": int(mask.sum()),
+                "n_violations": n_violations,
                 "underpowered": n_violations < 10,
             }
 
@@ -112,8 +142,10 @@ def main():
         res = run_one_interval(symbol, interval)
         out["intervals"][interval] = res
         n_underpowered = sum(1 for c in res["cells"].values() if c["underpowered"])
-        print(f"{symbol} {interval}: n={res['n_obs']} elapsed={res['elapsed_sec']:.1f}s "
-              f"cells={len(res['cells'])} underpowered={n_underpowered}")
+        print(
+            f"{symbol} {interval}: n={res['n_obs']} elapsed={res['elapsed_sec']:.1f}s "
+            f"cells={len(res['cells'])} underpowered={n_underpowered}"
+        )
         out_path = f"src/research/tmp/phase2_es_universality_{symbol}.json"
         with open(out_path, "w") as f:
             json.dump(out, f, indent=1, default=float)

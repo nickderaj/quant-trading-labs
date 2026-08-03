@@ -52,8 +52,13 @@ import research
 CONFIG_ID = "cfg2_12h"
 INTERVAL = "12h"
 FEATURE_COLS_RAW = [
-    "mean_reversion_1", "mean_reversion_4", "mean_reversion_12",
-    "realized_vol_8", "realized_vol_24", "realized_vol_96", "vol_of_vol_96",
+    "mean_reversion_1",
+    "mean_reversion_4",
+    "mean_reversion_12",
+    "realized_vol_8",
+    "realized_vol_24",
+    "realized_vol_96",
+    "vol_of_vol_96",
 ]
 VOL_COL = "realized_vol_24"
 TARGET_COL = "fwd_return_1_vol_norm"
@@ -104,14 +109,21 @@ def build_signal_panel(offset_days: int) -> pl.DataFrame:
         )
         fold_frames.append(
             scored.select(
-                "datetime", "symbol", "pred", "vol_targeted_size", "fwd_return_1", VOL_COL
+                "datetime",
+                "symbol",
+                "pred",
+                "vol_targeted_size",
+                "fwd_return_1",
+                VOL_COL,
             ).with_columns(pl.lit(fold_id).alias("fold"))
         )
     panel = pl.concat(fold_frames, how="diagonal_relaxed").sort(["datetime", "symbol"])
     return panel
 
 
-def fold_excess_returns(trade_frame_net: pl.DataFrame, signal_panel: pl.DataFrame) -> list[float]:
+def fold_excess_returns(
+    trade_frame_net: pl.DataFrame, signal_panel: pl.DataFrame
+) -> list[float]:
     """Per-fold (net strategy total - basket total) log return, matching
     backtest_configs.py's own excess_return_net convention - what Gate TC's
     bootstrap CI is computed over."""
@@ -121,7 +133,9 @@ def fold_excess_returns(trade_frame_net: pl.DataFrame, signal_panel: pl.DataFram
     ):
         fold_dates = set(fold_dates)
         strat_total = float(
-            trade_frame_net.filter(pl.col("datetime").is_in(fold_dates))["trade_log_return_net"].sum()
+            trade_frame_net.filter(pl.col("datetime").is_in(fold_dates))[
+                "trade_log_return_net"
+            ].sum()
         )
         basket = research.equal_weight_basket_returns(
             signal_panel.filter(pl.col("fold") == fold_id)
@@ -131,8 +145,12 @@ def fold_excess_returns(trade_frame_net: pl.DataFrame, signal_panel: pl.DataFram
     return out
 
 
-def evaluate_variant(name: str, weights: pl.DataFrame, signal_panel: pl.DataFrame, annualized_rate: float) -> dict:
-    trade_frame = research.portfolio_trade_frame(weights, signal_panel, target_col="fwd_return_1")
+def evaluate_variant(
+    name: str, weights: pl.DataFrame, signal_panel: pl.DataFrame, annualized_rate: float
+) -> dict:
+    trade_frame = research.portfolio_trade_frame(
+        weights, signal_panel, target_col="fwd_return_1"
+    )
     metrics = research.portfolio_metrics(
         trade_frame, annualized_rate, taker_fee=TAKER_FEE, slippage=SLIPPAGE, label=name
     )
@@ -140,9 +158,12 @@ def evaluate_variant(name: str, weights: pl.DataFrame, signal_panel: pl.DataFram
     excess = fold_excess_returns(costed, signal_panel)
     ci_lo, ci_hi = research.bootstrap_ci(np.array(excess), n_boot=2000, seed=0)
 
-    net_sum = weights.group_by("datetime").agg(pl.col("weight").sum().alias("net")).select(
-        pl.col("net").abs().max()
-    ).item()
+    net_sum = (
+        weights.group_by("datetime")
+        .agg(pl.col("weight").sum().alias("net"))
+        .select(pl.col("net").abs().max())
+        .item()
+    )
 
     return {
         "name": name,
@@ -163,7 +184,10 @@ def main():
     results: dict = {"config_id": CONFIG_ID, "interval": INTERVAL, "by_offset": {}}
 
     for offset in ORIGIN_OFFSETS_DAYS:
-        print(f"=== offset={offset}d: building signal (frozen, seed={SEED}) ===", flush=True)
+        print(
+            f"=== offset={offset}d: building signal (frozen, seed={SEED}) ===",
+            flush=True,
+        )
         signal_panel = build_signal_panel(offset)
 
         variants: dict[str, dict] = {}
@@ -172,8 +196,13 @@ def main():
         # correctness check already covered by tests/test_alpha_lib7.py;
         # here it's simply the notebook-3 baseline itself).
         baseline_weights = hysteresis_weights(
-            signal_panel, "pred", band=0.0, size_col="vol_targeted_size",
-            top_frac=TOP_FRAC, gross_exposure=GROSS_EXPOSURE, max_position_per_symbol=MAX_POSITION,
+            signal_panel,
+            "pred",
+            band=0.0,
+            size_col="vol_targeted_size",
+            top_frac=TOP_FRAC,
+            gross_exposure=GROSS_EXPOSURE,
+            max_position_per_symbol=MAX_POSITION,
         )
         variants["A0_baseline_band0"] = evaluate_variant(
             "A0_baseline_band0", baseline_weights, signal_panel, annualized_rate
@@ -184,8 +213,13 @@ def main():
             if band == 0.0:
                 continue
             w = hysteresis_weights(
-                signal_panel, "pred", band=band, size_col="vol_targeted_size",
-                top_frac=TOP_FRAC, gross_exposure=GROSS_EXPOSURE, max_position_per_symbol=MAX_POSITION,
+                signal_panel,
+                "pred",
+                band=band,
+                size_col="vol_targeted_size",
+                top_frac=TOP_FRAC,
+                gross_exposure=GROSS_EXPOSURE,
+                max_position_per_symbol=MAX_POSITION,
             )
             variants[f"A1_hysteresis_band{band}"] = evaluate_variant(
                 f"A1_hysteresis_band{band}", w, signal_panel, annualized_rate
@@ -208,22 +242,35 @@ def main():
 
         # Combined: pre-declared mid-point of each grid, tested once.
         combo_w = hysteresis_weights(
-            signal_panel, "pred", band=COMBINED["band"], size_col="vol_targeted_size",
-            top_frac=TOP_FRAC, gross_exposure=GROSS_EXPOSURE, max_position_per_symbol=MAX_POSITION,
+            signal_panel,
+            "pred",
+            band=COMBINED["band"],
+            size_col="vol_targeted_size",
+            top_frac=TOP_FRAC,
+            gross_exposure=GROSS_EXPOSURE,
+            max_position_per_symbol=MAX_POSITION,
         )
         combo_w = quantize_weights(combo_w, grid=COMBINED["grid"])
         combo_w = throttle_weights(combo_w, k=COMBINED["k"])
-        variants["A4_combined"] = evaluate_variant("A4_combined", combo_w, signal_panel, annualized_rate)
+        variants["A4_combined"] = evaluate_variant(
+            "A4_combined", combo_w, signal_panel, annualized_rate
+        )
 
         results["by_offset"][str(offset)] = variants
 
-        print(f"  baseline: net={variants['A0_baseline_band0']['sharpe_net']:.3f} "
-              f"turnover/yr={variants['A0_baseline_band0']['turnover_per_year']:.1f}", flush=True)
+        print(
+            f"  baseline: net={variants['A0_baseline_band0']['sharpe_net']:.3f} "
+            f"turnover/yr={variants['A0_baseline_band0']['turnover_per_year']:.1f}",
+            flush=True,
+        )
         for name, v in variants.items():
             if name == "A0_baseline_band0":
                 continue
-            print(f"  {name}: net={v['sharpe_net']:.3f} turnover/yr={v['turnover_per_year']:.1f} "
-                  f"ci={v['bootstrap_ci_excess_return']}", flush=True)
+            print(
+                f"  {name}: net={v['sharpe_net']:.3f} turnover/yr={v['turnover_per_year']:.1f} "
+                f"ci={v['bootstrap_ci_excess_return']}",
+                flush=True,
+            )
 
     with open("src/research/tmp/phase_a_turnover_results.json", "w") as f:
         json.dump(results, f, indent=2, default=str)

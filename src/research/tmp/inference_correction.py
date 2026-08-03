@@ -26,16 +26,16 @@ sys.path.insert(0, "src")
 sys.path.insert(0, "src/research/tmp")
 
 import numpy as np
-from scipy import stats
-
-import research
+import polars as pl
 from backtest_configs import (
     CONFIGS,
     build_featured_panel,
     load_funding_by_symbol,
     train_predict_fold,
 )
-import polars as pl
+from scipy import stats
+
+import research
 
 TOP_FRAC = 0.2
 GROSS_EXPOSURE = 1.0
@@ -70,13 +70,17 @@ def run_offset0(config: dict, funding_by_symbol: dict) -> dict:
     train_bars = TRAIN_TEST_DAYS[0] * bars_per_day
     test_bars = TRAIN_TEST_DAYS[1] * bars_per_day
 
-    splits = research.panel_walk_forward_splits(df, train_bars, test_bars, origin_offset=0)
+    splits = research.panel_walk_forward_splits(
+        df, train_bars, test_bars, origin_offset=0
+    )
     fold_trade_frames = []
     fold_summaries = []
     for fold_id, (train_idx, test_idx) in enumerate(splits):
         train_df = df[train_idx]
         test_df = df[test_idx]
-        preds, _, desc = train_predict_fold(train_df, test_df, feature_cols, target_col)
+        preds, _, _desc = train_predict_fold(
+            train_df, test_df, feature_cols, target_col
+        )
 
         test_scored = test_df.with_columns(pl.Series("pred", preds)).with_columns(
             research.vol_targeted_size("pred", vol_col, vol_target)
@@ -95,26 +99,42 @@ def run_offset0(config: dict, funding_by_symbol: dict) -> dict:
         basket = research.equal_weight_basket_returns(test_scored)
 
         fold_metrics = research.portfolio_metrics(
-            trade_frame, annualized_rate, taker_fee=TAKER_FEE, slippage=SLIPPAGE,
+            trade_frame,
+            annualized_rate,
+            taker_fee=TAKER_FEE,
+            slippage=SLIPPAGE,
             label=f"fold{fold_id}",
         )
         basket_total = float(basket["trade_log_return"].sum())
-        strat_total_net = fold_metrics.get("total_log_return_net", fold_metrics["total_log_return"])
-        fold_summaries.append({
-            "fold": fold_id,
-            "excess_return_net": strat_total_net - basket_total,
-        })
-        fold_trade_frames.append(trade_frame.with_columns(pl.lit(fold_id).alias("fold")))
+        strat_total_net = fold_metrics.get(
+            "total_log_return_net", fold_metrics["total_log_return"]
+        )
+        fold_summaries.append(
+            {
+                "fold": fold_id,
+                "excess_return_net": strat_total_net - basket_total,
+            }
+        )
+        fold_trade_frames.append(
+            trade_frame.with_columns(pl.lit(fold_id).alias("fold"))
+        )
 
     stitched = pl.concat(fold_trade_frames, how="diagonal_relaxed").sort("datetime")
     stitched_metrics = research.portfolio_metrics(
         stitched, annualized_rate, taker_fee=TAKER_FEE, slippage=SLIPPAGE
     )
 
-    net_return_col = "trade_log_return_net" if "trade_log_return_net" in stitched.columns else "trade_log_return"
+    net_return_col = (
+        "trade_log_return_net"
+        if "trade_log_return_net" in stitched.columns
+        else "trade_log_return"
+    )
     per_bar_net_returns = stitched[net_return_col].to_numpy()
     n_obs = len(per_bar_net_returns)
-    sharpe_net_annualized = stitched_metrics.get("sharpe_net", stitched_metrics.get("sharpe"))
+    sharpe_net_annualized = stitched_metrics.get(
+        "sharpe_net", stitched_metrics.get("sharpe")
+    )
+    assert sharpe_net_annualized is not None
     per_period_sharpe = sharpe_net_annualized / annualized_rate
 
     skew = float(stats.skew(per_bar_net_returns))

@@ -62,16 +62,25 @@ def load_funding_by_symbol() -> dict[str, pl.DataFrame]:
     out = {}
     for sym in SYMBOLS:
         try:
-            out[sym] = data.download_funding_rate_range(sym, START, END, cache_dir=CACHE_DIR)
+            out[sym] = data.download_funding_rate_range(
+                sym, START, END, cache_dir=CACHE_DIR
+            )
         except ValueError:
             continue
     return out
 
 
-def build_carry_panel(interval: str, funding_by_symbol: dict[str, pl.DataFrame]) -> pl.DataFrame:
+def build_carry_panel(
+    interval: str, funding_by_symbol: dict[str, pl.DataFrame]
+) -> pl.DataFrame:
     panel = research.load_universe_panel(
-        SYMBOLS, interval, START, END, min_cross_section=10,
-        download_dir=DOWNLOAD_DIR, cache_dir=CACHE_DIR,
+        SYMBOLS,
+        interval,
+        START,
+        END,
+        min_cross_section=10,
+        download_dir=DOWNLOAD_DIR,
+        cache_dir=CACHE_DIR,
     )
     featured = features.build_feature_panel(panel, funding_by_symbol=funding_by_symbol)
     return featured.with_columns(
@@ -84,7 +93,10 @@ def coverage_stats(panel: pl.DataFrame) -> dict:
     n_total = panel.height
     n_with_funding = panel.filter(pl.col("funding_rate").is_not_null()).height
     symbols_with_funding = (
-        panel.filter(pl.col("funding_rate").is_not_null())["symbol"].unique().sort().to_list()
+        panel.filter(pl.col("funding_rate").is_not_null())["symbol"]
+        .unique()
+        .sort()
+        .to_list()
     )
     return {
         "n_total_rows": n_total,
@@ -96,7 +108,9 @@ def coverage_stats(panel: pl.DataFrame) -> dict:
     }
 
 
-def fold_excess_returns(trade_frame_net: pl.DataFrame, full_df: pl.DataFrame, splits) -> list[float]:
+def fold_excess_returns(
+    trade_frame_net: pl.DataFrame, full_df: pl.DataFrame, splits
+) -> list[float]:
     """full_df must be the SAME frame `splits` (panel_walk_forward_splits'
     output) was computed on - test_idx are row positions into it, not into
     whatever subset the caller later builds from it."""
@@ -105,7 +119,9 @@ def fold_excess_returns(trade_frame_net: pl.DataFrame, full_df: pl.DataFrame, sp
         fold_panel = full_df[test_idx]
         test_dates = fold_panel["datetime"].unique().to_list()
         strat_total = float(
-            trade_frame_net.filter(pl.col("datetime").is_in(test_dates))["trade_log_return_net"].sum()
+            trade_frame_net.filter(pl.col("datetime").is_in(test_dates))[
+                "trade_log_return_net"
+            ].sum()
         )
         basket = research.equal_weight_basket_returns(fold_panel)
         basket_total = float(basket["trade_log_return"].sum())
@@ -114,7 +130,9 @@ def fold_excess_returns(trade_frame_net: pl.DataFrame, full_df: pl.DataFrame, sp
 
 
 def evaluate(name, weights, panel, full_df, annualized_rate, splits):
-    trade_frame = research.portfolio_trade_frame(weights, panel, target_col="fwd_return_1")
+    trade_frame = research.portfolio_trade_frame(
+        weights, panel, target_col="fwd_return_1"
+    )
     metrics = research.portfolio_metrics(
         trade_frame, annualized_rate, taker_fee=TAKER_FEE, slippage=SLIPPAGE, label=name
     )
@@ -123,7 +141,11 @@ def evaluate(name, weights, panel, full_df, annualized_rate, splits):
     ci_lo, ci_hi = research.bootstrap_ci(np.array(excess), n_boot=2000, seed=0)
     n_configs_trials = len(PRED_COLS) * len(INTERVALS) * len(ORIGIN_OFFSETS_DAYS)
     n_obs = len(trade_frame)
-    sharpe_per_period = metrics.get("sharpe_net", float("nan")) / annualized_rate if metrics.get("sharpe_net") is not None else float("nan")
+    sharpe_per_period = (
+        metrics.get("sharpe_net", float("nan")) / annualized_rate
+        if metrics.get("sharpe_net") is not None
+        else float("nan")
+    )
     dsr = (
         research.deflated_sharpe_prob(sharpe_per_period, n_configs_trials, n_obs)
         if np.isfinite(sharpe_per_period)
@@ -139,7 +161,8 @@ def evaluate(name, weights, panel, full_df, annualized_rate, splits):
         "deflated_sharpe_prob": dsr,
         "net_over_gross_sharpe_ratio": (
             metrics.get("sharpe_net") / metrics.get("sharpe")
-            if metrics.get("sharpe") not in (None, 0) else None
+            if metrics.get("sharpe") not in (None, 0)
+            else None
         ),
     }
 
@@ -154,8 +177,11 @@ def main():
         print(f"=== interval={interval} ===", flush=True)
         panel = build_carry_panel(interval, funding_by_symbol)
         cov = coverage_stats(panel)
-        print(f"  coverage: {cov['n_symbols_with_funding']}/{cov['n_symbols_total']} symbols, "
-              f"{cov['frac_rows_with_funding']:.1%} of rows", flush=True)
+        print(
+            f"  coverage: {cov['n_symbols_with_funding']}/{cov['n_symbols_total']} symbols, "
+            f"{cov['frac_rows_with_funding']:.1%} of rows",
+            flush=True,
+        )
 
         annualized_rate = research.sharpe_to_annualized_rate(interval)
         bpd = BARS_PER_DAY[interval]
@@ -177,14 +203,28 @@ def main():
                 # the feature itself) - evaluate directly over every test
                 # fold's rows, concatenated, exactly like the model-based
                 # configs' OOS stitching.
-                test_rows = np.concatenate([idx for _tr, idx in splits]) if splits else np.array([], dtype=int)
+                test_rows = (
+                    np.concatenate([idx for _tr, idx in splits])
+                    if splits
+                    else np.array([], dtype=int)
+                )
                 test_panel = df[np.unique(test_rows)].sort(["datetime", "symbol"])
 
                 weights = research.dollar_neutral_weights(
-                    test_panel, pred_col, top_frac=TOP_FRAC,
-                    gross_exposure=GROSS_EXPOSURE, max_position_per_symbol=MAX_POSITION,
+                    test_panel,
+                    pred_col,
+                    top_frac=TOP_FRAC,
+                    gross_exposure=GROSS_EXPOSURE,
+                    max_position_per_symbol=MAX_POSITION,
                 )
-                base = evaluate(f"{pred_kind}_{interval}_offset{offset_days}", weights, test_panel, df, annualized_rate, splits)
+                base = evaluate(
+                    f"{pred_kind}_{interval}_offset{offset_days}",
+                    weights,
+                    test_panel,
+                    df,
+                    annualized_rate,
+                    splits,
+                )
 
                 # Apply Phase A's own best turnover intervention (throttle
                 # k=6) to the best carry variant, per section 4's own
@@ -192,13 +232,23 @@ def main():
                 throttled = throttle_weights(weights, k=6)
                 throttled_res = evaluate(
                     f"{pred_kind}_{interval}_offset{offset_days}_throttle_k6",
-                    throttled, test_panel, df, annualized_rate, splits,
+                    throttled,
+                    test_panel,
+                    df,
+                    annualized_rate,
+                    splits,
                 )
 
-                by_offset[str(offset_days)] = {"base": base, "throttled_k6": throttled_res}
-                print(f"  {pred_kind} offset={offset_days}: net={base['sharpe_net']:.3f} "
-                      f"turnover/yr={base['turnover_per_year']:.1f} "
-                      f"throttled_net={throttled_res['sharpe_net']:.3f}", flush=True)
+                by_offset[str(offset_days)] = {
+                    "base": base,
+                    "throttled_k6": throttled_res,
+                }
+                print(
+                    f"  {pred_kind} offset={offset_days}: net={base['sharpe_net']:.3f} "
+                    f"turnover/yr={base['turnover_per_year']:.1f} "
+                    f"throttled_net={throttled_res['sharpe_net']:.3f}",
+                    flush=True,
+                )
 
             interval_results["by_pred"][pred_kind] = by_offset
 

@@ -102,8 +102,10 @@ FINANCING_RATE_APPROX = 0.05
 
 
 def compute_carry_fv(
-    leg2_price: float, storage_per_month: float, financing_rate: float
-) -> float:
+    leg2_price: np.ndarray | float,
+    storage_per_month: float,
+    financing_rate: np.ndarray | float,
+) -> np.ndarray | float:
     """Theoretical full-carry fair value of a calendar spread's deviation:
     `-(storage_per_month + financing_rate * leg2_price / 12)`. Negative,
     reflecting that storage + financing cost always pushes the deferred leg
@@ -863,9 +865,12 @@ def true_atr_series(
 
 def sma_causal(x: np.ndarray, window: int) -> np.ndarray:
     """Rolling mean, shift(1): bar t's SMA uses bars through t-1 only."""
-    return pl.Series(np.asarray(x, dtype=float)).rolling_mean(
-        window_size=window
-    ).shift(1).to_numpy()
+    return (
+        pl.Series(np.asarray(x, dtype=float))
+        .rolling_mean(window_size=window)
+        .shift(1)
+        .to_numpy()
+    )
 
 
 def regime_gate(

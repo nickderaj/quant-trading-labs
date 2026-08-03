@@ -234,8 +234,16 @@ class TestRegimePersistent:
         state = pl.Series("state", ["contango"] * 3 + [None] + ["contango"] * 3)
         result = SL10.regime_persistent(state, n_days=2)
         expected = pl.Series(
-            "", ["unconfirmed", "contango", "contango", "unconfirmed", "unconfirmed",
-                 "contango", "contango"]
+            "",
+            [
+                "unconfirmed",
+                "contango",
+                "contango",
+                "unconfirmed",
+                "unconfirmed",
+                "contango",
+                "contango",
+            ],
         )
         assert (result == expected).all()
 
@@ -251,7 +259,9 @@ class TestRollingLegCorrelation:
         # The first window_size-1 values should be NaN
         # All remaining values should be ~1.0
         assert np.isnan(result[0])
-        assert np.isnan(result[58])  # First 59 (window_size) should have < window samples
+        assert np.isnan(
+            result[58]
+        )  # First 59 (window_size) should have < window samples
         valid = result[60:]  # Window complete from index 60 onward
         # Check that valid values are very close to 1.0
         valid = valid[np.isfinite(valid)]
@@ -302,9 +312,7 @@ class TestRegimeConditionalAr1:
         rng = np.random.default_rng(SEED)
         n = 240  # 120 per regime, above the 60 observation minimum
         values = rng.normal(0, 1, n).cumsum()  # Random walk to ensure non-NaN
-        labels = (
-            ["a"] * 120 + ["b"] * 120
-        )  # Regime "a" is first 120, "b" is last 120
+        labels = ["a"] * 120 + ["b"] * 120  # Regime "a" is first 120, "b" is last 120
         result = SL10.regime_conditional_ar1(values, labels)
         assert "a" in result
         assert "b" in result
@@ -411,9 +419,7 @@ class TestRegimeStatePersistence:
     def test_mean_run_length_computed(self):
         """Given a known, hand-constructed state sequence, the mean run
         lengths per state should match the expected values."""
-        state = pl.Series(
-            "state", ["a", "a", "a", "b", "b", "a", "a", "a", "a", "a"]
-        )
+        state = pl.Series("state", ["a", "a", "a", "b", "b", "a", "a", "a", "a", "a"])
         result = SL10.regime_state_persistence(state)
         # Runs: "a" appears in runs [0:3] (length 3), [5:10] (length 5)
         # "b" appears in run [3:5] (length 2)
@@ -510,7 +516,12 @@ class TestCotNetNoncommFraction:
             }
         )
         result = SL10.cot_net_noncomm_fraction(cot)
-        expected_cols = ["report_date", "public_date", "net_noncomm_frac", "open_interest"]
+        expected_cols = [
+            "report_date",
+            "public_date",
+            "net_noncomm_frac",
+            "open_interest",
+        ]
         assert result.columns == expected_cols
 
     def test_zero_open_interest_clip(self):

@@ -21,8 +21,7 @@ from scipy.integrate import quad
 _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT / "src" / "research" / "tmp" / "densities"))
 
-import ged as G
-
+import ged as G  # type: ignore[import-not-found]
 
 # --------------------------------------------------------------------------
 # Unit variance of the standardized density
@@ -35,7 +34,9 @@ class TestUnitVariance:
         s = G._unit_scale(kappa)
         var, _ = quad(
             lambda x: x**2 * st.gennorm.pdf(x, beta=kappa, scale=s),
-            -50, 50, limit=200,
+            -50,
+            50,
+            limit=200,
         )
         assert var == pytest.approx(1.0, abs=1e-6)
 
@@ -44,7 +45,9 @@ class TestUnitVariance:
         kappa = 1.5
         var, _ = quad(
             lambda x: x**2 * np.exp(G.logpdf(np.array([x]), (kappa,)))[0],
-            -50, 50, limit=200,
+            -50,
+            50,
+            limit=200,
         )
         assert var == pytest.approx(1.0, abs=1e-6)
 
@@ -72,7 +75,9 @@ class TestPpfCdfRoundTrip:
         x = G.ppf(q, (kappa,))
         cdf_via_quad, _ = quad(
             lambda t: np.exp(G.logpdf(np.array([t]), (kappa,)))[0],
-            -50, x, limit=200,
+            -50,
+            x,
+            limit=200,
         )
         assert cdf_via_quad == pytest.approx(q, abs=1e-5)
 

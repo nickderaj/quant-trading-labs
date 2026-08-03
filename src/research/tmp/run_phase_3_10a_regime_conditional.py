@@ -61,9 +61,15 @@ PRIMARY_REGIME_DEFINITION = "raw_sign"  # declared in advance -- see module docs
 def load_regime_frame(product: str) -> pl.DataFrame:
     curve = pl.read_parquet(f"{CURVE_DIR}/{product}.parquet")
     curve = curve.filter(pl.col("date") <= pl.lit(DEV_END).str.to_date()).sort("date")
-    ts = C.term_structure_state(curve.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"]))
-    ts = ts.with_columns(S.regime_deadband(ts["roll_slope_annualized"]).alias("state_deadband"))
-    ts = ts.with_columns(S.regime_persistent(ts["term_structure_state"]).alias("state_persistent"))
+    ts = C.term_structure_state(
+        curve.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"])
+    )
+    ts = ts.with_columns(
+        S.regime_deadband(ts["roll_slope_annualized"]).alias("state_deadband")
+    )
+    ts = ts.with_columns(
+        S.regime_persistent(ts["term_structure_state"]).alias("state_persistent")
+    )
     return ts
 
 
@@ -100,7 +106,9 @@ def analyze_spread(name: str, taxonomy: dict) -> dict:
             n = int(mask.sum())
             leg_corr_by_regime[state] = {
                 "n": n,
-                "corr": float(np.corrcoef(r1[mask], r2[mask])[0, 1]) if n >= 30 else None,
+                "corr": float(np.corrcoef(r1[mask], r2[mask])[0, 1])
+                if n >= 30
+                else None,
             }
 
         out[def_name] = {
@@ -115,7 +123,9 @@ def analyze_spread(name: str, taxonomy: dict) -> dict:
 def main():
     with open(TAXONOMY_PATH) as f:
         taxonomy = json.load(f)["per_spread"]
-    inter_commodity = [name for name, v in taxonomy.items() if v["taxonomy"] == "inter_commodity"]
+    inter_commodity = [
+        name for name, v in taxonomy.items() if v["taxonomy"] == "inter_commodity"
+    ]
     calendar = [name for name, v in taxonomy.items() if v["taxonomy"] == "calendar"]
 
     per_spread: dict = {}
@@ -124,22 +134,42 @@ def main():
 
     # brent_wti "both legs agree" robustness variant (sec 4.1's named case).
     bz_regime = load_regime_frame("BZ").rename(
-        {c: f"bz_{c}" for c in ["roll_slope_annualized", "term_structure_state", "state_deadband", "state_persistent"]}
+        {
+            c: f"bz_{c}"
+            for c in [
+                "roll_slope_annualized",
+                "term_structure_state",
+                "state_deadband",
+                "state_persistent",
+            ]
+        }
     )
     cl_regime = load_regime_frame("CL").rename(
-        {c: f"cl_{c}" for c in ["roll_slope_annualized", "term_structure_state", "state_deadband", "state_persistent"]}
+        {
+            c: f"cl_{c}"
+            for c in [
+                "roll_slope_annualized",
+                "term_structure_state",
+                "state_deadband",
+                "state_persistent",
+            ]
+        }
     )
     bw = pl.read_parquet(f"{SPREAD_DIR}/brent_wti.parquet")
     bw = bw.filter(pl.col("date") <= pl.lit(DEV_END).str.to_date()).sort("date")
     bw_clean = bw.filter(~pl.col("roll_window_flag"))
-    merged = bw_clean.join(bz_regime, on="date", how="left").join(cl_regime, on="date", how="left")
+    merged = bw_clean.join(bz_regime, on="date", how="left").join(
+        cl_regime, on="date", how="left"
+    )
     both_agree = (
         pl.when(pl.col("bz_term_structure_state") == pl.col("cl_term_structure_state"))
         .then(pl.col("bz_term_structure_state"))
         .otherwise(pl.lit("disagree"))
     )
     merged = merged.with_columns(both_agree.alias("state_both_agree"))
-    ar1_both_agree = S.regime_conditional_ar1(merged["value"].to_numpy(), merged["state_both_agree"].to_list())
+    ar1_both_agree = S.regime_conditional_ar1(
+        merged["value"].to_numpy(), merged["state_both_agree"].to_list()
+    )
     n_agree = int((merged["state_both_agree"] != "disagree").sum())
     brent_wti_both_agree = {
         "n_days_total": merged.height,
@@ -165,18 +195,35 @@ def main():
         bw_fit = raw.get("backwardation", {}).get("fit")
         pooled = raw.get("_pooled", {}).get("fit")
         stronger_in = None
-        if cb and bw_fit and cb.get("beta") is not None and bw_fit.get("beta") is not None:
-            stronger_in = "backwardation" if abs(bw_fit["beta"]) > abs(cb["beta"]) else "contango"
-        cross_spread_summary.append({
-            "spread": name,
-            "contango_beta": cb.get("beta") if cb else None,
-            "contango_mean_reverting": cb.get("mean_reverting") if cb else None,
-            "backwardation_beta": bw_fit.get("beta") if bw_fit else None,
-            "backwardation_mean_reverting": bw_fit.get("mean_reverting") if bw_fit else None,
-            "pooled_mean_reverting": pooled.get("mean_reverting") if pooled else None,
-            "mean_reversion_stronger_in": stronger_in,
-        })
-    n_stronger_backwardation = sum(1 for r in cross_spread_summary if r["mean_reversion_stronger_in"] == "backwardation")
+        if (
+            cb
+            and bw_fit
+            and cb.get("beta") is not None
+            and bw_fit.get("beta") is not None
+        ):
+            stronger_in = (
+                "backwardation" if abs(bw_fit["beta"]) > abs(cb["beta"]) else "contango"
+            )
+        cross_spread_summary.append(
+            {
+                "spread": name,
+                "contango_beta": cb.get("beta") if cb else None,
+                "contango_mean_reverting": cb.get("mean_reverting") if cb else None,
+                "backwardation_beta": bw_fit.get("beta") if bw_fit else None,
+                "backwardation_mean_reverting": bw_fit.get("mean_reverting")
+                if bw_fit
+                else None,
+                "pooled_mean_reverting": pooled.get("mean_reverting")
+                if pooled
+                else None,
+                "mean_reversion_stronger_in": stronger_in,
+            }
+        )
+    n_stronger_backwardation = sum(
+        1
+        for r in cross_spread_summary
+        if r["mean_reversion_stronger_in"] == "backwardation"
+    )
 
     results = {
         "primary_regime_definition": PRIMARY_REGIME_DEFINITION,
@@ -196,7 +243,9 @@ def main():
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
     print(f"written {OUT_PATH}")
-    print(f"stronger reversion in backwardation: {n_stronger_backwardation}/{len(inter_commodity)}")
+    print(
+        f"stronger reversion in backwardation: {n_stronger_backwardation}/{len(inter_commodity)}"
+    )
 
 
 if __name__ == "__main__":

@@ -47,12 +47,12 @@ DATA_DIR = "src/research/data/market/spreads"
 OUT_PATH = "src/research/tmp/phase_4_spread_probe_results.json"
 
 SPREADS = [
-    "crack_321",       # refining margin, 3 legs (CL/HO/RB) collapsed to one series
-    "gold_silver",      # cross-metal ratio spread
-    "brent_wti",        # cross-crude spread
-    "corn_wheat",        # cross-grain spread
-    "platinum_palladium", # cross-metal spread
-    "crush_soy",          # soy processing margin
+    "crack_321",  # refining margin, 3 legs (CL/HO/RB) collapsed to one series
+    "gold_silver",  # cross-metal ratio spread
+    "brent_wti",  # cross-crude spread
+    "corn_wheat",  # cross-grain spread
+    "platinum_palladium",  # cross-metal spread
+    "crush_soy",  # soy processing margin
 ]
 
 
@@ -81,15 +81,19 @@ def main():
             "ar1_mean_reversion": ar1,
             "zscore_5d_forward_ic": ic,
         }
-        print(f"{name}: beta={ar1['beta']:.5f} t={ar1['t_stat_beta']:.2f} "
-              f"half_life={ar1['half_life_days']} IC={ic['ic']} p={ic['p_value']}")
+        print(
+            f"{name}: beta={ar1['beta']:.5f} t={ar1['t_stat_beta']:.2f} "
+            f"half_life={ar1['half_life_days']} IC={ic['ic']} p={ic['p_value']}"
+        )
 
     n_mean_reverting = sum(
-        1 for r in results.values()
+        1
+        for r in results.values()
         if "ar1_mean_reversion" in r and r["ar1_mean_reversion"]["mean_reverting"]
     )
     n_negative_ic_significant = sum(
-        1 for r in results.values()
+        1
+        for r in results.values()
         if "zscore_5d_forward_ic" in r
         and r["zscore_5d_forward_ic"]["ic"] is not None
         and r["zscore_5d_forward_ic"]["ic"] < 0

@@ -1480,7 +1480,11 @@ def _auto_block_length(values: np.ndarray, max_lag: int = 50) -> int:
     block_length = max_lag  # default: never dropped inside the band
     for lag in range(1, max_lag):
         acf_lag = np.sum(x[:-lag] * x[lag:]) / denom
-        acf_next = np.sum(x[: -(lag + 1)] * x[lag + 1 :]) / denom if lag + 1 <= max_lag else 0.0
+        acf_next = (
+            np.sum(x[: -(lag + 1)] * x[lag + 1 :]) / denom
+            if lag + 1 <= max_lag
+            else 0.0
+        )
         if abs(acf_lag) < band and abs(acf_next) < band:
             block_length = lag
             break
@@ -1488,7 +1492,10 @@ def _auto_block_length(values: np.ndarray, max_lag: int = 50) -> int:
 
 
 def _block_resample(
-    values: np.ndarray, block_length: int | None, n_boot: int, seed: int,
+    values: np.ndarray,
+    block_length: int | None,
+    n_boot: int,
+    seed: int,
     statistic,
 ) -> np.ndarray:
     """Shared block-resampling loop behind `block_bootstrap_ci` and

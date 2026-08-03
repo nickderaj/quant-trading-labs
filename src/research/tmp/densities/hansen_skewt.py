@@ -65,7 +65,9 @@ _MIN_N = 30
 def _consts(nu: float, lam: float) -> tuple[float, float, float]:
     """(c, a, b) per Hansen (1994); c computed via gammaln to avoid overflow
     at large nu."""
-    c = np.exp(gammaln((nu + 1.0) / 2.0) - gammaln(nu / 2.0)) / np.sqrt(np.pi * (nu - 2.0))
+    c = np.exp(gammaln((nu + 1.0) / 2.0) - gammaln(nu / 2.0)) / np.sqrt(
+        np.pi * (nu - 2.0)
+    )
     a = 4.0 * lam * c * (nu - 2.0) / (nu - 1.0)
     b = np.sqrt(1.0 + 3.0 * lam**2 - a**2)
     return c, a, b
@@ -83,7 +85,7 @@ def logpdf(z: np.ndarray, shape: tuple[float, ...]) -> np.ndarray:
 
 def ppf(q: float | np.ndarray, shape: tuple[float, ...]) -> np.ndarray:
     nu, lam = shape
-    c, a, b = _consts(nu, lam)
+    _c, a, b = _consts(nu, lam)
     q = np.asarray(q, dtype=float)
     scalar_input = q.ndim == 0
     q = np.atleast_1d(q)
@@ -92,7 +94,9 @@ def ppf(q: float | np.ndarray, shape: tuple[float, ...]) -> np.ndarray:
     out = np.empty_like(q, dtype=float)
     left = q < q0
     right = ~left
-    out[left] = (1.0 / b) * ((1.0 - lam) * cst * st.t.ppf(q[left] / (1.0 - lam), df=nu) - a)
+    out[left] = (1.0 / b) * (
+        (1.0 - lam) * cst * st.t.ppf(q[left] / (1.0 - lam), df=nu) - a
+    )
     out[right] = (1.0 / b) * (
         (1.0 + lam) * cst * st.t.ppf((q[right] - q0) / (1.0 + lam) + 0.5, df=nu) - a
     )
@@ -123,11 +127,13 @@ def fit(z: np.ndarray) -> tuple[float, ...] | None:
     x0 = np.array([8.0, 0.0])
     try:
         res = minimize(
-            negloglik, x0, method="L-BFGS-B",
+            negloglik,
+            x0,
+            method="L-BFGS-B",
             bounds=[_NU_BOUNDS, _LAM_BOUNDS],
             options={"maxiter": 200},
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
         return None
     if not res.success or not np.all(np.isfinite(res.x)):
         return None

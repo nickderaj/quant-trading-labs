@@ -20,13 +20,14 @@ purity the way a return-prediction backtest's does).
 import json
 import sys
 import time
+from typing import Any
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
+import dist_lib as L
 import numpy as np
 
-import dist_lib as L
 import research
 
 SYMBOL = "BTCUSDT"
@@ -72,8 +73,11 @@ for interval in INTERVALS:
     # rung 2: HAR-RV (daily/weekly/monthly RV components, rolling-refit OLS)
     har_df = L.make_har_features(df, interval)
     har_fc = L.rolling_ols_refit(
-        har_df, ["rv_d", "rv_w", "rv_m"], "rv_target",
-        refit_every=cheap_refit_every, min_train=min_train,
+        har_df,
+        ["rv_d", "rv_w", "rv_m"],
+        "rv_target",
+        refit_every=cheap_refit_every,
+        min_train=min_train,
     )
     forecasts["rung2_har_rv"] = har_fc
 
@@ -85,7 +89,11 @@ for interval in INTERVALS:
     # rung 4: distributional fits on RV (gamma/invgamma/lognorm), rolling refit
     for fam in ["gamma", "invgamma", "lognorm"]:
         forecasts[f"rung4_{fam}"] = L.rolling_rv_dist_forecast(
-            rv, fam, refit_every=mle_refit_every, min_train=min_train, max_train=MLE_MAX_TRAIN,
+            rv,
+            fam,
+            refit_every=mle_refit_every,
+            min_train=min_train,
+            max_train=MLE_MAX_TRAIN,
         )
 
     # rung 5: GARCH(1,1), normal / t / skewt innovations, rolling refit
@@ -93,7 +101,10 @@ for interval in INTERVALS:
     t_fits = []
     for innov in ["normal", "t", "skewt"]:
         fc, fits = L.rolling_garch_forecast(
-            ret, refit_every=mle_refit_every, min_train=min_train, innovation=innov,
+            ret,
+            refit_every=mle_refit_every,
+            min_train=min_train,
+            innovation=innov,
             max_train=MLE_MAX_TRAIN,
         )
         forecasts[f"rung5_garch_{innov}"] = fc
@@ -101,7 +112,9 @@ for interval in INTERVALS:
             t_fits = fits
         garch_fits_summary[innov] = {
             "n_refits": len(fits),
-            "last_params": {k: v for k, v in fits[-1].items() if k != "params"} if fits else None,
+            "last_params": {k: v for k, v in fits[-1].items() if k != "params"}
+            if fits
+            else None,
             # descriptive only ("what did the final fit look like") - NEVER used
             # for scoring below, since fits[-1] is only estimable from data at
             # the end of the sample and using it to score earlier bars would be
@@ -110,7 +123,9 @@ for interval in INTERVALS:
         }
 
     # rung 6: activity-based (count / dispersion index -> RV), rolling-refit OLS
-    forecasts["rung6_activity"] = L.activity_forecast(df, window=bpd if bpd > 1 else 24).to_numpy()  # uses cheap_refit_every internally via window
+    forecasts["rung6_activity"] = L.activity_forecast(
+        df, window=bpd if bpd > 1 else 24
+    ).to_numpy()  # uses cheap_refit_every internally via window
 
     # ---- score every rung: QLIKE (primary) + MSE, Mincer-Zarnowitz ----
     scores = {}
@@ -140,8 +155,12 @@ for interval in INTERVALS:
 
     # ---- ladder ordering: pick the single best-QLIKE representative of
     # each rung group for the Diebold-Mariano progression ----
-    def best_in_group(prefix: str) -> str | None:
-        cands = [k for k in scores if k.startswith(prefix) and np.isfinite(scores[k]["qlike"])]
+    def best_in_group(prefix: str, scores=scores) -> str | None:
+        cands = [
+            k
+            for k in scores
+            if k.startswith(prefix) and np.isfinite(scores[k]["qlike"])
+        ]
         if not cands:
             return None
         return min(cands, key=lambda k: scores[k]["qlike"])
@@ -157,32 +176,36 @@ for interval in INTERVALS:
     }
 
     # QLIKE loss series per representative, DM test on adjacent pairs
-    def qlike_loss_series(fc: np.ndarray) -> np.ndarray:
+    def qlike_loss_series(fc: np.ndarray, rv=rv) -> np.ndarray:
         # actual > 0, not >= 0: QLIKE's log(ratio) term is undefined at
         # actual == 0 (see dist_lib.qlike_mse's docstring comment - same
         # frozen-price-bar bug).
         mask = np.isfinite(rv) & np.isfinite(fc) & (fc > 0) & (rv > 0)
         out_arr = np.full(len(rv), np.nan)
         import distributions as dist
+
         out_arr[mask] = dist.qlike(rv[mask], fc[mask])
         return out_arr
 
     rung_order = ["rung0", "rung1", "rung2", "rung3", "rung4", "rung5", "rung6"]
-    dm_tests = {}
+    dm_tests: dict[str, dict[str, Any]] = {}
     prev_rung = None
     for r in rung_order:
         rep = ladder_reps[r]
         if rep is None:
             continue
-        if prev_rung is not None and ladder_reps[prev_rung] is not None:
-            la = qlike_loss_series(forecasts[ladder_reps[prev_rung]])
+        prev_rep: str | None = ladder_reps[prev_rung] if prev_rung is not None else None
+        if prev_rung is not None and prev_rep is not None:
+            la = qlike_loss_series(forecasts[prev_rep])
             lb = qlike_loss_series(forecasts[rep])
             both = np.isfinite(la) & np.isfinite(lb)
             if both.sum() > 30:
                 tstat, pval = L.diebold_mariano(la[both], lb[both])
                 dm_tests[f"{prev_rung}_vs_{r}"] = {
-                    "prev": ladder_reps[prev_rung], "rung": rep,
-                    "tstat": tstat, "pvalue": pval,
+                    "prev": prev_rep,
+                    "rung": rep,
+                    "tstat": tstat,
+                    "pvalue": pval,
                     "qlike_prev": float(np.nanmean(la[both])),
                     "qlike_rung": float(np.nanmean(lb[both])),
                     "n": int(both.sum()),
@@ -197,19 +220,26 @@ for interval in INTERVALS:
     # rung4, says nothing about rung5 vs rung3). All C(7,2)=21 pairs are
     # tested directly so "is there an actual winner" can be answered
     # honestly rather than assumed from the ladder order.
-    all_pairs_dm = {}
+    all_pairs_dm: dict[str, dict[str, Any]] = {}
     present_rungs = [r for r in rung_order if ladder_reps[r] is not None]
-    loss_cache = {r: qlike_loss_series(forecasts[ladder_reps[r]]) for r in present_rungs}
+    loss_cache = {}
+    for r in present_rungs:
+        rep_r = ladder_reps[r]
+        assert rep_r is not None
+        loss_cache[r] = qlike_loss_series(forecasts[rep_r])
     for i, ra in enumerate(present_rungs):
-        for rb in present_rungs[i + 1:]:
+        for rb in present_rungs[i + 1 :]:
             la, lb = loss_cache[ra], loss_cache[rb]
             both = np.isfinite(la) & np.isfinite(lb)
             if both.sum() > 30:
                 tstat, pval = L.diebold_mariano(la[both], lb[both])
                 all_pairs_dm[f"{ra}_vs_{rb}"] = {
-                    "a": ladder_reps[ra], "b": ladder_reps[rb],
-                    "tstat": tstat, "pvalue": pval,
-                    "qlike_a": float(np.nanmean(la[both])), "qlike_b": float(np.nanmean(lb[both])),
+                    "a": ladder_reps[ra],
+                    "b": ladder_reps[rb],
+                    "tstat": tstat,
+                    "pvalue": pval,
+                    "qlike_a": float(np.nanmean(la[both])),
+                    "qlike_b": float(np.nanmean(lb[both])),
                     "n": int(both.sum()),
                 }
 
@@ -217,12 +247,16 @@ for interval in INTERVALS:
     # every other rung AND every one of those pairwise differences is
     # significant (p < 0.05) in its favour.
     qlike_by_rung = {r: float(np.nanmean(loss_cache[r])) for r in present_rungs}
-    best_rung = min(qlike_by_rung, key=qlike_by_rung.get)
+    best_rung = min(qlike_by_rung, key=lambda r: qlike_by_rung[r])
     beats_all = True
     for r in present_rungs:
         if r == best_rung:
             continue
-        key = f"{best_rung}_vs_{r}" if f"{best_rung}_vs_{r}" in all_pairs_dm else f"{r}_vs_{best_rung}"
+        key = (
+            f"{best_rung}_vs_{r}"
+            if f"{best_rung}_vs_{r}" in all_pairs_dm
+            else f"{r}_vs_{best_rung}"
+        )
         entry = all_pairs_dm.get(key)
         if entry is None:
             continue
@@ -235,8 +269,10 @@ for interval in INTERVALS:
             beats_all = False
             break
     winner_verdict = {
-        "best_by_qlike": best_rung, "best_rep": ladder_reps[best_rung],
-        "qlike_by_rung": qlike_by_rung, "beats_every_other_rung_significantly": beats_all,
+        "best_by_qlike": best_rung,
+        "best_rep": ladder_reps[best_rung],
+        "qlike_by_rung": qlike_by_rung,
+        "beats_every_other_rung_significantly": beats_all,
     }
 
     res = {
@@ -254,7 +290,9 @@ for interval in INTERVALS:
         "elapsed_sec": time.time() - t0,
     }
     out["intervals"][interval] = res
-    print(f"{interval}: n={n} elapsed={res['elapsed_sec']:.1f}s ladder_reps={ladder_reps}")
+    print(
+        f"{interval}: n={n} elapsed={res['elapsed_sec']:.1f}s ladder_reps={ladder_reps}"
+    )
 
 with open("src/research/tmp/phase3_results.json", "w") as f:
     json.dump(out, f, indent=1, default=float)

@@ -19,29 +19,68 @@ from scipy import stats as st
 # ---------------------------------------------------------------------------
 
 PRODUCTS = [
-    "CL", "BZ", "NG", "HO", "RB",       # energy
-    "GC", "SI", "PL", "PA",             # metals
-    "ZC", "ZW", "KE", "ZS", "ZL", "ZM", # grains
-    "ES",                                # control (non-commodity)
+    "CL",
+    "BZ",
+    "NG",
+    "HO",
+    "RB",  # energy
+    "GC",
+    "SI",
+    "PL",
+    "PA",  # metals
+    "ZC",
+    "ZW",
+    "KE",
+    "ZS",
+    "ZL",
+    "ZM",  # grains
+    "ES",  # control (non-commodity)
 ]
 
 SECTOR = {
-    "CL": "energy", "BZ": "energy", "NG": "energy", "HO": "energy", "RB": "energy",
-    "GC": "metals", "SI": "metals", "PL": "metals", "PA": "metals",
-    "ZC": "grains", "ZW": "grains", "KE": "grains", "ZS": "grains", "ZL": "grains", "ZM": "grains",
+    "CL": "energy",
+    "BZ": "energy",
+    "NG": "energy",
+    "HO": "energy",
+    "RB": "energy",
+    "GC": "metals",
+    "SI": "metals",
+    "PL": "metals",
+    "PA": "metals",
+    "ZC": "grains",
+    "ZW": "grains",
+    "KE": "grains",
+    "ZS": "grains",
+    "ZL": "grains",
+    "ZM": "grains",
     "ES": "control",
 }
 
 # Physically-delivered products must be rolled before first notice.
-PHYSICALLY_DELIVERED = {"CL", "NG", "HO", "RB", "GC", "SI", "PL", "PA", "ZC", "ZW", "KE", "ZS", "ZL", "ZM"}
+PHYSICALLY_DELIVERED = {
+    "CL",
+    "NG",
+    "HO",
+    "RB",
+    "GC",
+    "SI",
+    "PL",
+    "PA",
+    "ZC",
+    "ZW",
+    "KE",
+    "ZS",
+    "ZL",
+    "ZM",
+}
 
 # Sector base hues (matplotlib/altair hex), with per-product shade variation applied
 # by `product_color`. Defined once here and reused across every figure in the
 # notebook so colour is consistent for a given product everywhere it appears.
 _SECTOR_BASE = {
-    "energy": "#d1495b",   # warm red
-    "metals": "#8886d1",   # violet-grey
-    "grains": "#2a9d8f",   # teal-green
+    "energy": "#d1495b",  # warm red
+    "metals": "#8886d1",  # violet-grey
+    "grains": "#2a9d8f",  # teal-green
     "control": "#6c757d",  # neutral grey (ES: not a commodity)
 }
 
@@ -78,7 +117,12 @@ def check_duplicate_tree(root_a: str, root_b: str) -> dict:
     from pathlib import Path
 
     a, b = Path(root_a), Path(root_b)
-    result: dict = {"root_a": str(a), "root_b": str(b), "a_exists": a.exists(), "b_exists": b.exists()}
+    result: dict = {
+        "root_a": str(a),
+        "root_b": str(b),
+        "a_exists": a.exists(),
+        "b_exists": b.exists(),
+    }
     if not (result["a_exists"] and result["b_exists"]):
         result["verdict"] = "only one tree present; duplicate check inapplicable"
         return result
@@ -161,7 +205,9 @@ def flag_contaminated_rows(
             / pl.col("_anchor_close").abs().clip(lower_bound=1e-9)
         ).alias("_deviation")
     )
-    out = out.with_columns((pl.col("_deviation") > deviation_threshold).alias("_bad_day"))
+    out = out.with_columns(
+        (pl.col("_deviation") > deviation_threshold).alias("_bad_day")
+    )
 
     contract_stats = out.group_by(["product", "contract_id"]).agg(
         pl.col("_bad_day").mean().alias("_frac_bad"), pl.len().alias("_n_days")
@@ -197,7 +243,9 @@ def liquidity_screen(
     screened = df.filter(pl.col("volume") >= min_volume)
     counts = screened.group_by(["product", "date"]).agg(pl.len().alias("_n_active"))
     screened = screened.join(counts, on=["product", "date"], how="left")
-    screened = screened.filter(pl.col("_n_active") >= min_active_contracts).drop("_n_active")
+    screened = screened.filter(pl.col("_n_active") >= min_active_contracts).drop(
+        "_n_active"
+    )
     return screened
 
 
@@ -240,14 +288,37 @@ def build_roll_schedule(
         d = date_col.cast(pl.Date)
         shifted = d.dt.offset_by(f"-{n}d")
         dow = shifted.dt.weekday()  # 1=Mon .. 7=Sun
-        shifted = pl.when(dow == 6).then(shifted.dt.offset_by("-1d")).when(dow == 7).then(shifted.dt.offset_by("-2d")).otherwise(shifted)
+        shifted = (
+            pl.when(dow == 6)
+            .then(shifted.dt.offset_by("-1d"))
+            .when(dow == 7)
+            .then(shifted.dt.offset_by("-2d"))
+            .otherwise(shifted)
+        )
         return shifted
 
-    cal = cal.with_columns(_offset_business_days(pl.col("_anchor"), roll_days_before).alias("roll_date"))
-    return cal.select(["product", "contract_month", "expiry", "first_notice_date", "last_trade_date", "_anchor", "roll_date"]).rename({"_anchor": "anchor_date"})
+    cal = cal.with_columns(
+        _offset_business_days(pl.col("_anchor"), roll_days_before).alias("roll_date")
+    )
+    return cal.select(
+        [
+            "product",
+            "contract_month",
+            "expiry",
+            "first_notice_date",
+            "last_trade_date",
+            "_anchor",
+            "roll_date",
+        ]
+    ).rename({"_anchor": "anchor_date"})
 
 
-def liquid_contract_months(ohlcv: pl.DataFrame, contracts: pl.DataFrame, product: str, min_total_volume: int = 5000) -> set[str]:
+def liquid_contract_months(
+    ohlcv: pl.DataFrame,
+    contracts: pl.DataFrame,
+    product: str,
+    min_total_volume: int = 5000,
+) -> set[str]:
     """Contract months for `product` that were genuinely traded, not just
     nominally listed. Some products list a ticker for every calendar month
     but only trade actively on a seasonal/quarterly cycle -- PL and PA trade
@@ -260,10 +331,16 @@ def liquid_contract_months(ohlcv: pl.DataFrame, contracts: pl.DataFrame, product
     front-month series for that whole month -- this is what caught it on PL
     (57% of F1 rows null before this filter).
     """
-    prod_contracts = contracts.filter(pl.col("product") == product).select(["contract_id", "contract_month"])
-    j = ohlcv.filter(pl.col("product") == product).join(prod_contracts, on="contract_id", how="inner")
+    prod_contracts = contracts.filter(pl.col("product") == product).select(
+        ["contract_id", "contract_month"]
+    )
+    j = ohlcv.filter(pl.col("product") == product).join(
+        prod_contracts, on="contract_id", how="inner"
+    )
     agg = j.group_by("contract_month").agg(pl.col("volume").sum().alias("total_vol"))
-    return set(agg.filter(pl.col("total_vol") >= min_total_volume)["contract_month"].to_list())
+    return set(
+        agg.filter(pl.col("total_vol") >= min_total_volume)["contract_month"].to_list()
+    )
 
 
 def build_continuous_series(
@@ -299,17 +376,27 @@ def build_continuous_series(
     but never-really-traded months from the roll sequence (sec above); set to 0
     to disable and use raw contracts.parquet membership only.
     """
-    prod_ohlcv = ohlcv.filter(pl.col("product") == product).sort(["contract_id", "date"])
+    prod_ohlcv = ohlcv.filter(pl.col("product") == product).sort(
+        ["contract_id", "date"]
+    )
     prod_contracts = contracts.filter(pl.col("product") == product).select(
         ["contract_id", "contract_month", "expiry"]
     )
     valid_months = set(prod_contracts["contract_month"].to_list())
     if min_contract_volume > 0:
-        valid_months &= liquid_contract_months(ohlcv, contracts, product, min_contract_volume)
-    schedule = build_roll_schedule(roll_calendar, product, roll_days_before, valid_contract_months=valid_months).sort("expiry")
+        valid_months &= liquid_contract_months(
+            ohlcv, contracts, product, min_contract_volume
+        )
+    schedule = build_roll_schedule(
+        roll_calendar, product, roll_days_before, valid_contract_months=valid_months
+    ).sort("expiry")
 
     px = prod_ohlcv.join(prod_contracts, on="contract_id", how="inner")
-    px = px.join(schedule.select(["contract_month", "roll_date", "anchor_date"]), on="contract_month", how="left")
+    px = px.join(
+        schedule.select(["contract_month", "roll_date", "anchor_date"]),
+        on="contract_month",
+        how="left",
+    )
     px = px.filter(pl.col("roll_date").is_not_null()).sort(["expiry", "date"])
 
     sched_sorted = schedule.filter(pl.col("roll_date").is_not_null()).sort("expiry")
@@ -341,7 +428,11 @@ def build_continuous_series(
         leg_px = leg_px.with_columns(
             (pl.col("expiry") - pl.col("date")).dt.total_days().alias(f"dte_f{leg}")
         ).rename({"close": f"close_f{leg}", "contract_month": f"contract_month_f{leg}"})
-        legs.append(leg_px.select(["date", f"close_f{leg}", f"dte_f{leg}", f"contract_month_f{leg}"]))
+        legs.append(
+            leg_px.select(
+                ["date", f"close_f{leg}", f"dte_f{leg}", f"contract_month_f{leg}"]
+            )
+        )
 
     curve = legs[0]
     for leg_df in legs[1:]:
@@ -357,7 +448,10 @@ def _add_return_conventions(curve: pl.DataFrame) -> pl.DataFrame:
     return conventions defined in `build_continuous_series`'s docstring.
     """
     curve = curve.with_columns(
-        pl.col("contract_month_f1").ne(pl.col("contract_month_f1").shift(1)).fill_null(False).alias("is_roll")
+        pl.col("contract_month_f1")
+        .ne(pl.col("contract_month_f1").shift(1))
+        .fill_null(False)
+        .alias("is_roll")
     )
     curve = curve.with_columns(
         pl.when(pl.col("is_roll") | pl.col("close_f1").shift(1).is_null())
@@ -380,19 +474,28 @@ def _add_return_conventions(curve: pl.DataFrame) -> pl.DataFrame:
     backadj = close - offset
     curve = curve.with_columns(pl.Series("close_backadj", backadj))
     curve = curve.with_columns(
-        (pl.col("close_backadj") / pl.col("close_backadj").shift(1)).log().alias("log_return_backadj")
+        (pl.col("close_backadj") / pl.col("close_backadj").shift(1))
+        .log()
+        .alias("log_return_backadj")
     )
 
     ratio = np.ones(n)
     cum_ratio = 1.0
     for i in range(1, n):
-        if is_roll[i] and not np.isnan(close[i]) and not np.isnan(close[i - 1]) and close[i - 1] != 0:
+        if (
+            is_roll[i]
+            and not np.isnan(close[i])
+            and not np.isnan(close[i - 1])
+            and close[i - 1] != 0
+        ):
             cum_ratio *= close[i - 1] / close[i]
         ratio[i] = cum_ratio
     ratioadj = close * ratio
     curve = curve.with_columns(pl.Series("close_ratioadj", ratioadj))
     curve = curve.with_columns(
-        (pl.col("close_ratioadj") / pl.col("close_ratioadj").shift(1)).log().alias("log_return_ratioadj")
+        (pl.col("close_ratioadj") / pl.col("close_ratioadj").shift(1))
+        .log()
+        .alias("log_return_ratioadj")
     )
     return curve
 
@@ -402,7 +505,9 @@ def _add_return_conventions(curve: pl.DataFrame) -> pl.DataFrame:
 # ---------------------------------------------------------------------------
 
 
-def reconcile_curves(built: pl.DataFrame, reference: pl.DataFrame, tick_size: float, leg: int = 1) -> dict:
+def reconcile_curves(
+    built: pl.DataFrame, reference: pl.DataFrame, tick_size: float, leg: int = 1
+) -> dict:
     """Compare a built F{leg} close series against a ready-made research/*_curve
     close_f{leg} series on overlapping dates. Pass condition: >=99% of overlapping
     dates agree to within one tick.
@@ -410,7 +515,9 @@ def reconcile_curves(built: pl.DataFrame, reference: pl.DataFrame, tick_size: fl
     col_built = f"close_f{leg}"
     col_ref = f"close_f{leg}"
     joined = built.select(["date", col_built]).join(
-        reference.select(["date", col_ref]).rename({col_ref: "_ref"}), on="date", how="inner"
+        reference.select(["date", col_ref]).rename({col_ref: "_ref"}),
+        on="date",
+        how="inner",
     )
     joined = joined.drop_nulls()
     if joined.height == 0:
@@ -418,35 +525,56 @@ def reconcile_curves(built: pl.DataFrame, reference: pl.DataFrame, tick_size: fl
     diff = (joined[col_built] - joined["_ref"]).abs()
     within = (diff <= tick_size + 1e-9).sum()
     pct = within / joined.height
-    return {"n_overlap": joined.height, "pct_within_tick": float(pct), "pass": bool(pct >= 0.99)}
+    return {
+        "n_overlap": joined.height,
+        "pct_within_tick": float(pct),
+        "pass": bool(pct >= 0.99),
+    }
 
 
-def reconcile_vol(built_vol: pl.DataFrame, metrics_vol: pl.DataFrame, tolerance: float = 0.15) -> dict:
+def reconcile_vol(
+    built_vol: pl.DataFrame, metrics_vol: pl.DataFrame, tolerance: float = 0.15
+) -> dict:
     """Compare computed realised vol against metrics/*.parquet's realised_vol_20d.
     `built_vol`/`metrics_vol` must share columns [date, vol]. Tolerance is relative.
     """
-    joined = built_vol.rename({"vol": "_built"}).join(
-        metrics_vol.rename({"vol": "_ref"}), on="date", how="inner"
-    ).drop_nulls()
+    joined = (
+        built_vol.rename({"vol": "_built"})
+        .join(metrics_vol.rename({"vol": "_ref"}), on="date", how="inner")
+        .drop_nulls()
+    )
     if joined.height == 0:
         return {"n_overlap": 0, "pct_within_tolerance": None, "pass": False}
-    rel_diff = ((joined["_built"] - joined["_ref"]).abs() / joined["_ref"].abs().clip(1e-9))
+    rel_diff = (joined["_built"] - joined["_ref"]).abs() / joined["_ref"].abs().clip(
+        1e-9
+    )
     within = (rel_diff <= tolerance).sum()
     pct = within / joined.height
-    return {"n_overlap": joined.height, "pct_within_tolerance": float(pct), "pass": bool(pct >= 0.90)}
+    return {
+        "n_overlap": joined.height,
+        "pct_within_tolerance": float(pct),
+        "pass": bool(pct >= 0.90),
+    }
 
 
-def reconcile_returns_yfinance(built_returns: pl.DataFrame, yf_returns: pl.DataFrame) -> dict:
+def reconcile_returns_yfinance(
+    built_returns: pl.DataFrame, yf_returns: pl.DataFrame
+) -> dict:
     """Correlate our continuous log returns against a yfinance continuous-futures
     proxy's daily log returns. Pass condition: correlation > 0.98.
     """
-    joined = built_returns.rename({"ret": "_built"}).join(
-        yf_returns.rename({"ret": "_yf"}), on="date", how="inner"
-    ).unique(subset=["date"]).drop_nulls()
+    joined = (
+        built_returns.rename({"ret": "_built"})
+        .join(yf_returns.rename({"ret": "_yf"}), on="date", how="inner")
+        .unique(subset=["date"])
+        .drop_nulls()
+    )
     joined = joined.filter(pl.col("_built").is_finite() & pl.col("_yf").is_finite())
     if joined.height < 30:
         return {"n_overlap": joined.height, "corr": None, "pass": False}
-    corr = float(np.corrcoef(joined["_built"].to_numpy(), joined["_yf"].to_numpy())[0, 1])
+    corr = float(
+        np.corrcoef(joined["_built"].to_numpy(), joined["_yf"].to_numpy())[0, 1]
+    )
     return {"n_overlap": joined.height, "corr": corr, "pass": bool(corr > 0.98)}
 
 
@@ -518,7 +646,9 @@ def round_turn_cost_per_contract(product: str, tick_multiplier: float = 1.0) -> 
     return spec["commission_per_contract"] + slippage
 
 
-def cost_per_unit_notional(product: str, price: float, tick_multiplier: float = 1.0) -> float:
+def cost_per_unit_notional(
+    product: str, price: float, tick_multiplier: float = 1.0
+) -> float:
     """Round-turn cost expressed as a fraction of contract notional, for use as an
     add_portfolio_costs-style `taker_fee`-equivalent. `price` is the current futures
     price (used to approximate notional via tick_value/tick as the point value).
@@ -561,7 +691,9 @@ def ljung_box_test(x: np.ndarray, lags: int) -> dict:
     return {"Q": float(q_stat), "p_value": p_value, "lags": lags, "n": n}
 
 
-def leverage_correlation(returns: np.ndarray, vol_next: np.ndarray, n_boot: int = 2000, seed: int = 0) -> dict:
+def leverage_correlation(
+    returns: np.ndarray, vol_next: np.ndarray, n_boot: int = 2000, seed: int = 0
+) -> dict:
     """corr(r_t, sigma_{t+1}) with a bootstrap CI. Negative in equities (the
     leverage effect: vol rises when price falls); commodities are hypothesised
     to show the opposite sign (sec 3.1's "inverse leverage effect") because a
@@ -583,7 +715,9 @@ def leverage_correlation(returns: np.ndarray, vol_next: np.ndarray, n_boot: int 
     return {"corr": corr, "ci_lo": ci_lo, "ci_hi": ci_hi, "n": n}
 
 
-def samuelson_effect(vol: np.ndarray, dte: np.ndarray, bin_edges: list[int] | None = None) -> dict:
+def samuelson_effect(
+    vol: np.ndarray, dte: np.ndarray, bin_edges: list[int] | None = None
+) -> dict:
     """Mean realised vol bucketed by days-to-expiry. Rising vol as dte -> 0 is
     the Samuelson effect: a contract's price becomes more sensitive to news as
     delivery approaches and time to arbitrage the news away shrinks.
@@ -598,7 +732,14 @@ def samuelson_effect(vol: np.ndarray, dte: np.ndarray, bin_edges: list[int] | No
         in_bin = (d >= lo) & (d < hi)
         if in_bin.sum() < 5:
             continue
-        out.append({"dte_lo": lo, "dte_hi": hi, "mean_vol": float(np.mean(v[in_bin])), "n": int(in_bin.sum())})
+        out.append(
+            {
+                "dte_lo": lo,
+                "dte_hi": hi,
+                "mean_vol": float(np.mean(v[in_bin])),
+                "n": int(in_bin.sum()),
+            }
+        )
     return {"buckets": out}
 
 
@@ -613,9 +754,14 @@ def month_of_year_stats(dates: list, returns: np.ndarray) -> dict:
         sel = sel[np.isfinite(sel)]
         if len(sel) < 5:
             continue
-        out.append({
-            "month": m, "mean_return": float(np.mean(sel)), "vol": float(np.std(sel)), "n": len(sel),
-        })
+        out.append(
+            {
+                "month": m,
+                "mean_return": float(np.mean(sel)),
+                "vol": float(np.std(sel)),
+                "n": len(sel),
+            }
+        )
     return {"months": out}
 
 
@@ -628,22 +774,62 @@ def day_of_week_stats(dates: list, returns: np.ndarray) -> dict:
         sel = sel[np.isfinite(sel)]
         if len(sel) < 5:
             continue
-        out.append({
-            "weekday": wd, "mean_return": float(np.mean(sel)), "vol": float(np.std(sel)), "n": len(sel),
-        })
+        out.append(
+            {
+                "weekday": wd,
+                "mean_return": float(np.mean(sel)),
+                "vol": float(np.std(sel)),
+                "n": len(sel),
+            }
+        )
     return {"weekdays": out}
 
 
 # Named events for tail-atlas annotation (sec 4 Phase 1). Windows are
 # inclusive [start, end] in ISO date strings.
 NAMED_EVENTS: list[dict[str, str | list[str]]] = [
-    {"name": "2011 Libya supply shock", "start": "2011-02-15", "end": "2011-04-30", "products": ["CL", "BZ"]},
-    {"name": "2014-15 OPEC collapse", "start": "2014-11-01", "end": "2015-03-01", "products": ["CL", "BZ", "RB", "HO"]},
-    {"name": "2020-04-20 negative WTI", "start": "2020-04-15", "end": "2020-04-25", "products": ["CL"]},
-    {"name": "2021-02 Uri freeze", "start": "2021-02-10", "end": "2021-02-20", "products": ["NG", "CL"]},
-    {"name": "2022-02 Ukraine invasion", "start": "2022-02-20", "end": "2022-04-01", "products": ["NG", "BZ", "CL", "ZW", "ZC"]},
-    {"name": "2022 nickel-style squeeze era (energy crunch)", "start": "2022-08-01", "end": "2022-09-15", "products": ["NG"]},
-    {"name": "2023-24 normalisation", "start": "2023-01-01", "end": "2024-06-30", "products": PRODUCTS},
+    {
+        "name": "2011 Libya supply shock",
+        "start": "2011-02-15",
+        "end": "2011-04-30",
+        "products": ["CL", "BZ"],
+    },
+    {
+        "name": "2014-15 OPEC collapse",
+        "start": "2014-11-01",
+        "end": "2015-03-01",
+        "products": ["CL", "BZ", "RB", "HO"],
+    },
+    {
+        "name": "2020-04-20 negative WTI",
+        "start": "2020-04-15",
+        "end": "2020-04-25",
+        "products": ["CL"],
+    },
+    {
+        "name": "2021-02 Uri freeze",
+        "start": "2021-02-10",
+        "end": "2021-02-20",
+        "products": ["NG", "CL"],
+    },
+    {
+        "name": "2022-02 Ukraine invasion",
+        "start": "2022-02-20",
+        "end": "2022-04-01",
+        "products": ["NG", "BZ", "CL", "ZW", "ZC"],
+    },
+    {
+        "name": "2022 nickel-style squeeze era (energy crunch)",
+        "start": "2022-08-01",
+        "end": "2022-09-15",
+        "products": ["NG"],
+    },
+    {
+        "name": "2023-24 normalisation",
+        "start": "2023-01-01",
+        "end": "2024-06-30",
+        "products": PRODUCTS,
+    },
 ]
 
 
@@ -676,7 +862,9 @@ def events_in_window(product: str, start: str, end: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
-def numerical_cdf_grid(logpdf_fn, grid_lo: float = -20.0, grid_hi: float = 20.0, n_grid: int = 4001) -> dict:
+def numerical_cdf_grid(
+    logpdf_fn, grid_lo: float = -20.0, grid_hi: float = 20.0, n_grid: int = 4001
+) -> dict:
     """Build a numerical CDF over `grid_lo..grid_hi` from a logpdf callable
     (z: np.ndarray) -> np.ndarray, via cumulative trapezoidal integration.
     Returns {"grid": z-grid, "cdf": F(z)}; F is normalised to end at 1.0 so a
@@ -693,7 +881,9 @@ def numerical_cdf_grid(logpdf_fn, grid_lo: float = -20.0, grid_hi: float = 20.0,
     return {"grid": grid, "cdf": cdf}
 
 
-def numerical_pit(logpdf_fn, z_values: np.ndarray, grid_lo: float = -20.0, grid_hi: float = 20.0) -> np.ndarray:
+def numerical_pit(
+    logpdf_fn, z_values: np.ndarray, grid_lo: float = -20.0, grid_hi: float = 20.0
+) -> np.ndarray:
     """PIT values for `z_values` under a shape-only family's logpdf, via
     `numerical_cdf_grid` + linear interpolation."""
     g = numerical_cdf_grid(logpdf_fn, grid_lo, grid_hi)
@@ -701,7 +891,9 @@ def numerical_pit(logpdf_fn, z_values: np.ndarray, grid_lo: float = -20.0, grid_
     return np.interp(z, g["grid"], g["cdf"])
 
 
-def numerical_ppf(logpdf_fn, u: np.ndarray, grid_lo: float = -20.0, grid_hi: float = 20.0) -> np.ndarray:
+def numerical_ppf(
+    logpdf_fn, u: np.ndarray, grid_lo: float = -20.0, grid_hi: float = 20.0
+) -> np.ndarray:
     """Inverse-CDF (quantile function) for `u` under a shape-only family's
     logpdf, via one `numerical_cdf_grid` build + interpolation -- the
     `numerical_pit` inverse. Exists because nig.ppf has no closed form and
@@ -739,7 +931,12 @@ def fit_gjr_zoo_two_stage(r: np.ndarray, family_module) -> dict | None:
     gjr_fit = L5.fit_gjr11(r, innovation="normal")
     if gjr_fit is None:
         return None
-    omega, alpha, gamma, beta = gjr_fit["omega"], gjr_fit["alpha"], gjr_fit["gamma"], gjr_fit["beta"]
+    omega, alpha, gamma, beta = (
+        gjr_fit["omega"],
+        gjr_fit["alpha"],
+        gjr_fit["gamma"],
+        gjr_fit["beta"],
+    )
     uncond = omega / max(1 - alpha - gamma / 2.0 - beta, 1e-6)
     sig2 = L5._gjr_variance_path(omega, alpha, gamma, beta, r, uncond)
     if np.any(sig2 <= 0) or not np.all(np.isfinite(sig2)):
@@ -752,14 +949,22 @@ def fit_gjr_zoo_two_stage(r: np.ndarray, family_module) -> dict | None:
     lev_last = gamma * last_shock if r[-1] < 0.0 else 0.0
     next_sig2 = omega + alpha * last_shock + lev_last + beta * sig2[-1]
     return {
-        "omega": float(omega), "alpha": float(alpha), "gamma": float(gamma), "beta": float(beta),
-        "shape": tuple(float(s) for s in shape), "next_var": float(next_sig2),
+        "omega": float(omega),
+        "alpha": float(alpha),
+        "gamma": float(gamma),
+        "beta": float(beta),
+        "shape": tuple(float(s) for s in shape),
+        "next_var": float(next_sig2),
         "family": family_module.NAME,
     }
 
 
 def rolling_gjr_forecast_zoo(
-    returns: np.ndarray, refit_every: int, min_train: int, family_module, max_train: int = 1500,
+    returns: np.ndarray,
+    refit_every: int,
+    min_train: int,
+    family_module,
+    max_train: int = 1500,
 ) -> tuple[np.ndarray, list[dict]]:
     """Refit-then-forward-fill rolling variance forecast for the GJR+zoo
     two-stage fit, structurally identical to
@@ -777,18 +982,28 @@ def rolling_gjr_forecast_zoo(
             new_fit = fit_gjr_zoo_two_stage(window, family_module)
             if new_fit is not None:
                 fit = new_fit
-                sig2_state = fit["omega"] / max(1 - fit["alpha"] - fit["gamma"] / 2.0 - fit["beta"], 1e-6)
+                sig2_state = fit["omega"] / max(
+                    1 - fit["alpha"] - fit["gamma"] / 2.0 - fit["beta"], 1e-6
+                )
                 fits.append({"t": t, **fit})
         if fit is not None:
             forecast[t] = sig2_state
             if t + 1 < n and np.isfinite(returns[t]):
                 shock = returns[t] ** 2
                 lev = fit["gamma"] * shock if returns[t] < 0.0 else 0.0
-                sig2_state = fit["omega"] + fit["alpha"] * shock + lev + fit["beta"] * sig2_state
+                sig2_state = (
+                    fit["omega"] + fit["alpha"] * shock + lev + fit["beta"] * sig2_state
+                )
     return forecast, fits
 
 
-def zoo_es_forecast_upper(variance_forecast: np.ndarray, fits: list[dict], family_module, q: float, n_points: int = 30) -> np.ndarray:
+def zoo_es_forecast_upper(
+    variance_forecast: np.ndarray,
+    fits: list[dict],
+    family_module,
+    q: float,
+    n_points: int = 30,
+) -> np.ndarray:
     """Upper-tail ES at exceedance probability q for a zoo family:
     sigma_t * (1/q) * integral_{1-q}^{1} ppf(u) du, via numerical
     integration of the family's own ppf (its `es(q, shape)` is defined as
@@ -821,7 +1036,9 @@ def zoo_es_forecast_upper(variance_forecast: np.ndarray, fits: list[dict], famil
     return out
 
 
-def spliced_evt_var_es_forecast(variance_forecast: np.ndarray, spliced_fits: list[dict], q: float) -> dict:
+def spliced_evt_var_es_forecast(
+    variance_forecast: np.ndarray, spliced_fits: list[dict], q: float
+) -> dict:
     """VaR/ES forecast at exceedance level q from a rolling spliced-EVT fit
     path (dist_lib6.rolling_spliced_evt_fits' output). Reuses each fit's own
     GPD tail sub-fit (dist_lib5.gpd_var_es) -- valid because notebook 8 only
@@ -863,7 +1080,11 @@ def spliced_evt_var_es_forecast(variance_forecast: np.ndarray, spliced_fits: lis
 _SEASONAL_WINDOWS = {
     "NG": {"heating_season": [11, 12, 1, 2, 3]},
     "ZC": {"planting": [4, 5], "growing": [6, 7, 8], "harvest": [9, 10, 11]},
-    "ZW": {"planting": [9, 10], "growing": [3, 4, 5], "harvest": [6, 7]},  # winter wheat cycle
+    "ZW": {
+        "planting": [9, 10],
+        "growing": [3, 4, 5],
+        "harvest": [6, 7],
+    },  # winter wheat cycle
     "ZS": {"planting": [4, 5], "growing": [6, 7, 8], "harvest": [9, 10]},
     "ZL": {"planting": [4, 5], "growing": [6, 7, 8], "harvest": [9, 10]},
     "ZM": {"planting": [4, 5], "growing": [6, 7, 8], "harvest": [9, 10]},
@@ -909,7 +1130,9 @@ def seasonal_state(dates: list, product: str) -> list[str]:
     return [month_to_state.get(d.month, "off_season") for d in dates]
 
 
-def macro_regime(fred_frames: dict[str, pl.DataFrame], dates: pl.Series, lag_days: int = 1) -> pl.DataFrame:
+def macro_regime(
+    fred_frames: dict[str, pl.DataFrame], dates: pl.Series, lag_days: int = 1
+) -> pl.DataFrame:
     """VIX tercile, T10Y2Y sign, and DFF level, each lagged `lag_days`
     business days before being joined onto `dates` (no lookahead: FRED is
     published with a lag and this repo's own discipline requires lagging it
@@ -923,7 +1146,11 @@ def macro_regime(fred_frames: dict[str, pl.DataFrame], dates: pl.Series, lag_day
     vix = fred_frames["VIXCLS"].with_columns(pl.col("date").cast(pl.Date)).sort("date")
     vix = vix.with_columns(pl.col("VIXCLS").shift(lag_days).alias("vix_lagged"))
     terciles = vix["vix_lagged"].drop_nulls().to_numpy()
-    t1, t2 = (np.percentile(terciles, [33.3, 66.7]) if len(terciles) > 10 else (np.nan, np.nan))
+    t1, t2 = (
+        np.percentile(terciles, [33.3, 66.7])
+        if len(terciles) > 10
+        else (np.nan, np.nan)
+    )
     vix = vix.with_columns(
         pl.when(pl.col("vix_lagged") < t1)
         .then(pl.lit("low_vol"))
@@ -933,16 +1160,27 @@ def macro_regime(fred_frames: dict[str, pl.DataFrame], dates: pl.Series, lag_day
         .alias("vix_regime")
     )
 
-    t10y2y = fred_frames["T10Y2Y"].with_columns(pl.col("date").cast(pl.Date)).sort("date")
-    t10y2y = t10y2y.with_columns(pl.col("T10Y2Y").shift(lag_days).alias("t10y2y_lagged"))
+    t10y2y = (
+        fred_frames["T10Y2Y"].with_columns(pl.col("date").cast(pl.Date)).sort("date")
+    )
     t10y2y = t10y2y.with_columns(
-        pl.when(pl.col("t10y2y_lagged") < 0).then(pl.lit("inverted")).otherwise(pl.lit("normal")).alias("yield_curve_regime")
+        pl.col("T10Y2Y").shift(lag_days).alias("t10y2y_lagged")
+    )
+    t10y2y = t10y2y.with_columns(
+        pl.when(pl.col("t10y2y_lagged") < 0)
+        .then(pl.lit("inverted"))
+        .otherwise(pl.lit("normal"))
+        .alias("yield_curve_regime")
     )
 
     dff = fred_frames["DFF"].with_columns(pl.col("date").cast(pl.Date)).sort("date")
     dff = dff.with_columns(pl.col("DFF").shift(lag_days).alias("dff_lagged"))
     dff_terciles = dff["dff_lagged"].drop_nulls().to_numpy()
-    d1, d2 = (np.percentile(dff_terciles, [33.3, 66.7]) if len(dff_terciles) > 10 else (np.nan, np.nan))
+    d1, d2 = (
+        np.percentile(dff_terciles, [33.3, 66.7])
+        if len(dff_terciles) > 10
+        else (np.nan, np.nan)
+    )
     dff = dff.with_columns(
         pl.when(pl.col("dff_lagged") < d1)
         .then(pl.lit("low_rate"))
@@ -958,7 +1196,9 @@ def macro_regime(fred_frames: dict[str, pl.DataFrame], dates: pl.Series, lag_day
     return out
 
 
-def kupiec_by_state(hits: np.ndarray, states: list[str] | np.ndarray, expected_rate: float) -> dict:
+def kupiec_by_state(
+    hits: np.ndarray, states: list[str] | np.ndarray, expected_rate: float
+) -> dict:
     """Kupiec unconditional-coverage test run separately within each state
     label, plus the pooled (unconditional) test, for a direct
     state-conditioned-vs-unconditional coverage comparison (Gate CI)."""
@@ -974,9 +1214,17 @@ def kupiec_by_state(hits: np.ndarray, states: list[str] | np.ndarray, expected_r
             out[state] = {"n": len(h), "kupiec_p": None, "observed_rate": None}
             continue
         _, p = dist.kupiec_test(h, expected_rate)
-        out[state] = {"n": len(h), "kupiec_p": float(p), "observed_rate": float(np.mean(h))}
+        out[state] = {
+            "n": len(h),
+            "kupiec_p": float(p),
+            "observed_rate": float(np.mean(h)),
+        }
     _, p_all = dist.kupiec_test(hits, expected_rate)
-    out["_pooled"] = {"n": len(hits), "kupiec_p": float(p_all), "observed_rate": float(np.mean(hits))}
+    out["_pooled"] = {
+        "n": len(hits),
+        "kupiec_p": float(p_all),
+        "observed_rate": float(np.mean(hits)),
+    }
     return out
 
 
@@ -998,7 +1246,15 @@ class RiskModel:
     (r-mean)/std, so VaR/ES need the mean/std Jacobian applied explicitly).
     """
 
-    def __init__(self, product: str, family: str, kind: str, mean: float, std: float, params: tuple):
+    def __init__(
+        self,
+        product: str,
+        family: str,
+        kind: str,
+        mean: float,
+        std: float,
+        params: tuple,
+    ):
         self.product = product
         self.family = family
         self.kind = kind
@@ -1067,11 +1323,19 @@ class RiskModel:
 
     def _lower_q_at_scale(self, alpha: float, sigma_t: float) -> float:
         base = self._lower_q(alpha)
-        return float(self.mean + (base - self.mean) * (sigma_t / self.std)) if self.std > 0 else base
+        return (
+            float(self.mean + (base - self.mean) * (sigma_t / self.std))
+            if self.std > 0
+            else base
+        )
 
     def _lower_es_at_scale(self, alpha: float, sigma_t: float) -> float:
         base = self._lower_es(alpha)
-        return float(self.mean + (base - self.mean) * (sigma_t / self.std)) if self.std > 0 else base
+        return (
+            float(self.mean + (base - self.mean) * (sigma_t / self.std))
+            if self.std > 0
+            else base
+        )
 
     def simulate(self, n: int, seed: int = 0) -> np.ndarray:
         """Draw n i.i.d. returns from the fitted marginal (used to build
@@ -1124,7 +1388,9 @@ class RiskModel:
         }
 
 
-def ewma_vol(returns: np.ndarray, lam: float = 0.94, seed_window: int = 20) -> np.ndarray:
+def ewma_vol(
+    returns: np.ndarray, lam: float = 0.94, seed_window: int = 20
+) -> np.ndarray:
     """Causal RiskMetrics-style EWMA volatility path: sigma2_t = lam *
     sigma2_{t-1} + (1-lam) * r_{t-1}^2, seeded by the sample variance of the
     first `seed_window` observations. sigma_t (the output) is only ever a
@@ -1159,7 +1425,14 @@ def fit_risk_model(returns: np.ndarray, product: str, family: str) -> RiskModel 
         params = fit_fn(returns)
         if params is None:
             return None
-        return RiskModel(product, family, "loc_scale", mean=float(np.mean(returns)), std=float(np.std(returns)), params=params)
+        return RiskModel(
+            product,
+            family,
+            "loc_scale",
+            mean=float(np.mean(returns)),
+            std=float(np.std(returns)),
+            params=params,
+        )
     import densities
 
     if family == "spliced_evt":
@@ -1173,7 +1446,9 @@ def fit_risk_model(returns: np.ndarray, product: str, family: str) -> RiskModel 
     return RiskModel(product, family, "standardized", mean=mean, std=std, params=shape)
 
 
-def empirical_lower_tail_dependence(u_i: np.ndarray, u_j: np.ndarray, q: float = 0.1) -> float:
+def empirical_lower_tail_dependence(
+    u_i: np.ndarray, u_j: np.ndarray, q: float = 0.1
+) -> float:
     """Empirical lower-tail dependence coefficient at threshold q:
     P(U_j <= q | U_i <= q), from rank-transformed (pseudo-uniform) marginals.
     """
@@ -1235,7 +1510,9 @@ def portfolio_risk(
         if historical_returns is not None:
             mat = np.column_stack([historical_returns[p] for p in products])
             mat = mat[np.all(np.isfinite(mat), axis=1)]
-            pseudo = np.column_stack([to_pseudo_uniform(mat[:, i]) for i in range(n_assets)])
+            pseudo = np.column_stack(
+                [to_pseudo_uniform(mat[:, i]) for i in range(n_assets)]
+            )
             corr = np.corrcoef(pseudo, rowvar=False)
         else:
             corr = np.eye(n_assets)
@@ -1252,7 +1529,9 @@ def portfolio_risk(
             u = _t_cdf(t_draws, t_df)
         else:
             raise ValueError(f"unknown dependence: {dependence!r}")
-        sims = np.column_stack([models[p].ppf_from_u(u[:, i]) for i, p in enumerate(products)])
+        sims = np.column_stack(
+            [models[p].ppf_from_u(u[:, i]) for i, p in enumerate(products)]
+        )
 
     port_ret = sims @ w
     var_01 = float(-np.percentile(port_ret, 1))
@@ -1261,15 +1540,23 @@ def portfolio_risk(
     es_05 = float(-np.mean(port_ret[port_ret <= np.percentile(port_ret, 5)]))
 
     tail_dep = {}
-    pseudo_sims = np.column_stack([to_pseudo_uniform(sims[:, i]) for i in range(n_assets)])
+    pseudo_sims = np.column_stack(
+        [to_pseudo_uniform(sims[:, i]) for i in range(n_assets)]
+    )
     for i in range(n_assets):
         for j in range(i + 1, n_assets):
             key = f"{products[i]}_{products[j]}"
-            tail_dep[key] = empirical_lower_tail_dependence(pseudo_sims[:, i], pseudo_sims[:, j])
+            tail_dep[key] = empirical_lower_tail_dependence(
+                pseudo_sims[:, i], pseudo_sims[:, j]
+            )
 
     return {
-        "dependence": dependence, "n_sims": n_sims,
-        "var_01": var_01, "var_05": var_05, "es_01": es_01, "es_05": es_05,
+        "dependence": dependence,
+        "n_sims": n_sims,
+        "var_01": var_01,
+        "var_05": var_05,
+        "es_01": es_01,
+        "es_05": es_05,
         "lower_tail_dependence": tail_dep,
     }
 
@@ -1317,33 +1604,72 @@ def portfolio_costs_futures(
     """
     w = weights.sort([symbol_col, datetime_col])
     w = w.with_columns(
-        pl.col("weight").diff().fill_null(pl.col("weight")).abs().over(symbol_col).alias("abs_dweight")
+        pl.col("weight")
+        .diff()
+        .fill_null(pl.col("weight"))
+        .abs()
+        .over(symbol_col)
+        .alias("abs_dweight")
     )
-    joined = w.join(prices.select([datetime_col, symbol_col, "close"]), on=[datetime_col, symbol_col], how="left")
+    joined = w.join(
+        prices.select([datetime_col, symbol_col, "close"]),
+        on=[datetime_col, symbol_col],
+        how="left",
+    )
     joined = joined.drop_nulls(subset=["close"])
 
     rows = joined.select([symbol_col, "close"]).to_dicts()
     cost_fracs = [
-        cost_per_unit_notional(r[symbol_col], r["close"], tick_multiplier) if r["close"] and r["close"] != 0 else 0.0
+        cost_per_unit_notional(r[symbol_col], r["close"], tick_multiplier)
+        if r["close"] and r["close"] != 0
+        else 0.0
         for r in rows
     ]
     joined = joined.with_columns(pl.Series("cost_frac_per_unit", cost_fracs))
-    joined = joined.with_columns((pl.col("abs_dweight") * pl.col("cost_frac_per_unit")).alias("cost_contribution"))
-    return joined.group_by(datetime_col).agg(pl.col("cost_contribution").sum().alias("cost_frac")).sort(datetime_col)
+    joined = joined.with_columns(
+        (pl.col("abs_dweight") * pl.col("cost_frac_per_unit")).alias(
+            "cost_contribution"
+        )
+    )
+    return (
+        joined.group_by(datetime_col)
+        .agg(pl.col("cost_contribution").sum().alias("cost_frac"))
+        .sort(datetime_col)
+    )
 
 
-def add_portfolio_costs_futures(trade_frame: pl.DataFrame, costs: pl.DataFrame, datetime_col: str = "datetime") -> pl.DataFrame:
+def add_portfolio_costs_futures(
+    trade_frame: pl.DataFrame, costs: pl.DataFrame, datetime_col: str = "datetime"
+) -> pl.DataFrame:
     """`research.add_portfolio_costs`'s cost math, but with a per-bar cost
     fraction (from `portfolio_costs_futures`) instead of one constant fee."""
-    out = trade_frame.join(costs, on=datetime_col, how="left").with_columns(pl.col("cost_frac").fill_null(0.0))
+    out = trade_frame.join(costs, on=datetime_col, how="left").with_columns(
+        pl.col("cost_frac").fill_null(0.0)
+    )
     out = out.with_columns((1 - pl.col("cost_frac")).log().alias("cost_log_return"))
-    out = out.with_columns((pl.col("trade_log_return") + pl.col("cost_log_return")).alias("trade_log_return_net"))
-    out = out.with_columns(pl.col("trade_log_return_net").cum_sum().alias("equity_curve_net"))
-    out = out.with_columns((pl.col("equity_curve_net") - pl.col("equity_curve_net").cum_max()).alias("drawdown_log_return_net"))
+    out = out.with_columns(
+        (pl.col("trade_log_return") + pl.col("cost_log_return")).alias(
+            "trade_log_return_net"
+        )
+    )
+    out = out.with_columns(
+        pl.col("trade_log_return_net").cum_sum().alias("equity_curve_net")
+    )
+    out = out.with_columns(
+        (pl.col("equity_curve_net") - pl.col("equity_curve_net").cum_max()).alias(
+            "drawdown_log_return_net"
+        )
+    )
     return out
 
 
-def futures_portfolio_metrics(trade_frame: pl.DataFrame, costs: pl.DataFrame, annualized_rate: float, datetime_col: str = "datetime", label: str = "portfolio") -> dict:
+def futures_portfolio_metrics(
+    trade_frame: pl.DataFrame,
+    costs: pl.DataFrame,
+    annualized_rate: float,
+    datetime_col: str = "datetime",
+    label: str = "portfolio",
+) -> dict:
     """`research.portfolio_metrics`'s summary, but net-of-cost via
     `add_portfolio_costs_futures` (per-bar, per-product costs) instead of
     `research.add_portfolio_costs`'s single scalar fee. Reuses
@@ -1355,9 +1681,13 @@ def futures_portfolio_metrics(trade_frame: pl.DataFrame, costs: pl.DataFrame, an
 
     if len(trade_frame) == 0:
         return {"label": label, "no_bars": 0}
-    metrics = research._series_metrics(trade_frame["trade_log_return"], annualized_rate, label)
+    metrics = research._series_metrics(
+        trade_frame["trade_log_return"], annualized_rate, label
+    )
     costed = add_portfolio_costs_futures(trade_frame, costs, datetime_col)
-    net_metrics = research._series_metrics(costed["trade_log_return_net"], annualized_rate, f"{label}_net")
+    net_metrics = research._series_metrics(
+        costed["trade_log_return_net"], annualized_rate, f"{label}_net"
+    )
     metrics["sharpe_net"] = net_metrics["sharpe"]
     metrics["total_log_return_net"] = net_metrics["total_log_return"]
     metrics["compound_return_net"] = net_metrics["compound_return"]

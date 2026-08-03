@@ -24,8 +24,9 @@ from scipy import stats as st
 from scipy.optimize import minimize
 
 sys.path.insert(0, "src/research/tmp")
-import dist_lib as L  # noqa: E402  (path must be set up first)
-import distributions as dist  # noqa: E402
+import dist_lib as L
+
+import distributions as dist
 
 # --------------------------------------------------------------------------
 # Phase 1: Hill estimator (tail index), independent of any parametric MLE fit
@@ -46,13 +47,15 @@ def hill_estimator(x: np.ndarray, k: int, tail: str = "upper") -> float:
     n = len(y)
     if k >= n or k < 10:
         return np.nan
-    top = y[n - k:]
+    top = y[n - k :]
     thresh = y[n - k - 1]
     xi = float(np.mean(np.log(top / thresh)))
     return 1.0 / xi if xi > 0 else np.nan
 
 
-def hill_alpha_path(x: np.ndarray, tail: str = "upper", k_min: int = 20, k_max: int | None = None) -> dict:
+def hill_alpha_path(
+    x: np.ndarray, tail: str = "upper", k_min: int = 20, k_max: int | None = None
+) -> dict:
     """Vectorized Hill alpha-hat for every k in [k_min, k_max] at once (a
     fast, O(n) equivalent of calling hill_estimator(x, k, tail) once per k -
     that function alone would cost O(n log n) per call, i.e. O(n^2 log n)
@@ -91,7 +94,9 @@ def hill_alpha_path(x: np.ndarray, tail: str = "upper", k_min: int = 20, k_max: 
     return {"k": ks, "alpha": alpha}
 
 
-def find_hill_plateau(alpha: np.ndarray, ks: np.ndarray, window: int = 50, rel_tol: float = 0.10) -> dict:
+def find_hill_plateau(
+    alpha: np.ndarray, ks: np.ndarray, window: int = 50, rel_tol: float = 0.10
+) -> dict:
     """Read a Hill plot for a stable plateau, honestly.
 
     Heuristic (documented, not a universal statistical result): slide a
@@ -116,7 +121,10 @@ def find_hill_plateau(alpha: np.ndarray, ks: np.ndarray, window: int = 50, rel_t
             scores[i] = (seg.max() - seg.min()) / med
     stable = np.where(scores < rel_tol)[0]
     if len(stable) == 0:
-        return {"found": False, "reason": f"no {window}-wide window has relative spread < {rel_tol}"}
+        return {
+            "found": False,
+            "reason": f"no {window}-wide window has relative spread < {rel_tol}",
+        }
     # widest contiguous run of stable window-start-indices
     runs, run_start = [], stable[0]
     for i in range(1, len(stable)):
@@ -129,7 +137,8 @@ def find_hill_plateau(alpha: np.ndarray, ks: np.ndarray, window: int = 50, rel_t
     plateau_mask = (k >= k_lo) & (k <= k_hi)
     return {
         "found": True,
-        "k_lo": int(k_lo), "k_hi": int(k_hi),
+        "k_lo": int(k_lo),
+        "k_hi": int(k_hi),
         "alpha_median": float(np.median(a[plateau_mask])),
         "alpha_min": float(np.min(a[plateau_mask])),
         "alpha_max": float(np.max(a[plateau_mask])),
@@ -143,7 +152,9 @@ def find_hill_plateau(alpha: np.ndarray, ks: np.ndarray, window: int = 50, rel_t
 # --------------------------------------------------------------------------
 
 
-def _gjr_variance_path(omega: float, alpha: float, gamma: float, beta: float, r: np.ndarray, sig2_0: float) -> np.ndarray:
+def _gjr_variance_path(
+    omega: float, alpha: float, gamma: float, beta: float, r: np.ndarray, sig2_0: float
+) -> np.ndarray:
     """GJR(1,1,1): sig2_t = omega + (alpha + gamma*1{r_{t-1}<0}) * r_{t-1}^2
     + beta*sig2_{t-1}. gamma > 0 is the leverage effect (down-moves raise
     next-bar variance more than up-moves of the same size). gamma == 0
@@ -161,17 +172,20 @@ def _gjr_variance_path(omega: float, alpha: float, gamma: float, beta: float, r:
 
 
 def _gjr_negloglik(params: np.ndarray, r: np.ndarray, innovation: str) -> float:
+    extra: list[float]
     if innovation == "normal":
         omega, alpha, gamma, beta = params
-        extra = ()
+        extra = []
     elif innovation == "t":
         omega, alpha, gamma, beta, nu = params
         if nu <= 2.1:
             return 1e10
-        extra = (nu,)
+        extra = [nu]
     else:
-        raise ValueError(f"GJR only supports normal/t innovations (skew-t skipped as "
-                          f"over-parameterized - see NEXT_RUN_PROMPT.md #Phase 2a), got {innovation!r}")
+        raise ValueError(
+            f"GJR only supports normal/t innovations (skew-t skipped as "
+            f"over-parameterized - see NEXT_RUN_PROMPT.md #Phase 2a), got {innovation!r}"
+        )
 
     if omega <= 1e-12 or alpha < 0 or beta < 0 or (alpha + gamma) < 0:
         return 1e10
@@ -192,7 +206,7 @@ def _gjr_negloglik(params: np.ndarray, r: np.ndarray, innovation: str) -> float:
     if innovation == "normal":
         ll = -0.5 * np.log(2 * np.pi * sig2) - 0.5 * z**2
     else:
-        (nu,) = extra
+        nu = extra[0]
         c = np.sqrt(nu / (nu - 2))
         zt = z * c
         ll = st.t.logpdf(zt, df=nu) + np.log(c) - 0.5 * np.log(sig2)
@@ -228,10 +242,14 @@ def fit_gjr11(r: np.ndarray, innovation: str = "normal") -> dict | None:
 
     try:
         res = minimize(
-            _gjr_negloglik, x0, args=(r, innovation), method="L-BFGS-B",
-            bounds=bounds, options={"maxiter": 200},
+            _gjr_negloglik,
+            x0,
+            args=(r, innovation),
+            method="L-BFGS-B",
+            bounds=bounds,
+            options={"maxiter": 200},
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
         return None
     if not np.all(np.isfinite(res.x)):
         return None
@@ -258,14 +276,23 @@ def fit_gjr11(r: np.ndarray, innovation: str = "normal") -> dict | None:
         lr_pvalue = float(st.chi2.sf(lr_stat, df=1))
 
     return {
-        "omega": float(omega), "alpha": float(alpha), "gamma": float(gamma), "beta": float(beta),
-        "params": params.tolist(), "next_var": float(next_sig2), "innovation": innovation,
-        "lr_gamma0_stat": lr_stat, "lr_gamma0_pvalue": lr_pvalue,
+        "omega": float(omega),
+        "alpha": float(alpha),
+        "gamma": float(gamma),
+        "beta": float(beta),
+        "params": params.tolist(),
+        "next_var": float(next_sig2),
+        "innovation": innovation,
+        "lr_gamma0_stat": lr_stat,
+        "lr_gamma0_pvalue": lr_pvalue,
     }
 
 
 def rolling_gjr_forecast(
-    returns: np.ndarray, refit_every: int, min_train: int, innovation: str = "normal",
+    returns: np.ndarray,
+    refit_every: int,
+    min_train: int,
+    innovation: str = "normal",
     max_train: int = 1500,
 ) -> tuple[np.ndarray, list[dict]]:
     """Rolling-refit GJR-GARCH(1,1,1) one-step-ahead variance forecast.
@@ -289,14 +316,18 @@ def rolling_gjr_forecast(
             new_fit = fit_gjr11(window, innovation)
             if new_fit is not None:
                 fit = new_fit
-                sig2_state = fit["omega"] / max(1 - fit["alpha"] - fit["gamma"] / 2.0 - fit["beta"], 1e-6)
+                sig2_state = fit["omega"] / max(
+                    1 - fit["alpha"] - fit["gamma"] / 2.0 - fit["beta"], 1e-6
+                )
                 fits.append({"t": t, **fit})
         if fit is not None:
             forecast[t] = sig2_state
             if t + 1 < n and np.isfinite(returns[t]):
                 shock = returns[t] ** 2
                 lev = fit["gamma"] * shock if returns[t] < 0.0 else 0.0
-                sig2_state = fit["omega"] + fit["alpha"] * shock + lev + fit["beta"] * sig2_state
+                sig2_state = (
+                    fit["omega"] + fit["alpha"] * shock + lev + fit["beta"] * sig2_state
+                )
     return forecast, fits
 
 
@@ -306,7 +337,9 @@ def rolling_gjr_forecast(
 # --------------------------------------------------------------------------
 
 
-def fit_gpd_tail(z: np.ndarray, tail_frac: float = 0.10, tail: str = "lower") -> dict | None:
+def fit_gpd_tail(
+    z: np.ndarray, tail_frac: float = 0.10, tail: str = "lower"
+) -> dict | None:
     """Peaks-over-threshold GPD fit to standardized residuals.
 
     z: standardized residuals r_t / sigma_t from an already-fit conditional
@@ -324,16 +357,22 @@ def fit_gpd_tail(z: np.ndarray, tail_frac: float = 0.10, tail: str = "lower") ->
     if k < 30:
         return None
     ys = np.sort(y)
-    u = ys[n - k - 1]                      # threshold
-    excess = ys[n - k:] - u                # exceedances over threshold
+    u = ys[n - k - 1]  # threshold
+    excess = ys[n - k :] - u  # exceedances over threshold
     excess = excess[excess > 0]
     if len(excess) < 30:
         return None
     xi, _loc, beta = st.genpareto.fit(excess, floc=0.0)
     if not np.isfinite(xi) or beta <= 0:
         return None
-    return {"xi": float(xi), "beta": float(beta), "u": float(u),
-            "n_exceed": int(len(excess)), "n": int(n), "tail": tail}
+    return {
+        "xi": float(xi),
+        "beta": float(beta),
+        "u": float(u),
+        "n_exceed": len(excess),
+        "n": int(n),
+        "tail": tail,
+    }
 
 
 def gpd_var_es(fit: dict, q: float) -> tuple[float, float]:
@@ -352,8 +391,11 @@ def gpd_var_es(fit: dict, q: float) -> tuple[float, float]:
     """
     xi, beta, u = fit["xi"], fit["beta"], fit["u"]
     ratio = q * fit["n"] / fit["n_exceed"]
-    z_q = u + (beta / xi) * (ratio ** (-xi) - 1.0) if abs(xi) > 1e-8 \
+    z_q = (
+        u + (beta / xi) * (ratio ** (-xi) - 1.0)
+        if abs(xi) > 1e-8
         else u - beta * np.log(ratio)
+    )
     es = np.nan
     if xi < 1.0:
         es = z_q / (1.0 - xi) + (beta - xi * u) / (1.0 - xi)
@@ -370,14 +412,22 @@ def _variance_path_for_fit(fit: dict, window: np.ndarray, model: str) -> np.ndar
         uncond = omega / max(1 - alpha - beta, 1e-6)
         return L._garch_variance_path(omega, alpha, beta, window, uncond)
     if model == "gjr":
-        omega, alpha, gamma, beta = fit["omega"], fit["alpha"], fit["gamma"], fit["beta"]
+        omega, alpha, gamma, beta = (
+            fit["omega"],
+            fit["alpha"],
+            fit["gamma"],
+            fit["beta"],
+        )
         uncond = omega / max(1 - alpha - gamma / 2.0 - beta, 1e-6)
         return _gjr_variance_path(omega, alpha, gamma, beta, window, uncond)
     raise ValueError(f"unknown model: {model!r}")
 
 
 def rolling_gpd_paths(
-    returns: np.ndarray, variance_fits: list[dict], model: str, max_train: int,
+    returns: np.ndarray,
+    variance_fits: list[dict],
+    model: str,
+    max_train: int,
     tail_frac: float = 0.10,
 ) -> tuple[dict, dict]:
     """Causal, forward-filled GPD tail fits (both tails), refit exactly when
@@ -431,7 +481,13 @@ def rolling_gpd_paths(
 # --------------------------------------------------------------------------
 
 
-def har_log_rv_forecast(df: pl.DataFrame, interval: str, refit_every: int, min_train: int, resid_window: int = 250) -> np.ndarray:
+def har_log_rv_forecast(
+    df: pl.DataFrame,
+    interval: str,
+    refit_every: int,
+    min_train: int,
+    resid_window: int = 250,
+) -> np.ndarray:
     """HAR-style variance forecast built in log(rv) space rather than rv
     levels - Phase 1c found log-RV materially better PIT/KS-calibrated than
     raw RV at every interval, and NEXT_RUN_PROMPT.md asks for this as a
@@ -452,18 +508,32 @@ def har_log_rv_forecast(df: pl.DataFrame, interval: str, refit_every: int, min_t
     log_rv_df = df.with_columns(pl.Series("log_rv_target", log_rv))
     lrv = pl.col("log_rv_target")
     log_rv_df = log_rv_df.with_columns(
-        lrv.rolling_mean(window_size=bpd, min_periods=1).shift(1).alias("log_rv_d"),
-        lrv.rolling_mean(window_size=bpd * 5, min_periods=bpd).shift(1).alias("log_rv_w"),
-        lrv.rolling_mean(window_size=bpd * 22, min_periods=bpd).shift(1).alias("log_rv_m"),
+        lrv.rolling_mean(window_size=bpd, min_samples=1).shift(1).alias("log_rv_d"),
+        lrv.rolling_mean(window_size=bpd * 5, min_samples=bpd)
+        .shift(1)
+        .alias("log_rv_w"),
+        lrv.rolling_mean(window_size=bpd * 22, min_samples=bpd)
+        .shift(1)
+        .alias("log_rv_m"),
     )
     mu_hat = L.rolling_ols_refit(
-        log_rv_df, ["log_rv_d", "log_rv_w", "log_rv_m"], "log_rv_target",
-        refit_every=refit_every, min_train=min_train,
+        log_rv_df,
+        ["log_rv_d", "log_rv_w", "log_rv_m"],
+        "log_rv_target",
+        refit_every=refit_every,
+        min_train=min_train,
     )
     resid = log_rv - mu_hat
     sigma2_resid = (
-        pl.Series("resid", resid).rolling_std(window_size=resid_window, min_periods=resid_window // 4) ** 2
-    ).shift(1).to_numpy()
+        (
+            pl.Series("resid", resid).rolling_std(
+                window_size=resid_window, min_samples=resid_window // 4
+            )
+            ** 2
+        )
+        .shift(1)
+        .to_numpy()
+    )
     with np.errstate(invalid="ignore"):
         forecast = np.exp(mu_hat + sigma2_resid / 2.0)
     forecast[~np.isfinite(mu_hat) | ~np.isfinite(sigma2_resid)] = np.nan
@@ -480,18 +550,25 @@ def har_log_rv_forecast(df: pl.DataFrame, interval: str, refit_every: int, min_t
 
 
 def vectorized_normal_scores(actual: np.ndarray, variance_forecast: np.ndarray) -> dict:
-    mask = np.isfinite(actual) & np.isfinite(variance_forecast) & (variance_forecast > 0)
+    mask = (
+        np.isfinite(actual) & np.isfinite(variance_forecast) & (variance_forecast > 0)
+    )
     a, v = actual[mask], variance_forecast[mask]
     log_score = -0.5 * np.log(2 * np.pi * v) - 0.5 * (a**2) / v
     crps = dist.crps_normal_closed_form(a, loc=0.0, scale=np.sqrt(v))
     return {"mask": mask, "log_score": log_score, "crps": crps}
 
 
-def vectorized_t_scores(actual: np.ndarray, variance_forecast: np.ndarray, nu: np.ndarray) -> dict:
+def vectorized_t_scores(
+    actual: np.ndarray, variance_forecast: np.ndarray, nu: np.ndarray
+) -> dict:
     nu = np.broadcast_to(np.asarray(nu, dtype=float), actual.shape)
     mask = (
-        np.isfinite(actual) & np.isfinite(variance_forecast) & (variance_forecast > 0)
-        & np.isfinite(nu) & (nu > 2)
+        np.isfinite(actual)
+        & np.isfinite(variance_forecast)
+        & (variance_forecast > 0)
+        & np.isfinite(nu)
+        & (nu > 2)
     )
     a, v, n_ = actual[mask], variance_forecast[mask], nu[mask]
     c = np.sqrt(n_ / (n_ - 2))
@@ -507,8 +584,9 @@ def benjamini_hochberg(pvalues: dict, alpha: float = 0.05) -> dict:
     where "significant" applies the standard BH decision rule (reject every
     hypothesis up to and including the largest rank k with p_(k) <= k/m*alpha).
     """
-    items = sorted(pvalues.items(), key=lambda kv: (np.inf if not np.isfinite(kv[1]) else kv[1]))
-    m = len(items)
+    items = sorted(
+        pvalues.items(), key=lambda kv: np.inf if not np.isfinite(kv[1]) else kv[1]
+    )
     finite = [kv for kv in items if np.isfinite(kv[1])]
     m_finite = len(finite)
     # find the largest rank k (1-indexed among finite p-values) satisfying BH's rule
@@ -519,13 +597,23 @@ def benjamini_hochberg(pvalues: dict, alpha: float = 0.05) -> dict:
     out = {}
     for rank, (key, p) in enumerate(items, start=1):
         is_finite = np.isfinite(p)
-        bh_rank = finite.index((key, p)) + 1 if is_finite else None
-        out[key] = {
-            "pvalue": float(p) if is_finite else None,
-            "rank": bh_rank,
-            "bh_threshold": float((bh_rank / m_finite) * alpha) if is_finite else None,
-            "significant": bool(is_finite and bh_rank <= k_star),
-        }
+        entry: dict[str, float | int | bool | None]
+        if is_finite:
+            bh_rank = finite.index((key, p)) + 1
+            entry = {
+                "pvalue": float(p),
+                "rank": bh_rank,
+                "bh_threshold": float((bh_rank / m_finite) * alpha),
+                "significant": bool(bh_rank <= k_star),
+            }
+        else:
+            entry = {
+                "pvalue": None,
+                "rank": None,
+                "bh_threshold": None,
+                "significant": False,
+            }
+        out[key] = entry
     return out
 
 
@@ -536,20 +624,28 @@ def benjamini_hochberg(pvalues: dict, alpha: float = 0.05) -> dict:
 QUANTILES = [0.01, 0.025, 0.05, 0.95, 0.975, 0.99]
 
 
-def normal_quantile_forecasts(variance_forecast: np.ndarray, quantiles=QUANTILES) -> dict:
+def normal_quantile_forecasts(
+    variance_forecast: np.ndarray, quantiles=QUANTILES
+) -> dict:
     """VaR forecast at every quantile level, normal innovations, causal
     (uses only variance_forecast, itself already causal)."""
     sigma = np.sqrt(np.where(variance_forecast > 0, variance_forecast, np.nan))
     return {q: st.norm.ppf(q, loc=0.0, scale=sigma) for q in quantiles}
 
 
-def t_quantile_forecasts(variance_forecast: np.ndarray, nu_path: np.ndarray, quantiles=QUANTILES) -> dict:
+def t_quantile_forecasts(
+    variance_forecast: np.ndarray, nu_path: np.ndarray, quantiles=QUANTILES
+) -> dict:
     """VaR forecast at every quantile level under a causal, per-bar Student-t
     shape path (same nu_path convention as nu_path_from_fits)."""
     nu = np.asarray(nu_path, dtype=float)
     valid = np.isfinite(nu) & (nu > 2) & (variance_forecast > 0)
     c = np.where(valid, np.sqrt(nu / np.where(nu > 2, nu - 2, np.nan)), np.nan)
-    scale = np.where(valid, np.sqrt(np.where(variance_forecast > 0, variance_forecast, np.nan)) / c, np.nan)
+    scale = np.where(
+        valid,
+        np.sqrt(np.where(variance_forecast > 0, variance_forecast, np.nan)) / c,
+        np.nan,
+    )
     out = {}
     for q in quantiles:
         qf = np.full(len(nu), np.nan)
@@ -558,7 +654,9 @@ def t_quantile_forecasts(variance_forecast: np.ndarray, nu_path: np.ndarray, qua
     return out
 
 
-def gpd_quantile_forecasts(variance_forecast: np.ndarray, gpd_paths: dict, quantiles=QUANTILES) -> dict:
+def gpd_quantile_forecasts(
+    variance_forecast: np.ndarray, gpd_paths: dict, quantiles=QUANTILES
+) -> dict:
     """VaR forecast at every quantile level from causal, forward-filled GPD
     tail fits (rolling_gpd_paths' own output) combined with the underlying
     model's causal sigma_t - VaR_t(q) = -sigma_t * z_q for the lower tail,
@@ -577,10 +675,26 @@ def gpd_quantile_forecasts(variance_forecast: np.ndarray, gpd_paths: dict, quant
         p = gpd_paths[tail]
         qf = np.full(n, np.nan)
         for t in range(n):
-            xi, beta, u, n_exceed = p["xi"][t], p["beta"][t], p["u"][t], p["n_exceed"][t]
-            if not (np.isfinite(xi) and np.isfinite(beta) and np.isfinite(u) and np.isfinite(n_exceed)):
+            xi, beta, u, n_exceed = (
+                p["xi"][t],
+                p["beta"][t],
+                p["u"][t],
+                p["n_exceed"][t],
+            )
+            if not (
+                np.isfinite(xi)
+                and np.isfinite(beta)
+                and np.isfinite(u)
+                and np.isfinite(n_exceed)
+            ):
                 continue
-            fit = {"xi": xi, "beta": beta, "u": u, "n_exceed": int(n_exceed), "n": int(n_exceed / 0.10)}
+            fit = {
+                "xi": xi,
+                "beta": beta,
+                "u": u,
+                "n_exceed": int(n_exceed),
+                "n": int(n_exceed / 0.10),
+            }
             z_q, _es_q = gpd_var_es(fit, exceed_q)
             qf[t] = -sigma[t] * z_q if tail == "lower" else sigma[t] * z_q
         out[q] = qf
@@ -607,14 +721,20 @@ def coverage_battery(actual: np.ndarray, quantile_forecasts: dict) -> dict:
         _, ip = dist.christoffersen_independence_test(hits)
         _, cp = dist.christoffersen_conditional_coverage_test(hits, rate)
         out[str(q)] = {
-            "kupiec_p": float(kp), "indep_p": float(ip), "cc_p": float(cp),
-            "observed_rate": float(np.mean(hits)), "expected_rate": rate,
-            "n": int(mask.sum()), "n_violations": int(hits.sum()),
+            "kupiec_p": float(kp),
+            "indep_p": float(ip),
+            "cc_p": float(cp),
+            "observed_rate": float(np.mean(hits)),
+            "expected_rate": rate,
+            "n": int(mask.sum()),
+            "n_violations": int(hits.sum()),
         }
     return out
 
 
-def acerbi_szekely_z(actual: np.ndarray, var_forecast: np.ndarray, es_forecast: np.ndarray, q: float) -> float:
+def acerbi_szekely_z(
+    actual: np.ndarray, var_forecast: np.ndarray, es_forecast: np.ndarray, q: float
+) -> float:
     """Acerbi-Szekely (2014) Test 2 statistic for expected-shortfall
     calibration: Z ~= 0 means well-calibrated ES; Z > 0 means realized tail
     losses are WORSE (more extreme) than the model's own ES predicted - the
@@ -648,7 +768,12 @@ def acerbi_szekely_z(actual: np.ndarray, var_forecast: np.ndarray, es_forecast: 
        repeatedly needed (see the six bugs documented in
        src/results/004_distributional_models.md).
     """
-    mask = np.isfinite(actual) & np.isfinite(var_forecast) & np.isfinite(es_forecast) & (es_forecast != 0)
+    mask = (
+        np.isfinite(actual)
+        & np.isfinite(var_forecast)
+        & np.isfinite(es_forecast)
+        & (es_forecast != 0)
+    )
     a, v, e = actual[mask], var_forecast[mask], es_forecast[mask]
     hit = a < v
     n = len(a)
@@ -658,7 +783,10 @@ def acerbi_szekely_z(actual: np.ndarray, var_forecast: np.ndarray, es_forecast: 
 
 
 def acerbi_szekely_bootstrap_pvalue(
-    z_observed: float, simulate_fn, n_boot: int = 200, seed: int = 0,
+    z_observed: float,
+    simulate_fn,
+    n_boot: int = 200,
+    seed: int = 0,
 ) -> float:
     """Bootstrap p-value for the Acerbi-Szekely Z statistic: no closed form
     exists (per NEXT_RUN_PROMPT.md), so the null distribution of Z under
@@ -698,17 +826,25 @@ def normal_es_forecast(variance_forecast: np.ndarray, q: float) -> np.ndarray:
     return -sigma * st.norm.pdf(z_q) / q
 
 
-def t_es_forecast(variance_forecast: np.ndarray, nu_path: np.ndarray, q: float) -> np.ndarray:
+def t_es_forecast(
+    variance_forecast: np.ndarray, nu_path: np.ndarray, q: float
+) -> np.ndarray:
     nu = np.asarray(nu_path, dtype=float)
     valid = np.isfinite(nu) & (nu > 2) & (variance_forecast > 0)
     c = np.where(valid, np.sqrt(nu / np.where(nu > 2, nu - 2, np.nan)), np.nan)
-    scale = np.where(valid, np.sqrt(np.where(variance_forecast > 0, variance_forecast, np.nan)) / c, np.nan)
+    scale = np.where(
+        valid,
+        np.sqrt(np.where(variance_forecast > 0, variance_forecast, np.nan)) / c,
+        np.nan,
+    )
     z_q = st.t.ppf(q, df=np.where(valid, nu, np.nan))
     f_zq = st.t.pdf(z_q, df=np.where(valid, nu, np.nan))
     return -scale * (nu + z_q**2) / (nu - 1) / q * f_zq
 
 
-def gpd_es_forecast(variance_forecast: np.ndarray, gpd_paths: dict, q: float) -> np.ndarray:
+def gpd_es_forecast(
+    variance_forecast: np.ndarray, gpd_paths: dict, q: float
+) -> np.ndarray:
     """ES companion to gpd_quantile_forecasts, at exceedance probability q
     (q<0.5: lower tail directly; q>0.5 callers should pass 1-q and re-sign,
     matching gpd_quantile_forecasts' own convention - kept separate here
@@ -722,16 +858,29 @@ def gpd_es_forecast(variance_forecast: np.ndarray, gpd_paths: dict, q: float) ->
     es = np.full(n, np.nan)
     for t in range(n):
         xi, beta, u, n_exceed = p["xi"][t], p["beta"][t], p["u"][t], p["n_exceed"][t]
-        if not (np.isfinite(xi) and np.isfinite(beta) and np.isfinite(u) and np.isfinite(n_exceed)):
+        if not (
+            np.isfinite(xi)
+            and np.isfinite(beta)
+            and np.isfinite(u)
+            and np.isfinite(n_exceed)
+        ):
             continue
-        fit = {"xi": xi, "beta": beta, "u": u, "n_exceed": int(n_exceed), "n": int(n_exceed / 0.10)}
+        fit = {
+            "xi": xi,
+            "beta": beta,
+            "u": u,
+            "n_exceed": int(n_exceed),
+            "n": int(n_exceed / 0.10),
+        }
         _z_q, es_q = gpd_var_es(fit, exceed_q)
         if np.isfinite(es_q):
             es[t] = -sigma[t] * es_q if tail == "lower" else sigma[t] * es_q
     return es
 
 
-def _simulate_z_from_uniforms(u: np.ndarray, sim_values: np.ndarray, es_forecast: np.ndarray, q: float) -> float:
+def _simulate_z_from_uniforms(
+    u: np.ndarray, sim_values: np.ndarray, es_forecast: np.ndarray, q: float
+) -> float:
     """Shared Z-statistic assembly: given each bar's own draw u~Uniform(0,1),
     a bar counts as a simulated hit iff u<q (exactly reproducing hit
     probability q under the null), and its simulated value is whatever the
@@ -745,30 +894,42 @@ def _simulate_z_from_uniforms(u: np.ndarray, sim_values: np.ndarray, es_forecast
     mask = hit & np.isfinite(es_forecast) & (es_forecast != 0) & np.isfinite(sim_values)
     if mask.sum() == 0:
         return float("nan")
-    return float((1.0 / (n * q)) * np.sum(np.where(mask, sim_values / es_forecast, 0.0)) - 1.0)
+    return float(
+        (1.0 / (n * q)) * np.sum(np.where(mask, sim_values / es_forecast, 0.0)) - 1.0
+    )
 
 
-def make_normal_acerbi_simulate_fn(sigma: np.ndarray, es_forecast: np.ndarray, q: float):
+def make_normal_acerbi_simulate_fn(
+    sigma: np.ndarray, es_forecast: np.ndarray, q: float
+):
     def simulate(rng):
         u = rng.uniform(0.0, 1.0, len(sigma))
         sim_values = sigma * st.norm.ppf(u)
         return _simulate_z_from_uniforms(u, sim_values, es_forecast, q)
+
     return simulate
 
 
-def make_t_acerbi_simulate_fn(sigma: np.ndarray, nu: np.ndarray, es_forecast: np.ndarray, q: float):
+def make_t_acerbi_simulate_fn(
+    sigma: np.ndarray, nu: np.ndarray, es_forecast: np.ndarray, q: float
+):
     valid = np.isfinite(nu) & (nu > 2)
     c = np.where(valid, np.sqrt(nu / np.where(nu > 2, nu - 2, np.nan)), np.nan)
     scale = sigma / c
 
     def simulate(rng):
         u = rng.uniform(0.0, 1.0, len(sigma))
-        sim_values = np.where(valid, scale * st.t.ppf(u, df=np.where(valid, nu, np.nan)), np.nan)
+        sim_values = np.where(
+            valid, scale * st.t.ppf(u, df=np.where(valid, nu, np.nan)), np.nan
+        )
         return _simulate_z_from_uniforms(u, sim_values, es_forecast, q)
+
     return simulate
 
 
-def make_gpd_acerbi_simulate_fn(sigma: np.ndarray, gpd_paths: dict, es_forecast: np.ndarray, q: float):
+def make_gpd_acerbi_simulate_fn(
+    sigma: np.ndarray, gpd_paths: dict, es_forecast: np.ndarray, q: float
+):
     tail = "lower" if q < 0.5 else "upper"
     p = gpd_paths[tail]
     xi, beta, u_thr, n_exceed = p["xi"], p["beta"], p["u"], p["n_exceed"]
@@ -779,10 +940,22 @@ def make_gpd_acerbi_simulate_fn(sigma: np.ndarray, gpd_paths: dict, es_forecast:
         sim_values = np.full(n, np.nan)
         hit = u < q
         for t in np.where(hit)[0]:
-            if not (np.isfinite(xi[t]) and np.isfinite(beta[t]) and np.isfinite(u_thr[t]) and np.isfinite(n_exceed[t])):
+            if not (
+                np.isfinite(xi[t])
+                and np.isfinite(beta[t])
+                and np.isfinite(u_thr[t])
+                and np.isfinite(n_exceed[t])
+            ):
                 continue
-            fit = {"xi": xi[t], "beta": beta[t], "u": u_thr[t], "n_exceed": int(n_exceed[t]), "n": int(n_exceed[t] / 0.10)}
-            z_u, _es = gpd_var_es(fit, u[t] if q < 0.5 else u[t])
+            fit = {
+                "xi": xi[t],
+                "beta": beta[t],
+                "u": u_thr[t],
+                "n_exceed": int(n_exceed[t]),
+                "n": int(n_exceed[t] / 0.10),
+            }
+            z_u, _es = gpd_var_es(fit, u[t])
             sim_values[t] = -sigma[t] * z_u if tail == "lower" else sigma[t] * z_u
         return _simulate_z_from_uniforms(u, sim_values, es_forecast, q)
+
     return simulate

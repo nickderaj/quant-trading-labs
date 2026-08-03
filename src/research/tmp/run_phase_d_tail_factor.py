@@ -69,8 +69,11 @@ def build_tail_shape_panel() -> pl.DataFrame:
             continue
         ret = df["log_return"].fill_null(0.0).to_numpy()
         variance_fc, fits = L6.rolling_garch_forecast_zoo(
-            ret, refit_every=refit_every, min_train=min_train,
-            family_module=hansen_skewt, max_train=L6.MLE_MAX_TRAIN,
+            ret,
+            refit_every=refit_every,
+            min_train=min_train,
+            family_module=hansen_skewt,
+            max_train=L6.MLE_MAX_TRAIN,
         )
         if not fits:
             print(f"  {sym}: zero successful refits, skipped", flush=True)
@@ -91,21 +94,30 @@ def build_tail_shape_panel() -> pl.DataFrame:
                 }
             )
         )
-        print(f"  {sym}: {len(fits)} refits, median nu={np.nanmedian(nu_path):.2f}, "
-              f"median lam={np.nanmedian(lam_path):.3f}", flush=True)
+        print(
+            f"  {sym}: {len(fits)} refits, median nu={np.nanmedian(nu_path):.2f}, "
+            f"median lam={np.nanmedian(lam_path):.3f}",
+            flush=True,
+        )
 
     panel = pl.concat(frames).drop_nulls(["nu", "lam", "pred_es", "fwd_return_1"])
     return panel.with_columns(
         pl.col("lam").abs().alias("abs_lam"),
-        (-pl.col("nu")).alias("neg_nu"),  # D2 wants LONG high-nu (thin), so rank on nu directly (not negated)
-        (-pl.col("pred_es")).alias("neg_pred_es"),  # D3 wants LONG low predicted-ES magnitude -> rank on -|ES|
-    ).with_columns((-pl.col("abs_lam")).alias("neg_abs_lam"))  # D1 wants LONG low |lam| -> rank on -|lam|
+        (-pl.col("nu")).alias(
+            "neg_nu"
+        ),  # D2 wants LONG high-nu (thin), so rank on nu directly (not negated)
+        (-pl.col("pred_es")).alias(
+            "neg_pred_es"
+        ),  # D3 wants LONG low predicted-ES magnitude -> rank on -|ES|
+    ).with_columns(
+        (-pl.col("abs_lam")).alias("neg_abs_lam")
+    )  # D1 wants LONG low |lam| -> rank on -|lam|
 
 
 FACTORS = {
-    "D1_tail_quality": "neg_abs_lam",   # long low |lambda| (symmetric), short high |lambda|
-    "D2_tail_premium": "nu",             # long high nu (thin tails), short low nu (fat tails)
-    "D3_risk_ranking": "neg_pred_es",   # long low predicted-ES magnitude, short high
+    "D1_tail_quality": "neg_abs_lam",  # long low |lambda| (symmetric), short high |lambda|
+    "D2_tail_premium": "nu",  # long high nu (thin tails), short low nu (fat tails)
+    "D3_risk_ranking": "neg_pred_es",  # long low predicted-ES magnitude, short high
 }
 
 
@@ -117,7 +129,9 @@ def fold_excess_returns(trade_frame_net, full_panel, splits) -> list[float]:
         fold_panel = full_panel[test_idx]
         test_dates = fold_panel["datetime"].unique().to_list()
         strat_total = float(
-            trade_frame_net.filter(pl.col("datetime").is_in(test_dates))["trade_log_return_net"].sum()
+            trade_frame_net.filter(pl.col("datetime").is_in(test_dates))[
+                "trade_log_return_net"
+            ].sum()
         )
         basket = research.equal_weight_basket_returns(fold_panel)
         basket_total = float(basket["trade_log_return"].sum())
@@ -126,36 +140,52 @@ def fold_excess_returns(trade_frame_net, full_panel, splits) -> list[float]:
 
 
 def main():
-    print("=== building tail-shape panel (rolling GARCH-Hansen-skew-t, all symbols) ===", flush=True)
+    print(
+        "=== building tail-shape panel (rolling GARCH-Hansen-skew-t, all symbols) ===",
+        flush=True,
+    )
     cache_path = "src/research/tmp/phase_d_tail_shape_panel_cache.parquet"
     import os
+
     if os.path.exists(cache_path):
         panel = pl.read_parquet(cache_path)
         print(f"loaded cached tail-shape panel from {cache_path}", flush=True)
     else:
         panel = build_tail_shape_panel()
         panel.write_parquet(cache_path)
-    print(f"panel: {panel.height} rows, {panel['symbol'].n_unique()} symbols", flush=True)
+    print(
+        f"panel: {panel.height} rows, {panel['symbol'].n_unique()} symbols", flush=True
+    )
 
     annualized_rate = research.sharpe_to_annualized_rate(INTERVAL)
     bpd = L6.BARS_PER_DAY[INTERVAL]
     train_bars = 365 * bpd
     test_bars = 91 * bpd
 
-    results: dict = {"interval": INTERVAL, "n_symbols": panel["symbol"].n_unique(), "factors": {}}
+    results: dict = {
+        "interval": INTERVAL,
+        "n_symbols": panel["symbol"].n_unique(),
+        "factors": {},
+    }
 
     for factor_name, pred_col in FACTORS.items():
         print(f"--- {factor_name} (pred_col={pred_col}) ---", flush=True)
         ic_df = research.cross_sectional_ic(panel, pred_col, "fwd_return_1")
         ic_stats = research.cross_sectional_ic_stats(ic_df, nw_lag=NW_LAG)
-        print(f"  IC: mean={ic_stats['mean_ic']:.4f} nw_t={ic_stats['nw_tstat']:.2f} "
-              f"n_periods={ic_stats['n_periods']}", flush=True)
+        print(
+            f"  IC: mean={ic_stats['mean_ic']:.4f} nw_t={ic_stats['nw_tstat']:.2f} "
+            f"n_periods={ic_stats['n_periods']}",
+            flush=True,
+        )
 
         factor_result: dict = {"ic_stats": ic_stats, "by_offset": {}}
         ic_significant = abs(ic_stats["nw_tstat"]) > 2
 
         if not ic_significant:
-            print("  IC not significant (|t|<=2) - portfolio would be noise; reporting IC only, per section 4.", flush=True)
+            print(
+                "  IC not significant (|t|<=2) - portfolio would be noise; reporting IC only, per section 4.",
+                flush=True,
+            )
             factor_result["portfolio_skipped_ic_not_significant"] = True
             results["factors"][factor_name] = factor_result
             continue
@@ -165,16 +195,29 @@ def main():
             splits = research.panel_walk_forward_splits(
                 panel, train_bars, test_bars, origin_offset=offset_bars
             )
-            test_rows = np.unique(np.concatenate([idx for _tr, idx in splits])) if splits else np.array([], dtype=int)
+            test_rows = (
+                np.unique(np.concatenate([idx for _tr, idx in splits]))
+                if splits
+                else np.array([], dtype=int)
+            )
             test_panel = panel[test_rows].sort(["datetime", "symbol"])
 
             weights = research.dollar_neutral_weights(
-                test_panel, pred_col, top_frac=TOP_FRAC,
-                gross_exposure=GROSS_EXPOSURE, max_position_per_symbol=MAX_POSITION,
+                test_panel,
+                pred_col,
+                top_frac=TOP_FRAC,
+                gross_exposure=GROSS_EXPOSURE,
+                max_position_per_symbol=MAX_POSITION,
             )
-            trade_frame = research.portfolio_trade_frame(weights, test_panel, target_col="fwd_return_1")
+            trade_frame = research.portfolio_trade_frame(
+                weights, test_panel, target_col="fwd_return_1"
+            )
             metrics = research.portfolio_metrics(
-                trade_frame, annualized_rate, taker_fee=TAKER_FEE, slippage=SLIPPAGE, label=factor_name
+                trade_frame,
+                annualized_rate,
+                taker_fee=TAKER_FEE,
+                slippage=SLIPPAGE,
+                label=factor_name,
             )
             costed = research.add_portfolio_costs(trade_frame, TAKER_FEE, SLIPPAGE)
             excess = fold_excess_returns(costed, panel, splits)
@@ -189,7 +232,8 @@ def main():
             # flag if the sign flips.
             leg_composition = (
                 weights.filter(pl.col("weight") != 0)
-                .group_by("symbol").agg(pl.len().alias("n_bars"))
+                .group_by("symbol")
+                .agg(pl.len().alias("n_bars"))
                 .sort("n_bars", descending=True)
             )
             top_symbol = leg_composition["symbol"][0] if len(leg_composition) else None
@@ -197,14 +241,20 @@ def main():
             if top_symbol is not None:
                 excl_panel = test_panel.filter(pl.col("symbol") != top_symbol)
                 excl_weights = research.dollar_neutral_weights(
-                    excl_panel, pred_col, top_frac=TOP_FRAC,
-                    gross_exposure=GROSS_EXPOSURE, max_position_per_symbol=MAX_POSITION,
+                    excl_panel,
+                    pred_col,
+                    top_frac=TOP_FRAC,
+                    gross_exposure=GROSS_EXPOSURE,
+                    max_position_per_symbol=MAX_POSITION,
                 )
                 excl_trade_frame = research.portfolio_trade_frame(
                     excl_weights, excl_panel, target_col="fwd_return_1"
                 )
                 excl_metrics = research.portfolio_metrics(
-                    excl_trade_frame, annualized_rate, taker_fee=TAKER_FEE, slippage=SLIPPAGE,
+                    excl_trade_frame,
+                    annualized_rate,
+                    taker_fee=TAKER_FEE,
+                    slippage=SLIPPAGE,
                     label=f"{factor_name}_excl_{top_symbol}",
                 )
                 sharpe_excl_top_symbol = excl_metrics.get("sharpe_net")
@@ -218,15 +268,18 @@ def main():
                 "sharpe_net_excl_top_symbol": sharpe_excl_top_symbol,
                 "sign_flips_excl_top_symbol": (
                     (metrics.get("sharpe_net") > 0) != (sharpe_excl_top_symbol > 0)
-                    if sharpe_excl_top_symbol is not None and metrics.get("sharpe_net") is not None
+                    if sharpe_excl_top_symbol is not None
+                    and metrics.get("sharpe_net") is not None
                     else None
                 ),
             }
-            print(f"    offset={offset_days}: net={metrics.get('sharpe_net'):.3f} "
-                  f"gross={metrics.get('sharpe'):.3f} top_symbol={top_symbol} "
-                  f"net_excl_top={sharpe_excl_top_symbol:.3f} "
-                  f"sign_flips={factor_result['by_offset'][str(offset_days)]['sign_flips_excl_top_symbol']}",
-                  flush=True)
+            print(
+                f"    offset={offset_days}: net={metrics.get('sharpe_net'):.3f} "
+                f"gross={metrics.get('sharpe'):.3f} top_symbol={top_symbol} "
+                f"net_excl_top={sharpe_excl_top_symbol:.3f} "
+                f"sign_flips={factor_result['by_offset'][str(offset_days)]['sign_flips_excl_top_symbol']}",
+                flush=True,
+            )
 
         results["factors"][factor_name] = factor_result
 

@@ -26,17 +26,18 @@ models per symbol, writing phase4_violation_{symbol}.json.
 import json
 import sys
 import time
+from typing import Any
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
-import numpy as np  # noqa: E402
+import dist_lib as L
+import dist_lib5 as L5
+import dist_lib6 as L6
+import numpy as np
 
-import dist_lib as L  # noqa: E402
-import dist_lib5 as L5  # noqa: E402
-import dist_lib6 as L6  # noqa: E402
-import distributions as dist  # noqa: E402
-import research  # noqa: E402
+import distributions as dist
+import research
 
 Q = 0.01  # the level this research programme centres on
 INTERVAL_ORDER = ["12h", "4h", "1d", "1h"]
@@ -51,8 +52,12 @@ def run_one_interval(symbol: str, interval: str) -> dict:
     block_size = 7 * bpd
 
     variance_fc, nu_paths, fits = L6.build_gate_a_forecasts(df, interval, ret)
-    gpd_paths_d8, _ = L5.rolling_gpd_paths(ret, fits["d4"], model="garch", max_train=L6.MLE_MAX_TRAIN, tail_frac=0.10)
-    gpd_paths_d9, _ = L5.rolling_gpd_paths(ret, fits["d6"], model="gjr", max_train=L6.MLE_MAX_TRAIN, tail_frac=0.10)
+    gpd_paths_d8, _ = L5.rolling_gpd_paths(
+        ret, fits["d4"], model="garch", max_train=L6.MLE_MAX_TRAIN, tail_frac=0.10
+    )
+    gpd_paths_d9, _ = L5.rolling_gpd_paths(
+        ret, fits["d6"], model="gjr", max_train=L6.MLE_MAX_TRAIN, tail_frac=0.10
+    )
 
     all_fc = dict(variance_fc)
     all_fc["d8_garch_evt"] = variance_fc["d4_garch_normal"]
@@ -79,34 +84,49 @@ def run_one_interval(symbol: str, interval: str) -> dict:
         hit_full = np.zeros(n, dtype=bool)
         hit_full[mask] = hit_masked.astype(bool)
 
-        counts, durations = L6.violation_blocks_and_durations(hit_full[mask], block_size)
+        counts, durations = L6.violation_blocks_and_durations(
+            hit_full[mask], block_size
+        )
 
-        cell = {
-            "n_valid_bars": int(mask.sum()), "n_violations": int(hit_masked.sum()),
-            "n_blocks": len(counts), "n_durations": len(durations),
+        cell: dict[str, Any] = {
+            "n_valid_bars": int(mask.sum()),
+            "n_violations": int(hit_masked.sum()),
+            "n_blocks": len(counts),
+            "n_durations": len(durations),
         }
 
         pois_fit = L6.fit_poisson_counts(counts) if len(counts) else None
         nb_fit = L6.fit_nb_counts(counts) if len(counts) else None
         if pois_fit is not None and nb_fit is not None:
-            lr_counts, p_counts = L6.boundary_lr_test(nb_fit["loglik"], pois_fit["loglik"])
+            lr_counts, p_counts = L6.boundary_lr_test(
+                nb_fit["loglik"], pois_fit["loglik"]
+            )
             cell["counts"] = {
-                "poisson_mu": pois_fit["mu"], "nb_mu": nb_fit["mu"], "nb_alpha": nb_fit["alpha"],
-                "lr_stat": lr_counts, "boundary_lr_pvalue": p_counts,
+                "poisson_mu": pois_fit["mu"],
+                "nb_mu": nb_fit["mu"],
+                "nb_alpha": nb_fit["alpha"],
+                "lr_stat": lr_counts,
+                "boundary_lr_pvalue": p_counts,
                 "nb_significantly_better": p_counts < 0.05,
             }
         else:
             cell["counts"] = None
 
         geo_fit = L6.fit_geometric_durations(durations) if len(durations) else None
-        dw_fit = L6.fit_discrete_weibull_durations(durations) if len(durations) else None
+        dw_fit = (
+            L6.fit_discrete_weibull_durations(durations) if len(durations) else None
+        )
         if geo_fit is not None and dw_fit is not None:
             lr_dur = max(0.0, 2.0 * (dw_fit["loglik"] - geo_fit["loglik"]))
             from scipy import stats as st
+
             p_dur = float(st.chi2.sf(lr_dur, df=1))
             cell["durations"] = {
-                "geometric_q": geo_fit["q"], "weibull_q": dw_fit["q"], "weibull_beta": dw_fit["beta"],
-                "lr_stat": lr_dur, "pvalue": p_dur,
+                "geometric_q": geo_fit["q"],
+                "weibull_q": dw_fit["q"],
+                "weibull_beta": dw_fit["beta"],
+                "lr_stat": lr_dur,
+                "pvalue": p_dur,
                 "weibull_significantly_better": p_dur < 0.05,
                 "clusters": dw_fit["beta"] < 1.0,
             }
@@ -115,7 +135,12 @@ def run_one_interval(symbol: str, interval: str) -> dict:
 
         results[name] = cell
 
-    return {"n_obs": n, "block_size_bars": block_size, "models": results, "elapsed_sec": time.time() - t0}
+    return {
+        "n_obs": n,
+        "block_size_bars": block_size,
+        "models": results,
+        "elapsed_sec": time.time() - t0,
+    }
 
 
 def main():
@@ -129,10 +154,20 @@ def main():
     for interval in intervals:
         res = run_one_interval(symbol, interval)
         out["intervals"][interval] = res
-        n_counts_sig = sum(1 for m in res["models"].values() if m["counts"] and m["counts"]["nb_significantly_better"])
-        n_dur_sig = sum(1 for m in res["models"].values() if m["durations"] and m["durations"]["weibull_significantly_better"])
-        print(f"{symbol} {interval}: n={res['n_obs']} elapsed={res['elapsed_sec']:.1f}s "
-              f"counts_sig={n_counts_sig}/10 dur_sig={n_dur_sig}/10")
+        n_counts_sig = sum(
+            1
+            for m in res["models"].values()
+            if m["counts"] and m["counts"]["nb_significantly_better"]
+        )
+        n_dur_sig = sum(
+            1
+            for m in res["models"].values()
+            if m["durations"] and m["durations"]["weibull_significantly_better"]
+        )
+        print(
+            f"{symbol} {interval}: n={res['n_obs']} elapsed={res['elapsed_sec']:.1f}s "
+            f"counts_sig={n_counts_sig}/10 dur_sig={n_dur_sig}/10"
+        )
         out_path = f"src/research/tmp/phase4_violation_{symbol}.json"
         with open(out_path, "w") as f:
             json.dump(out, f, indent=1, default=float)

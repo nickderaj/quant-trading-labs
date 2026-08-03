@@ -26,12 +26,10 @@ import time
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
+import dist_lib as L
 import numpy as np
-import polars as pl
 from scipy import stats as st
 
-import dist_lib as L
-import distributions as dist
 import research
 
 SYMBOL = "BTCUSDT"
@@ -44,8 +42,13 @@ THRESH_WINDOW_DAYS = 90
 
 
 def rolling_refit_states(
-    x: np.ndarray, k: int, refit_every: int, min_train: int, max_train: int,
-    emission: str = "gaussian", fit_fn=None,
+    x: np.ndarray,
+    k: int,
+    refit_every: int,
+    min_train: int,
+    max_train: int,
+    emission: str = "gaussian",
+    fit_fn=None,
 ) -> tuple[np.ndarray, np.ndarray, list[dict]]:
     """Generic rolling-refit + forward-filter state machinery shared by GMM
     and HMM. Returns (state_probs [n,k], hard_state [n], fit_log).
@@ -85,6 +88,7 @@ def rolling_refit_states(
         if emission == "mixture":
             p = L.gmm_posterior(x[t], fit)
         else:
+            assert alpha is not None
             alpha = L.hmm_filter_step(alpha, x[t], fit)
             p = alpha
         probs[t] = p
@@ -108,12 +112,15 @@ def geometric_duration_test(hard_state: np.ndarray) -> dict:
             runs.append(cur)
             cur = 1
     runs.append(cur)
-    runs = np.array(runs, dtype=float)
-    p_geom = 1.0 / np.mean(runs)
-    ks = st.kstest(runs, "geom", args=(p_geom,))
+    runs_arr = np.array(runs, dtype=float)
+    p_geom = 1.0 / np.mean(runs_arr)
+    ks = st.kstest(runs_arr, "geom", args=(p_geom,))
     return {
-        "n_runs": len(runs), "mean_duration": float(np.mean(runs)),
-        "p_geom": float(p_geom), "ks_stat": float(ks.statistic), "ks_pvalue": float(ks.pvalue),
+        "n_runs": len(runs_arr),
+        "mean_duration": float(np.mean(runs_arr)),
+        "p_geom": float(p_geom),
+        "ks_stat": float(ks.statistic),
+        "ks_pvalue": float(ks.pvalue),
     }
 
 
@@ -127,8 +134,10 @@ def transition_matrix(hard_state: np.ndarray, k: int) -> list[list[float]]:
     return (counts / row_sums).tolist()
 
 
-def conditional_stats_by_regime(returns: np.ndarray, hard_state: np.ndarray, k: int) -> dict:
-    out = {}
+def conditional_stats_by_regime(
+    returns: np.ndarray, hard_state: np.ndarray, k: int
+) -> dict:
+    out: dict[str, dict[str, int | float]] = {}
     for j in range(k):
         mask = hard_state == j
         r = returns[mask]
@@ -137,11 +146,15 @@ def conditional_stats_by_regime(returns: np.ndarray, hard_state: np.ndarray, k: 
             out[str(j)] = {"n": len(r)}
             continue
         ac1 = float(np.corrcoef(r[:-1], r[1:])[0, 1]) if len(r) > 20 else np.nan
-        out[str(j)] = {
-            "n": len(r), "mean": float(np.mean(r)), "std": float(np.std(r)),
-            "skew": float(st.skew(r)), "kurtosis": float(st.kurtosis(r, fisher=False)),
+        stats: dict[str, int | float] = {
+            "n": len(r),
+            "mean": float(np.mean(r)),
+            "std": float(np.std(r)),
+            "skew": float(st.skew(r)),
+            "kurtosis": float(st.kurtosis(r, fisher=False)),
             "autocorr_lag1": ac1,
         }
+        out[str(j)] = stats
     return out
 
 
@@ -170,10 +183,14 @@ def predicts_vol_and_direction(
     return {
         "vol_kruskal": vol_test,
         "direction_anova": dir_test,
-        "mean_fwd_return_by_state": [float(np.mean(g)) if len(g) else None for g in
-                                      [returns[mask_d & (hard_state == j)] for j in range(k)]],
-        "mean_rv_fwd_by_state": [float(np.mean(g)) if len(g) else None for g in
-                                  [rv_fwd[mask & (hard_state == j)] for j in range(k)]],
+        "mean_fwd_return_by_state": [
+            float(np.mean(g)) if len(g) else None
+            for g in [returns[mask_d & (hard_state == j)] for j in range(k)]
+        ],
+        "mean_rv_fwd_by_state": [
+            float(np.mean(g)) if len(g) else None
+            for g in [rv_fwd[mask & (hard_state == j)] for j in range(k)]
+        ],
     }
 
 
@@ -197,7 +214,12 @@ for interval in INTERVALS:
     res: dict = {"n_obs": n}
 
     # ---- rung 0: trailing-median RV threshold (causal, 2 states) ----
-    med = df["rv_target"].rolling_median(window_size=thresh_window, min_periods=thresh_window // 2).shift(1).to_numpy()
+    med = (
+        df["rv_target"]
+        .rolling_median(window_size=thresh_window, min_samples=thresh_window // 2)
+        .shift(1)
+        .to_numpy()
+    )
     thr_state = np.where(np.isfinite(med), (rv > med).astype(float), np.nan)
     res["baseline_threshold"] = {
         "geometric_duration": geometric_duration_test(thr_state),
@@ -209,7 +231,13 @@ for interval in INTERVALS:
     # ---- rung 1: Gaussian mixture, K=2,3 ----
     for k in [2, 3]:
         probs, hard, fit_log = rolling_refit_states(
-            ret, k, refit_every, min_train, MAX_TRAIN, emission="mixture", fit_fn=L.fit_gmm_em,
+            ret,
+            k,
+            refit_every,
+            min_train,
+            MAX_TRAIN,
+            emission="mixture",
+            fit_fn=L.fit_gmm_em,
         )
         res[f"gmm_k{k}"] = {
             "n_refits": len(fit_log),
@@ -221,10 +249,18 @@ for interval in INTERVALS:
 
     # ---- rung 2: HMM, Gaussian and Student-t emissions, K=2 ----
     for emission, t_df in [("gaussian", None), ("t", 5.0)]:
+
         def fit_fn(window, k, emission=emission, t_df=t_df):
             return L.fit_hmm(window, k=k, n_iter=15, emission=emission, t_df=t_df)
+
         probs, hard, fit_log = rolling_refit_states(
-            ret, 2, refit_every, min_train, MAX_TRAIN, emission="hmm", fit_fn=fit_fn,
+            ret,
+            2,
+            refit_every,
+            min_train,
+            MAX_TRAIN,
+            emission="hmm",
+            fit_fn=fit_fn,
         )
         res[f"hmm_{emission}"] = {
             "n_refits": len(fit_log),
@@ -236,12 +272,23 @@ for interval in INTERVALS:
 
     # ---- rung 3: activity regime (count dispersion index vs its own trailing median) ----
     disp = (
-        df["count"].rolling_std(window_size=thresh_window, min_periods=thresh_window // 2) ** 2
-        / df["count"].rolling_mean(window_size=thresh_window, min_periods=thresh_window // 2)
+        df["count"].rolling_std(
+            window_size=thresh_window, min_samples=thresh_window // 2
+        )
+        ** 2
+        / df["count"].rolling_mean(
+            window_size=thresh_window, min_samples=thresh_window // 2
+        )
     ).shift(1)
-    disp_med = disp.rolling_median(window_size=thresh_window, min_periods=thresh_window // 2).to_numpy()
+    disp_med = disp.rolling_median(
+        window_size=thresh_window, min_samples=thresh_window // 2
+    ).to_numpy()
     disp_arr = disp.to_numpy()
-    act_state = np.where(np.isfinite(disp_arr) & np.isfinite(disp_med), (disp_arr > disp_med).astype(float), np.nan)
+    act_state = np.where(
+        np.isfinite(disp_arr) & np.isfinite(disp_med),
+        (disp_arr > disp_med).astype(float),
+        np.nan,
+    )
     res["activity_regime"] = {
         "geometric_duration": geometric_duration_test(act_state),
         "transition_matrix": transition_matrix(act_state, 2),

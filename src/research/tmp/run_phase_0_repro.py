@@ -68,9 +68,13 @@ def main():
         f"carry DSR {gate_ac['deflated_sharpe_prob']} != write-up's 0.997"
     )
     ci_lo, ci_hi = gate_ac["excess_return_ci"]
-    assert ci_lo < 0 < ci_hi, f"carry excess-return CI {gate_ac['excess_return_ci']} does not include zero"
+    assert ci_lo < 0 < ci_hi, (
+        f"carry excess-return CI {gate_ac['excess_return_ci']} does not include zero"
+    )
     assert gate_ac["excess_ci_excludes_zero"] is False
-    assert gate_ac["fires"] is False, "Gate AC must be recorded as a null - hypothesis (c) turns on this exact fact"
+    assert gate_ac["fires"] is False, (
+        "Gate AC must be recorded as a null - hypothesis (c) turns on this exact fact"
+    )
     results["gate_AC_repro"] = gate_ac
 
     results["_verdict"] = (

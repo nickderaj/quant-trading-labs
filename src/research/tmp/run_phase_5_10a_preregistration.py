@@ -128,7 +128,8 @@ INCLUDE_EXCLUDE_DECISION = (
 
 GATE_TABLE = {
     "SP": {
-        "notebook": "10b", "claim": "unconditional structural mean-reversion in commodity spreads survives cost",
+        "notebook": "10b",
+        "claim": "unconditional structural mean-reversion in commodity spreads survives cost",
         "fires_if": "net Sharpe > 0 at every origin offset AND block-bootstrap 95% CI on net return (self-financing, baseline zero) excludes zero AND DSR > 0.95 on the cumulative config count",
         "scope": "run on both taxonomy groups (inter-commodity, calendar), reported separately by group, on eligible (cointegrated) spreads only",
     },
@@ -139,22 +140,26 @@ GATE_TABLE = {
         "scope": "inter-commodity spreads only (sec 4.2), primary regime definition = deadband (see REGIME_DEFINITIONS above)",
     },
     "SPR-BW": {
-        "notebook": "10b", "claim": "the operator's specific prior: the effect is not a brent_wti artifact",
+        "notebook": "10b",
+        "claim": "the operator's specific prior: the effect is not a brent_wti artifact",
         "fires_if": "Gate SPR's improvement holds for brent_wti AND for at least 3 other inter-commodity spreads independently",
         "scope": "per-spread breakdown of Gate SPR's own book, plus brent_wti's both-legs-agree secondary variant",
     },
     "VS": {
-        "notebook": "10b", "claim": "volatility-scaled commodity carry closes Gate AC's excess-vs-basket gap",
+        "notebook": "10b",
+        "claim": "volatility-scaled commodity carry closes Gate AC's excess-vs-basket gap",
         "fires_if": "the SAME criterion Gate AC used (net Sharpe > 0 every offset AND excess-vs-equal-weight-basket bootstrap CI excludes zero AND DSR > 0.95), with the DSR count carrying forward notebook 8's already-logged carry configurations -- not reset to 1",
         "scope": "reuses notebook 8's carry panel/cost model, only the position-sizing rule (vol-scaled, not constant-weight) changes",
     },
     "BM": {
-        "notebook": "10b", "claim": "an equal-weighted blend of notebook 8's four momentum lookbacks is sign-consistent and survives cost",
+        "notebook": "10b",
+        "claim": "an equal-weighted blend of notebook 8's four momentum lookbacks is sign-consistent and survives cost",
         "fires_if": "same criterion, counting the blend as a new configuration on top of the already-logged single-lookback configs",
         "scope": "reuses notebook 8's momentum panel/cost model",
     },
     "FA-data": {
-        "notebook": "10b", "claim": "(data check, not a strategy gate) this repo's cache holds a crypto spot series distinct from the perpetuals",
+        "notebook": "10b",
+        "claim": "(data check, not a strategy gate) this repo's cache holds a crypto spot series distinct from the perpetuals",
         "fires_if": "resolved TRUE or FALSE before any Gate FA work; if FALSE, Gate FA is deferred with a data-acquisition note -- no proxy",
         "scope": "cheap check only",
     },
@@ -227,7 +232,8 @@ DSR_CONFIG_COUNTS = {
     },
     "_transparency_log": {
         "total_spreads_descriptively_screened_10a": 30,
-        "total_regime_conditional_descriptive_runs_10a": 11 * 3,  # 11 inter-commodity spreads x 3 regime defs, Phase 3
+        "total_regime_conditional_descriptive_runs_10a": 11
+        * 3,  # 11 inter-commodity spreads x 3 regime defs, Phase 3
         "note": (
             "These 10a screening/descriptive numbers are logged for full transparency "
             "(sec 8: 'log every configuration tried') but are NOT part of any gate's "

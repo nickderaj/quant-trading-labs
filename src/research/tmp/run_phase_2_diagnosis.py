@@ -40,8 +40,10 @@ HYPOTHESES = {
         "name": "Our strategies are too naive",
         "verdict": "partially supported",
         "supporting_sources": [
-            "barroso_santa_clara_2015", "aqr_century_trend_following",
-            "aqr_demystifying_managed_futures", "jensen_kelly_pedersen_2023",
+            "barroso_santa_clara_2015",
+            "aqr_century_trend_following",
+            "aqr_demystifying_managed_futures",
+            "jensen_kelly_pedersen_2023",
         ],
         "contrary_or_qualifying_sources": ["man_group_vol_targeting"],
         "reasoning": (
@@ -68,7 +70,9 @@ HYPOTHESES = {
         "verdict": "contradicted",
         "supporting_sources": [],
         "contrary_or_qualifying_sources": [
-            "novy_marx_velikov_2016", "chen_velikov_2023", "quantpedia_oos_analysis",
+            "novy_marx_velikov_2016",
+            "chen_velikov_2023",
+            "quantpedia_oos_analysis",
         ],
         "reasoning": (
             "No Tier 1/2 source found in this survey argues that realistic trading costs "
@@ -96,10 +100,13 @@ HYPOTHESES = {
         "name": "Our statistical bar is too strict",
         "verdict": "partially supported",
         "supporting_sources": [
-            "man_ahl_track_record", "asness_ritholtz_transcript", "quantpedia_oos_analysis",
+            "man_ahl_track_record",
+            "asness_ritholtz_transcript",
+            "quantpedia_oos_analysis",
         ],
         "contrary_or_qualifying_sources": [
-            "harvey_liu_zhu_2016", "bailey_lopez_de_prado_dsr",
+            "harvey_liu_zhu_2016",
+            "bailey_lopez_de_prado_dsr",
         ],
         "reasoning": (
             "This hypothesis needed the most careful separation of two DIFFERENT bars this "
@@ -183,9 +190,12 @@ HYPOTHESES = {
         "name": "The markets are efficient at the horizons/instruments we can reach",
         "verdict": "well-supported",
         "supporting_sources": [
-            "mclean_pontiff_2016", "bitcoin_efficiency_scientific_reports",
-            "crypto_efficiency_political_uncertainty_2025", "nber_gorton_rouwenhorst",
-            "zhu_2024_pairs_trading", "gatev_goetzmann_rouwenhorst_2006",
+            "mclean_pontiff_2016",
+            "bitcoin_efficiency_scientific_reports",
+            "crypto_efficiency_political_uncertainty_2025",
+            "nber_gorton_rouwenhorst",
+            "zhu_2024_pairs_trading",
+            "gatev_goetzmann_rouwenhorst_2006",
         ],
         "contrary_or_qualifying_sources": ["jensen_kelly_pedersen_2023"],
         "reasoning": (
@@ -216,10 +226,14 @@ HYPOTHESES = {
         "name": "We have been structurally looking in the wrong place",
         "verdict": "well-supported",
         "supporting_sources": [
-            "fed_hedge_fund_treasury_exposures", "ofr_treasury_basis_2021",
-            "dallas_fed_basis_funding", "cftc_mrac_basis_trade",
-            "gatev_goetzmann_rouwenhorst_2006", "zhu_2024_pairs_trading",
-            "avellaneda_stoikov_2008", "hedge_fund_journal_vrp",
+            "fed_hedge_fund_treasury_exposures",
+            "ofr_treasury_basis_2021",
+            "dallas_fed_basis_funding",
+            "cftc_mrac_basis_trade",
+            "gatev_goetzmann_rouwenhorst_2006",
+            "zhu_2024_pairs_trading",
+            "avellaneda_stoikov_2008",
+            "hedge_fund_journal_vrp",
         ],
         "contrary_or_qualifying_sources": [],
         "reasoning": (
@@ -255,7 +269,9 @@ HYPOTHESES = {
 
 
 def gate_DX(hypotheses):
-    well_supported = [k for k, v in hypotheses.items() if v["verdict"] == "well-supported"]
+    well_supported = [
+        k for k, v in hypotheses.items() if v["verdict"] == "well-supported"
+    ]
     contradicted = [k for k, v in hypotheses.items() if v["verdict"] == "contradicted"]
     # both must be backed by >=1 tier1/2 source (already true by construction: every
     # hypothesis entry above lists only tier1/2 sources in supporting_sources)
@@ -270,7 +286,8 @@ def gate_DX(hypotheses):
             "hypotheses (d) and (e) are well-supported on Tier 1/2 evidence while "
             "hypothesis (b) is contradicted on Tier 1/2 evidence - not every hypothesis "
             "converged to 'partially supported' or 'insufficient evidence'."
-            if fires else "Gate does not fire."
+            if fires
+            else "Gate does not fire."
         ),
     }
 
@@ -278,7 +295,10 @@ def gate_DX(hypotheses):
 def gate_BAR(hypotheses):
     rec = hypotheses["c"].get("actionable_recommendation")
     has_recommendation = rec is not None and "recommendation" in rec
-    has_consequences = rec is not None and "consequences_for_existing_nulls_labelled_hypothetical" in rec
+    has_consequences = (
+        rec is not None
+        and "consequences_for_existing_nulls_labelled_hypothetical" in rec
+    )
     fires = has_recommendation and has_consequences
     return {
         "has_sourced_recommendation": has_recommendation,
@@ -325,7 +345,10 @@ def main():
     for hkey, h in HYPOTHESES.items():
         print(f"({hkey}) {h['name']}: {h['verdict'].upper()}")
     print()
-    print("Gate DX:", json.dumps({k: v for k, v in dx.items() if k != "reasoning"}, indent=2))
+    print(
+        "Gate DX:",
+        json.dumps({k: v for k, v in dx.items() if k != "reasoning"}, indent=2),
+    )
     print(dx["reasoning"])
     print()
     print("Gate BAR:", json.dumps(bar, indent=2))

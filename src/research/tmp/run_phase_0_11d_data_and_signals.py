@@ -99,7 +99,9 @@ def signal_firing_diagnostics(universe: dict[str, dict]) -> dict:
     p = S11.BreakoutParams()
     out = {}
     for s, f in universe.items():
-        sig = S11.compute_breakout_entries(f["open"], f["high"], f["low"], f["close"], p)
+        sig = S11.compute_breakout_entries(
+            f["open"], f["high"], f["low"], f["close"], p
+        )
         out[s] = {"n_bars": len(f["close"]), "n_raw_signals": int(sig.sum())}
     return out
 
@@ -131,8 +133,12 @@ def main() -> None:
         },
         "crypto_raw_signal_counts": crypto_sig,
         "equity_raw_signal_counts": equity_sig,
-        "total_crypto_raw_signals": sum(v["n_raw_signals"] for v in crypto_sig.values()),
-        "total_equity_raw_signals": sum(v["n_raw_signals"] for v in equity_sig.values()),
+        "total_crypto_raw_signals": sum(
+            v["n_raw_signals"] for v in crypto_sig.values()
+        ),
+        "total_equity_raw_signals": sum(
+            v["n_raw_signals"] for v in equity_sig.values()
+        ),
         "crypto_regime_ok_frac": float(
             np.mean([crypto_regime[s].mean() for s in crypto if len(crypto_regime[s])])
         ),
@@ -140,7 +146,9 @@ def main() -> None:
             np.mean([equity_regime[s].mean() for s in equity if len(equity_regime[s])])
         ),
     }
-    Path("src/research/tmp/phase_0_11d_results.json").write_text(json.dumps(out, indent=2))
+    Path("src/research/tmp/phase_0_11d_results.json").write_text(
+        json.dumps(out, indent=2)
+    )
     print(
         f"Phase 0 11d: {out['n_crypto_symbols']} crypto symbols "
         f"(raw signals={out['total_crypto_raw_signals']}, "

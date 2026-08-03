@@ -14,9 +14,9 @@ import time
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
 
+import dist_lib as L
 import numpy as np
 
-import dist_lib as L
 import research
 
 SYMBOLS = ["ETHUSDT", "SOLUSDT", "DOGEUSDT", "BNBUSDT", "XRPUSDT"]
@@ -42,8 +42,11 @@ for symbol in SYMBOLS:
 
     har_df = L.make_har_features(df, INTERVAL)
     forecasts["rung2_har_rv"] = L.rolling_ols_refit(
-        har_df, ["rv_d", "rv_w", "rv_m"], "rv_target",
-        refit_every=CHEAP_REFIT_DAYS, min_train=MIN_TRAIN_DAYS,
+        har_df,
+        ["rv_d", "rv_w", "rv_m"],
+        "rv_target",
+        refit_every=CHEAP_REFIT_DAYS,
+        min_train=MIN_TRAIN_DAYS,
     )
 
     range_df = L.range_estimator_forecasts(df, window=24)
@@ -52,12 +55,19 @@ for symbol in SYMBOLS:
 
     for fam in ["gamma", "invgamma", "lognorm"]:
         forecasts[f"rung4_{fam}"] = L.rolling_rv_dist_forecast(
-            rv, fam, refit_every=MLE_REFIT_DAYS, min_train=MIN_TRAIN_DAYS, max_train=MLE_MAX_TRAIN,
+            rv,
+            fam,
+            refit_every=MLE_REFIT_DAYS,
+            min_train=MIN_TRAIN_DAYS,
+            max_train=MLE_MAX_TRAIN,
         )
 
     for innov in ["normal", "t", "skewt"]:
         fc, _fits = L.rolling_garch_forecast(
-            ret, refit_every=MLE_REFIT_DAYS, min_train=MIN_TRAIN_DAYS, innovation=innov,
+            ret,
+            refit_every=MLE_REFIT_DAYS,
+            min_train=MIN_TRAIN_DAYS,
+            innovation=innov,
             max_train=MLE_MAX_TRAIN,
         )
         forecasts[f"rung5_garch_{innov}"] = fc
@@ -66,14 +76,19 @@ for symbol in SYMBOLS:
 
     scores = {name: L.qlike_mse(rv, fc) for name, fc in forecasts.items()}
 
-    def best_in_group(prefix):
-        cands = [k for k in scores if k.startswith(prefix) and np.isfinite(scores[k]["qlike"])]
+    def best_in_group(prefix, scores=scores):
+        cands = [
+            k
+            for k in scores
+            if k.startswith(prefix) and np.isfinite(scores[k]["qlike"])
+        ]
         return min(cands, key=lambda k: scores[k]["qlike"]) if cands else None
 
     ladder_reps = {f"rung{i}": best_in_group(f"rung{i}_") for i in range(7)}
 
-    def qlike_loss_series(fc):
+    def qlike_loss_series(fc, rv=rv):
         import distributions as dist
+
         mask = np.isfinite(rv) & np.isfinite(fc) & (fc > 0) & (rv > 0)
         arr = np.full(len(rv), np.nan)
         arr[mask] = dist.qlike(rv[mask], fc[mask])
@@ -82,7 +97,7 @@ for symbol in SYMBOLS:
     present = [r for r in ladder_reps if ladder_reps[r] is not None]
     loss_cache = {r: qlike_loss_series(forecasts[ladder_reps[r]]) for r in present}
     qlike_by_rung = {r: float(np.nanmean(loss_cache[r])) for r in present}
-    best_rung = min(qlike_by_rung, key=qlike_by_rung.get)
+    best_rung = min(qlike_by_rung, key=lambda r: qlike_by_rung[r])
 
     beats_all = True
     for r in present:
@@ -97,13 +112,17 @@ for symbol in SYMBOLS:
             beats_all = False
 
     out["symbols"][symbol] = {
-        "n_obs": n, "qlike_by_rung": qlike_by_rung,
-        "best_rung": best_rung, "best_rep": ladder_reps[best_rung],
+        "n_obs": n,
+        "qlike_by_rung": qlike_by_rung,
+        "best_rung": best_rung,
+        "best_rep": ladder_reps[best_rung],
         "beats_every_other_rung_significantly": beats_all,
         "elapsed_sec": time.time() - t0,
     }
-    print(f"{symbol}: n={n} best={best_rung}/{ladder_reps[best_rung]} "
-          f"beats_all={beats_all} elapsed={time.time()-t0:.1f}s")
+    print(
+        f"{symbol}: n={n} best={best_rung}/{ladder_reps[best_rung]} "
+        f"beats_all={beats_all} elapsed={time.time() - t0:.1f}s"
+    )
 
 with open("src/research/tmp/phase3_transfer_results.json", "w") as f:
     json.dump(out, f, indent=1, default=float)

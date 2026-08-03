@@ -51,7 +51,7 @@ def logpdf(z: np.ndarray, shape: tuple[float, ...]) -> np.ndarray:
 def ppf(q: float | np.ndarray, shape: tuple[float, ...]) -> np.ndarray:
     gamma, delta = shape
     loc, scale = _loc_scale(gamma, delta)
-    return st.johnsonsu.ppf(q, gamma, delta, loc=loc, scale=scale)
+    return np.asarray(st.johnsonsu.ppf(q, gamma, delta, loc=loc, scale=scale))
 
 
 def es(q: float, shape: tuple[float, ...]) -> float:
@@ -64,7 +64,7 @@ def es(q: float, shape: tuple[float, ...]) -> float:
     finite z-grid (see `distributions.crps`'s old numerical-grid bug in this
     repo's history for exactly this failure mode).
     """
-    gamma, delta = shape
+    _gamma, _delta = shape
 
     def integrand(u):
         return ppf(u, shape)

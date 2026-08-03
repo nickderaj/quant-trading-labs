@@ -22,6 +22,7 @@ Writes phase_3_results.json.
 import json
 import sys
 import time
+from typing import cast
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
@@ -57,9 +58,14 @@ research.set_seed(0)
 def load_ret(product: str) -> tuple[np.ndarray, np.ndarray]:
     curve = pl.read_parquet(f"{CURVE_DIR}/{product}.parquet")
     dev_start = DEV_START.get(product, DEV_START["__default__"])
-    sub = curve.select(["date", pl.col("log_return_ratioadj").alias("ret")]).drop_nulls()
+    sub = curve.select(
+        ["date", pl.col("log_return_ratioadj").alias("ret")]
+    ).drop_nulls()
     sub = sub.filter(pl.col("ret").is_finite())
-    sub = sub.filter((pl.col("date") >= pl.lit(dev_start).str.to_date()) & (pl.col("date") <= pl.lit(DEV_END).str.to_date()))
+    sub = sub.filter(
+        (pl.col("date") >= pl.lit(dev_start).str.to_date())
+        & (pl.col("date") <= pl.lit(DEV_END).str.to_date())
+    )
     return sub["ret"].to_numpy(), sub["date"].to_numpy()
 
 
@@ -70,11 +76,35 @@ def build_models(ret: np.ndarray) -> dict:
     n = len(ret)
     models: dict = {}
 
-    fc_g_n, fits_g_n = L.rolling_garch_forecast(ret, refit_every=REFIT_EVERY, min_train=MIN_TRAIN, innovation="normal", max_train=MAX_TRAIN)
-    fc_g_t, fits_g_t = L.rolling_garch_forecast(ret, refit_every=REFIT_EVERY, min_train=MIN_TRAIN, innovation="t", max_train=MAX_TRAIN)
+    fc_g_n, fits_g_n = L.rolling_garch_forecast(
+        ret,
+        refit_every=REFIT_EVERY,
+        min_train=MIN_TRAIN,
+        innovation="normal",
+        max_train=MAX_TRAIN,
+    )
+    fc_g_t, fits_g_t = L.rolling_garch_forecast(
+        ret,
+        refit_every=REFIT_EVERY,
+        min_train=MIN_TRAIN,
+        innovation="t",
+        max_train=MAX_TRAIN,
+    )
     nu_g_t = L.nu_path_from_fits(fits_g_t, n, param_index=3)
-    fc_j_n, fits_j_n = L5.rolling_gjr_forecast(ret, refit_every=REFIT_EVERY, min_train=MIN_TRAIN, innovation="normal", max_train=MAX_TRAIN)
-    fc_j_t, fits_j_t = L5.rolling_gjr_forecast(ret, refit_every=REFIT_EVERY, min_train=MIN_TRAIN, innovation="t", max_train=MAX_TRAIN)
+    fc_j_n, fits_j_n = L5.rolling_gjr_forecast(
+        ret,
+        refit_every=REFIT_EVERY,
+        min_train=MIN_TRAIN,
+        innovation="normal",
+        max_train=MAX_TRAIN,
+    )
+    fc_j_t, fits_j_t = L5.rolling_gjr_forecast(
+        ret,
+        refit_every=REFIT_EVERY,
+        min_train=MIN_TRAIN,
+        innovation="t",
+        max_train=MAX_TRAIN,
+    )
     nu_j_t = L.nu_path_from_fits(fits_j_t, n, param_index=4)
 
     def normal_ls(fc):
@@ -89,34 +119,83 @@ def build_models(ret: np.ndarray) -> dict:
         out[r["mask"]] = r["log_score"]
         return out
 
-    models["garch_normal"] = {"variance_fc": fc_g_n, "nu_path": None, "fits": fits_g_n, "log_score_full": normal_ls(fc_g_n), "kind": "garch"}
-    models["garch_t"] = {"variance_fc": fc_g_t, "nu_path": nu_g_t, "fits": fits_g_t, "log_score_full": t_ls(fc_g_t, nu_g_t), "kind": "garch"}
-    models["gjr_normal"] = {"variance_fc": fc_j_n, "nu_path": None, "fits": fits_j_n, "log_score_full": normal_ls(fc_j_n), "kind": "gjr"}
-    models["gjr_t"] = {"variance_fc": fc_j_t, "nu_path": nu_j_t, "fits": fits_j_t, "log_score_full": t_ls(fc_j_t, nu_j_t), "kind": "gjr"}
+    models["garch_normal"] = {
+        "variance_fc": fc_g_n,
+        "nu_path": None,
+        "fits": fits_g_n,
+        "log_score_full": normal_ls(fc_g_n),
+        "kind": "garch",
+    }
+    models["garch_t"] = {
+        "variance_fc": fc_g_t,
+        "nu_path": nu_g_t,
+        "fits": fits_g_t,
+        "log_score_full": t_ls(fc_g_t, nu_g_t),
+        "kind": "garch",
+    }
+    models["gjr_normal"] = {
+        "variance_fc": fc_j_n,
+        "nu_path": None,
+        "fits": fits_j_n,
+        "log_score_full": normal_ls(fc_j_n),
+        "kind": "gjr",
+    }
+    models["gjr_t"] = {
+        "variance_fc": fc_j_t,
+        "nu_path": nu_j_t,
+        "fits": fits_j_t,
+        "log_score_full": t_ls(fc_j_t, nu_j_t),
+        "kind": "gjr",
+    }
 
     for fam_name in ZOO_FAMILIES:
         mod = densities.REGISTRY[fam_name]
-        fc_gz, fits_gz = L6.rolling_garch_forecast_zoo(ret, refit_every=REFIT_EVERY, min_train=MIN_TRAIN, family_module=mod, max_train=MAX_TRAIN)
+        fc_gz, fits_gz = L6.rolling_garch_forecast_zoo(
+            ret,
+            refit_every=REFIT_EVERY,
+            min_train=MIN_TRAIN,
+            family_module=mod,
+            max_train=MAX_TRAIN,
+        )
         models[f"garch_{fam_name}"] = {
-            "variance_fc": fc_gz, "nu_path": None, "fits": fits_gz,
-            "log_score_full": L6.score_zoo_model(ret, fc_gz, fits_gz, mod), "kind": "garch",
+            "variance_fc": fc_gz,
+            "nu_path": None,
+            "fits": fits_gz,
+            "log_score_full": L6.score_zoo_model(ret, fc_gz, fits_gz, mod),
+            "kind": "garch",
         }
-        fc_jz, fits_jz = C.rolling_gjr_forecast_zoo(ret, refit_every=REFIT_EVERY, min_train=MIN_TRAIN, family_module=mod, max_train=MAX_TRAIN)
+        fc_jz, fits_jz = C.rolling_gjr_forecast_zoo(
+            ret,
+            refit_every=REFIT_EVERY,
+            min_train=MIN_TRAIN,
+            family_module=mod,
+            max_train=MAX_TRAIN,
+        )
         models[f"gjr_{fam_name}"] = {
-            "variance_fc": fc_jz, "nu_path": None, "fits": fits_jz,
-            "log_score_full": L6.score_zoo_model(ret, fc_jz, fits_jz, mod), "kind": "gjr",
+            "variance_fc": fc_jz,
+            "nu_path": None,
+            "fits": fits_jz,
+            "log_score_full": L6.score_zoo_model(ret, fc_jz, fits_jz, mod),
+            "kind": "gjr",
         }
 
-    spliced_fits = L6.rolling_spliced_evt_fits(ret, fits_g_n, model="garch", max_train=MAX_TRAIN)
+    spliced_fits = L6.rolling_spliced_evt_fits(
+        ret, fits_g_n, model="garch", max_train=MAX_TRAIN
+    )
     models["garch_spliced_evt"] = {
-        "variance_fc": fc_g_n, "nu_path": None, "fits": spliced_fits,
-        "log_score_full": L6.score_spliced_evt_model(ret, fc_g_n, spliced_fits), "kind": "spliced",
+        "variance_fc": fc_g_n,
+        "nu_path": None,
+        "fits": spliced_fits,
+        "log_score_full": L6.score_spliced_evt_model(ret, fc_g_n, spliced_fits),
+        "kind": "spliced",
     }
 
     return models
 
 
-def quantile_and_es_forecasts(model_name: str, m: dict, ret: np.ndarray) -> tuple[dict, dict]:
+def quantile_and_es_forecasts(
+    model_name: str, m: dict, ret: np.ndarray
+) -> tuple[dict, dict]:
     import alpha_lib7 as A
     import densities
 
@@ -160,12 +239,19 @@ def process_product(product: str) -> dict | None:
 
     models = build_models(ret)
     log_score_full = {name: m["log_score_full"] for name, m in models.items()}
-    dm = L6.all_pairs_dm_bh(list(models.keys()), log_score_full, dm_bootstrap_n=DM_BOOTSTRAP_N)
-    mean_ls = {name: (float(np.nanmean(ls)) if np.isfinite(ls).any() else None) for name, ls in log_score_full.items()}
+    dm = L6.all_pairs_dm_bh(
+        list(models.keys()), log_score_full, dm_bootstrap_n=DM_BOOTSTRAP_N
+    )
+    mean_ls = {
+        name: (float(np.nanmean(ls)) if np.isfinite(ls).any() else None)
+        for name, ls in log_score_full.items()
+    }
     valid = [k for k, v in mean_ls.items() if v is not None]
-    ranking = sorted(valid, key=lambda k: mean_ls[k], reverse=True)
+    ranking = sorted(valid, key=lambda k: cast(float, mean_ls[k]), reverse=True)
     best = ranking[0] if ranking else None
-    best_significant = L6.beats_all_significantly(best, valid, dm, "bh_bootstrap") if best else False
+    best_significant = (
+        L6.beats_all_significantly(best, valid, dm, "bh_bootstrap") if best else False
+    )
 
     coverage = {}
     acerbi = {}
@@ -179,7 +265,9 @@ def process_product(product: str) -> dict | None:
         for q in ES_LEVELS:
             var_lo, es_lo = quantiles.get(q), es.get(q)
             if var_lo is not None and es_lo is not None:
-                acerbi_entry[f"lower_{q}"] = {"z": L5.acerbi_szekely_z(ret, var_lo, es_lo, q)}
+                acerbi_entry[f"lower_{q}"] = {
+                    "z": L5.acerbi_szekely_z(ret, var_lo, es_lo, q)
+                }
             var_hi, es_hi = quantiles.get(1 - q), es.get(1 - q)
             if var_hi is not None and es_hi is not None:
                 # upper-tail test = lower-tail test on the reflected series
@@ -195,7 +283,9 @@ def process_product(product: str) -> dict | None:
                 gjr_gammas.append(f["gamma"])
     gjr_sign = {
         "mean_gamma": float(np.mean(gjr_gammas)) if gjr_gammas else None,
-        "frac_positive": float(np.mean(np.array(gjr_gammas) > 0)) if gjr_gammas else None,
+        "frac_positive": float(np.mean(np.array(gjr_gammas) > 0))
+        if gjr_gammas
+        else None,
         "n_fits": len(gjr_gammas),
         "interpretation": "positive gamma = equity leverage sign (down-moves raise next-bar var more); negative = inverse-leverage (commodity) sign",
     }
@@ -207,6 +297,7 @@ def process_product(product: str) -> dict | None:
         if q01 is not None:
             quantiles, _ = quantile_and_es_forecasts(best, models[best], ret)
             var01 = quantiles.get(0.01)
+            assert var01 is not None
             mask = np.isfinite(ret) & np.isfinite(var01)
             hits = dist.exceedances(ret[mask], var01[mask], side="lower").astype(int)
             counts, durations = L6.violation_blocks_and_durations(hits, block_size=21)
@@ -214,7 +305,11 @@ def process_product(product: str) -> dict | None:
             nb_fit = L6.fit_nb_counts(counts)
             geo_fit = L6.fit_geometric_durations(durations)
             weibull_fit = L6.fit_discrete_weibull_durations(durations)
-            count_lr = L6.boundary_lr_test(nb_fit["loglik"], poisson_fit["loglik"]) if (nb_fit and poisson_fit) else (None, None)
+            count_lr = (
+                L6.boundary_lr_test(nb_fit["loglik"], poisson_fit["loglik"])
+                if (nb_fit and poisson_fit)
+                else (None, None)
+            )
             dur_lr_stat, dur_lr_p = None, None
             if weibull_fit and geo_fit:
                 # beta=1 (geometric) is an INTERIOR point of discrete-Weibull's
@@ -222,13 +317,22 @@ def process_product(product: str) -> dict | None:
                 # mixture correction (see fit_discrete_weibull_durations).
                 from scipy import stats as st
 
-                dur_lr_stat = float(max(0.0, 2 * (weibull_fit["loglik"] - geo_fit["loglik"])))
+                dur_lr_stat = float(
+                    max(0.0, 2 * (weibull_fit["loglik"] - geo_fit["loglik"]))
+                )
                 dur_lr_p = float(st.chi2.sf(dur_lr_stat, df=1))
             violation_process = {
-                "model": best, "n_blocks": len(counts), "n_durations": len(durations),
-                "poisson": poisson_fit, "nb": nb_fit, "geometric": geo_fit, "discrete_weibull": weibull_fit,
-                "count_lr_stat": count_lr[0], "count_lr_pvalue": count_lr[1],
-                "duration_lr_stat": dur_lr_stat, "duration_lr_pvalue": dur_lr_p,
+                "model": best,
+                "n_blocks": len(counts),
+                "n_durations": len(durations),
+                "poisson": poisson_fit,
+                "nb": nb_fit,
+                "geometric": geo_fit,
+                "discrete_weibull": weibull_fit,
+                "count_lr_stat": count_lr[0],
+                "count_lr_pvalue": count_lr[1],
+                "duration_lr_stat": dur_lr_stat,
+                "duration_lr_pvalue": dur_lr_p,
             }
 
     return {
@@ -253,7 +357,7 @@ def main():
         out = process_product(p)
         if out is not None:
             results[p] = out
-        print(f"  {p} done in {time.time()-t1:.1f}s", flush=True)
+        print(f"  {p} done in {time.time() - t1:.1f}s", flush=True)
 
     winners = {p: results[p]["best_model"] for p in results if results[p]["best_model"]}
     results["_summary"] = {
@@ -261,12 +365,15 @@ def main():
         "distinct_winners": sorted(set(winners.values())),
     }
     results["_config"] = {
-        "min_train": MIN_TRAIN, "refit_every": REFIT_EVERY, "max_train": MAX_TRAIN,
-        "quantiles": QUANTILES, "es_levels": ES_LEVELS,
+        "min_train": MIN_TRAIN,
+        "refit_every": REFIT_EVERY,
+        "max_train": MAX_TRAIN,
+        "quantiles": QUANTILES,
+        "es_levels": ES_LEVELS,
     }
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\nwritten {OUT_PATH} in {time.time()-t0:.1f}s")
+    print(f"\nwritten {OUT_PATH} in {time.time() - t0:.1f}s")
 
 
 if __name__ == "__main__":

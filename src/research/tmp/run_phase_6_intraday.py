@@ -15,6 +15,7 @@ Writes phase_6_results.json.
 import json
 import sys
 import time
+from typing import cast
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
@@ -31,7 +32,9 @@ def load_intraday(product: str) -> pl.DataFrame:
     df = pl.read_parquet(f"{INTRADAY_DIR}/{product}.parquet")
     df = df.sort("timestamp")
     # ET = UTC-5 (winter) / UTC-4 (summer); use polars tz conversion for DST correctness.
-    df = df.with_columns(pl.col("timestamp").dt.convert_time_zone("America/New_York").alias("ts_et"))
+    df = df.with_columns(
+        pl.col("timestamp").dt.convert_time_zone("America/New_York").alias("ts_et")
+    )
     df = df.with_columns(
         # dt.hour()/dt.minute() return Int8 -- hour_et*60 overflows Int8's
         # +-127 range (600 for hour=10), silently wrapping and corrupting
@@ -41,18 +44,26 @@ def load_intraday(product: str) -> pl.DataFrame:
         pl.col("ts_et").dt.weekday().alias("weekday"),  # 1=Mon..7=Sun
         pl.col("ts_et").dt.date().alias("date_et"),
     )
-    df = df.with_columns((pl.col("close") / pl.col("close").shift(1)).log().alias("ret"))
+    df = df.with_columns(
+        (pl.col("close") / pl.col("close").shift(1)).log().alias("ret")
+    )
     return df.filter(pl.col("ret").is_finite())
 
 
 def vol_seasonality(df: pl.DataFrame) -> dict:
     agg = (
-        df.with_columns((pl.col("hour_et") * 60 + pl.col("minute_et")).alias("minute_of_day"))
+        df.with_columns(
+            (pl.col("hour_et") * 60 + pl.col("minute_et")).alias("minute_of_day")
+        )
         .group_by("minute_of_day")
         .agg(pl.col("ret").abs().mean().alias("mean_abs_ret"), pl.len().alias("n"))
         .sort("minute_of_day")
     )
-    return {"minute_of_day": agg["minute_of_day"].to_list(), "mean_abs_ret": agg["mean_abs_ret"].to_list(), "n": agg["n"].to_list()}
+    return {
+        "minute_of_day": agg["minute_of_day"].to_list(),
+        "mean_abs_ret": agg["mean_abs_ret"].to_list(),
+        "n": agg["n"].to_list(),
+    }
 
 
 def eia_event_study(df: pl.DataFrame, window_min: int = 30) -> dict:
@@ -60,20 +71,33 @@ def eia_event_study(df: pl.DataFrame, window_min: int = 30) -> dict:
     the announcement window against the same time-of-day on non-Wednesdays,
     and against a same-day pre-announcement baseline."""
     ann_minute = 10 * 60 + 30
-    df = df.with_columns((pl.col("hour_et") * 60 + pl.col("minute_et")).alias("minute_of_day"))
+    df = df.with_columns(
+        (pl.col("hour_et") * 60 + pl.col("minute_et")).alias("minute_of_day")
+    )
 
     in_window = df.filter(
-        (pl.col("minute_of_day") >= ann_minute - window_min) & (pl.col("minute_of_day") <= ann_minute + window_min)
+        (pl.col("minute_of_day") >= ann_minute - window_min)
+        & (pl.col("minute_of_day") <= ann_minute + window_min)
     )
     wed_window = in_window.filter(pl.col("weekday") == 3)
     other_window = in_window.filter(pl.col("weekday") != 3)
 
-    wed_mean = float(wed_window["ret"].abs().mean()) if wed_window.height > 0 else None
-    other_mean = float(other_window["ret"].abs().mean()) if other_window.height > 0 else None
+    wed_mean = (
+        float(cast(float, wed_window["ret"].abs().mean()))
+        if wed_window.height > 0
+        else None
+    )
+    other_mean = (
+        float(cast(float, other_window["ret"].abs().mean()))
+        if other_window.height > 0
+        else None
+    )
 
     # minute-by-minute path around the announcement, Wednesdays only
     path = (
-        wed_window.with_columns((pl.col("minute_of_day") - ann_minute).alias("minutes_from_announcement"))
+        wed_window.with_columns(
+            (pl.col("minute_of_day") - ann_minute).alias("minutes_from_announcement")
+        )
         .group_by("minutes_from_announcement")
         .agg(pl.col("ret").abs().mean().alias("mean_abs_ret"))
         .sort("minutes_from_announcement")
@@ -88,7 +112,9 @@ def eia_event_study(df: pl.DataFrame, window_min: int = 30) -> dict:
     }
 
 
-def realized_vol_signature(df: pl.DataFrame, freqs_min: list[int] | None = None) -> dict:
+def realized_vol_signature(
+    df: pl.DataFrame, freqs_min: list[int] | None = None
+) -> dict:
     """RV at several sampling frequencies (the microstructure-noise
     signature plot): resample close prices to each frequency, compute daily
     RV = sum of squared log returns, report the mean daily RV per frequency.
@@ -97,15 +123,28 @@ def realized_vol_signature(df: pl.DataFrame, freqs_min: list[int] | None = None)
         freqs_min = [1, 5, 15, 30, 60]
     out = {}
     for f in freqs_min:
-        sampled = df.with_columns(((pl.col("hour_et") * 60 + pl.col("minute_et")) // f * f).alias("bucket"))
+        sampled = df.with_columns(
+            ((pl.col("hour_et") * 60 + pl.col("minute_et")) // f * f).alias("bucket")
+        )
         bars = (
             sampled.group_by(["date_et", "bucket"])
-            .agg(pl.col("close").last().alias("close"), pl.col("ts_et").last().alias("ts_et"))
+            .agg(
+                pl.col("close").last().alias("close"),
+                pl.col("ts_et").last().alias("ts_et"),
+            )
             .sort(["date_et", "ts_et"])
         )
-        bars = bars.with_columns((pl.col("close") / pl.col("close").shift(1)).log().over("date_et").alias("ret"))
+        bars = bars.with_columns(
+            (pl.col("close") / pl.col("close").shift(1))
+            .log()
+            .over("date_et")
+            .alias("ret")
+        )
         daily_rv = bars.group_by("date_et").agg((pl.col("ret") ** 2).sum().alias("rv"))
-        out[str(f)] = {"mean_daily_rv": float(daily_rv["rv"].mean()), "n_days": daily_rv.height}
+        out[str(f)] = {
+            "mean_daily_rv": float(cast(float, daily_rv["rv"].mean())),
+            "n_days": daily_rv.height,
+        }
     return out
 
 
@@ -132,7 +171,7 @@ def main():
     )
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\nwritten {OUT_PATH} in {time.time()-t0:.1f}s")
+    print(f"\nwritten {OUT_PATH} in {time.time() - t0:.1f}s")
 
 
 if __name__ == "__main__":

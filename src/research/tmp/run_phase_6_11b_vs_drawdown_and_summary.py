@@ -59,9 +59,7 @@ def reconcile_gate_vs() -> dict:
     # floating-point reproducibility (a ~1e-4 relative difference survives
     # even with the same seed and inputs -- polars rolling/ranking internals
     # are not bit-deterministic across runs -- not a methodology change).
-    sharpe_recomputed = float(
-        np.mean(log_ret) / np.std(log_ret) * ANNUALIZED_RATE
-    )
+    sharpe_recomputed = float(np.mean(log_ret) / np.std(log_ret) * ANNUALIZED_RATE)
     sharpe_matches_published = bool(
         np.isclose(sharpe_recomputed, published_offset0["sharpe_net"], rtol=1e-3)
     )
@@ -83,7 +81,9 @@ def reconcile_gate_vs() -> dict:
                 equity = 0.0
                 ruined_at = i if ruined_at is None else ruined_at
         equity_fixed[i] = equity
-    running_max = np.maximum.accumulate(np.concatenate([[START_EQUITY], equity_fixed]))[1:]
+    running_max = np.maximum.accumulate(np.concatenate([[START_EQUITY], equity_fixed]))[
+        1:
+    ]
     drawdown_fixed = equity_fixed / np.where(running_max > 0, running_max, 1.0) - 1.0
     max_dd_fixed_notional = float(np.min(drawdown_fixed))
     ruin_note = (
@@ -119,10 +119,10 @@ def reconcile_gate_vs() -> dict:
         "note": (
             "Sharpe and DSR are unchanged (verified above) -- this recomputation touches "
             "only the drawdown convention. The published -5.41 log-unit drawdown "
-            f"corresponds to {max_dd_log_convention:.4f} ({max_dd_log_convention*100:.1f}%) "
+            f"corresponds to {max_dd_log_convention:.4f} ({max_dd_log_convention * 100:.1f}%) "
             "of peak under a continuously-compounded reading; the fixed-notional, "
             "capital-bounded reading (no compounding, floored at zero) gives "
-            f"{max_dd_fixed_notional:.4f} ({max_dd_fixed_notional*100:.1f}%) of peak instead. "
+            f"{max_dd_fixed_notional:.4f} ({max_dd_fixed_notional * 100:.1f}%) of peak instead. "
             "This is a labelled hypothetical recomputation, not a replacement of 10b's "
             "own published number."
         ),
@@ -139,11 +139,21 @@ def three_way_summary() -> dict:
     ts = _load(PHASE_FILES["TS"])
     summary["TS"] = {
         k: ts["gate_TS"]["structured_by_offset"]["offset_0"][k]
-        for k in ["sharpe", "max_drawdown", "return_over_drawdown", "equity_path_return"]
+        for k in [
+            "sharpe",
+            "max_drawdown",
+            "return_over_drawdown",
+            "equity_path_return",
+        ]
     } | {"fires": ts["gate_TS"]["fires"]}
     summary["TS-S"] = {
         k: ts["gate_TS_S"]["stop_disabled_metrics_offset0"][k]
-        for k in ["sharpe", "max_drawdown", "return_over_drawdown", "equity_path_return"]
+        for k in [
+            "sharpe",
+            "max_drawdown",
+            "return_over_drawdown",
+            "equity_path_return",
+        ]
     } | {"fires": ts["gate_TS_S"]["fires"]}
 
     bf = _load(PHASE_FILES["BF"])
@@ -151,20 +161,35 @@ def three_way_summary() -> dict:
     bf_offset0 = bf["gate_BF"]["by_storage"][headline]["by_offset"]["offset_0"]
     summary["BF"] = {
         k: bf_offset0[k]
-        for k in ["sharpe", "max_drawdown", "return_over_drawdown", "equity_path_return"]
+        for k in [
+            "sharpe",
+            "max_drawdown",
+            "return_over_drawdown",
+            "equity_path_return",
+        ]
     } | {"fires": bf["gate_BF"]["fires"]}
     summary["BF-X"] = {"fires": bf["gate_BF_X"]["fires"]}
 
     scr = _load(PHASE_FILES["SCR"])
     summary["SCR"] = {
         k: scr["screen_inclusive_by_offset"]["offset_0"][k]
-        for k in ["sharpe", "max_drawdown", "return_over_drawdown", "equity_path_return"]
+        for k in [
+            "sharpe",
+            "max_drawdown",
+            "return_over_drawdown",
+            "equity_path_return",
+        ]
     } | {"fires": scr["fires"]}
 
     va = _load(PHASE_FILES["VA"])
     summary["VA"] = {
         k: va["va_by_offset"]["offset_0"][k]
-        for k in ["sharpe", "max_drawdown", "return_over_drawdown", "equity_path_return"]
+        for k in [
+            "sharpe",
+            "max_drawdown",
+            "return_over_drawdown",
+            "equity_path_return",
+        ]
     } | {"fires": va["fires"]}
 
     re_ = _load(PHASE_FILES["RE"])
@@ -172,7 +197,12 @@ def three_way_summary() -> dict:
     re_offset0 = re_["grid"][best_key]["by_offset"]["offset_0"]
     summary["RE"] = {
         k: re_offset0[k]
-        for k in ["sharpe", "max_drawdown", "return_over_drawdown", "equity_path_return"]
+        for k in [
+            "sharpe",
+            "max_drawdown",
+            "return_over_drawdown",
+            "equity_path_return",
+        ]
     } | {"fires": re_["fires"], "best_combo": best_key}
 
     return summary
@@ -193,7 +223,7 @@ def main() -> None:
         f"Gate VS: sharpe_unchanged={gate_vs_reconciliation['sharpe_unchanged']} "
         f"dd_log_convention={gate_vs_reconciliation['max_drawdown_log_cumsum_convention_pct']:.4f} "
         f"dd_fixed_notional={gate_vs_reconciliation['max_drawdown_fixed_notional_convention_pct']:.4f} | "
-        f"three-way summary: {[(g, round(v['sharpe'],3), round(v['max_drawdown'],4), v['fires']) for g, v in three_way.items() if 'sharpe' in v]}"
+        f"three-way summary: {[(g, round(v['sharpe'], 3), round(v['max_drawdown'], 4), v['fires']) for g, v in three_way.items() if 'sharpe' in v]}"
     )
 
 

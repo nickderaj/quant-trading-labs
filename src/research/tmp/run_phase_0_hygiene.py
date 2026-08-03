@@ -27,8 +27,18 @@ DUPLICATE_ROOT = "src/research/market"
 OUT_PATH = "src/research/tmp/phase_0_results.json"
 
 ROLL_DAYS_BEFORE = 5  # production choice; sensitivity to {3,5,10} tested below
-YFINANCE_TICKER = {"CL": "CL=F", "NG": "NG=F", "GC": "GC=F", "ZC": "ZC=F"}  # HG has no ohlcv/HG (sec 1.4)
-RESEARCH_CURVE = {"CL": "cl_curve.parquet", "NG": "ng_curve.parquet", "GC": "gc_curve.parquet", "SI": "si_curve.parquet"}
+YFINANCE_TICKER = {
+    "CL": "CL=F",
+    "NG": "NG=F",
+    "GC": "GC=F",
+    "ZC": "ZC=F",
+}  # HG has no ohlcv/HG (sec 1.4)
+RESEARCH_CURVE = {
+    "CL": "cl_curve.parquet",
+    "NG": "ng_curve.parquet",
+    "GC": "gc_curve.parquet",
+    "SI": "si_curve.parquet",
+}
 
 
 def load_data():
@@ -58,9 +68,15 @@ def negative_price_evidence() -> dict:
     3=settlement_price, 4=trading_session_low_price, 5=trading_session_high_price,
     6=cleared_volume, 7=lowest_offer, 8=highest_bid, 9=open_interest.
     """
-    raw = pl.read_parquet(f"{DATA_ROOT}/databento/exact_statistics/raw", columns=[
-        "local_contract_id", "stat_type", "price", "ts_ref",
-    ])
+    raw = pl.read_parquet(
+        f"{DATA_ROOT}/databento/exact_statistics/raw",
+        columns=[
+            "local_contract_id",
+            "stat_type",
+            "price",
+            "ts_ref",
+        ],
+    )
     sub = raw.filter(pl.col("local_contract_id") == 2542)
     by_type = (
         sub.group_by("stat_type")
@@ -68,18 +84,26 @@ def negative_price_evidence() -> dict:
         .sort("stat_type")
     )
     stat_names = {
-        1: "opening_price", 2: "indicative_opening_price", 3: "settlement_price",
-        4: "trading_session_low_price", 5: "trading_session_high_price",
-        6: "cleared_volume", 7: "lowest_offer", 8: "highest_bid", 9: "open_interest",
+        1: "opening_price",
+        2: "indicative_opening_price",
+        3: "settlement_price",
+        4: "trading_session_low_price",
+        5: "trading_session_high_price",
+        6: "cleared_volume",
+        7: "lowest_offer",
+        8: "highest_bid",
+        9: "open_interest",
     }
     rows = []
     for r in by_type.iter_rows(named=True):
-        rows.append({
-            "stat_type": r["stat_type"],
-            "stat_name": stat_names.get(r["stat_type"], "unknown"),
-            "mean_price": r["mean_price"],
-            "n": r["n"],
-        })
+        rows.append(
+            {
+                "stat_type": r["stat_type"],
+                "stat_name": stat_names.get(r["stat_type"], "unknown"),
+                "mean_price": r["mean_price"],
+                "n": r["n"],
+            }
+        )
     return {
         "contract_id": 2542,
         "ticker": "GC201511",
@@ -111,7 +135,9 @@ def naive_tail_stats(ohlcv: pl.DataFrame, products: list[str]) -> dict:
             .sort("date")
         )
         close = front["close"].to_numpy()
-        ret = np.diff(np.log(np.abs(close) + 1e-12))  # naive, deliberately not roll-safe
+        ret = np.diff(
+            np.log(np.abs(close) + 1e-12)
+        )  # naive, deliberately not roll-safe
         ret = ret[np.isfinite(ret)]
         if len(ret) < 30:
             continue
@@ -136,12 +162,19 @@ def hygiene_and_liquidity_stats(ohlcv: pl.DataFrame, products: list[str]) -> dic
             "n_contaminated_flagged": n_flagged,
             "pct_contaminated": n_flagged / df.height if df.height else 0.0,
             "n_after_liquidity_screen": liq.height,
-            "pct_dropped_by_liquidity": 1 - (liq.height / clean.height) if clean.height else 0.0,
+            "pct_dropped_by_liquidity": 1 - (liq.height / clean.height)
+            if clean.height
+            else 0.0,
         }
     return out
 
 
-def build_curves(ohlcv: pl.DataFrame, contracts: pl.DataFrame, roll_cal: pl.DataFrame, products: list[str]) -> dict:
+def build_curves(
+    ohlcv: pl.DataFrame,
+    contracts: pl.DataFrame,
+    roll_cal: pl.DataFrame,
+    products: list[str],
+) -> dict:
     """Continuous series are built from hygiene-clean data only. The liquidity
     screen is deliberately NOT applied upstream of curve construction: our roll
     schedule is calendar-driven (from roll_calendar), not volume-driven, so a
@@ -157,7 +190,14 @@ def build_curves(ohlcv: pl.DataFrame, contracts: pl.DataFrame, roll_cal: pl.Data
         df = ohlcv.filter(pl.col("product") == p)
         clean = C.apply_hygiene_filter(df)
         try:
-            curve = C.build_continuous_series(clean, contracts, roll_cal, p, roll_days_before=ROLL_DAYS_BEFORE, n_legs=3)
+            curve = C.build_continuous_series(
+                clean,
+                contracts,
+                roll_cal,
+                p,
+                roll_days_before=ROLL_DAYS_BEFORE,
+                n_legs=3,
+            )
         except Exception as e:  # noqa: BLE001
             print(f"  {p}: FAILED to build curve: {e}")
             continue
@@ -165,13 +205,17 @@ def build_curves(ohlcv: pl.DataFrame, contracts: pl.DataFrame, roll_cal: pl.Data
     return curves
 
 
-def roll_sensitivity(ohlcv: pl.DataFrame, contracts: pl.DataFrame, roll_cal: pl.DataFrame, product: str) -> dict:
+def roll_sensitivity(
+    ohlcv: pl.DataFrame, contracts: pl.DataFrame, roll_cal: pl.DataFrame, product: str
+) -> dict:
     """Sensitivity of the continuous F1 series' summary stats to N in {3,5,10}."""
     df = ohlcv.filter(pl.col("product") == product)
     clean = C.apply_hygiene_filter(df)
     out = {}
     for n in [3, 5, 10]:
-        curve = C.build_continuous_series(clean, contracts, roll_cal, product, roll_days_before=n, n_legs=1)
+        curve = C.build_continuous_series(
+            clean, contracts, roll_cal, product, roll_days_before=n, n_legs=1
+        )
         ret = curve["log_return_unadj"].drop_nulls().to_numpy()
         out[str(n)] = {
             "n_obs": len(ret),
@@ -206,14 +250,18 @@ def stale_bar_audit(curves: dict) -> dict:
     return out
 
 
-def three_way_validation(curves: dict, products: list[str], contracts: pl.DataFrame) -> dict:
+def three_way_validation(
+    curves: dict, products: list[str], contracts: pl.DataFrame
+) -> dict:
     result = {}
     # (a) vs research/*_curve.parquet
     curve_val = {}
     for p, fname in RESEARCH_CURVE.items():
         if p not in curves:
             continue
-        ref = pl.read_parquet(f"{DATA_ROOT}/research/{fname}").with_columns(pl.col("date").cast(pl.Date))
+        ref = pl.read_parquet(f"{DATA_ROOT}/research/{fname}").with_columns(
+            pl.col("date").cast(pl.Date)
+        )
         tick = C.CONTRACT_SPECS.get(p, {}).get("tick", 0.01)
         curve_val[p] = C.reconcile_curves(curves[p], ref, tick_size=tick, leg=1)
     result["vs_research_curve"] = curve_val
@@ -232,20 +280,37 @@ def three_way_validation(curves: dict, products: list[str], contracts: pl.DataFr
         f1_contract_id = (
             curve.select(["date", "contract_month_f1"])
             .rename({"contract_month_f1": "contract_month"})
-            .join(contracts.filter(pl.col("product") == p).select(["contract_month", "contract_id"]), on="contract_month", how="left")
+            .join(
+                contracts.filter(pl.col("product") == p).select(
+                    ["contract_month", "contract_id"]
+                ),
+                on="contract_month",
+                how="left",
+            )
         )
         metrics = (
             pl.read_parquet(f)
             .select(["contract_id", "date", "realised_vol_20d"])
-            .join(f1_contract_id.select(["date", "contract_id"]), on=["date", "contract_id"], how="inner")
+            .join(
+                f1_contract_id.select(["date", "contract_id"]),
+                on=["date", "contract_id"],
+                how="inner",
+            )
             .select(["date", pl.col("realised_vol_20d").alias("vol")])
         )
         # our own 20d annualised realised vol, from the back-adjusted (gap-free)
         # return series -- log_return_unadj is null at every roll boundary by
         # design, which would poison a rolling window near each of ~200 rolls.
-        built = curve.select(["date", "log_return_backadj"]).with_columns(
-            (pl.col("log_return_backadj").rolling_std(window_size=20) * (252 ** 0.5)).alias("vol")
-        ).select(["date", "vol"])
+        built = (
+            curve.select(["date", "log_return_backadj"])
+            .with_columns(
+                (
+                    pl.col("log_return_backadj").rolling_std(window_size=20)
+                    * (252**0.5)
+                ).alias("vol")
+            )
+            .select(["date", "vol"])
+        )
         vol_val[p] = C.reconcile_vol(built, metrics, tolerance=0.25)
     result["vs_metrics_vol"] = vol_val
 
@@ -255,8 +320,12 @@ def three_way_validation(curves: dict, products: list[str], contracts: pl.DataFr
         if p not in curves:
             continue
         yf = pl.read_parquet(f"{DATA_ROOT}/yfinance/daily/{ticker}.parquet")
-        yf = yf.with_columns(pl.col("timestamp").cast(pl.Date).alias("date")).sort("date")
-        yf = yf.with_columns((pl.col("close") / pl.col("close").shift(1)).log().alias("ret"))
+        yf = yf.with_columns(pl.col("timestamp").cast(pl.Date).alias("date")).sort(
+            "date"
+        )
+        yf = yf.with_columns(
+            (pl.col("close") / pl.col("close").shift(1)).log().alias("ret")
+        )
         yf_ret = yf.select(["date", "ret"])
         built_ret = curves[p].select(["date", pl.col("log_return_unadj").alias("ret")])
         yf_val[p] = C.reconcile_returns_yfinance(built_ret, yf_ret)
@@ -271,16 +340,35 @@ def reproduction_check() -> dict:
     try:
         with open("src/research/tmp/phase3_zoo_results.json") as f:
             phase3 = json.load(f)
-        checks.append({"source": "phase3_zoo_results.json", "loaded": True, "top_level_keys": list(phase3.keys())[:5]})
+        checks.append(
+            {
+                "source": "phase3_zoo_results.json",
+                "loaded": True,
+                "top_level_keys": list(phase3.keys())[:5],
+            }
+        )
     except Exception as e:  # noqa: BLE001
-        checks.append({"source": "phase3_zoo_results.json", "loaded": False, "error": str(e)})
+        checks.append(
+            {"source": "phase3_zoo_results.json", "loaded": False, "error": str(e)}
+        )
     try:
         with open("src/research/tmp/phase_e_holdout_results.json") as f:
             phase_e = json.load(f)
-        checks.append({"source": "phase_e_holdout_results.json", "loaded": True, "top_level_keys": list(phase_e.keys())[:5]})
+        checks.append(
+            {
+                "source": "phase_e_holdout_results.json",
+                "loaded": True,
+                "top_level_keys": list(phase_e.keys())[:5],
+            }
+        )
     except Exception as e:  # noqa: BLE001
-        checks.append({"source": "phase_e_holdout_results.json", "loaded": False, "error": str(e)})
-    return {"checks": checks, "note": "existence + structure check; numeric assertions belong in the notebook cell per house style"}
+        checks.append(
+            {"source": "phase_e_holdout_results.json", "loaded": False, "error": str(e)}
+        )
+    return {
+        "checks": checks,
+        "note": "existence + structure check; numeric assertions belong in the notebook cell per house style",
+    }
 
 
 def main():
@@ -305,9 +393,13 @@ def main():
     results["naive_tail_stats"] = naive_tail_stats(ohlcv, ohlcv_products)
 
     print("hygiene + liquidity screen stats...")
-    results["hygiene_liquidity_stats"] = hygiene_and_liquidity_stats(ohlcv, ohlcv_products)
+    results["hygiene_liquidity_stats"] = hygiene_and_liquidity_stats(
+        ohlcv, ohlcv_products
+    )
 
-    print("building continuous series for all products (this is the core deliverable)...")
+    print(
+        "building continuous series for all products (this is the core deliverable)..."
+    )
     curves = build_curves(ohlcv, contracts, roll_cal, ohlcv_products)
     print(f"  built curves for: {sorted(curves.keys())}")
 
@@ -321,7 +413,9 @@ def main():
     results["stale_bar_audit"] = stale_bar_audit(curves)
 
     print("three-way validation...")
-    results["three_way_validation"] = three_way_validation(curves, ohlcv_products, contracts)
+    results["three_way_validation"] = three_way_validation(
+        curves, ohlcv_products, contracts
+    )
 
     print("reproduction check...")
     results["reproduction_check"] = reproduction_check()
@@ -344,7 +438,7 @@ def main():
 
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\nwritten {OUT_PATH} in {time.time()-t0:.1f}s")
+    print(f"\nwritten {OUT_PATH} in {time.time() - t0:.1f}s")
 
 
 if __name__ == "__main__":

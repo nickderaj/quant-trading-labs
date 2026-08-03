@@ -2,19 +2,27 @@ import json
 
 
 def md(src):
-    return {"cell_type": "markdown", "metadata": {}, "source": src.splitlines(keepends=True)}
+    return {
+        "cell_type": "markdown",
+        "metadata": {},
+        "source": src.splitlines(keepends=True),
+    }
 
 
 def code(src):
     return {
-        "cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [],
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
         "source": src.splitlines(keepends=True),
     }
 
 
 cells = []
 
-cells.append(md("""\
+cells.append(
+    md("""\
 # Notebook 7 - Alpha Generation, Conditioned on What We Now Know About Risk
 
 Five notebooks in, this research programme has an unusually clean and unusually
@@ -36,9 +44,11 @@ Full narrative and every number: `src/results/007_alpha_generation.md`. Terminol
 grounded in this repo's own numbers, in `docs/` (start at `docs/README.md`) - this
 notebook adds entries for turnover budgeting, hysteresis/no-trade bands, carry/basis,
 and the tail-premium factor.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 import sys
 
 sys.path.insert(0, "..")
@@ -55,9 +65,11 @@ pl.Config.set_tbl_cols(20)
 pl.Config.set_tbl_width_chars(220)
 
 TMP = "tmp"
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase 0 - Reproduction check
 
 Before building anything on top of notebook 3's numbers, `run_repro_check7.py`
@@ -65,9 +77,11 @@ re-derived its headline net/gross Sharpe, its origin-shift instability, its real
 turnover/fee drag, and the Phase 7 holdout Sharpe directly from the committed
 `backtest_results.json`/`holdout_results.json` and asserted each. All reproduced
 exactly - shown live here.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 backtest_results = json.load(open(f"{TMP}/backtest_results.json"))
 holdout_results = json.load(open(f"{TMP}/holdout_results.json"))
 
@@ -84,9 +98,11 @@ assert abs(sharpe_net_0 - 0.42) < 0.005
 assert abs(sharpe_net_7 - (-2.45)) < 0.005
 assert abs(holdout_net - (-0.47)) < 0.005
 print("\\nAll notebook-3 headline numbers reproduced. The premise this notebook builds on holds.")
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase A - Cut turnover on a known-gross-profitable signal
 
 cfg2_12h's own predictions were generated ONCE per origin offset (fixed seed, never
@@ -101,9 +117,11 @@ the notebook-3 baseline marked. Rebalance throttling is the effective lever - tu
 falls up to 71%/year and net Sharpe improves substantially at every offset - but **Gate
 TC does not fire**: no variant's bootstrap 95% CI on excess return vs. basket excludes
 zero, at any offset.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase_a = json.load(open(f"{TMP}/phase_a_turnover_results.json"))
 
 family_colors = {
@@ -128,15 +146,19 @@ axes[0].legend(title="intervention (* = baseline)", fontsize=8, loc="lower right
 fig.suptitle("Phase A: net Sharpe vs. turnover, cfg2_12h's frozen signal, by intervention and origin offset")
 plt.tight_layout()
 plt.show()
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 # Gate TC verdict, read from the committed JSON (never re-decided here)
 phase_e = json.load(open(f"{TMP}/phase_e_holdout_results.json"))
 print("Gate TC:", phase_e["gate_verdicts"]["TC"])
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase B - Gate the signal on predicted tail risk
 
 Phase A's best turnover-qualifying, all-offset-positive variant (throttle k=6) gated on
@@ -144,9 +166,11 @@ a causal 1% conditional VaR path from GARCH-NIG (notebook 6's own best-certified
 density at 12h), two ways: B1 whole-book stand-down, B2 per-symbol tilt (reusing
 `run_phase6_application.py`'s `build_overlay_weight` unchanged). Every comparison is
 gated vs. the IDENTICAL ungated throttle-k6 book, never the raw notebook-3 baseline.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase_b = json.load(open(f"{TMP}/phase_b_risk_gated_results.json"))
 
 rows = []
@@ -159,22 +183,28 @@ for offset, variants in phase_b["by_offset"].items():
             "delta_vs_ungated": round(v["sharpe_net"] - base, 3),
         })
 pl.DataFrame(rows)
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 print("Gate RG:", phase_e["gate_verdicts"]["RG"])
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase C - Carry (funding rate) as a primary signal
 
 Funding rate tested as a transparent, single-feature cross-sectional ranking (not a
 fitted model) at 4h/12h/1d, all four origin offsets, raw and 20-bar z-scored, ranked on
 `-funding_rate` (a pre-declared sign correction - see `docs/09-market-data-and-microstructure.md`'s
 "Carry / basis trade" entry for why). Full funding coverage (30/30 symbols).
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase_c = json.load(open(f"{TMP}/phase_c_carry_results.json"))
 
 rows = []
@@ -193,22 +223,28 @@ print(f"coverage (4h): {phase_c['intervals']['4h']['coverage']['n_symbols_with_f
       f"{phase_c['intervals']['4h']['coverage']['n_symbols_total']} symbols, "
       f"{phase_c['intervals']['4h']['coverage']['frac_rows_with_funding']:.1%} of rows")
 carry_df
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 print("Gate CY:", phase_e["gate_verdicts"]["CY"])
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase D - Tail shape as a cross-sectional factor
 
 Rolling GARCH-(Hansen skew-t) fit per symbol at 4h, extracting causal nu (tail
 heaviness) and lambda (skew) paths. IC computed FIRST, before any portfolio, per this
 notebook's own pre-declared rule: an insignificant IC means the portfolio would be
 noise, reported as such rather than backtested into a spurious Sharpe.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 phase_d = json.load(open(f"{TMP}/phase_d_tail_factor_results.json"))
 
 for factor, fr in phase_d["factors"].items():
@@ -223,9 +259,11 @@ for factor, fr in phase_d["factors"].items():
         print(f"    offset={offset}: net={cell['sharpe_net']:.3f} "
               f"top_symbol={cell['top_symbol_by_leg_bars']} "
               f"net_excl_top={cell['sharpe_net_excl_top_symbol']:.3f}{flag}")
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 **D2's own investigation, worth walking through explicitly**: its full-sample IC is
 significant but NEGATIVE (the opposite sign from its own "long thin tails" hypothesis),
 yet the top/bottom-quintile portfolio built exactly as pre-declared came back
@@ -237,35 +275,45 @@ every offset: the apparent edge is a single-symbol artifact, not a genuine
 cross-sectional tail-premium effect - the same "spectacular on one symbol, does not
 generalize" pattern this whole research programme keeps finding, here caught by
 checking leg composition rather than assumed away.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 print("Gate TF:", phase_e["gate_verdicts"]["TF"])
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Phase E - Holdout (GATED, did not run)
 
 `run_phase_e_holdout.py` reads all four gate verdicts back out of the committed Phase
 A-D JSONs and decides programmatically - never re-derives a fresh number, never lets a
 subagent decide. All four are null.
-"""))
+""")
+)
 
-cells.append(code("""\
+cells.append(
+    code("""\
 print(f"any_gate_fired: {phase_e['any_gate_fired']}")
 print(f"holdout_run: {phase_e['holdout_run']}")
 for gate, v in phase_e["gate_verdicts"].items():
     print(f"  {gate}: fired={v['fired']} - {v['reason']}")
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 The holdout (2025-07-01 onward) was not touched anywhere in this notebook: no
 `load_universe_panel(allow_holdout=True)` call, no data past `research.HOLDOUT_START`
 read. It stays frozen, available for whichever future notebook next has a fired gate to
 spend it on.
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Bugs found
 
 Two bugs caught while building this notebook's own drivers, both in a helper this
@@ -283,9 +331,11 @@ above) - not a code bug, but a result that would have been wrongly credited to G
 if the leg-composition check hadn't been added after seeing the raw numbers looked
 gate-passing. Now part of `alpha_lib7`'s own standard robustness checks for every
 Phase D factor/offset going forward.
-"""))
+""")
+)
 
-cells.append(md("""\
+cells.append(
+    md("""\
 ## Bottom line
 
 **The hypothesis that transaction cost, not signal absence, is what has blocked every
@@ -324,14 +374,19 @@ well-characterized by this programme's own machinery. What this notebook adds is
 sharper, more specific negative result - it is not simply that trading is expensive; a
 70% turnover cut on a real signal still didn't produce a certifiable edge, and that is
 evidence about the market, not about this programme's own diligence.
-"""))
+""")
+)
 
 with open("src/research/007_alpha_generation.ipynb", "w") as f:
     json.dump(
         {
             "cells": cells,
             "metadata": {
-                "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+                "kernelspec": {
+                    "display_name": "Python 3",
+                    "language": "python",
+                    "name": "python3",
+                },
                 "language_info": {"name": "python", "version": "3.12"},
             },
             "nbformat": 4,

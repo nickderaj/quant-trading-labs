@@ -34,7 +34,10 @@ CANDIDATES = [
             "factor."
         ),
         "evidence_tier": 1,
-        "evidence_sources": ["gatev_goetzmann_rouwenhorst_2006", "zhu_2024_pairs_trading"],
+        "evidence_sources": [
+            "gatev_goetzmann_rouwenhorst_2006",
+            "zhu_2024_pairs_trading",
+        ],
         "data_needed": "The 30 pre-built spread series in data/market/spreads/*.parquet, already in this repo, never backtested (notebook 8 explicitly declared this Strategy E and cut it from scope).",
         "data_already_in_repo": True,
         "expected_sharpe_turnover_capacity": (
@@ -148,7 +151,10 @@ CANDIDATES = [
             "applied to crypto."
         ),
         "evidence_tier": 1,
-        "evidence_sources": ["fed_hedge_fund_treasury_exposures", "ofr_treasury_basis_2021"],
+        "evidence_sources": [
+            "fed_hedge_fund_treasury_exposures",
+            "ofr_treasury_basis_2021",
+        ],
         "evidence_caveat": (
             "The Tier 1 evidence above supports the GENERAL cash-and-carry mechanism (in "
             "Treasury markets, not crypto) - applied to crypto specifically ONLY BY "
@@ -224,7 +230,9 @@ CANDIDATES = [
 
 
 def gate_SL(candidates):
-    n_full_detail = len(candidates)  # all 5 have full Phase-3 detail regardless of testability
+    n_full_detail = len(
+        candidates
+    )  # all 5 have full Phase-3 detail regardless of testability
     n_testable = sum(1 for c in candidates if c["data_already_in_repo"])
     fires = n_full_detail >= 3 and n_testable >= 1
     return {
@@ -241,8 +249,10 @@ def main():
     with open(OUT_PATH, "w") as f:
         json.dump(out, f, indent=2)
     for c in CANDIDATES:
-        print(f"{c['gate_name']}: {c['title']} (hyp {c['hypothesis_addressed']}, "
-              f"tier {c['evidence_tier']}, testable={c['data_already_in_repo']})")
+        print(
+            f"{c['gate_name']}: {c['title']} (hyp {c['hypothesis_addressed']}, "
+            f"tier {c['evidence_tier']}, testable={c['data_already_in_repo']})"
+        )
     print()
     print("Gate SL:", json.dumps(sl, indent=2))
     print(f"\nwritten {OUT_PATH}")

@@ -451,6 +451,4 @@ with open("src/research/011b_spread_mechanism_gates.ipynb", "w") as f:
         f,
         indent=1,
     )
-print(
-    f"written src/research/011b_spread_mechanism_gates.ipynb ({len(cells)} cells)"
-)
+print(f"written src/research/011b_spread_mechanism_gates.ipynb ({len(cells)} cells)")

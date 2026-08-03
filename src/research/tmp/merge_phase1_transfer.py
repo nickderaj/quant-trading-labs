@@ -10,12 +10,14 @@ never delegated to a subagent.
 """
 
 import json
+from typing import Any
 
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT", "BNBUSDT", "XRPUSDT"]
 TRANSFER_SYMBOLS = ["ETHUSDT", "SOLUSDT", "DOGEUSDT", "BNBUSDT", "XRPUSDT"]
 INTERVALS = ["12h", "4h", "1h"]
 
-btc_phase3 = json.load(open("src/research/tmp/phase3_density_results.json"))
+with open("src/research/tmp/phase3_density_results.json") as _f:
+    btc_phase3 = json.load(_f)
 
 # The driver (run_phase1_transfer_full.py) was already validated once against
 # BTC's committed 12h numbers before any transfer symbol was fanned out: its
@@ -25,33 +27,50 @@ btc_phase3 = json.load(open("src/research/tmp/phase3_density_results.json"))
 # notebook 5's committed phase3_density_results.json (identical computation,
 # already proven byte-for-byte reproducible).
 
-out = {"intervals": {}}
+out: dict[str, Any] = {"intervals": {}}
 
 for interval in INTERVALS:
     per_symbol = {}
     per_symbol["BTCUSDT"] = {
-        "best_by_log_score": btc_phase3["intervals"][interval]["gate_a_verdict"]["best_by_log_score"],
-        "beats_every_other_significantly_bootstrap_bh":
-            btc_phase3["intervals"][interval]["gate_a_verdict"]["beats_every_other_significantly_bootstrap_bh"],
-        "beats_every_other_significantly_normal_bh":
-            btc_phase3["intervals"][interval]["gate_a_verdict"]["beats_every_other_significantly_normal_bh"],
-        "scores": {k: v["log_score_mean"] for k, v in btc_phase3["intervals"][interval]["scores"].items()},
-        "n_per_model": {k: v["n"] for k, v in btc_phase3["intervals"][interval]["scores"].items()},
+        "best_by_log_score": btc_phase3["intervals"][interval]["gate_a_verdict"][
+            "best_by_log_score"
+        ],
+        "beats_every_other_significantly_bootstrap_bh": btc_phase3["intervals"][
+            interval
+        ]["gate_a_verdict"]["beats_every_other_significantly_bootstrap_bh"],
+        "beats_every_other_significantly_normal_bh": btc_phase3["intervals"][interval][
+            "gate_a_verdict"
+        ]["beats_every_other_significantly_normal_bh"],
+        "scores": {
+            k: v["log_score_mean"]
+            for k, v in btc_phase3["intervals"][interval]["scores"].items()
+        },
+        "n_per_model": {
+            k: v["n"] for k, v in btc_phase3["intervals"][interval]["scores"].items()
+        },
     }
     for s in TRANSFER_SYMBOLS:
-        d = json.load(open(f"src/research/tmp/phase1_transfer_{s}.json"))
+        with open(f"src/research/tmp/phase1_transfer_{s}.json") as _f:
+            d = json.load(_f)
         iv = d["intervals"][interval]
         per_symbol[s] = {
             "best_by_log_score": iv["best_by_log_score"],
-            "beats_every_other_significantly_bootstrap_bh": iv["beats_every_other_significantly_bootstrap_bh"],
-            "beats_every_other_significantly_normal_bh": iv["beats_every_other_significantly_normal_bh"],
+            "beats_every_other_significantly_bootstrap_bh": iv[
+                "beats_every_other_significantly_bootstrap_bh"
+            ],
+            "beats_every_other_significantly_normal_bh": iv[
+                "beats_every_other_significantly_normal_bh"
+            ],
             "scores": {k: v["log_score_mean"] for k, v in iv["scores"].items()},
             "n_per_model": {k: v["n"] for k, v in iv["scores"].items()},
         }
 
-    n_garch_t_best = sum(1 for s in SYMBOLS if per_symbol[s]["best_by_log_score"] == "d5_garch_t")
+    n_garch_t_best = sum(
+        1 for s in SYMBOLS if per_symbol[s]["best_by_log_score"] == "d5_garch_t"
+    )
     n_garch_t_sig_winner = sum(
-        1 for s in SYMBOLS
+        1
+        for s in SYMBOLS
         if per_symbol[s]["best_by_log_score"] == "d5_garch_t"
         and per_symbol[s]["beats_every_other_significantly_bootstrap_bh"]
     )
@@ -67,7 +86,9 @@ for interval in INTERVALS:
     # Cluster result: is the best model always fat-tailed (d5/d7) or
     # log-RV-family (d2), at every symbol, even when identity varies?
     fat_or_logrv_ids = {"d5_garch_t", "d7_gjr_t", "d2_har_log_rv"}
-    cluster_holds = all(per_symbol[s]["best_by_log_score"] in fat_or_logrv_ids for s in SYMBOLS)
+    cluster_holds = all(
+        per_symbol[s]["best_by_log_score"] in fat_or_logrv_ids for s in SYMBOLS
+    )
 
     out["intervals"][interval] = {
         "per_symbol": per_symbol,
@@ -77,8 +98,10 @@ for interval in INTERVALS:
         "gate_t_fires": gate_t_fires,
         "cluster_fat_tailed_or_log_rv_holds": cluster_holds,
     }
-    print(f"{interval}: GARCH-t best on {n_garch_t_best}/6, significant winner on {n_garch_t_sig_winner}/6, "
-          f"Gate T fires={gate_t_fires}, cluster holds={cluster_holds}")
+    print(
+        f"{interval}: GARCH-t best on {n_garch_t_best}/6, significant winner on {n_garch_t_sig_winner}/6, "
+        f"Gate T fires={gate_t_fires}, cluster holds={cluster_holds}"
+    )
 
 with open("src/research/tmp/phase1_transfer_full_results.json", "w") as f:
     json.dump(out, f, indent=1, default=float)

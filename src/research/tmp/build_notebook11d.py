@@ -282,4 +282,6 @@ with open("src/research/011d_momentum_breakout_transfer.ipynb", "w") as f:
         f,
         indent=1,
     )
-print(f"written src/research/011d_momentum_breakout_transfer.ipynb ({len(cells)} cells)")
+print(
+    f"written src/research/011d_momentum_breakout_transfer.ipynb ({len(cells)} cells)"
+)

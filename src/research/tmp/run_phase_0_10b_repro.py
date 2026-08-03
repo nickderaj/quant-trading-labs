@@ -55,39 +55,39 @@ def main():
     run_check(
         "phase2_n_spreads",
         summary["n_spreads"] == 30,
-        f"Expected 30 spreads, got {summary['n_spreads']}"
+        f"Expected 30 spreads, got {summary['n_spreads']}",
     )
 
     run_check(
         "phase2_n_inter_commodity",
         summary["n_inter_commodity"] == 11,
-        f"Expected 11 inter-commodity spreads, got {summary['n_inter_commodity']}"
+        f"Expected 11 inter-commodity spreads, got {summary['n_inter_commodity']}",
     )
 
     run_check(
         "phase2_n_calendar",
         summary["n_calendar"] == 19,
-        f"Expected 19 calendar spreads, got {summary['n_calendar']}"
+        f"Expected 19 calendar spreads, got {summary['n_calendar']}",
     )
 
     run_check(
         "phase2_n_pass_adf_5pct",
         summary["n_pass_adf_5pct"] == 23,
-        f"Expected 23 spreads passing ADF at 5%, got {summary['n_pass_adf_5pct']}"
+        f"Expected 23 spreads passing ADF at 5%, got {summary['n_pass_adf_5pct']}",
     )
 
     # Check that gold_silver is excluded from 10b
     run_check(
         "gold_silver_exclude_10b",
         per_spread["gold_silver"]["include_in_10b"] is False,
-        f"gold_silver include_in_10b={per_spread['gold_silver']['include_in_10b']}, expected False"
+        f"gold_silver include_in_10b={per_spread['gold_silver']['include_in_10b']}, expected False",
     )
 
     # Check that platinum_palladium is excluded from 10b
     run_check(
         "platinum_palladium_exclude_10b",
         per_spread["platinum_palladium"]["include_in_10b"] is False,
-        f"platinum_palladium include_in_10b={per_spread['platinum_palladium']['include_in_10b']}, expected False"
+        f"platinum_palladium include_in_10b={per_spread['platinum_palladium']['include_in_10b']}, expected False",
     )
 
     results["phase_2_spread_selection"] = {
@@ -96,11 +96,15 @@ def main():
         "n_calendar": summary["n_calendar"],
         "n_pass_adf_5pct": summary["n_pass_adf_5pct"],
         "gold_silver_exclude_10b": per_spread["gold_silver"]["include_in_10b"],
-        "platinum_palladium_exclude_10b": per_spread["platinum_palladium"]["include_in_10b"],
+        "platinum_palladium_exclude_10b": per_spread["platinum_palladium"][
+            "include_in_10b"
+        ],
     }
 
     # ---- 2. Phase 5 regime definitions and DSR config (notebook 10a) ----
-    print("\n=== Phase 5 Regime Definitions & DSR Config Reproduction (Notebook 10a) ===")
+    print(
+        "\n=== Phase 5 Regime Definitions & DSR Config Reproduction (Notebook 10a) ==="
+    )
     phase5_data = load("phase_5_10a_results.json")
     regime_definitions = phase5_data["regime_definitions"]
     dsr_config_counts = phase5_data["dsr_config_counts"]
@@ -109,37 +113,37 @@ def main():
     run_check(
         "regime_definitions_primary",
         regime_definitions["primary"] == "deadband",
-        f"Expected regime_definitions.primary='deadband', got '{regime_definitions['primary']}'"
+        f"Expected regime_definitions.primary='deadband', got '{regime_definitions['primary']}'",
     )
 
     run_check(
         "dsr_config_sp",
         dsr_config_counts["SP"]["n_trials"] == 8,
-        f"Expected SP n_trials=8, got {dsr_config_counts['SP']['n_trials']}"
+        f"Expected SP n_trials=8, got {dsr_config_counts['SP']['n_trials']}",
     )
 
     run_check(
         "dsr_config_spr",
         dsr_config_counts["SPR"]["n_trials"] == 12,
-        f"Expected SPR n_trials=12, got {dsr_config_counts['SPR']['n_trials']}"
+        f"Expected SPR n_trials=12, got {dsr_config_counts['SPR']['n_trials']}",
     )
 
     run_check(
         "dsr_config_spr_bw",
         dsr_config_counts["SPR-BW"]["n_trials"] == 1,
-        f"Expected SPR-BW n_trials=1, got {dsr_config_counts['SPR-BW']['n_trials']}"
+        f"Expected SPR-BW n_trials=1, got {dsr_config_counts['SPR-BW']['n_trials']}",
     )
 
     run_check(
         "dsr_config_vs",
         dsr_config_counts["VS"]["n_trials"] == 8,
-        f"Expected VS n_trials=8, got {dsr_config_counts['VS']['n_trials']}"
+        f"Expected VS n_trials=8, got {dsr_config_counts['VS']['n_trials']}",
     )
 
     run_check(
         "dsr_config_bm",
         dsr_config_counts["BM"]["n_trials"] == 20,
-        f"Expected BM n_trials=20, got {dsr_config_counts['BM']['n_trials']}"
+        f"Expected BM n_trials=20, got {dsr_config_counts['BM']['n_trials']}",
     )
 
     # Check that all six gate names are present in gate_table
@@ -149,14 +153,15 @@ def main():
     run_check(
         "gate_table_all_gates_present",
         all_gates_present,
-        f"Expected gates {gate_names} all present in gate_table, got {gate_table_keys}"
+        f"Expected gates {gate_names} all present in gate_table, got {gate_table_keys}",
     )
     print(f"  Gate table keys: {sorted(gate_table_keys)}")
 
     results["phase_5_regime_and_dsr"] = {
         "regime_definitions_primary": regime_definitions["primary"],
         "dsr_config_counts": {
-            k: v["n_trials"] for k, v in dsr_config_counts.items()
+            k: v["n_trials"]
+            for k, v in dsr_config_counts.items()
             if k != "_transparency_log"
         },
         "gate_table_keys": sorted(gate_table_keys),
@@ -169,13 +174,13 @@ def main():
     run_check(
         "phase4_10b_resolved",
         phase4_10b_data["resolved"] == "FALSE",
-        f"Expected resolved='FALSE', got '{phase4_10b_data['resolved']}'"
+        f"Expected resolved='FALSE', got '{phase4_10b_data['resolved']}'",
     )
 
     run_check(
         "phase4_10b_fa_data_available",
         phase4_10b_data["fa_data_available"] is False,
-        f"Expected fa_data_available=False, got {phase4_10b_data['fa_data_available']}"
+        f"Expected fa_data_available=False, got {phase4_10b_data['fa_data_available']}",
     )
 
     results["phase_4_10b_fa_data"] = {
@@ -227,4 +232,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

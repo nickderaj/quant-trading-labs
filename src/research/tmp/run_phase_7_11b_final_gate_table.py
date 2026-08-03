@@ -78,21 +78,25 @@ def main() -> None:
 
     sharpe_by_gate = {
         "TS": ts["gate_TS"]["structured_by_offset"]["offset_0"]["sharpe"],
-        "BF": bf["gate_BF"]["by_storage"][bf["gate_BF"]["headline_storage"]]["by_offset"][
-            "offset_0"
-        ]["sharpe"],
+        "BF": bf["gate_BF"]["by_storage"][bf["gate_BF"]["headline_storage"]][
+            "by_offset"
+        ]["offset_0"]["sharpe"],
         "SCR": scr["screen_inclusive_by_offset"]["offset_0"]["sharpe"],
         "VA": va["va_by_offset"]["offset_0"]["sharpe"],
-        "RE": re_["grid"][re_["best_non_baseline_key"]]["by_offset"]["offset_0"]["sharpe"],
+        "RE": re_["grid"][re_["best_non_baseline_key"]]["by_offset"]["offset_0"][
+            "sharpe"
+        ],
     }
     dd_by_gate = {
         "TS": ts["gate_TS"]["structured_by_offset"]["offset_0"]["max_drawdown"],
-        "BF": bf["gate_BF"]["by_storage"][bf["gate_BF"]["headline_storage"]]["by_offset"][
-            "offset_0"
-        ]["max_drawdown"],
+        "BF": bf["gate_BF"]["by_storage"][bf["gate_BF"]["headline_storage"]][
+            "by_offset"
+        ]["offset_0"]["max_drawdown"],
         "SCR": scr["screen_inclusive_by_offset"]["offset_0"]["max_drawdown"],
         "VA": va["va_by_offset"]["offset_0"]["max_drawdown"],
-        "RE": re_["grid"][re_["best_non_baseline_key"]]["by_offset"]["offset_0"]["max_drawdown"],
+        "RE": re_["grid"][re_["best_non_baseline_key"]]["by_offset"]["offset_0"][
+            "max_drawdown"
+        ],
     }
     dsr_by_gate = {
         "TS": ts["gate_TS"]["deflated_sharpe_prob"],
@@ -118,7 +122,9 @@ def main() -> None:
         "gate_claims_verbatim_from_11a_prereg": {g: prereg_gates[g] for g in fires},
         "fires": fires,
         "n_trials_actual": n_trials_actual,
-        "n_trials_preregistered": {g: prereg_counts[g]["n_trials"] for g in n_trials_actual},
+        "n_trials_preregistered": {
+            g: prereg_counts[g]["n_trials"] for g in n_trials_actual
+        },
         "n_trials_mismatches": mismatches,
         "n_trials_match_prereg_exactly": len(mismatches) == 0,
         "n_trials_11b_total": n_trials_11b_total,

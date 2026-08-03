@@ -74,7 +74,9 @@ class TestRollSchedule:
     def test_roll_uses_first_notice_over_last_trade(self):
         sched = C.build_roll_schedule(self._roll_calendar(), "CL", roll_days_before=0)
         row = sched.filter(pl.col("contract_month") == "2020-05")
-        assert row["anchor_date"][0] == date(2020, 4, 22)  # first_notice, not last_trade (04-21)
+        assert row["anchor_date"][0] == date(
+            2020, 4, 22
+        )  # first_notice, not last_trade (04-21)
 
 
 # --------------------------------------------------------------------------
@@ -118,7 +120,9 @@ class TestContinuousSeries:
         ohlcv, contracts, roll_cal = self._tiny_universe()
         # roll_days_before=0 -> anchor (first_notice 2020-01-21) minus 0 business
         # days = 2020-01-21, so F1 is contract 1 through 2020-01-17 (all 5 rows).
-        curve = C.build_continuous_series(ohlcv, contracts, roll_cal, "CL", roll_days_before=0, n_legs=1)
+        curve = C.build_continuous_series(
+            ohlcv, contracts, roll_cal, "CL", roll_days_before=0, n_legs=1
+        )
         assert curve["contract_month_f1"].to_list() == ["2020-01"] * 5
         # no roll inside this window -> unadjusted, backadj, ratioadj all agree
         unadj = curve["log_return_unadj"].drop_nulls().to_numpy()
@@ -131,14 +135,18 @@ class TestContinuousSeries:
         # (Sun) -> snapped back to 2020-01-17 (Fri). The test window is
         # 2020-01-13..17, so F1 is contract 1 through 2020-01-16 and rolls to
         # contract 2 on 2020-01-17 (date >= roll_date).
-        curve = C.build_continuous_series(ohlcv, contracts, roll_cal, "CL", roll_days_before=2, n_legs=1)
+        curve = C.build_continuous_series(
+            ohlcv, contracts, roll_cal, "CL", roll_days_before=2, n_legs=1
+        )
         months = curve["contract_month_f1"].to_list()
         assert "2020-01" in months and "2020-02" in months
         roll_idx = months.index("2020-02")
         # back-adjusted price must have NO jump at the roll (unlike raw close_f1)
         backadj = curve["close_backadj"].to_numpy()
         raw = curve["close_f1"].to_numpy()
-        assert abs(backadj[roll_idx] - backadj[roll_idx - 1]) < abs(raw[roll_idx] - raw[roll_idx - 1])
+        assert abs(backadj[roll_idx] - backadj[roll_idx - 1]) < abs(
+            raw[roll_idx] - raw[roll_idx - 1]
+        )
         # log_return_unadj must be null exactly at the roll (never computed
         # across the boundary on unadjusted prices)
         assert curve["log_return_unadj"][roll_idx] is None
@@ -147,7 +155,9 @@ class TestContinuousSeries:
 
     def test_dte_decreases_within_a_contract(self):
         ohlcv, contracts, roll_cal = self._tiny_universe()
-        curve = C.build_continuous_series(ohlcv, contracts, roll_cal, "CL", roll_days_before=0, n_legs=1)
+        curve = C.build_continuous_series(
+            ohlcv, contracts, roll_cal, "CL", roll_days_before=0, n_legs=1
+        )
         dte = curve["dte_f1"].to_numpy()
         assert np.all(np.diff(dte) <= 0)
 
@@ -171,8 +181,12 @@ class TestHygieneFilter:
         for i, (d, anchor_px) in enumerate(
             zip([date(2020, 4, 1 + i) for i in range(15)], anchor_prices, strict=True)
         ):
-            rows.append(("CL", d, 682, anchor_px, 900_000))  # anchor: always liquid, normal price
-            rows.append(("CL", d, 744, anchor_px * 1.03, 90_000))  # a second normal contract
+            rows.append(
+                ("CL", d, 682, anchor_px, 900_000)
+            )  # anchor: always liquid, normal price
+            rows.append(
+                ("CL", d, 744, anchor_px * 1.03, 90_000)
+            )  # a second normal contract
             if i == 14:  # 2020-04-15 stand-in for the crash day (last day in range)
                 rows.append(("CL", d, 752, -2.67, 102_083))
             else:
@@ -185,22 +199,30 @@ class TestHygieneFilter:
             rows.append(("GC", d, 2542, -0.40 - 0.02 * i, 14))  # junk every single day
 
         return pl.DataFrame(
-            rows, schema=["product", "date", "contract_id", "close", "volume"], orient="row"
+            rows,
+            schema=["product", "date", "contract_id", "close", "volume"],
+            orient="row",
         )
 
     def test_cl_real_negative_settle_survives(self):
         flagged = C.flag_contaminated_rows(self._mixed_frame())
-        cl_rows = flagged.filter((pl.col("product") == "CL") & (pl.col("contract_id") == 752))
+        cl_rows = flagged.filter(
+            (pl.col("product") == "CL") & (pl.col("contract_id") == 752)
+        )
         assert not cl_rows["contaminated"].any()
 
     def test_gc_spread_junk_rejected(self):
         flagged = C.flag_contaminated_rows(self._mixed_frame())
-        gc_rows = flagged.filter((pl.col("product") == "GC") & (pl.col("contract_id") == 2542))
+        gc_rows = flagged.filter(
+            (pl.col("product") == "GC") & (pl.col("contract_id") == 2542)
+        )
         assert gc_rows["contaminated"].all()
 
     def test_gc_legitimate_outrights_survive(self):
         flagged = C.flag_contaminated_rows(self._mixed_frame())
-        legit = flagged.filter((pl.col("product") == "GC") & (pl.col("contract_id") != 2542))
+        legit = flagged.filter(
+            (pl.col("product") == "GC") & (pl.col("contract_id") != 2542)
+        )
         assert not legit["contaminated"].any()
 
     def test_apply_hygiene_filter_drops_only_contaminated(self):
@@ -276,7 +298,9 @@ class TestCostModel:
         # non-thin product with identical tick economics
         spec = C.CONTRACT_SPECS["PL"]
         base_slip = spec["tick_value"]
-        assert pl_cost_1x == pytest.approx(spec["commission_per_contract"] + 2 * base_slip)
+        assert pl_cost_1x == pytest.approx(
+            spec["commission_per_contract"] + 2 * base_slip
+        )
 
     def test_stress_and_optimistic_variants_order_correctly(self):
         opt = C.round_turn_cost_per_contract("CL", tick_multiplier=0.5)
@@ -300,7 +324,9 @@ class TestStaleBarRuns:
         stats = C.stale_bar_runs(close)
         assert stats["n_runs"] == 2
         assert stats["max_run"] == 3
-        assert stats["n_stale_days"] == 3  # 2 extra days in the 3-run + 1 extra in the 2-run
+        assert (
+            stats["n_stale_days"] == 3
+        )  # 2 extra days in the 3-run + 1 extra in the 2-run
 
     def test_no_repeats_gives_zero_runs(self):
         close = np.array([10.0, 11.0, 12.0, 13.0])
@@ -517,7 +543,9 @@ class TestGjrZooTwoStage:
         import densities
 
         r = self._synthetic_returns(n=1200)
-        forecast, fits = C.rolling_gjr_forecast_zoo(r, refit_every=200, min_train=300, family_module=densities.ged)
+        forecast, fits = C.rolling_gjr_forecast_zoo(
+            r, refit_every=200, min_train=300, family_module=densities.ged
+        )
         assert len(fits) >= 2
         valid = np.isfinite(forecast)
         assert valid.sum() > 0
@@ -536,7 +564,10 @@ class TestTermStructureState:
                 "date": [date(2020, 1, 1), date(2020, 1, 2)],
                 "close_f1": [100.0, 100.0],
                 "dte_f1": [10, 10],
-                "close_f2": [95.0, 105.0],  # row0: F2<F1 -> backwardation; row1: F2>F1 -> contango
+                "close_f2": [
+                    95.0,
+                    105.0,
+                ],  # row0: F2<F1 -> backwardation; row1: F2>F1 -> contango
                 "dte_f2": [40, 40],
             }
         )
@@ -568,9 +599,7 @@ class TestKupiecByState:
         n = 2000
         # state A: correctly calibrated 1% hit rate; state B: hits at 5% (miscalibrated)
         states = np.array(["A"] * (n // 2) + ["B"] * (n // 2))
-        hits = np.concatenate(
-            [rng.random(n // 2) < 0.01, rng.random(n // 2) < 0.05]
-        )
+        hits = np.concatenate([rng.random(n // 2) < 0.01, rng.random(n // 2) < 0.05])
         result = C.kupiec_by_state(hits, states, expected_rate=0.01)
         assert result["A"]["kupiec_p"] > 0.01
         assert result["B"]["kupiec_p"] < 0.01
@@ -603,7 +632,9 @@ class TestRiskModel:
         rng = np.random.default_rng(SEED)
         r = rng.standard_normal(3000) * 0.02
         model = C.fit_risk_model(r, "TEST", "normal")
-        assert model.var(0.01, horizon=4) == pytest.approx(model.var(0.01, horizon=1) * 2, rel=1e-6)
+        assert model.var(0.01, horizon=4) == pytest.approx(
+            model.var(0.01, horizon=1) * 2, rel=1e-6
+        )
 
     def test_simulate_matches_fitted_moments(self):
         rng = np.random.default_rng(SEED)
@@ -645,7 +676,9 @@ class TestRiskModel:
         r = rng.standard_normal(4000) * 0.02
         model = C.fit_risk_model(r, "TEST", "normal")
         assert model is not None
-        assert model.var_conditional(0.01, sigma_t=model.std) == pytest.approx(model.var(0.01), rel=1e-6)
+        assert model.var_conditional(0.01, sigma_t=model.std) == pytest.approx(
+            model.var(0.01), rel=1e-6
+        )
 
 
 class TestEwmaVol:
@@ -689,13 +722,27 @@ class TestPortfolioRisk:
 
     def test_gaussian_copula_var_positive(self):
         models, hist = self._two_asset_setup()
-        result = C.portfolio_risk(models, {"A": 0.5, "B": 0.5}, dependence="gaussian", historical_returns=hist, n_sims=5000, seed=0)
+        result = C.portfolio_risk(
+            models,
+            {"A": 0.5, "B": 0.5},
+            dependence="gaussian",
+            historical_returns=hist,
+            n_sims=5000,
+            seed=0,
+        )
         assert result["var_01"] > 0
         assert result["es_01"] >= result["var_01"]
 
     def test_empirical_dependence_runs(self):
         models, hist = self._two_asset_setup()
-        result = C.portfolio_risk(models, {"A": 0.5, "B": 0.5}, dependence="empirical", historical_returns=hist, n_sims=5000, seed=0)
+        result = C.portfolio_risk(
+            models,
+            {"A": 0.5, "B": 0.5},
+            dependence="empirical",
+            historical_returns=hist,
+            n_sims=5000,
+            seed=0,
+        )
         assert result["var_01"] > 0
 
     def test_t_copula_shows_more_tail_dependence_than_gaussian(self):
@@ -703,8 +750,23 @@ class TestPortfolioRisk:
         # materially higher lower-tail dependence than Gaussian at the same
         # correlation, since Gaussian tail dependence -> 0 asymptotically.
         models, hist = self._two_asset_setup(corr=0.3)
-        gauss = C.portfolio_risk(models, {"A": 0.5, "B": 0.5}, dependence="gaussian", historical_returns=hist, n_sims=20000, seed=0)
-        t_cop = C.portfolio_risk(models, {"A": 0.5, "B": 0.5}, dependence="t", historical_returns=hist, t_df=3.0, n_sims=20000, seed=0)
+        gauss = C.portfolio_risk(
+            models,
+            {"A": 0.5, "B": 0.5},
+            dependence="gaussian",
+            historical_returns=hist,
+            n_sims=20000,
+            seed=0,
+        )
+        t_cop = C.portfolio_risk(
+            models,
+            {"A": 0.5, "B": 0.5},
+            dependence="t",
+            historical_returns=hist,
+            t_df=3.0,
+            n_sims=20000,
+            seed=0,
+        )
         gauss_td = gauss["lower_tail_dependence"]["A_B"]
         t_td = t_cop["lower_tail_dependence"]["A_B"]
         assert t_td > gauss_td
@@ -722,7 +784,9 @@ class TestTailDependenceHelpers:
         rng = np.random.default_rng(SEED)
         x = rng.standard_normal(2000)
         u = C.to_pseudo_uniform(x)
-        td = C.empirical_lower_tail_dependence(u, u, q=0.1)  # perfectly comonotonic with itself
+        td = C.empirical_lower_tail_dependence(
+            u, u, q=0.1
+        )  # perfectly comonotonic with itself
         assert td == pytest.approx(1.0)
 
     def test_empirical_tail_dependence_low_for_independent(self):
@@ -790,7 +854,9 @@ class TestPortfolioCostsFutures:
                 "turnover": [1.0, 0.5, 1.0],
             }
         )
-        metrics = C.futures_portfolio_metrics(trade_frame, costs, annualized_rate=16.0, label="test")
+        metrics = C.futures_portfolio_metrics(
+            trade_frame, costs, annualized_rate=16.0, label="test"
+        )
         assert "sharpe" in metrics
         assert "sharpe_net" in metrics
         assert metrics["sharpe_net"] <= metrics["sharpe"] + 1e-9

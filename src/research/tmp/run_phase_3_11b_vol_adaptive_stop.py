@@ -75,7 +75,9 @@ def build_book(offset: int, adaptive: bool) -> dict:
     p = S11.TradingRuleParams()
     params = {n: p for n in LIVE_SPREADS}
     stop_mult_scales = (
-        {n: vol_adaptive_scale(frames[n], p) for n in LIVE_SPREADS} if adaptive else None
+        {n: vol_adaptive_scale(frames[n], p) for n in LIVE_SPREADS}
+        if adaptive
+        else None
     )
     return S11.simulate_book(
         frames,
@@ -91,7 +93,9 @@ def main() -> None:
     control_by_offset = {}
     va_by_offset = {}
     for offset in ORIGIN_OFFSETS:
-        control_by_offset[f"offset_{offset}"] = S11.book_metrics(build_book(offset, False))
+        control_by_offset[f"offset_{offset}"] = S11.book_metrics(
+            build_book(offset, False)
+        )
         va_by_offset[f"offset_{offset}"] = S11.book_metrics(build_book(offset, True))
 
     va_positive_every_offset = all(
@@ -101,16 +105,22 @@ def main() -> None:
     control_book0 = build_book(0, False)
     va_book0 = build_book(0, True)
     treatment_pnl = np.array([t["ret_eq"] for t in va_book0["trades"]])
-    treatment_blocks = S11.trade_blocks(np.array([t["exit_date"] for t in va_book0["trades"]]))
+    treatment_blocks = S11.trade_blocks(
+        np.array([t["exit_date"] for t in va_book0["trades"]])
+    )
     control_pnl = np.array([t["ret_eq"] for t in control_book0["trades"]])
-    control_blocks = S11.trade_blocks(np.array([t["exit_date"] for t in control_book0["trades"]]))
+    control_blocks = S11.trade_blocks(
+        np.array([t["exit_date"] for t in control_book0["trades"]])
+    )
     va_bootstrap = S11.paired_block_bootstrap(
         control_pnl, control_blocks, treatment_pnl, treatment_blocks
     )
 
     control_dd = control_by_offset["offset_0"]["max_drawdown"]
     va_dd = va_by_offset["offset_0"]["max_drawdown"]
-    dd_no_worse = va_dd >= control_dd  # both negative; "no worse" = less negative or equal
+    dd_no_worse = (
+        va_dd >= control_dd
+    )  # both negative; "no worse" = less negative or equal
 
     va_fires = bool(
         va_positive_every_offset and va_bootstrap["delta_excludes_zero"] and dd_no_worse
@@ -131,8 +141,8 @@ def main() -> None:
         json.dump(out, f, indent=2, default=str)
 
     print(
-        f"Gate VA: fires={va_fires} va_sharpes={[round(va_by_offset[f'offset_{o}']['sharpe'],3) for o in ORIGIN_OFFSETS]} "
-        f"control_sharpes={[round(control_by_offset[f'offset_{o}']['sharpe'],3) for o in ORIGIN_OFFSETS]} "
+        f"Gate VA: fires={va_fires} va_sharpes={[round(va_by_offset[f'offset_{o}']['sharpe'], 3) for o in ORIGIN_OFFSETS]} "
+        f"control_sharpes={[round(control_by_offset[f'offset_{o}']['sharpe'], 3) for o in ORIGIN_OFFSETS]} "
         f"dd_va={va_dd:.4f} dd_control={control_dd:.4f} delta_ci={va_bootstrap['delta_ci']}"
     )
 

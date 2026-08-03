@@ -16,13 +16,13 @@ from scipy import stats as st
 _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT / "src" / "research" / "tmp" / "densities"))
 
-import johnsonsu as J
+import johnsonsu as J  # type: ignore[import-not-found]
 
 SEED = 0
 
 SHAPES = [
-    (0.0, 2.0),   # symmetric
-    (1.5, 3.0),   # asymmetric (gamma != 0)
+    (0.0, 2.0),  # symmetric
+    (1.5, 3.0),  # asymmetric (gamma != 0)
     (-2.0, 1.5),  # asymmetric, opposite skew, lower delta (heavier tail)
 ]
 
@@ -98,7 +98,9 @@ class TestFit:
         gamma, delta = shape
         loc, scale = J._loc_scale(gamma, delta)
         rng = np.random.default_rng(SEED)
-        z = st.johnsonsu.rvs(gamma, delta, loc=loc, scale=scale, size=20_000, random_state=rng)
+        z = st.johnsonsu.rvs(
+            gamma, delta, loc=loc, scale=scale, size=20_000, random_state=rng
+        )
         fitted = J.fit(z)
         assert fitted is not None
         g_hat, d_hat = fitted

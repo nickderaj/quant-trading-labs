@@ -54,12 +54,17 @@ def load_product_frame(product: str) -> pl.DataFrame | None:
     curve = pl.read_parquet(f"{CURVE_DIR}/{product}.parquet")
     dev_start = DEV_START.get(product, DEV_START["__default__"])
     sub = curve.filter(pl.col("log_return_ratioadj").is_finite())
-    sub = sub.filter((pl.col("date") >= pl.lit(dev_start).str.to_date()) & (pl.col("date") <= pl.lit(DEV_END).str.to_date()))
+    sub = sub.filter(
+        (pl.col("date") >= pl.lit(dev_start).str.to_date())
+        & (pl.col("date") <= pl.lit(DEV_END).str.to_date())
+    )
     sub = sub.sort("date")
     if sub.height < 400:
         return None
 
-    ts = C.term_structure_state(sub.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"]))
+    ts = C.term_structure_state(
+        sub.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"])
+    )
     sub = sub.join(ts, on="date", how="left")
 
     # carry signal: long backwardation (negative slope) -> predictive score
@@ -82,9 +87,13 @@ def load_product_frame(product: str) -> pl.DataFrame | None:
     csum = np.cumsum(np.nan_to_num(fwd))
     for t in range(n - CARRY_HORIZON):
         fwd_carry[t] = csum[t + CARRY_HORIZON] - csum[t]
-    sub = sub.with_columns(pl.Series("fwd_return_1", fwd_1), pl.Series("fwd_return_carry", fwd_carry))
+    sub = sub.with_columns(
+        pl.Series("fwd_return_1", fwd_1), pl.Series("fwd_return_carry", fwd_carry)
+    )
 
-    sub = sub.with_columns(pl.lit(product).alias("symbol"), pl.col("close_f1").alias("close"))
+    sub = sub.with_columns(
+        pl.lit(product).alias("symbol"), pl.col("close_f1").alias("close")
+    )
     return sub
 
 
@@ -100,8 +109,10 @@ def build_panel(products: list[str]) -> pl.DataFrame:
 
 def run_strategy(
     panel: pl.DataFrame, pred_col: str, target_col: str, label: str, origin_offset: int
-) -> dict:
-    sub = panel.select(["date", "symbol", pred_col, target_col, "close"]).drop_nulls(subset=[pred_col, target_col])
+) -> tuple[dict, pl.DataFrame]:
+    sub = panel.select(["date", "symbol", pred_col, target_col, "close"]).drop_nulls(
+        subset=[pred_col, target_col]
+    )
     sub = sub.filter(pl.col(pred_col).is_finite() & pl.col(target_col).is_finite())
     if origin_offset > 0:
         # simple origin shift: drop the first `origin_offset` unique dates,
@@ -113,23 +124,47 @@ def run_strategy(
         sub = sub.filter(pl.col("date").is_in(list(keep_dates)))
 
     weights = research.dollar_neutral_weights(
-        sub.rename({"date": "datetime"}), pred_col=pred_col, datetime_col="datetime",
-        top_frac=TOP_FRAC, gross_exposure=GROSS_EXPOSURE, max_position_per_symbol=MAX_POSITION,
+        sub.rename({"date": "datetime"}),
+        pred_col=pred_col,
+        datetime_col="datetime",
+        top_frac=TOP_FRAC,
+        gross_exposure=GROSS_EXPOSURE,
+        max_position_per_symbol=MAX_POSITION,
     )
-    returns_df = sub.rename({"date": "datetime"}).select(["datetime", "symbol", target_col])
-    trade_frame = research.portfolio_trade_frame(weights, returns_df, target_col=target_col, datetime_col="datetime")
+    returns_df = sub.rename({"date": "datetime"}).select(
+        ["datetime", "symbol", target_col]
+    )
+    trade_frame = research.portfolio_trade_frame(
+        weights, returns_df, target_col=target_col, datetime_col="datetime"
+    )
 
     prices = sub.rename({"date": "datetime"}).select(["datetime", "symbol", "close"])
     costs = C.portfolio_costs_futures(weights, prices, datetime_col="datetime")
-    metrics = C.futures_portfolio_metrics(trade_frame, costs, annualized_rate=ANNUALIZED_RATE, datetime_col="datetime", label=f"{label}_offset{origin_offset}")
+    metrics = C.futures_portfolio_metrics(
+        trade_frame,
+        costs,
+        annualized_rate=ANNUALIZED_RATE,
+        datetime_col="datetime",
+        label=f"{label}_offset{origin_offset}",
+    )
     costed = C.add_portfolio_costs_futures(trade_frame, costs, datetime_col="datetime")
 
-    CONFIG_LOG.append({"label": label, "origin_offset": origin_offset, "pred_col": pred_col, "target_col": target_col})
+    CONFIG_LOG.append(
+        {
+            "label": label,
+            "origin_offset": origin_offset,
+            "pred_col": pred_col,
+            "target_col": target_col,
+        }
+    )
     return metrics, costed.select(["datetime", "trade_log_return_net"])
 
 
 def gate_verdict(
-    metrics_by_offset: dict, headline_net_returns: pl.DataFrame, basket_returns: pl.DataFrame, n_trials: int
+    metrics_by_offset: dict,
+    headline_net_returns: pl.DataFrame,
+    basket_returns: pl.DataFrame,
+    n_trials: int,
 ) -> dict:
     """Gate AC/AM: net Sharpe > 0 at every origin offset AND block-bootstrap
     95% CI on (strategy_net - equal_weight_basket) excludes zero AND
@@ -139,16 +174,30 @@ def gate_verdict(
     all_positive = all(s > 0 for s in sharpes_net)
 
     joined = headline_net_returns.join(basket_returns, on="datetime", how="inner")
-    excess = (joined["trade_log_return_net"] - joined["basket_return"]).drop_nulls().to_numpy()
-    ci_lo, ci_hi = research.block_bootstrap_ci(excess, n_boot=2000, seed=0) if len(excess) > 30 else (None, None)
-    ci_excludes_zero = ci_lo is not None and (ci_lo > 0 or ci_hi < 0)
+    excess = (
+        (joined["trade_log_return_net"] - joined["basket_return"])
+        .drop_nulls()
+        .to_numpy()
+    )
+    ci_lo, ci_hi = (
+        research.block_bootstrap_ci(excess, n_boot=2000, seed=0)
+        if len(excess) > 30
+        else (None, None)
+    )
+    ci_excludes_zero = (
+        ci_lo is not None and ci_hi is not None and (ci_lo > 0 or ci_hi < 0)
+    )
 
     headline = metrics_by_offset["offset_0"]
     n_obs = headline["no_bars"]
-    dsr = research.deflated_sharpe_prob(headline["sharpe_net"] / ANNUALIZED_RATE, n_trials=n_trials, n_obs=n_obs)
+    dsr = research.deflated_sharpe_prob(
+        headline["sharpe_net"] / ANNUALIZED_RATE, n_trials=n_trials, n_obs=n_obs
+    )
     return {
         "net_sharpe_positive_at_every_offset": all_positive,
-        "sharpes_net_by_offset": {k: v["sharpe_net"] for k, v in metrics_by_offset.items()},
+        "sharpes_net_by_offset": {
+            k: v["sharpe_net"] for k, v in metrics_by_offset.items()
+        },
         "excess_return_ci": [ci_lo, ci_hi],
         "excess_ci_excludes_zero": ci_excludes_zero,
         "deflated_sharpe_prob": dsr,
@@ -160,7 +209,9 @@ def main():
     t0 = time.time()
     print("building panel...", flush=True)
     panel = build_panel(C.PRODUCTS)
-    print(f"panel: {panel.height} rows, {panel['symbol'].n_unique()} symbols", flush=True)
+    print(
+        f"panel: {panel.height} rows, {panel['symbol'].n_unique()} symbols", flush=True
+    )
 
     results: dict = {"strategy_A_carry": {}, "strategy_B_momentum": {}}
 
@@ -169,21 +220,30 @@ def main():
     print("Strategy A: carry...", flush=True)
     carry_by_offset, carry_returns_by_offset = {}, {}
     for offset in ORIGIN_OFFSETS:
-        m, ret = run_strategy(panel, "carry_signal", "fwd_return_carry", "carry", offset)
+        m, ret = run_strategy(
+            panel, "carry_signal", "fwd_return_carry", "carry", offset
+        )
         carry_by_offset[f"offset_{offset}"] = m
         carry_returns_by_offset[offset] = ret
-    carry_basket = research.equal_weight_basket_returns(panel_dt, target_col="fwd_return_carry", datetime_col="datetime")
+    carry_basket = research.equal_weight_basket_returns(
+        panel_dt, target_col="fwd_return_carry", datetime_col="datetime"
+    )
     carry_basket = carry_basket.rename({"trade_log_return": "basket_return"})
     results["strategy_A_carry"] = {
         "by_offset": carry_by_offset,
         "gate_AC": gate_verdict(
-            carry_by_offset, carry_returns_by_offset[0], carry_basket, n_trials=len(ORIGIN_OFFSETS)
+            carry_by_offset,
+            carry_returns_by_offset[0],
+            carry_basket,
+            n_trials=len(ORIGIN_OFFSETS),
         ),
     }
 
     print("Strategy B: momentum (4 lookbacks)...", flush=True)
     mom_results = {}
-    mom_basket = research.equal_weight_basket_returns(panel_dt, target_col="fwd_return_1", datetime_col="datetime")
+    mom_basket = research.equal_weight_basket_returns(
+        panel_dt, target_col="fwd_return_1", datetime_col="datetime"
+    )
     mom_basket = mom_basket.rename({"trade_log_return": "basket_return"})
     for name in MOM_LOOKBACKS:
         by_offset, returns_by_offset = {}, {}
@@ -194,10 +254,15 @@ def main():
         mom_results[name] = {
             "by_offset": by_offset,
             "gate": gate_verdict(
-                by_offset, returns_by_offset[0], mom_basket, n_trials=len(ORIGIN_OFFSETS) * len(MOM_LOOKBACKS)
+                by_offset,
+                returns_by_offset[0],
+                mom_basket,
+                n_trials=len(ORIGIN_OFFSETS) * len(MOM_LOOKBACKS),
             ),
         }
-    best_mom = max(mom_results.items(), key=lambda kv: kv[1]["by_offset"]["offset_0"]["sharpe_net"])
+    best_mom = max(
+        mom_results.items(), key=lambda kv: kv[1]["by_offset"]["offset_0"]["sharpe_net"]
+    )
     results["strategy_B_momentum"] = {
         "by_lookback": mom_results,
         "best_lookback": best_mom[0],
@@ -212,13 +277,15 @@ def main():
     )
     results["_config_log"] = CONFIG_LOG
     results["_config"] = {
-        "carry_horizon_days": CARRY_HORIZON, "mom_lookbacks": MOM_LOOKBACKS,
-        "top_frac": TOP_FRAC, "origin_offsets": ORIGIN_OFFSETS,
+        "carry_horizon_days": CARRY_HORIZON,
+        "mom_lookbacks": MOM_LOOKBACKS,
+        "top_frac": TOP_FRAC,
+        "origin_offsets": ORIGIN_OFFSETS,
     }
 
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\nwritten {OUT_PATH} in {time.time()-t0:.1f}s")
+    print(f"\nwritten {OUT_PATH} in {time.time() - t0:.1f}s")
 
 
 if __name__ == "__main__":

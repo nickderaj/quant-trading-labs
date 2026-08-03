@@ -22,6 +22,7 @@ Writes phase_2_results.json.
 import json
 import sys
 import time
+from typing import cast
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
@@ -51,8 +52,12 @@ research.set_seed(0)
 def load_series(product: str) -> pl.DataFrame:
     if product == "BTCUSDT":
         btc = pl.read_parquet(BTC_PATH).sort("datetime")
-        btc = btc.with_columns((pl.col("close") / pl.col("close").shift(1)).log().alias("ret"))
-        out = btc.select([pl.col("datetime").dt.date().alias("date"), "ret"]).drop_nulls()
+        btc = btc.with_columns(
+            (pl.col("close") / pl.col("close").shift(1)).log().alias("ret")
+        )
+        out = btc.select(
+            [pl.col("datetime").dt.date().alias("date"), "ret"]
+        ).drop_nulls()
         return out.filter(pl.col("ret").is_finite())
     curve = pl.read_parquet(f"{CURVE_DIR}/{product}.parquet")
     dev_start = DEV_START.get(product, DEV_START["__default__"])
@@ -60,19 +65,28 @@ def load_series(product: str) -> pl.DataFrame:
     # drop_nulls() alone is not enough: a null close_f1 (e.g. a day the front
     # contract itself didn't print) propagates to NaN, not polars-null, once
     # it passes through the ratio-adjustment's cumulative product/log chain.
-    sub = curve.select(["date", pl.col("log_return_ratioadj").alias("ret")]).drop_nulls()
+    sub = curve.select(
+        ["date", pl.col("log_return_ratioadj").alias("ret")]
+    ).drop_nulls()
     sub = sub.filter(pl.col("ret").is_finite())
-    sub = sub.filter((pl.col("date") >= pl.lit(dev_start).str.to_date()) & (pl.col("date") <= pl.lit(dev_end).str.to_date()))
+    sub = sub.filter(
+        (pl.col("date") >= pl.lit(dev_start).str.to_date())
+        & (pl.col("date") <= pl.lit(dev_end).str.to_date())
+    )
     return sub
 
 
 def make_folds(n: int) -> list[tuple[np.ndarray, np.ndarray]]:
     train_bars = int(n * 0.6)
     test_bars = max(50, int(n * 0.08))
-    return research.walk_forward_splits(n, train_bars=train_bars, test_bars=test_bars, mode="anchored")
+    return research.walk_forward_splits(
+        n, train_bars=train_bars, test_bars=test_bars, mode="anchored"
+    )
 
 
-def fit_and_score_family(family: str, r_train: np.ndarray, r_test: np.ndarray) -> dict | None:
+def fit_and_score_family(
+    family: str, r_train: np.ndarray, r_test: np.ndarray
+) -> dict | None:
     if family == "normal":
         params = dist._fit_normal(r_train)
         if params is None:
@@ -114,10 +128,18 @@ def fit_and_score_family(family: str, r_train: np.ndarray, r_test: np.ndarray) -
     finite = np.isfinite(log_score)
     aic = 2 * n_params - 2 * ll_train
     bic = n_params * np.log(len(r_train)) - 2 * ll_train
-    return {"log_score": log_score, "finite_mask": finite, "aic": aic, "bic": bic, "n_params": n_params}
+    return {
+        "log_score": log_score,
+        "finite_mask": finite,
+        "aic": aic,
+        "bic": bic,
+        "n_params": n_params,
+    }
 
 
-def pit_for_family(family: str, r_train: np.ndarray, r_pool: np.ndarray) -> np.ndarray | None:
+def pit_for_family(
+    family: str, r_train: np.ndarray, r_pool: np.ndarray
+) -> np.ndarray | None:
     """PIT of a pooled OOS sample under a family fit once on the full train
     prefix ending just before the pool (used only for the calibration plot,
     not for family ranking)."""
@@ -166,7 +188,9 @@ def process_product(product: str) -> dict | None:
         print(f"  {product}: no folds produced, skipping")
         return None
 
-    per_family_log_score_full: dict[str, np.ndarray] = {f: np.full(n, np.nan) for f in ALL_FAMILIES}
+    per_family_log_score_full: dict[str, np.ndarray] = {
+        f: np.full(n, np.nan) for f in ALL_FAMILIES
+    }
     per_family_aic: dict[str, list[float]] = {f: [] for f in ALL_FAMILIES}
     per_family_bic: dict[str, list[float]] = {f: [] for f in ALL_FAMILIES}
 
@@ -184,14 +208,20 @@ def process_product(product: str) -> dict | None:
     dm = L6.all_pairs_dm_bh(ALL_FAMILIES, per_family_log_score_full)
 
     mean_log_score = {
-        f: float(np.nanmean(per_family_log_score_full[f])) if np.isfinite(per_family_log_score_full[f]).any() else None
+        f: float(np.nanmean(per_family_log_score_full[f]))
+        if np.isfinite(per_family_log_score_full[f]).any()
+        else None
         for f in ALL_FAMILIES
     }
     valid_families = [f for f, v in mean_log_score.items() if v is not None]
-    ranked = sorted(valid_families, key=lambda f: mean_log_score[f], reverse=True)
+    ranked = sorted(
+        valid_families, key=lambda f: cast(float, mean_log_score[f]), reverse=True
+    )
     best = ranked[0] if ranked else None
     best_wins_significantly = (
-        L6.beats_all_significantly(best, valid_families, dm, "bh_bootstrap") if best else False
+        L6.beats_all_significantly(best, valid_families, dm, "bh_bootstrap")
+        if best
+        else False
     )
 
     # PIT + KS on the last fold's test pool (most-informed fit, held-out data)
@@ -208,14 +238,23 @@ def process_product(product: str) -> dict | None:
         from scipy import stats as st
 
         ks_stat, ks_p = st.kstest(pit, "uniform")
-        pit_ks[family] = {"ks_stat": float(ks_stat), "ks_p": float(ks_p), "n": len(pit), "pit_sample": pit[:500].tolist()}
+        pit_ks[family] = {
+            "ks_stat": float(ks_stat),
+            "ks_p": float(ks_p),
+            "n": len(pit),
+            "pit_sample": pit[:500].tolist(),
+        }
 
     return {
         "n_obs": n,
         "n_folds": len(folds),
         "mean_log_score": mean_log_score,
-        "aic_mean": {f: float(np.mean(v)) if v else None for f, v in per_family_aic.items()},
-        "bic_mean": {f: float(np.mean(v)) if v else None for f, v in per_family_bic.items()},
+        "aic_mean": {
+            f: float(np.mean(v)) if v else None for f, v in per_family_aic.items()
+        },
+        "bic_mean": {
+            f: float(np.mean(v)) if v else None for f, v in per_family_bic.items()
+        },
         "ranking": ranked,
         "best_family": best,
         "best_wins_significantly_bh": best_wins_significantly,
@@ -238,7 +277,9 @@ def main():
 
     # Family map: which family wins where, and is it the same family
     # everywhere (Gate CD's question)?
-    winners = {p: results[p]["best_family"] for p in results if results[p]["best_family"]}
+    winners = {
+        p: results[p]["best_family"] for p in results if results[p]["best_family"]
+    }
     distinct_winners = sorted(set(winners.values()))
     results["_family_map_summary"] = {
         "winners": winners,
@@ -254,7 +295,7 @@ def main():
 
     with open(OUT_PATH, "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\nwritten {OUT_PATH} in {time.time()-t0:.1f}s")
+    print(f"\nwritten {OUT_PATH} in {time.time() - t0:.1f}s")
 
 
 if __name__ == "__main__":

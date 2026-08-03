@@ -23,7 +23,7 @@ import polars as pl
 
 
 def classify_spread_taxonomy(leg_products: list[str]) -> str:
-    """"calendar" if every leg is the same underlying product (the spread IS
+    """ "calendar" if every leg is the same underlying product (the spread IS
     the term structure itself -- see sec 4.2), else "inter_commodity" (two or
     more distinct underlyings, e.g. crack/crush spreads and cross-product
     pairs). Requires at least 2 legs.
@@ -99,7 +99,13 @@ def adf_test(x: np.ndarray, max_lag: int | None = None) -> dict:
     v = v[np.isfinite(v)]
     n = len(v)
     if n < 30:
-        return {"t_stat": np.nan, "n_obs": n, "n_lags": 0, "stationary_5pct": False, "stationary_1pct": False}
+        return {
+            "t_stat": np.nan,
+            "n_obs": n,
+            "n_lags": 0,
+            "stationary_5pct": False,
+            "stationary_1pct": False,
+        }
     if max_lag is None:
         max_lag = min(20, int(12 * (n / 100) ** 0.25))
 
@@ -129,8 +135,12 @@ def adf_test(x: np.ndarray, max_lag: int | None = None) -> dict:
         "n_obs": n_eff,
         "n_lags": n_lags,
         "critical_values": ADF_CRITICAL_VALUES,
-        "stationary_5pct": bool(np.isfinite(t_stat) and t_stat < ADF_CRITICAL_VALUES["5%"]),
-        "stationary_1pct": bool(np.isfinite(t_stat) and t_stat < ADF_CRITICAL_VALUES["1%"]),
+        "stationary_5pct": bool(
+            np.isfinite(t_stat) and t_stat < ADF_CRITICAL_VALUES["5%"]
+        ),
+        "stationary_1pct": bool(
+            np.isfinite(t_stat) and t_stat < ADF_CRITICAL_VALUES["1%"]
+        ),
     }
 
 
@@ -154,7 +164,9 @@ REGIME_DEADBAND_ANNUALIZED = 0.02
 REGIME_PERSISTENCE_DAYS = 5
 
 
-def regime_deadband(roll_slope_annualized: pl.Series, deadband: float = REGIME_DEADBAND_ANNUALIZED) -> pl.Series:
+def regime_deadband(
+    roll_slope_annualized: pl.Series, deadband: float = REGIME_DEADBAND_ANNUALIZED
+) -> pl.Series:
     """Variant (ii): raw sign, but with a magnitude deadband -- |slope| below
     `deadband` is labelled "flat" (no trade fires) rather than assigned to
     whichever side of zero it happens to be on."""
@@ -171,7 +183,9 @@ def regime_deadband(roll_slope_annualized: pl.Series, deadband: float = REGIME_D
     )["regime"]
 
 
-def regime_persistent(state: pl.Series, n_days: int = REGIME_PERSISTENCE_DAYS) -> pl.Series:
+def regime_persistent(
+    state: pl.Series, n_days: int = REGIME_PERSISTENCE_DAYS
+) -> pl.Series:
     """Variant (iii): the raw-sign state (contango/backwardation/None) is
     only "confirmed" once it has held for `n_days` consecutive observations;
     until then (and on any day where the underlying raw state is null), the
@@ -198,7 +212,9 @@ def regime_persistent(state: pl.Series, n_days: int = REGIME_PERSISTENCE_DAYS) -
 # ---------------------------------------------------------------------------
 
 
-def rolling_leg_correlation(leg1_returns: np.ndarray, leg2_returns: np.ndarray, window: int = 60) -> np.ndarray:
+def rolling_leg_correlation(
+    leg1_returns: np.ndarray, leg2_returns: np.ndarray, window: int = 60
+) -> np.ndarray:
     """Rolling Pearson correlation between two legs' log returns -- the
     diagnostic for leg decoupling (sec 7: "this is the chart that directly
     addresses the operator's hypothesis"). NaN wherever fewer than `window`
@@ -212,12 +228,16 @@ def rolling_leg_correlation(leg1_returns: np.ndarray, leg2_returns: np.ndarray, 
         pl.when(both_finite).then(pl.col("r2")).otherwise(None).alias("r2"),
     )
     out = df.select(
-        pl.rolling_corr(pl.col("r1"), pl.col("r2"), window_size=window, min_samples=window).alias("corr")
+        pl.rolling_corr(
+            pl.col("r1"), pl.col("r2"), window_size=window, min_samples=window
+        ).alias("corr")
     )
     return out["corr"].to_numpy()
 
 
-def regime_conditional_ar1(values: np.ndarray, regime_labels: list[str] | np.ndarray) -> dict:
+def regime_conditional_ar1(
+    values: np.ndarray, regime_labels: list[str] | np.ndarray
+) -> dict:
     """`research_lib9.ols_ar1_diff` run separately within each regime label
     present, plus the pooled (unconditional) fit -- the direct test of sec
     4.1's core question ("does the spread mean-revert harder in one regime
@@ -241,7 +261,9 @@ def regime_conditional_ar1(values: np.ndarray, regime_labels: list[str] | np.nda
     return out
 
 
-def regime_conditional_vol(returns: np.ndarray, regime_labels: list[str] | np.ndarray) -> dict:
+def regime_conditional_vol(
+    returns: np.ndarray, regime_labels: list[str] | np.ndarray
+) -> dict:
     """Annualised realised vol of the spread's own return series, split by
     regime label -- the volatility half of sec 5 Phase 3's regime-conditional
     structure question."""
@@ -252,8 +274,16 @@ def regime_conditional_vol(returns: np.ndarray, regime_labels: list[str] | np.nd
     out: dict = {}
     for state in sorted({s for s in labels.tolist() if s is not None}):
         sel = r[labels == state]
-        out[state] = {"n": len(sel), "vol_annualized": float(np.std(sel) * np.sqrt(252)) if len(sel) >= 20 else None}
-    out["_pooled"] = {"n": len(r), "vol_annualized": float(np.std(r) * np.sqrt(252)) if len(r) >= 20 else None}
+        out[state] = {
+            "n": len(sel),
+            "vol_annualized": float(np.std(sel) * np.sqrt(252))
+            if len(sel) >= 20
+            else None,
+        }
+    out["_pooled"] = {
+        "n": len(r),
+        "vol_annualized": float(np.std(r) * np.sqrt(252)) if len(r) >= 20 else None,
+    }
     return out
 
 
@@ -312,8 +342,13 @@ def cot_net_noncomm_fraction(cot: pl.DataFrame) -> pl.DataFrame:
     ).sort("report_date")
     out = out.with_columns(
         (
-            (pl.col("noncomm_long") - pl.col("noncomm_short")) / pl.col("open_interest").clip(lower_bound=1)
+            (pl.col("noncomm_long") - pl.col("noncomm_short"))
+            / pl.col("open_interest").clip(lower_bound=1)
         ).alias("net_noncomm_frac")
     )
-    out = out.with_columns((pl.col("report_date") + pl.duration(days=3)).alias("public_date"))
-    return out.select(["report_date", "public_date", "net_noncomm_frac", "open_interest"])
+    out = out.with_columns(
+        (pl.col("report_date") + pl.duration(days=3)).alias("public_date")
+    )
+    return out.select(
+        ["report_date", "public_date", "net_noncomm_frac", "open_interest"]
+    )

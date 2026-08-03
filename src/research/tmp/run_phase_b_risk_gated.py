@@ -78,8 +78,11 @@ def build_var_forecast_panel() -> pl.DataFrame:
             continue
         ret = df["log_return"].fill_null(0.0).to_numpy()
         variance_fc, fits = L6.rolling_garch_forecast_zoo(
-            ret, refit_every=refit_every, min_train=min_train,
-            family_module=nig, max_train=L6.MLE_MAX_TRAIN,
+            ret,
+            refit_every=refit_every,
+            min_train=min_train,
+            family_module=nig,
+            max_train=L6.MLE_MAX_TRAIN,
         )
         if not fits:
             print(f"  {sym}: zero successful refits, skipped", flush=True)
@@ -87,7 +90,11 @@ def build_var_forecast_panel() -> pl.DataFrame:
         var_forecast = L6.zoo_quantile_forecast(variance_fc, fits, nig, Q)
         frames.append(
             pl.DataFrame(
-                {"datetime": df["datetime"], "symbol": sym, "var_forecast": var_forecast}
+                {
+                    "datetime": df["datetime"],
+                    "symbol": sym,
+                    "var_forecast": var_forecast,
+                }
             )
         )
         print(f"  {sym}: {len(fits)} refits", flush=True)
@@ -108,7 +115,9 @@ def build_tilt_from_var(var_panel: pl.DataFrame) -> pl.DataFrame:
 
 
 def evaluate(name, weights, signal_panel, annualized_rate):
-    trade_frame = research.portfolio_trade_frame(weights, signal_panel, target_col="fwd_return_1")
+    trade_frame = research.portfolio_trade_frame(
+        weights, signal_panel, target_col="fwd_return_1"
+    )
     metrics = research.portfolio_metrics(
         trade_frame, annualized_rate, taker_fee=TAKER_FEE, slippage=SLIPPAGE, label=name
     )
@@ -140,11 +149,18 @@ def main():
 
         # Identical ungated: Phase A's own throttle-k6 baseline weights.
         ungated_w = hysteresis_weights(
-            signal_panel, "pred", band=0.0, size_col="vol_targeted_size",
-            top_frac=TOP_FRAC, gross_exposure=GROSS_EXPOSURE, max_position_per_symbol=MAX_POSITION,
+            signal_panel,
+            "pred",
+            band=0.0,
+            size_col="vol_targeted_size",
+            top_frac=TOP_FRAC,
+            gross_exposure=GROSS_EXPOSURE,
+            max_position_per_symbol=MAX_POSITION,
         )
         ungated_w = throttle_weights(ungated_w, k=THROTTLE_K)
-        ungated = evaluate("ungated_throttle_k6", ungated_w, signal_panel, annualized_rate)
+        ungated = evaluate(
+            "ungated_throttle_k6", ungated_w, signal_panel, annualized_rate
+        )
 
         variants = {"ungated_throttle_k6": ungated}
 
@@ -158,19 +174,33 @@ def main():
 
         # B2 per-symbol tilt (applied to size BEFORE dollar-neutralizing,
         # then the identical band=0 + throttle-k6 mechanics as the ungated case)
-        tilted_signal = signal_panel.join(tilt_panel, on=["datetime", "symbol"], how="left").with_columns(
-            pl.col("tilt").fill_null(1.0)
-        ).with_columns((pl.col("vol_targeted_size") * pl.col("tilt")).alias("tilted_size"))
+        tilted_signal = (
+            signal_panel.join(tilt_panel, on=["datetime", "symbol"], how="left")
+            .with_columns(pl.col("tilt").fill_null(1.0))
+            .with_columns(
+                (pl.col("vol_targeted_size") * pl.col("tilt")).alias("tilted_size")
+            )
+        )
         tilted_w = hysteresis_weights(
-            tilted_signal, "pred", band=0.0, size_col="tilted_size",
-            top_frac=TOP_FRAC, gross_exposure=GROSS_EXPOSURE, max_position_per_symbol=MAX_POSITION,
+            tilted_signal,
+            "pred",
+            band=0.0,
+            size_col="tilted_size",
+            top_frac=TOP_FRAC,
+            gross_exposure=GROSS_EXPOSURE,
+            max_position_per_symbol=MAX_POSITION,
         )
         tilted_w = throttle_weights(tilted_w, k=THROTTLE_K)
-        variants["B2_tilt"] = evaluate("B2_tilt", tilted_w, signal_panel, annualized_rate)
+        variants["B2_tilt"] = evaluate(
+            "B2_tilt", tilted_w, signal_panel, annualized_rate
+        )
 
         results["by_offset"][str(offset)] = variants
         for name, v in variants.items():
-            print(f"  {name}: net={v['sharpe_net']:.3f} dd={v['max_drawdown_net']:.3f}", flush=True)
+            print(
+                f"  {name}: net={v['sharpe_net']:.3f} dd={v['max_drawdown_net']:.3f}",
+                flush=True,
+            )
 
     with open("src/research/tmp/phase_b_risk_gated_results.json", "w") as f:
         json.dump(results, f, indent=2, default=str)

@@ -80,9 +80,14 @@ def spread_daily_returns(name: str, leg_products: list[str]) -> pl.DataFrame | N
     n_legs = len(leg_products)
     point_values = [point_value(p) for p in leg_products]
     capital_basis = np.array(
-        [sum(abs(row[i]) * point_values[i] for i in range(n_legs)) for row in leg_prices]
+        [
+            sum(abs(row[i]) * point_values[i] for i in range(n_legs))
+            for row in leg_prices
+        ]
     )
-    round_turn_costs_dollars = sum(C.round_turn_cost_per_contract(p) for p in leg_products)
+    round_turn_costs_dollars = sum(
+        C.round_turn_cost_per_contract(p) for p in leg_products
+    )
 
     v = value.to_numpy()
     pos = position.to_numpy()
@@ -91,24 +96,34 @@ def spread_daily_returns(name: str, leg_products: list[str]) -> pl.DataFrame | N
     # applied to the value change realized over that same interval -- no
     # lookahead: pos[t-1] only used z-scores through t-1.
     pos_lag = np.concatenate([[0.0], pos[:-1]])
-    dollar_pnl = pos_lag * dv * point_values[0]  # value is quoted in leg1's own price units
+    dollar_pnl = (
+        pos_lag * dv * point_values[0]
+    )  # value is quoted in leg1's own price units
     gross_return = dollar_pnl / np.where(capital_basis > 0, capital_basis, np.nan)
 
     dpos = np.abs(np.diff(pos, prepend=0.0))
-    cost_frac = dpos * round_turn_costs_dollars / np.where(capital_basis > 0, capital_basis, np.nan)
+    cost_frac = (
+        dpos
+        * round_turn_costs_dollars
+        / np.where(capital_basis > 0, capital_basis, np.nan)
+    )
     net_return = gross_return - cost_frac
 
-    out = pl.DataFrame({
-        "date": df["date"],
-        "net_return": net_return,
-        "gross_return": gross_return,
-        "cost_frac": cost_frac,
-        "position": pos,
-    })
+    out = pl.DataFrame(
+        {
+            "date": df["date"],
+            "net_return": net_return,
+            "gross_return": gross_return,
+            "cost_frac": cost_frac,
+            "position": pos,
+        }
+    )
     return out.filter(pl.col("net_return").is_finite())
 
 
-def build_book(spread_names: list[str], taxonomy: dict, origin_offset: int) -> pl.DataFrame:
+def build_book(
+    spread_names: list[str], taxonomy: dict, origin_offset: int
+) -> pl.DataFrame:
     """Equal-weighted book across all eligible spreads in a taxonomy group,
     at a given origin offset (offset applied by dropping the first
     `origin_offset` unique dates from EACH spread's own return series before
@@ -124,7 +139,9 @@ def build_book(spread_names: list[str], taxonomy: dict, origin_offset: int) -> p
             dates = ret["date"].unique().sort().to_list()
             keep = set(dates[origin_offset:])
             ret = ret.filter(pl.col("date").is_in(list(keep)))
-        per_spread.append(ret.select(["date", "net_return"]).rename({"net_return": name}))
+        per_spread.append(
+            ret.select(["date", "net_return"]).rename({"net_return": name})
+        )
 
     if not per_spread:
         return pl.DataFrame({"date": [], "book_net_return": []})
@@ -146,8 +163,18 @@ def series_metrics(returns: np.ndarray) -> dict:
     mean, std = float(np.mean(r)), float(np.std(r))
     sharpe = mean / std * ANNUALIZED_RATE if std > 0 else float("nan")
     equity = np.cumsum(r)
-    max_dd = float(np.min(equity - np.maximum.accumulate(equity))) if len(equity) else float("nan")
-    return {"sharpe": sharpe, "mean_daily": mean, "std_daily": std, "n": len(r), "max_drawdown_cum": max_dd}
+    max_dd = (
+        float(np.min(equity - np.maximum.accumulate(equity)))
+        if len(equity)
+        else float("nan")
+    )
+    return {
+        "sharpe": sharpe,
+        "mean_daily": mean,
+        "std_daily": std,
+        "n": len(r),
+        "max_drawdown_cum": max_dd,
+    }
 
 
 def gate_sp_verdict(group: str, spread_names: list[str], taxonomy: dict) -> dict:
@@ -164,12 +191,22 @@ def gate_sp_verdict(group: str, spread_names: list[str], taxonomy: dict) -> dict
     sharpes = [m["sharpe"] for m in by_offset.values()]
     all_positive = all(np.isfinite(s) and s > 0 for s in sharpes)
 
-    ci_lo, ci_hi = research.block_bootstrap_ci(headline_returns, n_boot=2000, seed=0) if headline_returns is not None and len(headline_returns) > 30 else (None, None)
-    ci_excludes_zero = ci_lo is not None and ci_hi is not None and (ci_lo > 0 or ci_hi < 0)
+    ci_lo, ci_hi = (
+        research.block_bootstrap_ci(headline_returns, n_boot=2000, seed=0)
+        if headline_returns is not None and len(headline_returns) > 30
+        else (None, None)
+    )
+    ci_excludes_zero = (
+        ci_lo is not None and ci_hi is not None and (ci_lo > 0 or ci_hi < 0)
+    )
 
     headline = by_offset["offset_0"]
     dsr = (
-        research.deflated_sharpe_prob(headline["sharpe"] / ANNUALIZED_RATE, n_trials=N_TRIALS_SP, n_obs=headline["n"])
+        research.deflated_sharpe_prob(
+            headline["sharpe"] / ANNUALIZED_RATE,
+            n_trials=N_TRIALS_SP,
+            n_obs=headline["n"],
+        )
         if np.isfinite(headline["sharpe"])
         else float("nan")
     )
@@ -183,7 +220,9 @@ def gate_sp_verdict(group: str, spread_names: list[str], taxonomy: dict) -> dict
         "ci_excludes_zero": ci_excludes_zero,
         "deflated_sharpe_prob": dsr,
         "net_sharpe_positive_at_every_offset": all_positive,
-        "fires": bool(all_positive and ci_excludes_zero and np.isfinite(dsr) and dsr > 0.95),
+        "fires": bool(
+            all_positive and ci_excludes_zero and np.isfinite(dsr) and dsr > 0.95
+        ),
     }
 
 
@@ -191,7 +230,9 @@ def main():
     with open(TAXONOMY_PATH) as f:
         taxonomy = json.load(f)["per_spread"]
     eligible = {name: v for name, v in taxonomy.items() if v["include_in_10b"]}
-    inter_commodity = sorted([n for n, v in eligible.items() if v["taxonomy"] == "inter_commodity"])
+    inter_commodity = sorted(
+        [n for n, v in eligible.items() if v["taxonomy"] == "inter_commodity"]
+    )
     calendar = sorted([n for n, v in eligible.items() if v["taxonomy"] == "calendar"])
 
     results = {
@@ -202,7 +243,9 @@ def main():
             "roll_window_exclusion": "applied to signal AND P&L, not just the descriptive screen",
             "n_trials": N_TRIALS_SP,
         },
-        "inter_commodity": gate_sp_verdict("inter_commodity", inter_commodity, taxonomy),
+        "inter_commodity": gate_sp_verdict(
+            "inter_commodity", inter_commodity, taxonomy
+        ),
         "calendar": gate_sp_verdict("calendar", calendar, taxonomy),
     }
     with open(OUT_PATH, "w") as f:
@@ -210,8 +253,10 @@ def main():
     print(f"written {OUT_PATH}")
     for g in ("inter_commodity", "calendar"):
         r = results[g]
-        print(f"{g}: n={r['n_eligible_spreads']} fires={r['fires']} dsr={r['deflated_sharpe_prob']:.4f} "
-              f"ci={r['excess_return_ci_vs_zero']} sharpes={[round(m['sharpe'],3) for m in r['by_offset'].values()]}")
+        print(
+            f"{g}: n={r['n_eligible_spreads']} fires={r['fires']} dsr={r['deflated_sharpe_prob']:.4f} "
+            f"ci={r['excess_return_ci_vs_zero']} sharpes={[round(m['sharpe'], 3) for m in r['by_offset'].values()]}"
+        )
 
 
 if __name__ == "__main__":

@@ -18,8 +18,6 @@ sys.path.insert(0, "src")
 import numpy as np
 import polars as pl
 
-import research
-
 
 def hysteresis_weights(
     panel: pl.DataFrame,
@@ -173,9 +171,7 @@ def throttle_weights(
         return weights
 
     times = weights[datetime_col].unique(maintain_order=False).sort()
-    time_idx = pl.DataFrame(
-        {datetime_col: times, "_tidx": np.arange(len(times))}
-    )
+    time_idx = pl.DataFrame({datetime_col: times, "_tidx": np.arange(len(times))})
     w = weights.join(time_idx, on=datetime_col, how="left").sort(
         [symbol_col, datetime_col]
     )
@@ -213,7 +209,7 @@ def var_gate_standdown(
     )
     trailing = (
         per_bar["median_abs_var"]
-        .rolling_median(window_size=trailing_window, min_periods=trailing_window // 2)
+        .rolling_median(window_size=trailing_window, min_samples=trailing_window // 2)
         .shift(1)
     )
     per_bar = per_bar.with_columns(trailing.alias("trailing_median"))
@@ -244,13 +240,17 @@ def var_gate_tilt(
     [datetime_col, symbol_col, "tilt"] in [0, 1].
     """
     sys.path.insert(0, "src/research/tmp")
-    from run_phase6_application import build_overlay_weight  # noqa: E402
+    from run_phase6_application import build_overlay_weight
 
     out = []
-    for sym, g in var_forecast.sort(datetime_col).group_by(symbol_col, maintain_order=True):
+    for sym, g in var_forecast.sort(datetime_col).group_by(
+        symbol_col, maintain_order=True
+    ):
         g = g.sort(datetime_col)
         tilt = build_overlay_weight(g[var_col].to_numpy())
-        out.append(g.select(datetime_col, symbol_col).with_columns(pl.Series("tilt", tilt)))
+        out.append(
+            g.select(datetime_col, symbol_col).with_columns(pl.Series("tilt", tilt))
+        )
     return pl.concat(out).sort([datetime_col, symbol_col])
 
 

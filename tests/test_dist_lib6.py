@@ -100,7 +100,9 @@ class TestDurationModels:
     def test_clustered_durations_have_beta_below_one_and_are_significant(self):
         rng = np.random.default_rng(SEED)
         # mixture of many short gaps and a few long ones -> falling hazard
-        durations = np.concatenate([rng.geometric(0.8, 1500) - 1, rng.geometric(0.05, 500) - 1])
+        durations = np.concatenate(
+            [rng.geometric(0.8, 1500) - 1, rng.geometric(0.05, 500) - 1]
+        )
         rng.shuffle(durations)
         geo = L6.fit_geometric_durations(durations)
         dw = L6.fit_discrete_weibull_durations(durations)
@@ -118,7 +120,9 @@ class TestDurationModels:
         geo = L6.fit_geometric_durations(durations)
         assert geo is not None
         nll_at_geo_q_beta1 = L6._discrete_weibull_negloglik(
-            np.array([np.log(geo["q"] / (1 - geo["q"]))]), durations, fix_beta1=True,
+            np.array([np.log(geo["q"] / (1 - geo["q"]))]),
+            durations,
+            fix_beta1=True,
         )
         assert -nll_at_geo_q_beta1 == pytest.approx(geo["loglik"], rel=1e-8)
 
@@ -155,8 +159,12 @@ class TestZooGarchFitAndScore:
         fits = [{"t": 0, "shape": (2.0,)}, {"t": 150, "shape": (1.2,)}]
         ls = L6.score_zoo_model(actual, variance_forecast, fits, ged)
         sigma = np.sqrt(variance_forecast)
-        expected_seg1 = ged.logpdf(actual[:150] / sigma[:150], (2.0,)) - np.log(sigma[:150])
-        expected_seg2 = ged.logpdf(actual[150:] / sigma[150:], (1.2,)) - np.log(sigma[150:])
+        expected_seg1 = ged.logpdf(actual[:150] / sigma[:150], (2.0,)) - np.log(
+            sigma[:150]
+        )
+        expected_seg2 = ged.logpdf(actual[150:] / sigma[150:], (1.2,)) - np.log(
+            sigma[150:]
+        )
         np.testing.assert_allclose(ls[:150], expected_seg1)
         np.testing.assert_allclose(ls[150:], expected_seg2)
 
@@ -185,7 +193,9 @@ class TestSplicedEvtDensity:
         z = (z - z.mean()) / z.std()
         fit = L6.fit_spliced_evt_density(z, tail_frac=0.10)
         assert fit is not None
-        assert (fit["w_lower"] + fit["w_interior"] + fit["w_upper"]) == pytest.approx(1.0)
+        assert (fit["w_lower"] + fit["w_interior"] + fit["w_upper"]) == pytest.approx(
+            1.0
+        )
         assert fit["w_lower"] == pytest.approx(0.10, abs=0.02)
         assert fit["w_upper"] == pytest.approx(0.10, abs=0.02)
 
@@ -194,7 +204,9 @@ class TestSplicedEvtDensity:
         z = rng.standard_normal(50)
         assert L6.fit_spliced_evt_density(z, tail_frac=0.10) is None
 
-    def test_score_spliced_evt_model_scores_are_finite_and_match_manual_computation(self):
+    def test_score_spliced_evt_model_scores_are_finite_and_match_manual_computation(
+        self,
+    ):
         rng = np.random.default_rng(SEED)
         z_train = rng.standard_t(4, 3000)
         z_train = (z_train - z_train.mean()) / z_train.std()

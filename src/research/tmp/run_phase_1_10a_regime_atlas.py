@@ -31,7 +31,8 @@ def load_curve(product: str) -> pl.DataFrame:
     curve = pl.read_parquet(f"{CURVE_DIR}/{product}.parquet")
     dev_start = DEV_START.get(product, DEV_START["__default__"])
     sub = curve.filter(
-        (pl.col("date") >= pl.lit(dev_start).str.to_date()) & (pl.col("date") <= pl.lit(DEV_END).str.to_date())
+        (pl.col("date") >= pl.lit(dev_start).str.to_date())
+        & (pl.col("date") <= pl.lit(DEV_END).str.to_date())
     ).sort("date")
     return sub
 
@@ -46,7 +47,9 @@ def main():
             per_product[product] = {"error": "insufficient history"}
             continue
 
-        ts = C.term_structure_state(curve.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"]))
+        ts = C.term_structure_state(
+            curve.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"])
+        )
         curve = curve.join(ts, on="date", how="left")
 
         state = curve["term_structure_state"]
@@ -71,11 +74,17 @@ def main():
         month_regime: dict[int, dict[str, float]] = {}
         state_arr = state.to_list()
         for m in range(1, 13):
-            sel = [state_arr[i] for i in range(len(state_arr)) if months[i] == m and state_arr[i] is not None]
+            sel = [
+                state_arr[i]
+                for i in range(len(state_arr))
+                if months[i] == m and state_arr[i] is not None
+            ]
             if len(sel) < 5:
                 continue
             month_regime[m] = {
-                "frac_backwardation": float(np.mean([s == "backwardation" for s in sel])),
+                "frac_backwardation": float(
+                    np.mean([s == "backwardation" for s in sel])
+                ),
                 "n": len(sel),
             }
 
@@ -93,11 +102,21 @@ def main():
             "date_range": [str(dates[0]), str(dates[-1])],
         }
         per_product[product] = entry
-        by_sector.setdefault(C.SECTOR[product], []).append({"product": product, "frac_backwardation": entry["frac_backwardation"]})
+        by_sector.setdefault(C.SECTOR[product], []).append(
+            {"product": product, "frac_backwardation": entry["frac_backwardation"]}
+        )
 
     sector_summary = {
         sector: {
-            "mean_frac_backwardation": float(np.mean([p["frac_backwardation"] for p in members if p["frac_backwardation"] is not None])),
+            "mean_frac_backwardation": float(
+                np.mean(
+                    [
+                        p["frac_backwardation"]
+                        for p in members
+                        if p["frac_backwardation"] is not None
+                    ]
+                )
+            ),
             "products": members,
         }
         for sector, members in by_sector.items()
@@ -110,25 +129,39 @@ def main():
     snapshots = {}
     for product in ["CL", "NG", "ZC"]:
         curve = load_curve(product)
-        ts = C.term_structure_state(curve.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"]))
-        curve = curve.join(ts, on="date", how="left").drop_nulls(subset=["roll_slope_annualized"])
+        ts = C.term_structure_state(
+            curve.select(["date", "close_f1", "dte_f1", "close_f2", "dte_f2"])
+        )
+        curve = curve.join(ts, on="date", how="left").drop_nulls(
+            subset=["roll_slope_annualized"]
+        )
         if curve.height == 0:
             continue
-        deep_contango_row = curve.sort("roll_slope_annualized", descending=True).head(1).to_dicts()[0]
-        deep_backward_row = curve.sort("roll_slope_annualized", descending=False).head(1).to_dicts()[0]
+        deep_contango_row = (
+            curve.sort("roll_slope_annualized", descending=True).head(1).to_dicts()[0]
+        )
+        deep_backward_row = (
+            curve.sort("roll_slope_annualized", descending=False).head(1).to_dicts()[0]
+        )
         snapshots[product] = {
             "deep_contango": {
                 "date": str(deep_contango_row["date"]),
-                "close_f1": deep_contango_row["close_f1"], "dte_f1": deep_contango_row["dte_f1"],
-                "close_f2": deep_contango_row["close_f2"], "dte_f2": deep_contango_row["dte_f2"],
-                "close_f3": deep_contango_row.get("close_f3"), "dte_f3": deep_contango_row.get("dte_f3"),
+                "close_f1": deep_contango_row["close_f1"],
+                "dte_f1": deep_contango_row["dte_f1"],
+                "close_f2": deep_contango_row["close_f2"],
+                "dte_f2": deep_contango_row["dte_f2"],
+                "close_f3": deep_contango_row.get("close_f3"),
+                "dte_f3": deep_contango_row.get("dte_f3"),
                 "roll_slope_annualized": deep_contango_row["roll_slope_annualized"],
             },
             "deep_backwardation": {
                 "date": str(deep_backward_row["date"]),
-                "close_f1": deep_backward_row["close_f1"], "dte_f1": deep_backward_row["dte_f1"],
-                "close_f2": deep_backward_row["close_f2"], "dte_f2": deep_backward_row["dte_f2"],
-                "close_f3": deep_backward_row.get("close_f3"), "dte_f3": deep_backward_row.get("dte_f3"),
+                "close_f1": deep_backward_row["close_f1"],
+                "dte_f1": deep_backward_row["dte_f1"],
+                "close_f2": deep_backward_row["close_f2"],
+                "dte_f2": deep_backward_row["dte_f2"],
+                "close_f3": deep_backward_row.get("close_f3"),
+                "dte_f3": deep_backward_row.get("dte_f3"),
                 "roll_slope_annualized": deep_backward_row["roll_slope_annualized"],
             },
         }

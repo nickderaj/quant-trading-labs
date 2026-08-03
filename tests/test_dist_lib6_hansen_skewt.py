@@ -24,7 +24,7 @@ from scipy.integrate import quad
 _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT / "src" / "research" / "tmp" / "densities"))
 
-import hansen_skewt as H
+import hansen_skewt as H  # type: ignore[import-not-found]
 
 SEED = 0
 
@@ -66,7 +66,9 @@ class TestDensityMoments:
 
 
 class TestPpfCdfRoundTrip:
-    @pytest.mark.parametrize("nu,lam", [(5.0, 0.3), (8.0, -0.3), (4.5, 0.5), (6.0, -0.6)])
+    @pytest.mark.parametrize(
+        "nu,lam", [(5.0, 0.3), (8.0, -0.3), (4.5, 0.5), (6.0, -0.6)]
+    )
     @pytest.mark.parametrize("q", [0.01, 0.1, 0.3, 0.5, 0.7, 0.9, 0.99])
     def test_ppf_matches_cdf(self, nu, lam, q):
         # q values deliberately span both below and above the density's own
