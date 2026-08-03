@@ -1127,7 +1127,11 @@ def random_dollar_neutral_metrics(
     stand-in for it.
     """
     rng = np.random.default_rng(seed)
-    symbols_per_bar = panel.select(datetime_col, symbol_col).unique()
+    # maintain_order: polars' default unique() row order is nondeterministic
+    # (multithreaded hash), which would silently make the seed argument
+    # non-reproducible -- the same seed would attach its random predictions
+    # to a different (bar, symbol) pairing on every run.
+    symbols_per_bar = panel.select(datetime_col, symbol_col).unique(maintain_order=True)
     rows = []
     for s in range(no_seeds):
         random_pred = symbols_per_bar.with_columns(

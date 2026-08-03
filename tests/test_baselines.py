@@ -50,8 +50,13 @@ def test_random_dollar_neutral_metrics_shape_and_distribution():
         "compound_return",
     }
     # a null (random-ranking) baseline on i.i.d. noise shouldn't be
-    # systematically wildly one-sided - mean sharpe should be roughly near 0
-    assert abs(result["sharpe"].mean()) < 3.0
+    # systematically one-sided - mean sharpe should be near 0 *on the scale
+    # of its own dispersion*. An absolute bound is not meaningful here: a
+    # 40-bar panel annualized at 4h has a per-seed sharpe sd in the tens, so
+    # compare the mean against its own standard error instead.
+    sharpe = result["sharpe"]
+    std_err = sharpe.std() / np.sqrt(len(sharpe))
+    assert abs(sharpe.mean()) < 3.0 * std_err
 
 
 def test_random_dollar_neutral_metrics_charges_cost_when_fee_given():
