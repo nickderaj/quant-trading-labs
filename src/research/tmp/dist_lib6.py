@@ -348,14 +348,16 @@ def fit_nb_counts(counts: np.ndarray) -> dict | None:
             method="Nelder-Mead",
             options={"maxiter": 2000, "xatol": 1e-6, "fatol": 1e-6},
         )
-    except Exception as _e:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
-        print(f"DEBUG fit_nb_counts exception: {_e!r}")
+    except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
         return None
-    if not res.success or not np.all(np.isfinite(res.x)):
-        print(
-            f"DEBUG fit_nb_counts non-success: success={res.success} "
-            f"message={res.message!r} nit={res.nit} x={res.x} fun={res.fun}"
-        )
+    # Not gated on res.success: the MLE can sit at the Poisson boundary
+    # (alpha -> 0, i.e. log_alpha -> -inf), which Nelder-Mead's xatol/fatol
+    # can never satisfy since the objective keeps marginally improving as
+    # the unbounded parameter drifts further from a reachable optimum - it
+    # hits maxiter instead, even though res.x is already the right answer
+    # (see this function's own docstring: alpha near zero is a valid,
+    # expected fit, not a failure).
+    if not np.all(np.isfinite(res.x)):
         return None
     mu, alpha = float(np.exp(res.x[0])), float(np.exp(res.x[1]))
     ll = -float(res.fun)
