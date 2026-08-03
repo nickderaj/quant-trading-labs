@@ -346,7 +346,7 @@ def fit_nb_counts(counts: np.ndarray) -> dict | None:
             x0,
             args=(counts,),
             method="Nelder-Mead",
-            options={"maxiter": 500, "xatol": 1e-8, "fatol": 1e-8},
+            options={"maxiter": 2000, "xatol": 1e-6, "fatol": 1e-6},
         )
     except Exception:  # noqa: BLE001 - optimizer can raise arbitrary errors; convention is None on any failure
         return None
