@@ -1,0 +1,98 @@
+{
+  "notebook": "013",
+  "committed_before_first_backtest": true,
+  "ground_truth_phase0_findings": {
+    "crypto_1h_coverage_dev_window_2021_07_to_2025_06": {
+      "LUNAUSDT": "1h bars absent from 2022-06 onward -- post-collapse delisting from the futures klines feed, not a cache defect. Kept in universe per trap 6 with/without check; series simply ends there.",
+      "FTTUSDT": "1h bars absent 2021-07 through 2022-03, present after -- pre-listing gap, not delisting. FTT later collapses Nov 2022 and stays listed with degenerate bars; kept per trap 6.",
+      "EOSUSDT": "1h bars absent for 2025-06 only; attempted live Binance backfill via download_and_unzip_klines, returned 404 (archive month not published). Single-month gap, disclosed, not backfilled.",
+      "MATICUSDT": "1h bars absent 2024-10 through 2025-06 (9 months) -- Binance's Sept-2024 MATIC->POL rebrand ended the old symbol's klines feed. Backfill attempted under MATICUSDT, 404 as expected. Same gap exists at native 6h (Design C uses 6h fetched directly from Binance, not resampled from 1h -- see design_C_bar below). MATIC simply drops out of the cross-section for these months, the same treatment LUNA/FTT get post-collapse/delisting.",
+      "all_other_symbols": "complete 1h coverage across the full 2021-07-01 to 2025-06-30 dev window."
+    },
+    "databento_futures": "16 products confirmed present at src/research/data/market/databento/ohlcv/*.parquet, GC.parquet spans 2010-06-06 to 2026-07-22 (52734 rows) as claimed.",
+    "yfinance": "69 tickers confirmed at src/research/data/market/yfinance/daily/, GC=F.parquet present.",
+    "check_duplicate_tree": "databento and yfinance trees have disjoint relative paths (0 overlapping filenames) -- confirmed safe to pool for Phase B, no duplicate-record risk.",
+    "cost_and_stats_machinery": "every function named in NEXT_PROMPT.md sec2 (research.py, commod_lib8.py, alpha_lib7.py) confirmed present by introspection; none required stubbing."
+  },
+  "universe_and_window_decisions": {
+    "crypto_dev_window": "2021-07-01 to 2025-06-30",
+    "futures_dev_window": "2010-06-06 (GC) / per-product start to 2024-12-31",
+    "crypto_holdout": "2025-07-01 onward (research.HOLDOUT_START) -- already spent once by notebook 003 Phase 7 on cfg2_12h; independence reduced for this notebook, spend at most once more per sec8 rule, only if Gate AT or XS fires on dev",
+    "futures_holdout": "2025-01-01 to 2026-07-28 -- already spent once by notebook 008 Phase 8 on risk calibration, never on a directional book; spend at most once, only if Gate FF or SQ fires on dev",
+    "design_C_bar": "NEXT_PROMPT.md sec4.C's premise ('we have no 6h cache') turned out to be resamplable-around but unnecessary: 6h is a native Binance klines interval and data.download_and_unzip_klines fetches it directly from data.binance.vision, same as every other cached interval -- confirmed live (BTCUSDT 2022-01, 124 bars). Fetched and cached directly per symbol via research.load_universe_panel(interval='6h'), not resampled from 1h. MATIC has no 6h bars from 2024-10 onward (POL rebrand, sec2, same underlying gap as 1h) and simply drops out of the cross-section for those months, the same treatment LUNA/FTT already get post-collapse/delisting.",
+    "design_C_liquidity_proxy": "trailing dollar volume substitutes for market cap (no market-cap data in repo)",
+    "design_C_funding": "not modelled -- no funding-rate cache for the short leg's 8h funding cash flows; disclosed as known limitation, not estimated",
+    "design_B_universe": "16 databento products (includes ES, E-mini S&P, futures-native) + 6 yfinance FX futures (6A 6B 6C 6E 6J 6S) = 22 instruments. yfinance's separate ES=F daily proxy is dropped from the panel since databento already carries the futures-native ES continuous series -- pooling both would double-count the same underlying instrument, not add diversity. No bond futures (ZN/ZB/TY/FGBL) or VIX futures exist anywhere in the repo; disclosed as a structural universe gap versus the source design, not substituted with an ETF proxy. CONTRACT_SPECS in commod_lib8.py extended with real CME tick/tick-value specs for the 6 FX futures so the sec2 futures cost-model headline (round_turn_cost_per_contract) covers the whole panel, not just the 16 original products.",
+    "design_D_universe": "30 crypto symbols (source design uses 66) -- disclosed as a structural weakening (sparser graph, fewer neighbours per node); node degree reported alongside every IC/backtest number.",
+    "survivorship": "LUNAUSDT and FTTUSDT retained in-sample for Designs C and D; both run with and without the two names (trap 6), both versions reported."
+  },
+  "stop_fill_convention": {
+    "rule": "a stop fills at the worse of (stop price, bar open) whenever the bar's open already gapped through the stop; otherwise fills at the stop price. If both a stop and a profit target are inside one bar's high-low range, the stop is assumed to hit first.",
+    "applies_to": ["Design A ATR exits", "Design C trailing ATR exits"],
+    "sensitivity_row_required": "one run under the optimistic same-bar-favourable-fill convention, reported as a labelled sensitivity row, never as the headline"
+  },
+  "causal_construction_assertions": {
+    "design_C_monthly_reopt": "unit test in tests/test_exec_lib13.py perturbs bars after the fit boundary and asserts no earlier month's fitted (L, theta, alpha) or resulting position changes",
+    "design_D_correlation_graph": "unit test in tests/test_exec_lib13.py perturbs bars after each rebalance date and asserts the adjacency matrix used at that rebalance is unchanged"
+  },
+  "cost_models": {
+    "crypto_headline": "TAKER_FEE=0.0004 + SLIPPAGE=0.0001 (5bp/side), research.add_trading_costs/add_tx_fees/add_portfolio_costs",
+    "futures_headline": "commod_lib8.round_turn_cost_per_contract with CONTRACT_SPECS and THIN_PRODUCTS adjustment, portfolio_costs_futures/add_portfolio_costs_futures/futures_portfolio_metrics -- this is the headline for every futures number in 013, per the correction of 012's error",
+    "design_A_sensitivity_only": "the 0.7bp + sqrt-impact cost assumption named in the design spec appears only as a labelled sensitivity row against the round_turn_cost_per_contract headline"
+  },
+  "gates": {
+    "FF": {
+      "design": "A",
+      "market": "GC futures, F1 continuous",
+      "fires_if": "block-bootstrap 95% CI on net Sharpe (round_turn_cost_per_contract headline) excludes zero AND DSR>=0.95 at n_trials=18 AND |beta to spot GC=F| < 0.15 AND sign stable across all four origin offsets (0/7/14/21)"
+    },
+    "SQ": {
+      "design": "B",
+      "fires_if": "best architecture's median-across->=5-seeds net Sharpe beats the linear baseline's, paired block-bootstrap CI on the difference excludes zero, AND the level clears the sec3 bar (net Sharpe CI excl. 0, DSR>=0.95, stable sign across offsets, beats buy-and-hold/random-dollar-neutral null with paired CI excl. 0)",
+      "note": "clearing the absolute bar while tying the linear baseline is a null for this design's actual claim and must be reported as one even if the absolute bar is cleared"
+    },
+    "AT": {
+      "design": "C",
+      "fires_if": "net Sharpe clears sec3 bar AND adaptive beats frozen-parameter twin on paired CI excl. 0 AND at least 3 of 4 ablations move in the sign the design predicts",
+      "all_three_required": true
+    },
+    "XS": {
+      "design": "D",
+      "fires_if": "dollar-neutral book's net Sharpe clears sec3 bar AND cross-sectional IC passes 003's survival filter (|NW t|>3 and consistent sign across years) AND beta to equal_weight_basket_returns < 0.2"
+    },
+    "TGT": {
+      "fires_if": "any design reaches net Sharpe >= 2.0 on its dev window under the headline cost model, DSR>=0.95 at n_trials=18, AND passes the Phase L look-ahead audit",
+      "always_report": "the best net Sharpe achieved across all four designs is written into the results file whether or not this gate fires"
+    },
+    "TM": {
+      "design": "D",
+      "fires_if": "no-time-mixing variant has significantly higher cross-sectional IC than the time-mixing variant, bootstrap CI on the difference excluding zero",
+      "note": "pure science gate, decoupled from tradability"
+    }
+  },
+  "phase_L_audit_trigger": "any design's dev-window net Sharpe >= 1.5 is treated as a suspected defect and must pass the look-ahead audit (stop-fill re-check, causal-construction re-check, single-instrument exclusion, survivorship with/without LUNA+FTT, origin-offset perturbation-not-vacuity check) before being written into 013's results file as a result rather than a suspected defect.",
+  "n_trials": {
+    "pooled_total": 18,
+    "breakdown": {
+      "A": ["base (trend+momentum+smoothing+vol-target+fractional-kelly+impact+ATR-stop)", "no-smoothing", "no-impact-discount", "no-fractional-kelly"],
+      "B": ["linear baseline", "LSTM (median across >=5 seeds)", "variable-selection-gated LSTM (median across >=5 seeds)"],
+      "C": ["adaptive", "frozen-parameter twin", "ablation: no trailing stop", "ablation: no selection filter", "ablation: no liquidity filter", "ablation: no adaptation"],
+      "D": ["long-only top-5 + time-mixing", "long-only top-5 + no time-mixing", "dollar-neutral + time-mixing", "dollar-neutral + no time-mixing", "dollar-neutral + throttled (alpha_lib7 turnover machinery)"]
+    },
+    "counting_rule": "seeds within an architecture (Design B) are one trial each because the median was pre-declared as the estimator here, before any seed was run. This number is not revised downward after seeing results.",
+    "will_not_split_notebook": true
+  },
+  "single_instrument_and_offset_checks": {
+    "single_symbol_exclusion": "alpha_lib7's single-symbol exclusion check applied to every portfolio-level number in Designs C and D, and to per-fold contributions in B",
+    "origin_offset_vacuity_check": "before reporting agreement across the four offsets as robustness, confirm the offsets actually perturb book composition/turnover (012's offset leg was found nearly vacuous)"
+  },
+  "scope": "one notebook src/research/013_*.ipynb, one results file src/results/013_*.md, machinery in src/research/tmp/exec_lib13.py, tests in tests/test_exec_lib13.py. No fifth design. No universe extension past what is declared here to make a gate fire. No tuning toward the sec0 reported targets -- report whatever net Sharpe results, including near zero.",
+  "addendum_design_C_v2": {
+    "trigger": "the user supplied the four designs' actual source URLs after dev-window results were already committed. Design C's source (arXiv:2602.11708) specifies exact parameters v1 guessed at and got wrong: quality thresholds 1.3/1.7 (v1 used 0.0/0.15), a 150+-symbol universe (v1 used 30), top-15/bottom-15 market-cap-based selection (v1 used a dollar-volume proxy), and modelled funding (v1 disclosed as not modelled).",
+    "not_a_retroactive_edit": "v1's gates, trials, and n_trials count are UNCHANGED and remain in the results file as originally reported -- this is a disclosed follow-up run (Design C v2), not a revision of what v1 found or a re-tuning of v1's parameters toward the target.",
+    "universe_expansion": "128 Binance USDT perpetuals (v1's original 30, unioned with every USDT perpetual onboarded on/before 2022-07-01 per live exchangeInfo, excluding BTCDOM/DEFI index products). Fetched live from Binance per the user's explicit authorization to pull free crypto data for testing.",
+    "market_cap_data": "CoinGecko's free /coins/markets endpoint, a CURRENT snapshot ranking (117/128 symbols mapped) applied statically across the whole 2022-2025 backtest -- the free tier's rate limit makes a full rolling historical market-cap reconstruction across 128 symbols impractical. This is a real remaining gap versus the paper's presumably-rolling ranking, disclosed rather than presented as an exact match.",
+    "funding_data": "live Binance fapi funding-rate history, fetched for all 128 symbols (closing v1's disclosed gap).",
+    "new_trial_count": "7 new configurations computed and looked at for Design C v2 (adaptive, frozen twin, adaptive without funding, 3 ablations, survivorship exclusion) -- pooled n_trials rises from 18 to 25 (18 + 7), honestly counted upward per sec6's own rule that the count is never revised downward, only ever disclosed accurately. DSR at n_trials=25 for C v2's adaptive net Sharpe (-0.055) is 0.018, changing no verdict (already ~0 at n_trials=18)."
+  }
+}

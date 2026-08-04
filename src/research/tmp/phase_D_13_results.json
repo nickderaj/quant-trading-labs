@@ -1,0 +1,124 @@
+{
+  "gate": "XS",
+  "n_trials_pooled": 18,
+  "universe": [
+    "AAVEUSDT",
+    "ADAUSDT",
+    "ALGOUSDT",
+    "ATOMUSDT",
+    "AVAXUSDT",
+    "AXSUSDT",
+    "BNBUSDT",
+    "BTCUSDT",
+    "DOGEUSDT",
+    "DOTUSDT",
+    "ETCUSDT",
+    "ETHUSDT",
+    "FILUSDT",
+    "FTMUSDT",
+    "LINKUSDT",
+    "LTCUSDT",
+    "MANAUSDT",
+    "NEARUSDT",
+    "SANDUSDT",
+    "SOLUSDT",
+    "THETAUSDT",
+    "TRXUSDT",
+    "UNIUSDT",
+    "VETUSDT",
+    "XLMUSDT",
+    "XRPUSDT"
+  ],
+  "universe_size": 26,
+  "node_degree": {
+    "mean_degree": 22.779386343993085,
+    "median_degree": 24.0
+  },
+  "ic_sanity_check": {
+    "no_time_mixing": {
+      "mean_ic": -0.03156115905726848,
+      "nw_tstat": -3.5839573196237855,
+      "n_periods": 720,
+      "passes_003_survival_filter": true,
+      "leak_suspected": false
+    },
+    "time_mixing": {
+      "mean_ic": -0.045649521906453515,
+      "nw_tstat": -4.74563706172051,
+      "n_periods": 720,
+      "passes_003_survival_filter": true,
+      "leak_suspected": false
+    }
+  },
+  "ic_003_context": {
+    "mean_reversion_ic": 0.042,
+    "realized_vol_ic": -0.038,
+    "source": "notebook 003"
+  },
+  "gate_TM": {
+    "ci_diff_no_mix_minus_mix": [
+      -0.004188827383154787,
+      0.03339271891961888
+    ],
+    "fires": false
+  },
+  "books": {
+    "long_only": {
+      "gross": {
+        "label": "long_only_gross",
+        "sharpe": 0.010502265360417524,
+        "n_bars": 720
+      },
+      "net": {
+        "label": "long_only_net",
+        "sharpe": 0.008942217383356557,
+        "n_bars": 720
+      },
+      "ci_95": [
+        -0.002624372962328697,
+        0.00259989082601288
+      ],
+      "ci_excludes_zero": false,
+      "mean_turnover": 0.007222222222222223
+    },
+    "dollar_neutral": {
+      "gross": {
+        "label": "dollar_neutral_gross",
+        "sharpe": -0.6072835699825981,
+        "n_bars": 720
+      },
+      "net": {
+        "label": "dollar_neutral_net",
+        "sharpe": -1.5228443386980919,
+        "n_bars": 720
+      },
+      "ci_95": [
+        -0.0019993450592068716,
+        -0.0002782049980635849
+      ],
+      "ci_excludes_zero": true,
+      "mean_turnover": 1.3644444444444443
+    },
+    "dollar_neutral_throttled": {
+      "gross": {
+        "label": "dollar_neutral_throttled_gross",
+        "sharpe": -0.536856773535418,
+        "n_bars": 720
+      },
+      "net": {
+        "label": "dollar_neutral_throttled_net",
+        "sharpe": -0.8111566379904673,
+        "n_bars": 720
+      },
+      "ci_95": [
+        -0.0015940599511621138,
+        0.0002451817642845045
+      ],
+      "ci_excludes_zero": false,
+      "mean_turnover": 0.43194444444444446
+    }
+  },
+  "dollar_neutral_beta_to_basket": -0.021591264834667025,
+  "dsr_dollar_neutral": 4.929015505127488e-06,
+  "gate_XS_fires": false
+}

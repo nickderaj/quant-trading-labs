@@ -1,0 +1,29 @@
+{
+  "threshold": 1.5,
+  "designs": {
+    "A": {
+      "design": "A",
+      "headline_net_sharpe": 0.33294696706518234,
+      "triggered": false,
+      "note": "below the 1.5 audit trigger -- reported as-is, no audit required"
+    },
+    "B": {
+      "design": "B",
+      "headline_net_sharpe": 0.05715883356709048,
+      "triggered": false,
+      "note": "below the 1.5 audit trigger -- reported as-is, no audit required"
+    },
+    "C": {
+      "design": "C",
+      "headline_net_sharpe": -0.1052311205222627,
+      "triggered": false,
+      "note": "below the 1.5 audit trigger -- reported as-is, no audit required"
+    },
+    "D": {
+      "design": "D",
+      "headline_net_sharpe": -1.5228443386980919,
+      "triggered": false,
+      "note": "below the 1.5 audit trigger -- reported as-is, no audit required"
+    }
+  }
+}

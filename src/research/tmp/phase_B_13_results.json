@@ -1,0 +1,99 @@
+{
+  "gate": "SQ",
+  "n_trials_pooled": 18,
+  "universe": [
+    "BZ",
+    "CL",
+    "ES",
+    "GC",
+    "HO",
+    "KE",
+    "NG",
+    "PA",
+    "PL",
+    "RB",
+    "SI",
+    "ZC",
+    "ZL",
+    "ZM",
+    "ZS",
+    "ZW",
+    "6A=F",
+    "6B=F",
+    "6C=F",
+    "6E=F",
+    "6J=F",
+    "6S=F"
+  ],
+  "universe_gap_disclosure": "no bond futures (ZN/ZB/TY/FGBL) or VIX futures anywhere in this repo; not substituted with an ETF proxy",
+  "n_folds": 8,
+  "results": {
+    "linear_baseline": {
+      "features": "lag_4,lag_5",
+      "target": "fwd_return_1",
+      "no_bars": 23602,
+      "no_trades": 23602,
+      "frac_time_in_market": 1.0,
+      "win_rate": 0.4863994576730786,
+      "avg_win": 0.01753221619023592,
+      "avg_loss": -0.014967782765384303,
+      "best_trade": 3.295836925506592,
+      "worst_trade": -2.6390573978424072,
+      "ev": 0.0008401991010049924,
+      "std": 0.06536789238452911,
+      "total_log_return": 19.830381393432617,
+      "compound_return": 409472945.11945754,
+      "max_drawdown": -9.076750755310059,
+      "equity_trough": -3.9143292903900146,
+      "equity_peak": 19.830379486083984,
+      "sharpe": 0.2040412617218206
+    },
+    "LSTM": {
+      "name": "LSTM",
+      "n_seeds": 5,
+      "seed_sharpes": [
+        0.0655401200649448,
+        0.05715883356709048,
+        -0.002746557610052143,
+        0.042067833998927794,
+        0.07277714156394065
+      ],
+      "median_sharpe": 0.05715883356709048,
+      "min_sharpe": -0.002746557610052143,
+      "max_sharpe": 0.07277714156394065,
+      "median_sharpe_ci_95": [
+        -3.1152012214866517e-06,
+        5.324262744080621e-06
+      ],
+      "ci_excludes_zero": false,
+      "dsr_at_median": 0.10383574994982986,
+      "breakeven_cost_bps": 10.0,
+      "n_oos_bars": 27205
+    },
+    "GatedLSTM": {
+      "name": "GatedLSTM",
+      "n_seeds": 5,
+      "seed_sharpes": [
+        -0.029418247513243737,
+        0.05208980114861372,
+        0.05875161208806789,
+        -0.01506258315019537,
+        0.10416409180354905
+      ],
+      "median_sharpe": 0.05208980114861372,
+      "min_sharpe": -0.029418247513243737,
+      "max_sharpe": 0.10416409180354905,
+      "median_sharpe_ci_95": [
+        -2.059619256187564e-06,
+        3.8166779972865215e-06
+      ],
+      "ci_excludes_zero": false,
+      "dsr_at_median": 0.09464861559685145,
+      "breakeven_cost_bps": 10.5,
+      "n_oos_bars": 27205
+    }
+  },
+  "best_architecture": "LSTM",
+  "cost_note": "headline cost is commod_lib8.cost_per_unit_notional per instrument per bar (round_turn_cost_per_contract / notional at that bar's price), including the FX CONTRACT_SPECS entries added for this design; breakeven_cost_bps is the additional cost-sensitivity number sec4.B asks for",
+  "gate_SQ_fires": false
+}
