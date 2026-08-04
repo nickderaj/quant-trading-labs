@@ -1,0 +1,235 @@
+{
+  "errors": [],
+  "panel_rows": 224878,
+  "panel_path": "src/research/data/market/research/regime_panel.parquet",
+  "sectors": [
+    {
+      "name": "Macro",
+      "kind": "macro",
+      "dimensions": [
+        "risk",
+        "yield_curve",
+        "credit"
+      ],
+      "symbols_used": [
+        "ES=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 6531,
+      "first": "2000-09-18 00:00:00",
+      "last": "2026-07-31 00:00:00"
+    },
+    {
+      "name": "Commodities",
+      "kind": "basket",
+      "dimensions": [
+        "carry",
+        "mean_reversion",
+        "term_structure",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "CL=F",
+        "BZ=F",
+        "RB=F",
+        "HO=F",
+        "NG=F",
+        "GC=F",
+        "SI=F",
+        "HG=F",
+        "PL=F",
+        "PA=F",
+        "ZC=F",
+        "ZW=F",
+        "ZS=F",
+        "ZM=F",
+        "ZL=F",
+        "SB=F",
+        "KC=F",
+        "CT=F",
+        "LE=F",
+        "HE=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 7247,
+      "first": "1997-10-29 00:00:00",
+      "last": "2026-07-31 00:00:00"
+    },
+    {
+      "name": "FX",
+      "kind": "basket",
+      "dimensions": [
+        "mean_reversion",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "6E=F",
+        "6J=F",
+        "6B=F",
+        "6A=F",
+        "6C=F",
+        "6S=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 6562,
+      "first": "2000-05-23 00:00:00",
+      "last": "2026-07-31 00:00:00"
+    },
+    {
+      "name": "oil products",
+      "kind": "basket",
+      "dimensions": [
+        "carry",
+        "mean_reversion",
+        "term_structure",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "CL=F",
+        "BZ=F",
+        "RB=F",
+        "HO=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 6518,
+      "first": "2000-08-23 00:00:00",
+      "last": "2026-07-31 00:00:00"
+    },
+    {
+      "name": "natgas",
+      "kind": "basket",
+      "dimensions": [
+        "carry",
+        "mean_reversion",
+        "term_structure",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "NG=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 6509,
+      "first": "2000-08-30 00:00:00",
+      "last": "2026-07-31 00:00:00"
+    },
+    {
+      "name": "soy complex",
+      "kind": "basket",
+      "dimensions": [
+        "mean_reversion",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "ZS=F",
+        "ZM=F",
+        "ZL=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 6639,
+      "first": "2000-03-15 00:00:00",
+      "last": "2026-07-31 00:00:00"
+    },
+    {
+      "name": "grains",
+      "kind": "basket",
+      "dimensions": [
+        "mean_reversion",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "ZC=F",
+        "ZW=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 6543,
+      "first": "2000-07-17 00:00:00",
+      "last": "2026-07-31 00:00:00"
+    },
+    {
+      "name": "softs",
+      "kind": "basket",
+      "dimensions": [
+        "mean_reversion",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "KC=F",
+        "SB=F",
+        "CT=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 6668,
+      "first": "2000-01-03 00:00:00",
+      "last": "2026-07-30 00:00:00"
+    },
+    {
+      "name": "precious",
+      "kind": "basket",
+      "dimensions": [
+        "carry",
+        "mean_reversion",
+        "term_structure",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "GC=F",
+        "SI=F",
+        "PL=F",
+        "PA=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 7222,
+      "first": "1997-10-29 00:00:00",
+      "last": "2026-07-31 00:00:00"
+    },
+    {
+      "name": "base metals",
+      "kind": "basket",
+      "dimensions": [
+        "carry",
+        "mean_reversion",
+        "term_structure",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "HG=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 6508,
+      "first": "2000-08-30 00:00:00",
+      "last": "2026-07-31 00:00:00"
+    },
+    {
+      "name": "meats",
+      "kind": "basket",
+      "dimensions": [
+        "mean_reversion",
+        "trend",
+        "volatility"
+      ],
+      "symbols_used": [
+        "LE=F",
+        "HE=F"
+      ],
+      "symbols_skipped": [],
+      "rows": 6447,
+      "first": "2000-12-15 00:00:00",
+      "last": "2026-07-30 00:00:00"
+    }
+  ],
+  "charts": {
+    "snapshot": "tmp/phase_1_14_charts/snapshot.png",
+    "history": "tmp/phase_1_14_charts/history.png",
+    "ribbon_full": "tmp/phase_1_14_charts/ribbon_full.png",
+    "ribbon_episode_sectors": "tmp/phase_1_14_charts/ribbon_episode_sectors.png"
+  }
+}

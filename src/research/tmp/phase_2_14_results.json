@@ -1,0 +1,1988 @@
+{
+  "per_sector_dimension": [
+    {
+      "sector": "Macro",
+      "dimension": "risk",
+      "n_bars": 6280,
+      "n_labelled": 6280,
+      "sector_total_rows": 6531,
+      "flip_rate": 0.007803790412486065,
+      "avg_duration": 125.6,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9615679069055275,
+      "max_single_label_occupancy": 0.7151273885350319,
+      "occupancy_by_label": {
+        "neutral": 0.7151273885350319,
+        "risk_off": 0.16878980891719744,
+        "risk_on": 0.1160828025477707
+      },
+      "durations_by_label": {
+        "neutral": {
+          "n_spells": 25,
+          "mean": 179.64,
+          "median": 152.0,
+          "max": 576
+        },
+        "risk_off": {
+          "n_spells": 15,
+          "mean": 70.66666666666667,
+          "median": 65.0,
+          "max": 192
+        },
+        "risk_on": {
+          "n_spells": 10,
+          "mean": 72.9,
+          "median": 47.0,
+          "max": 233
+        }
+      },
+      "expected_remaining_duration": {
+        "neutral": 187.08333333333354,
+        "risk_off": 70.6666666666664,
+        "risk_on": 72.89999999999993
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "Macro",
+      "dimension": "yield_curve",
+      "n_bars": 6531,
+      "n_labelled": 6531,
+      "sector_total_rows": 6531,
+      "flip_rate": 0.001225114854517611,
+      "avg_duration": 725.6666666666666,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 1.0,
+      "max_single_label_occupancy": 0.6769254325524422,
+      "occupancy_by_label": {
+        "flat": 0.251416322155872,
+        "inverted": 0.07165824529168581,
+        "steep": 0.6769254325524422
+      },
+      "durations_by_label": {
+        "flat": {
+          "n_spells": 5,
+          "mean": 328.4,
+          "median": 449.0,
+          "max": 479
+        },
+        "inverted": {
+          "n_spells": 1,
+          "mean": 468.0,
+          "median": 468.0,
+          "max": 468
+        },
+        "steep": {
+          "n_spells": 3,
+          "mean": 1473.6666666666667,
+          "median": 1205.0,
+          "max": 2795
+        }
+      },
+      "expected_remaining_duration": {
+        "flat": 410.25000000000443,
+        "inverted": 468.00000000000165,
+        "steep": 1473.6666666667165
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "Macro",
+      "dimension": "credit",
+      "n_bars": 516,
+      "n_labelled": 516,
+      "sector_total_rows": 6531,
+      "flip_rate": 0.019417475728155338,
+      "avg_duration": 46.90909090909091,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.07900780891134589,
+      "max_single_label_occupancy": 0.5155038759689923,
+      "occupancy_by_label": {
+        "neutral": 0.5155038759689923,
+        "tight": 0.42248062015503873,
+        "wide": 0.06201550387596899
+      },
+      "durations_by_label": {
+        "neutral": {
+          "n_spells": 5,
+          "mean": 53.2,
+          "median": 54.0,
+          "max": 87
+        },
+        "tight": {
+          "n_spells": 5,
+          "mean": 43.6,
+          "median": 27.0,
+          "max": 106
+        },
+        "wide": {
+          "n_spells": 1,
+          "mean": 32.0,
+          "median": 32.0,
+          "max": 32
+        }
+      },
+      "expected_remaining_duration": {
+        "neutral": 53.199999999999925,
+        "tight": 54.24999999999991,
+        "wide": 32.0
+      },
+      "disqualified": true,
+      "disqualification_reasons": [
+        "labelled coverage 7.90% of sector history < 10%"
+      ]
+    },
+    {
+      "sector": "Commodities",
+      "dimension": "carry",
+      "n_bars": 2157,
+      "n_labelled": 2157,
+      "sector_total_rows": 7247,
+      "flip_rate": 0.019016697588126158,
+      "avg_duration": 51.357142857142854,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.29764040292534844,
+      "max_single_label_occupancy": 0.6022253129346314,
+      "occupancy_by_label": {
+        "negative": 0.6022253129346314,
+        "neutral": 0.34909596662030595,
+        "positive": 0.048678720445062586
+      },
+      "durations_by_label": {
+        "negative": {
+          "n_spells": 17,
+          "mean": 76.41176470588235,
+          "median": 49.0,
+          "max": 333
+        },
+        "neutral": {
+          "n_spells": 19,
+          "mean": 39.63157894736842,
+          "median": 24.0,
+          "max": 113
+        },
+        "positive": {
+          "n_spells": 6,
+          "mean": 17.5,
+          "median": 18.5,
+          "max": 23
+        }
+      },
+      "expected_remaining_duration": {
+        "negative": 81.12500000000028,
+        "neutral": 39.63157894736845,
+        "positive": 17.499999999999993
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "Commodities",
+      "dimension": "mean_reversion",
+      "n_bars": 6195,
+      "n_labelled": 6195,
+      "sector_total_rows": 7247,
+      "flip_rate": 0.002744591540200194,
+      "avg_duration": 344.1666666666667,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.8548364840623707,
+      "max_single_label_occupancy": 0.7604519774011299,
+      "occupancy_by_label": {
+        "neutral": 0.7604519774011299,
+        "trending": 0.23954802259887006
+      },
+      "durations_by_label": {
+        "neutral": {
+          "n_spells": 9,
+          "mean": 523.4444444444445,
+          "median": 419.0,
+          "max": 1102
+        },
+        "trending": {
+          "n_spells": 9,
+          "mean": 164.88888888888889,
+          "median": 147.0,
+          "max": 301
+        }
+      },
+      "expected_remaining_duration": {
+        "neutral": 588.7500000000001,
+        "trending": 164.8888888888883
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "Commodities",
+      "dimension": "term_structure",
+      "n_bars": 2157,
+      "n_labelled": 2157,
+      "sector_total_rows": 7247,
+      "flip_rate": 0.01437847866419295,
+      "avg_duration": 67.40625,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.29764040292534844,
+      "max_single_label_occupancy": 0.5669911914696337,
+      "occupancy_by_label": {
+        "backwardation": 0.08576726935558646,
+        "contango": 0.3472415391747798,
+        "flat": 0.5669911914696337
+      },
+      "durations_by_label": {
+        "backwardation": {
+          "n_spells": 5,
+          "mean": 37.0,
+          "median": 33.0,
+          "max": 59
+        },
+        "contango": {
+          "n_spells": 12,
+          "mean": 62.416666666666664,
+          "median": 25.5,
+          "max": 170
+        },
+        "flat": {
+          "n_spells": 15,
+          "mean": 81.53333333333333,
+          "median": 81.0,
+          "max": 161
+        }
+      },
+      "expected_remaining_duration": {
+        "backwardation": 37.00000000000007,
+        "contango": 68.00000000000024,
+        "flat": 81.53333333333359
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "Commodities",
+      "dimension": "trend",
+      "n_bars": 6196,
+      "n_labelled": 6196,
+      "sector_total_rows": 7247,
+      "flip_rate": 0.003228410008071025,
+      "avg_duration": 295.04761904761904,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.8549744721953912,
+      "max_single_label_occupancy": 0.9023563589412524,
+      "occupancy_by_label": {
+        "bear": 0.052453195610071016,
+        "bull": 0.045190445448676564,
+        "sideways": 0.9023563589412524
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 4,
+          "mean": 81.25,
+          "median": 86.5,
+          "max": 103
+        },
+        "bull": {
+          "n_spells": 6,
+          "mean": 46.666666666666664,
+          "median": 51.5,
+          "max": 68
+        },
+        "sideways": {
+          "n_spells": 11,
+          "mean": 508.27272727272725,
+          "median": 296.0,
+          "max": 1559
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 81.2499999999997,
+        "bull": 46.66666666666659,
+        "sideways": 558.9999999999964
+      },
+      "disqualified": true,
+      "disqualification_reasons": [
+        "single-label occupancy 90.24% > 90%"
+      ]
+    },
+    {
+      "sector": "Commodities",
+      "dimension": "volatility",
+      "n_bars": 6430,
+      "n_labelled": 6430,
+      "sector_total_rows": 7247,
+      "flip_rate": 0.004044174832788925,
+      "avg_duration": 238.14814814814815,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.8872636953222023,
+      "max_single_label_occupancy": 0.8945567651632971,
+      "occupancy_by_label": {
+        "extreme": 0.004976671850699844,
+        "high": 0.08569206842923795,
+        "low": 0.014774494556765163,
+        "normal": 0.8945567651632971
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 1,
+          "mean": 32.0,
+          "median": 32.0,
+          "max": 32
+        },
+        "high": {
+          "n_spells": 10,
+          "mean": 55.1,
+          "median": 24.5,
+          "max": 229
+        },
+        "low": {
+          "n_spells": 3,
+          "mean": 31.666666666666668,
+          "median": 36.0,
+          "max": 40
+        },
+        "normal": {
+          "n_spells": 13,
+          "mean": 442.46153846153845,
+          "median": 381.0,
+          "max": 921
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 32.0,
+        "high": 55.10000000000005,
+        "low": 31.66666666666668,
+        "normal": 479.25000000001006
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "FX",
+      "dimension": "mean_reversion",
+      "n_bars": 6144,
+      "n_labelled": 6144,
+      "sector_total_rows": 6562,
+      "flip_rate": 0.006999837213088068,
+      "avg_duration": 139.63636363636363,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9362999085644621,
+      "max_single_label_occupancy": 0.6383463541666666,
+      "occupancy_by_label": {
+        "mean_reverting": 0.0037434895833333335,
+        "neutral": 0.6383463541666666,
+        "trending": 0.35791015625
+      },
+      "durations_by_label": {
+        "mean_reverting": {
+          "n_spells": 1,
+          "mean": 23.0,
+          "median": 23.0,
+          "max": 23
+        },
+        "neutral": {
+          "n_spells": 22,
+          "mean": 178.27272727272728,
+          "median": 115.0,
+          "max": 532
+        },
+        "trending": {
+          "n_spells": 21,
+          "mean": 104.71428571428571,
+          "median": 80.0,
+          "max": 232
+        }
+      },
+      "expected_remaining_duration": {
+        "mean_reverting": 23.000000000000014,
+        "neutral": 178.27272727272836,
+        "trending": 109.9000000000004
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "FX",
+      "dimension": "trend",
+      "n_bars": 6145,
+      "n_labelled": 6145,
+      "sector_total_rows": 6562,
+      "flip_rate": 0.011555989583333334,
+      "avg_duration": 85.34722222222223,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.936452301127705,
+      "max_single_label_occupancy": 0.68413344182262,
+      "occupancy_by_label": {
+        "bear": 0.15720097640358013,
+        "bull": 0.15866558177379983,
+        "sideways": 0.68413344182262
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 16,
+          "mean": 60.375,
+          "median": 51.0,
+          "max": 143
+        },
+        "bull": {
+          "n_spells": 20,
+          "mean": 48.75,
+          "median": 35.0,
+          "max": 140
+        },
+        "sideways": {
+          "n_spells": 36,
+          "mean": 116.77777777777777,
+          "median": 95.5,
+          "max": 465
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 64.3333333333331,
+        "bull": 48.74999999999991,
+        "sideways": 116.77777777777797
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "FX",
+      "dimension": "volatility",
+      "n_bars": 6379,
+      "n_labelled": 6379,
+      "sector_total_rows": 6562,
+      "flip_rate": 0.014424584509250549,
+      "avg_duration": 68.59139784946237,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9721121609265467,
+      "max_single_label_occupancy": 0.6211004859695877,
+      "occupancy_by_label": {
+        "extreme": 0.037309923185452266,
+        "high": 0.19078225427182943,
+        "low": 0.15080733657313058,
+        "normal": 0.6211004859695877
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 6,
+          "mean": 39.666666666666664,
+          "median": 37.5,
+          "max": 72
+        },
+        "high": {
+          "n_spells": 26,
+          "mean": 46.80769230769231,
+          "median": 30.5,
+          "max": 205
+        },
+        "low": {
+          "n_spells": 19,
+          "mean": 50.63157894736842,
+          "median": 38.0,
+          "max": 97
+        },
+        "normal": {
+          "n_spells": 42,
+          "mean": 94.33333333333333,
+          "median": 75.0,
+          "max": 367
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 39.666666666666636,
+        "high": 46.80769230769222,
+        "low": 50.63157894736835,
+        "normal": 96.60975609756127
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "oil products",
+      "dimension": "carry",
+      "n_bars": 2158,
+      "n_labelled": 2158,
+      "sector_total_rows": 6518,
+      "flip_rate": 0.007881316643486324,
+      "avg_duration": 119.88888888888889,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.33108315434182267,
+      "max_single_label_occupancy": 0.4508804448563485,
+      "occupancy_by_label": {
+        "negative": 0.1102873030583874,
+        "neutral": 0.4388322520852641,
+        "positive": 0.4508804448563485
+      },
+      "durations_by_label": {
+        "negative": {
+          "n_spells": 2,
+          "mean": 119.0,
+          "median": 119.0,
+          "max": 208
+        },
+        "neutral": {
+          "n_spells": 9,
+          "mean": 105.22222222222223,
+          "median": 93.0,
+          "max": 235
+        },
+        "positive": {
+          "n_spells": 7,
+          "mean": 139.0,
+          "median": 101.0,
+          "max": 357
+        }
+      },
+      "expected_remaining_duration": {
+        "negative": 119.00000000000043,
+        "neutral": 105.22222222222169,
+        "positive": 161.9999999999993
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "oil products",
+      "dimension": "mean_reversion",
+      "n_bars": 6194,
+      "n_labelled": 6194,
+      "sector_total_rows": 6518,
+      "flip_rate": 0.008880994671403197,
+      "avg_duration": 110.60714285714286,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9502915004602639,
+      "max_single_label_occupancy": 0.5586051017113336,
+      "occupancy_by_label": {
+        "mean_reverting": 0.03535679690022603,
+        "neutral": 0.5586051017113336,
+        "trending": 0.40603810138844043
+      },
+      "durations_by_label": {
+        "mean_reverting": {
+          "n_spells": 6,
+          "mean": 36.5,
+          "median": 37.0,
+          "max": 56
+        },
+        "neutral": {
+          "n_spells": 27,
+          "mean": 128.14814814814815,
+          "median": 95.0,
+          "max": 416
+        },
+        "trending": {
+          "n_spells": 23,
+          "mean": 109.34782608695652,
+          "median": 86.0,
+          "max": 320
+        }
+      },
+      "expected_remaining_duration": {
+        "mean_reverting": 36.5,
+        "neutral": 133.03846153846138,
+        "trending": 109.34782608695699
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "oil products",
+      "dimension": "term_structure",
+      "n_bars": 2158,
+      "n_labelled": 2158,
+      "sector_total_rows": 6518,
+      "flip_rate": 0.013444598980064905,
+      "avg_duration": 71.93333333333334,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.33108315434182267,
+      "max_single_label_occupancy": 0.41427247451343835,
+      "occupancy_by_label": {
+        "backwardation": 0.41427247451343835,
+        "contango": 0.24513438368860055,
+        "flat": 0.3405931417979611
+      },
+      "durations_by_label": {
+        "backwardation": {
+          "n_spells": 10,
+          "mean": 89.4,
+          "median": 79.5,
+          "max": 154
+        },
+        "contango": {
+          "n_spells": 6,
+          "mean": 88.16666666666667,
+          "median": 75.0,
+          "max": 169
+        },
+        "flat": {
+          "n_spells": 14,
+          "mean": 52.5,
+          "median": 33.0,
+          "max": 214
+        }
+      },
+      "expected_remaining_duration": {
+        "backwardation": 89.40000000000042,
+        "contango": 88.16666666666669,
+        "flat": 56.46153846153851
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "oil products",
+      "dimension": "trend",
+      "n_bars": 6195,
+      "n_labelled": 6195,
+      "sector_total_rows": 6518,
+      "flip_rate": 0.013722957701000968,
+      "avg_duration": 72.03488372093024,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9504449217551396,
+      "max_single_label_occupancy": 0.6497175141242938,
+      "occupancy_by_label": {
+        "bear": 0.192090395480226,
+        "bull": 0.15819209039548024,
+        "sideways": 0.6497175141242938
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 22,
+          "mean": 54.09090909090909,
+          "median": 41.0,
+          "max": 145
+        },
+        "bull": {
+          "n_spells": 21,
+          "mean": 46.666666666666664,
+          "median": 42.0,
+          "max": 107
+        },
+        "sideways": {
+          "n_spells": 43,
+          "mean": 93.6046511627907,
+          "median": 54.0,
+          "max": 518
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 54.09090909090896,
+        "bull": 46.66666666666659,
+        "sideways": 95.80952380952387
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "oil products",
+      "dimension": "volatility",
+      "n_bars": 6427,
+      "n_labelled": 6427,
+      "sector_total_rows": 6518,
+      "flip_rate": 0.02131963896669779,
+      "avg_duration": 46.572463768115945,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9860386621663086,
+      "max_single_label_occupancy": 0.5290182044499767,
+      "occupancy_by_label": {
+        "extreme": 0.07997510502567294,
+        "high": 0.18111093822934496,
+        "low": 0.20989575229500546,
+        "normal": 0.5290182044499767
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 15,
+          "mean": 34.266666666666666,
+          "median": 21.0,
+          "max": 86
+        },
+        "high": {
+          "n_spells": 38,
+          "mean": 30.63157894736842,
+          "median": 26.5,
+          "max": 69
+        },
+        "low": {
+          "n_spells": 27,
+          "mean": 49.96296296296296,
+          "median": 25.0,
+          "max": 197
+        },
+        "normal": {
+          "n_spells": 58,
+          "mean": 58.62068965517241,
+          "median": 45.0,
+          "max": 184
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 34.26666666666666,
+        "high": 31.43243243243242,
+        "low": 49.962962962962855,
+        "normal": 58.62068965517231
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "natgas",
+      "dimension": "carry",
+      "n_bars": 2159,
+      "n_labelled": 2159,
+      "sector_total_rows": 6509,
+      "flip_rate": 0.017145505097312327,
+      "avg_duration": 56.81578947368421,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.3316945767398986,
+      "max_single_label_occupancy": 0.6887447892542844,
+      "occupancy_by_label": {
+        "negative": 0.6887447892542844,
+        "neutral": 0.1046780917091246,
+        "positive": 0.206577119036591
+      },
+      "durations_by_label": {
+        "negative": {
+          "n_spells": 14,
+          "mean": 106.21428571428571,
+          "median": 65.5,
+          "max": 354
+        },
+        "neutral": {
+          "n_spells": 11,
+          "mean": 20.545454545454547,
+          "median": 18.0,
+          "max": 42
+        },
+        "positive": {
+          "n_spells": 13,
+          "mean": 34.30769230769231,
+          "median": 37.0,
+          "max": 61
+        }
+      },
+      "expected_remaining_duration": {
+        "negative": 114.30769230769256,
+        "neutral": 20.54545454545456,
+        "positive": 34.30769230769234
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "natgas",
+      "dimension": "mean_reversion",
+      "n_bars": 6197,
+      "n_labelled": 6197,
+      "sector_total_rows": 6509,
+      "flip_rate": 0.011620400258231117,
+      "avg_duration": 84.89041095890411,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9520663696420341,
+      "max_single_label_occupancy": 0.4805551073099887,
+      "occupancy_by_label": {
+        "mean_reverting": 0.11892851379699855,
+        "neutral": 0.4805551073099887,
+        "trending": 0.4005163788930127
+      },
+      "durations_by_label": {
+        "mean_reverting": {
+          "n_spells": 13,
+          "mean": 56.69230769230769,
+          "median": 58.0,
+          "max": 128
+        },
+        "neutral": {
+          "n_spells": 34,
+          "mean": 87.58823529411765,
+          "median": 67.0,
+          "max": 316
+        },
+        "trending": {
+          "n_spells": 26,
+          "mean": 95.46153846153847,
+          "median": 73.0,
+          "max": 263
+        }
+      },
+      "expected_remaining_duration": {
+        "mean_reverting": 56.692307692307594,
+        "neutral": 90.21212121212163,
+        "trending": 95.46153846153808
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "natgas",
+      "dimension": "term_structure",
+      "n_bars": 2159,
+      "n_labelled": 2159,
+      "sector_total_rows": 6509,
+      "flip_rate": 0.017608897126969416,
+      "avg_duration": 55.35897435897436,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.3316945767398986,
+      "max_single_label_occupancy": 0.6447429365446966,
+      "occupancy_by_label": {
+        "backwardation": 0.23112552107457157,
+        "contango": 0.6447429365446966,
+        "flat": 0.12413154238073182
+      },
+      "durations_by_label": {
+        "backwardation": {
+          "n_spells": 12,
+          "mean": 41.583333333333336,
+          "median": 40.5,
+          "max": 63
+        },
+        "contango": {
+          "n_spells": 15,
+          "mean": 92.8,
+          "median": 80.0,
+          "max": 291
+        },
+        "flat": {
+          "n_spells": 12,
+          "mean": 22.333333333333332,
+          "median": 21.0,
+          "max": 40
+        }
+      },
+      "expected_remaining_duration": {
+        "backwardation": 41.58333333333329,
+        "contango": 99.35714285714268,
+        "flat": 22.333333333333325
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "natgas",
+      "dimension": "trend",
+      "n_bars": 6198,
+      "n_labelled": 6198,
+      "sector_total_rows": 6509,
+      "flip_rate": 0.017750524447313214,
+      "avg_duration": 55.83783783783784,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9522200030726686,
+      "max_single_label_occupancy": 0.5227492739593417,
+      "occupancy_by_label": {
+        "bear": 0.2357212003872217,
+        "bull": 0.2415295256534366,
+        "sideways": 0.5227492739593417
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 23,
+          "mean": 63.52173913043478,
+          "median": 51.0,
+          "max": 194
+        },
+        "bull": {
+          "n_spells": 32,
+          "mean": 46.78125,
+          "median": 35.5,
+          "max": 125
+        },
+        "sideways": {
+          "n_spells": 56,
+          "mean": 57.857142857142854,
+          "median": 48.5,
+          "max": 155
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 63.52173913043466,
+        "bull": 46.781250000000036,
+        "sideways": 58.890909090909076
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "natgas",
+      "dimension": "volatility",
+      "n_bars": 6430,
+      "n_labelled": 6430,
+      "sector_total_rows": 6509,
+      "flip_rate": 0.019754238606315134,
+      "avg_duration": 50.234375,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.987862958979874,
+      "max_single_label_occupancy": 0.40388802488335923,
+      "occupancy_by_label": {
+        "extreme": 0.08133748055987558,
+        "high": 0.2581648522550544,
+        "low": 0.25660964230171074,
+        "normal": 0.40388802488335923
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 15,
+          "mean": 34.86666666666667,
+          "median": 36.0,
+          "max": 58
+        },
+        "high": {
+          "n_spells": 42,
+          "mean": 39.523809523809526,
+          "median": 30.0,
+          "max": 121
+        },
+        "low": {
+          "n_spells": 21,
+          "mean": 78.57142857142857,
+          "median": 53.0,
+          "max": 188
+        },
+        "normal": {
+          "n_spells": 50,
+          "mean": 51.94,
+          "median": 44.0,
+          "max": 172
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 34.86666666666671,
+        "high": 39.52380952380952,
+        "low": 82.45000000000029,
+        "normal": 51.93999999999999
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "soy complex",
+      "dimension": "mean_reversion",
+      "n_bars": 6232,
+      "n_labelled": 6232,
+      "sector_total_rows": 6639,
+      "flip_rate": 0.008505857807735516,
+      "avg_duration": 115.4074074074074,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9386955866847416,
+      "max_single_label_occupancy": 0.5285622593068036,
+      "occupancy_by_label": {
+        "mean_reverting": 0.026797175866495507,
+        "neutral": 0.5285622593068036,
+        "trending": 0.4446405648267009
+      },
+      "durations_by_label": {
+        "mean_reverting": {
+          "n_spells": 4,
+          "mean": 41.75,
+          "median": 31.0,
+          "max": 86
+        },
+        "neutral": {
+          "n_spells": 27,
+          "mean": 122.0,
+          "median": 101.0,
+          "max": 402
+        },
+        "trending": {
+          "n_spells": 23,
+          "mean": 120.47826086956522,
+          "median": 69.0,
+          "max": 290
+        }
+      },
+      "expected_remaining_duration": {
+        "mean_reverting": 41.75000000000006,
+        "neutral": 121.99999999999986,
+        "trending": 125.90909090909088
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "soy complex",
+      "dimension": "trend",
+      "n_bars": 6233,
+      "n_labelled": 6233,
+      "sector_total_rows": 6639,
+      "flip_rate": 0.013318356867779204,
+      "avg_duration": 74.20238095238095,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9388462117788824,
+      "max_single_label_occupancy": 0.614631798491898,
+      "occupancy_by_label": {
+        "bear": 0.143590566340446,
+        "bull": 0.24177763516765602,
+        "sideways": 0.614631798491898
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 19,
+          "mean": 47.10526315789474,
+          "median": 33.0,
+          "max": 115
+        },
+        "bull": {
+          "n_spells": 23,
+          "mean": 65.52173913043478,
+          "median": 57.0,
+          "max": 143
+        },
+        "sideways": {
+          "n_spells": 42,
+          "mean": 91.21428571428571,
+          "median": 59.5,
+          "max": 306
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 47.10526315789466,
+        "bull": 65.52173913043464,
+        "sideways": 93.41463414634187
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "soy complex",
+      "dimension": "volatility",
+      "n_bars": 6464,
+      "n_labelled": 6464,
+      "sector_total_rows": 6639,
+      "flip_rate": 0.01825777502707721,
+      "avg_duration": 54.319327731092436,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9736406085253804,
+      "max_single_label_occupancy": 0.6138613861386139,
+      "occupancy_by_label": {
+        "extreme": 0.03047648514851485,
+        "high": 0.2141089108910891,
+        "low": 0.14155321782178218,
+        "normal": 0.6138613861386139
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 8,
+          "mean": 24.625,
+          "median": 22.0,
+          "max": 45
+        },
+        "high": {
+          "n_spells": 39,
+          "mean": 35.48717948717949,
+          "median": 28.0,
+          "max": 129
+        },
+        "low": {
+          "n_spells": 19,
+          "mean": 48.1578947368421,
+          "median": 38.0,
+          "max": 182
+        },
+        "normal": {
+          "n_spells": 53,
+          "mean": 74.86792452830188,
+          "median": 62.0,
+          "max": 216
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 24.624999999999993,
+        "high": 35.487179487179546,
+        "low": 48.1578947368421,
+        "normal": 76.28846153846143
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "grains",
+      "dimension": "mean_reversion",
+      "n_bars": 6220,
+      "n_labelled": 6220,
+      "sector_total_rows": 6543,
+      "flip_rate": 0.008522270461488986,
+      "avg_duration": 115.18518518518519,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9506342656273881,
+      "max_single_label_occupancy": 0.590032154340836,
+      "occupancy_by_label": {
+        "mean_reverting": 0.020257234726688104,
+        "neutral": 0.590032154340836,
+        "trending": 0.3897106109324759
+      },
+      "durations_by_label": {
+        "mean_reverting": {
+          "n_spells": 4,
+          "mean": 31.5,
+          "median": 28.0,
+          "max": 59
+        },
+        "neutral": {
+          "n_spells": 27,
+          "mean": 135.92592592592592,
+          "median": 96.0,
+          "max": 343
+        },
+        "trending": {
+          "n_spells": 23,
+          "mean": 105.3913043478261,
+          "median": 75.0,
+          "max": 314
+        }
+      },
+      "expected_remaining_duration": {
+        "mean_reverting": 31.5,
+        "neutral": 141.11538461538444,
+        "trending": 105.39130434782558
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "grains",
+      "dimension": "trend",
+      "n_bars": 6221,
+      "n_labelled": 6221,
+      "sector_total_rows": 6543,
+      "flip_rate": 0.015112540192926046,
+      "avg_duration": 65.48421052631579,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.950787100718325,
+      "max_single_label_occupancy": 0.60842308310561,
+      "occupancy_by_label": {
+        "bear": 0.15881691046455554,
+        "bull": 0.23276000642983444,
+        "sideways": 0.60842308310561
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 19,
+          "mean": 52.0,
+          "median": 40.0,
+          "max": 131
+        },
+        "bull": {
+          "n_spells": 28,
+          "mean": 51.714285714285715,
+          "median": 49.0,
+          "max": 127
+        },
+        "sideways": {
+          "n_spells": 48,
+          "mean": 78.85416666666667,
+          "median": 69.0,
+          "max": 241
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 51.999999999999886,
+        "bull": 51.7142857142857,
+        "sideways": 80.51063829787233
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "grains",
+      "dimension": "volatility",
+      "n_bars": 6463,
+      "n_labelled": 6463,
+      "sector_total_rows": 6543,
+      "flip_rate": 0.018724852986691427,
+      "avg_duration": 52.97540983606557,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9877731927250497,
+      "max_single_label_occupancy": 0.5598019495590283,
+      "occupancy_by_label": {
+        "extreme": 0.02645830109856104,
+        "high": 0.24462323998143276,
+        "low": 0.16911650936097788,
+        "normal": 0.5598019495590283
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 7,
+          "mean": 24.428571428571427,
+          "median": 21.0,
+          "max": 45
+        },
+        "high": {
+          "n_spells": 39,
+          "mean": 40.53846153846154,
+          "median": 30.0,
+          "max": 96
+        },
+        "low": {
+          "n_spells": 20,
+          "mean": 54.65,
+          "median": 48.0,
+          "max": 129
+        },
+        "normal": {
+          "n_spells": 56,
+          "mean": 64.60714285714286,
+          "median": 51.5,
+          "max": 232
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 28.333333333333346,
+        "high": 40.538461538461554,
+        "low": 54.65,
+        "normal": 64.60714285714269
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "softs",
+      "dimension": "mean_reversion",
+      "n_bars": 6350,
+      "n_labelled": 6350,
+      "sector_total_rows": 6668,
+      "flip_rate": 0.006615214994487321,
+      "avg_duration": 147.67441860465115,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9523095380923815,
+      "max_single_label_occupancy": 0.5198425196850394,
+      "occupancy_by_label": {
+        "mean_reverting": 0.009763779527559056,
+        "neutral": 0.5198425196850394,
+        "trending": 0.47039370078740156
+      },
+      "durations_by_label": {
+        "mean_reverting": {
+          "n_spells": 2,
+          "mean": 31.0,
+          "median": 31.0,
+          "max": 33
+        },
+        "neutral": {
+          "n_spells": 21,
+          "mean": 157.1904761904762,
+          "median": 143.0,
+          "max": 574
+        },
+        "trending": {
+          "n_spells": 20,
+          "mean": 149.35,
+          "median": 136.5,
+          "max": 322
+        }
+      },
+      "expected_remaining_duration": {
+        "mean_reverting": 31.00000000000003,
+        "neutral": 157.1904761904761,
+        "trending": 157.1578947368411
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "softs",
+      "dimension": "trend",
+      "n_bars": 6352,
+      "n_labelled": 6352,
+      "sector_total_rows": 6668,
+      "flip_rate": 0.009604786647772005,
+      "avg_duration": 102.45161290322581,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9526094781043791,
+      "max_single_label_occupancy": 0.7345717884130982,
+      "occupancy_by_label": {
+        "bear": 0.09949622166246852,
+        "bull": 0.16593198992443325,
+        "sideways": 0.7345717884130982
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 16,
+          "mean": 39.5,
+          "median": 29.0,
+          "max": 109
+        },
+        "bull": {
+          "n_spells": 15,
+          "mean": 70.26666666666667,
+          "median": 57.0,
+          "max": 179
+        },
+        "sideways": {
+          "n_spells": 31,
+          "mean": 150.51612903225808,
+          "median": 82.0,
+          "max": 765
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 39.499999999999964,
+        "bull": 75.21428571428591,
+        "sideways": 150.51612903225848
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "softs",
+      "dimension": "volatility",
+      "n_bars": 6584,
+      "n_labelled": 6584,
+      "sector_total_rows": 6668,
+      "flip_rate": 0.012152514051344371,
+      "avg_duration": 81.28395061728395,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9874025194961008,
+      "max_single_label_occupancy": 0.7960206561360875,
+      "occupancy_by_label": {
+        "extreme": 0.012454434993924665,
+        "high": 0.1417071688942892,
+        "low": 0.04981773997569866,
+        "normal": 0.7960206561360875
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 3,
+          "mean": 27.333333333333332,
+          "median": 34.0,
+          "max": 35
+        },
+        "high": {
+          "n_spells": 29,
+          "mean": 32.172413793103445,
+          "median": 29.0,
+          "max": 87
+        },
+        "low": {
+          "n_spells": 12,
+          "mean": 27.333333333333332,
+          "median": 18.5,
+          "max": 78
+        },
+        "normal": {
+          "n_spells": 37,
+          "mean": 141.64864864864865,
+          "median": 130.0,
+          "max": 563
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 27.33333333333331,
+        "high": 33.28571428571423,
+        "low": 27.33333333333331,
+        "normal": 141.6486486486483
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "precious",
+      "dimension": "carry",
+      "n_bars": 2157,
+      "n_labelled": 2157,
+      "sector_total_rows": 7222,
+      "flip_rate": 0.01020408163265306,
+      "avg_duration": 93.78260869565217,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.29867072833010244,
+      "max_single_label_occupancy": 0.5456652758460825,
+      "occupancy_by_label": {
+        "negative": 0.4251274918868799,
+        "neutral": 0.5456652758460825,
+        "positive": 0.02920723226703755
+      },
+      "durations_by_label": {
+        "negative": {
+          "n_spells": 12,
+          "mean": 76.41666666666667,
+          "median": 52.0,
+          "max": 232
+        },
+        "neutral": {
+          "n_spells": 8,
+          "mean": 147.125,
+          "median": 125.0,
+          "max": 427
+        },
+        "positive": {
+          "n_spells": 3,
+          "mean": 21.0,
+          "median": 21.0,
+          "max": 22
+        }
+      },
+      "expected_remaining_duration": {
+        "negative": 83.27272727272765,
+        "neutral": 147.12499999999955,
+        "positive": 20.999999999999975
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "precious",
+      "dimension": "mean_reversion",
+      "n_bars": 6676,
+      "n_labelled": 6676,
+      "sector_total_rows": 7222,
+      "flip_rate": 0.007790262172284644,
+      "avg_duration": 125.9622641509434,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9243976737745777,
+      "max_single_label_occupancy": 0.5627621330137808,
+      "occupancy_by_label": {
+        "mean_reverting": 0.02201917315757939,
+        "neutral": 0.5627621330137808,
+        "trending": 0.4152186938286399
+      },
+      "durations_by_label": {
+        "mean_reverting": {
+          "n_spells": 3,
+          "mean": 49.0,
+          "median": 41.0,
+          "max": 74
+        },
+        "neutral": {
+          "n_spells": 26,
+          "mean": 144.5,
+          "median": 123.5,
+          "max": 432
+        },
+        "trending": {
+          "n_spells": 24,
+          "mean": 115.5,
+          "median": 79.0,
+          "max": 404
+        }
+      },
+      "expected_remaining_duration": {
+        "mean_reverting": 48.99999999999994,
+        "neutral": 144.5000000000001,
+        "trending": 120.47826086956478
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "precious",
+      "dimension": "term_structure",
+      "n_bars": 2157,
+      "n_labelled": 2157,
+      "sector_total_rows": 7222,
+      "flip_rate": 0.008812615955473098,
+      "avg_duration": 107.85,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.29867072833010244,
+      "max_single_label_occupancy": 0.803894297635605,
+      "occupancy_by_label": {
+        "backwardation": 0.03523412146499768,
+        "contango": 0.16087158089939732,
+        "flat": 0.803894297635605
+      },
+      "durations_by_label": {
+        "backwardation": {
+          "n_spells": 2,
+          "mean": 38.0,
+          "median": 38.0,
+          "max": 44
+        },
+        "contango": {
+          "n_spells": 9,
+          "mean": 38.55555555555556,
+          "median": 29.0,
+          "max": 76
+        },
+        "flat": {
+          "n_spells": 9,
+          "mean": 192.66666666666666,
+          "median": 65.0,
+          "max": 593
+        }
+      },
+      "expected_remaining_duration": {
+        "backwardation": 38.00000000000004,
+        "contango": 43.25000000000002,
+        "flat": 192.66666666666782
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "precious",
+      "dimension": "trend",
+      "n_bars": 6677,
+      "n_labelled": 6677,
+      "sector_total_rows": 7222,
+      "flip_rate": 0.012582384661473937,
+      "avg_duration": 78.55294117647058,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9245361395735253,
+      "max_single_label_occupancy": 0.6496929758873746,
+      "occupancy_by_label": {
+        "bear": 0.14991762767710048,
+        "bull": 0.20038939643552495,
+        "sideways": 0.6496929758873746
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 18,
+          "mean": 55.611111111111114,
+          "median": 42.0,
+          "max": 188
+        },
+        "bull": {
+          "n_spells": 25,
+          "mean": 53.52,
+          "median": 48.0,
+          "max": 165
+        },
+        "sideways": {
+          "n_spells": 42,
+          "mean": 103.28571428571429,
+          "median": 76.5,
+          "max": 444
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 58.82352941176465,
+        "bull": 53.52000000000006,
+        "sideways": 103.28571428571465
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "precious",
+      "dimension": "volatility",
+      "n_bars": 6910,
+      "n_labelled": 6910,
+      "sector_total_rows": 7222,
+      "flip_rate": 0.015921262121870023,
+      "avg_duration": 62.252252252252255,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9567986707283301,
+      "max_single_label_occupancy": 0.6151953690303907,
+      "occupancy_by_label": {
+        "extreme": 0.049204052098408106,
+        "high": 0.2098408104196816,
+        "low": 0.12575976845151954,
+        "normal": 0.6151953690303907
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 11,
+          "mean": 30.90909090909091,
+          "median": 25.0,
+          "max": 61
+        },
+        "high": {
+          "n_spells": 37,
+          "mean": 39.189189189189186,
+          "median": 34.0,
+          "max": 129
+        },
+        "low": {
+          "n_spells": 17,
+          "mean": 51.11764705882353,
+          "median": 37.0,
+          "max": 162
+        },
+        "normal": {
+          "n_spells": 46,
+          "mean": 92.41304347826087,
+          "median": 77.0,
+          "max": 305
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 30.909090909090914,
+        "high": 39.189189189189214,
+        "low": 51.11764705882363,
+        "normal": 94.44444444444419
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "base metals",
+      "dimension": "carry",
+      "n_bars": 2158,
+      "n_labelled": 2158,
+      "sector_total_rows": 6508,
+      "flip_rate": 0.02086230876216968,
+      "avg_duration": 46.91304347826087,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.3315918869084204,
+      "max_single_label_occupancy": 0.7900834105653383,
+      "occupancy_by_label": {
+        "negative": 0.7900834105653383,
+        "neutral": 0.0366079703429101,
+        "positive": 0.17330861909175163
+      },
+      "durations_by_label": {
+        "negative": {
+          "n_spells": 23,
+          "mean": 74.1304347826087,
+          "median": 45.0,
+          "max": 277
+        },
+        "neutral": {
+          "n_spells": 3,
+          "mean": 26.333333333333332,
+          "median": 35.0,
+          "max": 36
+        },
+        "positive": {
+          "n_spells": 20,
+          "mean": 18.7,
+          "median": 20.0,
+          "max": 41
+        }
+      },
+      "expected_remaining_duration": {
+        "negative": 74.13043478260839,
+        "neutral": 38.99999999999997,
+        "positive": 18.700000000000003
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "base metals",
+      "dimension": "mean_reversion",
+      "n_bars": 6196,
+      "n_labelled": 6196,
+      "sector_total_rows": 6508,
+      "flip_rate": 0.010653753026634382,
+      "avg_duration": 92.4776119402985,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9520590043023971,
+      "max_single_label_occupancy": 0.4538411878631375,
+      "occupancy_by_label": {
+        "mean_reverting": 0.1552614590058102,
+        "neutral": 0.3908973531310523,
+        "trending": 0.4538411878631375
+      },
+      "durations_by_label": {
+        "mean_reverting": {
+          "n_spells": 13,
+          "mean": 74.0,
+          "median": 65.0,
+          "max": 188
+        },
+        "neutral": {
+          "n_spells": 32,
+          "mean": 75.6875,
+          "median": 63.0,
+          "max": 270
+        },
+        "trending": {
+          "n_spells": 22,
+          "mean": 127.81818181818181,
+          "median": 92.5,
+          "max": 437
+        }
+      },
+      "expected_remaining_duration": {
+        "mean_reverting": 74.00000000000014,
+        "neutral": 75.68749999999976,
+        "trending": 133.85714285714192
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "base metals",
+      "dimension": "term_structure",
+      "n_bars": 2158,
+      "n_labelled": 2158,
+      "sector_total_rows": 6508,
+      "flip_rate": 0.041261010662957814,
+      "avg_duration": 23.977777777777778,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.3315918869084204,
+      "max_single_label_occupancy": 0.48146431881371643,
+      "occupancy_by_label": {
+        "backwardation": 0.335032437442076,
+        "contango": 0.48146431881371643,
+        "flat": 0.1835032437442076
+      },
+      "durations_by_label": {
+        "backwardation": {
+          "n_spells": 29,
+          "mean": 24.93103448275862,
+          "median": 23.0,
+          "max": 44
+        },
+        "contango": {
+          "n_spells": 37,
+          "mean": 28.08108108108108,
+          "median": 24.0,
+          "max": 122
+        },
+        "flat": {
+          "n_spells": 24,
+          "mean": 16.5,
+          "median": 16.5,
+          "max": 43
+        }
+      },
+      "expected_remaining_duration": {
+        "backwardation": 24.93103448275864,
+        "contango": 28.081081081081095,
+        "flat": 17.17391304347827
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "base metals",
+      "dimension": "trend",
+      "n_bars": 6197,
+      "n_labelled": 6197,
+      "sector_total_rows": 6508,
+      "flip_rate": 0.014686894770819884,
+      "avg_duration": 67.3586956521739,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9522126613398894,
+      "max_single_label_occupancy": 0.5546232047765047,
+      "occupancy_by_label": {
+        "bear": 0.19235113764724868,
+        "bull": 0.25302565757624657,
+        "sideways": 0.5546232047765047
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 20,
+          "mean": 59.6,
+          "median": 44.5,
+          "max": 153
+        },
+        "bull": {
+          "n_spells": 26,
+          "mean": 60.30769230769231,
+          "median": 43.0,
+          "max": 238
+        },
+        "sideways": {
+          "n_spells": 46,
+          "mean": 74.71739130434783,
+          "median": 60.5,
+          "max": 244
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 59.59999999999989,
+        "bull": 60.30769230769229,
+        "sideways": 76.35555555555563
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "base metals",
+      "dimension": "volatility",
+      "n_bars": 6429,
+      "n_labelled": 6429,
+      "sector_total_rows": 6508,
+      "flip_rate": 0.024579962663347853,
+      "avg_duration": 40.43396226415094,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.987861094038107,
+      "max_single_label_occupancy": 0.51065484523254,
+      "occupancy_by_label": {
+        "extreme": 0.09426038264115726,
+        "high": 0.20796391351687665,
+        "low": 0.18712085860942604,
+        "normal": 0.51065484523254
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 20,
+          "mean": 30.3,
+          "median": 26.0,
+          "max": 55
+        },
+        "high": {
+          "n_spells": 48,
+          "mean": 27.854166666666668,
+          "median": 23.0,
+          "max": 91
+        },
+        "low": {
+          "n_spells": 28,
+          "mean": 42.964285714285715,
+          "median": 27.5,
+          "max": 166
+        },
+        "normal": {
+          "n_spells": 63,
+          "mean": 52.111111111111114,
+          "median": 42.0,
+          "max": 166
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 30.30000000000004,
+        "high": 27.85416666666666,
+        "low": 42.96428571428579,
+        "normal": 52.93548387096777
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "meats",
+      "dimension": "mean_reversion",
+      "n_bars": 6135,
+      "n_labelled": 6135,
+      "sector_total_rows": 6447,
+      "flip_rate": 0.008803390935767852,
+      "avg_duration": 111.54545454545455,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9516053978594695,
+      "max_single_label_occupancy": 0.5010594947025265,
+      "occupancy_by_label": {
+        "mean_reverting": 0.05052974735126324,
+        "neutral": 0.44841075794621027,
+        "trending": 0.5010594947025265
+      },
+      "durations_by_label": {
+        "mean_reverting": {
+          "n_spells": 4,
+          "mean": 77.5,
+          "median": 77.0,
+          "max": 147
+        },
+        "neutral": {
+          "n_spells": 28,
+          "mean": 98.25,
+          "median": 86.0,
+          "max": 295
+        },
+        "trending": {
+          "n_spells": 23,
+          "mean": 133.65217391304347,
+          "median": 96.0,
+          "max": 379
+        }
+      },
+      "expected_remaining_duration": {
+        "mean_reverting": 77.4999999999998,
+        "neutral": 101.85185185185166,
+        "trending": 133.65217391304267
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "meats",
+      "dimension": "trend",
+      "n_bars": 6136,
+      "n_labelled": 6136,
+      "sector_total_rows": 6447,
+      "flip_rate": 0.011083944580277099,
+      "avg_duration": 88.92753623188406,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.951760508763766,
+      "max_single_label_occupancy": 0.7480443285528031,
+      "occupancy_by_label": {
+        "bear": 0.12011082138200782,
+        "bull": 0.13184485006518906,
+        "sideways": 0.7480443285528031
+      },
+      "durations_by_label": {
+        "bear": {
+          "n_spells": 17,
+          "mean": 43.35294117647059,
+          "median": 36.0,
+          "max": 93
+        },
+        "bull": {
+          "n_spells": 17,
+          "mean": 47.588235294117645,
+          "median": 45.0,
+          "max": 97
+        },
+        "sideways": {
+          "n_spells": 35,
+          "mean": 131.14285714285714,
+          "median": 88.0,
+          "max": 568
+        }
+      },
+      "expected_remaining_duration": {
+        "bear": 43.35294117647058,
+        "bull": 47.58823529411756,
+        "sideways": 134.9705882352933
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    },
+    {
+      "sector": "meats",
+      "dimension": "volatility",
+      "n_bars": 6368,
+      "n_labelled": 6368,
+      "sector_total_rows": 6447,
+      "flip_rate": 0.017590702057483903,
+      "avg_duration": 56.35398230088496,
+      "pct_time_labeled_within_available": 1.0,
+      "pct_of_sector_history_covered": 0.9877462385605708,
+      "max_single_label_occupancy": 0.7083856783919598,
+      "occupancy_by_label": {
+        "extreme": 0.024497487437185928,
+        "high": 0.21451005025125627,
+        "low": 0.05260678391959799,
+        "normal": 0.7083856783919598
+      },
+      "durations_by_label": {
+        "extreme": {
+          "n_spells": 4,
+          "mean": 39.0,
+          "median": 31.0,
+          "max": 78
+        },
+        "high": {
+          "n_spells": 42,
+          "mean": 32.523809523809526,
+          "median": 24.0,
+          "max": 105
+        },
+        "low": {
+          "n_spells": 14,
+          "mean": 23.928571428571427,
+          "median": 14.5,
+          "max": 84
+        },
+        "normal": {
+          "n_spells": 53,
+          "mean": 85.11320754716981,
+          "median": 60.0,
+          "max": 358
+        }
+      },
+      "expected_remaining_duration": {
+        "extreme": 38.99999999999997,
+        "high": 33.292682926829265,
+        "low": 23.928571428571434,
+        "normal": 85.11320754716981
+      },
+      "disqualified": false,
+      "disqualification_reasons": []
+    }
+  ],
+  "disqualified": [
+    {
+      "sector": "Macro",
+      "dimension": "credit",
+      "reasons": [
+        "labelled coverage 7.90% of sector history < 10%"
+      ]
+    },
+    {
+      "sector": "Commodities",
+      "dimension": "trend",
+      "reasons": [
+        "single-label occupancy 90.24% > 90%"
+      ]
+    }
+  ]
+}

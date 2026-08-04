@@ -1,0 +1,59 @@
+{
+  "NL": {
+    "claim": "no_lookahead_check passes at every truncation for every sector",
+    "fires": true,
+    "hard_gate": true,
+    "detail": true
+  },
+  "RA": {
+    "claim": "Balanced accuracy on the episode table significantly beats the class-prior baseline",
+    "fires": false,
+    "n_trials": 39,
+    "bonferroni_threshold": 0.001282051282051282,
+    "significant_wins": []
+  },
+  "RM": {
+    "claim": "Balanced accuracy on mechanical labels significantly beats persistence and Markov baselines",
+    "fires": false,
+    "n_trials": 39,
+    "bonferroni_threshold": 0.001282051282051282,
+    "significant_wins": []
+  },
+  "RL": {
+    "claim": "Median label lag at episode onset <= 21 trading days",
+    "fires": false,
+    "median_lag_days": 27.0,
+    "n_episodes_scored": 14,
+    "n_censored_never_matched": 5
+  },
+  "RS": {
+    "claim": "No scored dimension exceeds 90% single-label occupancy or flips more than once per 10 bars",
+    "fires": true,
+    "n_disqualified_in_phase2": 2,
+    "disqualified": [
+      "Commodities|trend",
+      "Macro|credit"
+    ],
+    "violations_among_scored": []
+  },
+  "RC": {
+    "claim": "Port fidelity: ported engine matches source scores where checkable",
+    "fires": true,
+    "config_hash_equal": {
+      "macro_default": true,
+      "commodity_default": true,
+      "fx_default": true,
+      "equity_default": true
+    },
+    "end_to_end_equal": {
+      "macro_default": {
+        "scores_equal": true,
+        "labels_equal": true
+      },
+      "commodity_default": {
+        "scores_equal": true,
+        "labels_equal": true
+      }
+    }
+  }
+}

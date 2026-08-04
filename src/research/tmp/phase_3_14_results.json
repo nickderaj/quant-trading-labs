@@ -1,0 +1,1442 @@
+{
+  "scoring_cutoff": "2025-01-01",
+  "disqualified_excluded": [
+    "Commodities|trend",
+    "Macro|credit"
+  ],
+  "n_trials": {
+    "episode_table": 14,
+    "mechanical_labels": 25,
+    "total": 39
+  },
+  "episode_table": {
+    "per_sector_dimension": {
+      "Macro|risk": {
+        "n_obs": 567,
+        "engine": {
+          "balanced_accuracy": 0.3527336860670194,
+          "hit_rate": 0.3527336860670194
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 567,
+            "balanced_accuracy": 0.3527336860670194,
+            "hit_rate": 0.3527336860670194
+          },
+          "class_prior": {
+            "n_obs": 567,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 567,
+            "balanced_accuracy": 0.3527336860670194,
+            "hit_rate": 0.3527336860670194
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            -0.007054673721340388,
+            0.007054673721340388
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "GFC",
+            "expected": "risk_off",
+            "lead_lag_days": 15.0
+          },
+          {
+            "episode": "Euro crisis",
+            "expected": "risk_off",
+            "lead_lag_days": null
+          },
+          {
+            "episode": "COVID crash",
+            "expected": "risk_off",
+            "lead_lag_days": 20.0
+          },
+          {
+            "episode": "Hiking cycle / inversion",
+            "expected": "risk_off",
+            "lead_lag_days": -21.0
+          }
+        ]
+      },
+      "Macro|credit": {
+        "excluded": true,
+        "reason": "disqualified in Phase 2"
+      },
+      "Macro|yield_curve": {
+        "n_obs": 400,
+        "engine": {
+          "balanced_accuracy": 0.8248407643312101,
+          "hit_rate": 0.725
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 400,
+            "balanced_accuracy": 0.8232484076433121,
+            "hit_rate": 0.7225
+          },
+          "class_prior": {
+            "n_obs": 400,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.215
+          },
+          "markov": {
+            "n_obs": 400,
+            "balanced_accuracy": 0.8232484076433121,
+            "hit_rate": 0.7225
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0025,
+          "ci95": [
+            0.0,
+            0.0075
+          ],
+          "pvalue": 0.526
+        },
+        "episodes": [
+          {
+            "episode": "Taper tantrum",
+            "expected": "steep",
+            "lead_lag_days": -21.0
+          },
+          {
+            "episode": "Hiking cycle / inversion",
+            "expected": "inverted",
+            "lead_lag_days": 110.0
+          }
+        ]
+      },
+      "Commodities|trend": {
+        "excluded": true,
+        "reason": "disqualified in Phase 2"
+      },
+      "oil products|term_structure": {
+        "n_obs": 295,
+        "engine": {
+          "balanced_accuracy": 0.9186440677966101,
+          "hit_rate": 0.9186440677966101
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 295,
+            "balanced_accuracy": 0.9186440677966101,
+            "hit_rate": 0.9186440677966101
+          },
+          "class_prior": {
+            "n_obs": 295,
+            "balanced_accuracy": 0.19322033898305085,
+            "hit_rate": 0.19322033898305085
+          },
+          "markov": {
+            "n_obs": 295,
+            "balanced_accuracy": 0.9186440677966101,
+            "hit_rate": 0.9186440677966101
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            -0.010169491525423728,
+            0.010169491525423728
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "Oil glut",
+            "expected": "contango",
+            "lead_lag_days": null
+          },
+          {
+            "episode": "Energy backwardation",
+            "expected": "backwardation",
+            "lead_lag_days": -18.0
+          }
+        ]
+      },
+      "Commodities|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.047619047619047616,
+          "hit_rate": 0.047619047619047616
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.023809523809523808,
+            "hit_rate": 0.023809523809523808
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.047619047619047616,
+            "hit_rate": 0.047619047619047616
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": 40.0
+          }
+        ]
+      },
+      "FX|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.23809523809523808,
+          "hit_rate": 0.23809523809523808
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.21428571428571427,
+            "hit_rate": 0.21428571428571427
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.23809523809523808,
+            "hit_rate": 0.23809523809523808
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": 32.0
+          }
+        ]
+      },
+      "oil products|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.2857142857142857,
+          "hit_rate": 0.2857142857142857
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.2619047619047619,
+            "hit_rate": 0.2619047619047619
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.2857142857142857,
+            "hit_rate": 0.2857142857142857
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": 30.0
+          }
+        ]
+      },
+      "natgas|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.16666666666666666,
+          "hit_rate": 0.16666666666666666
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.14285714285714285,
+            "hit_rate": 0.14285714285714285
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.16666666666666666,
+            "hit_rate": 0.16666666666666666
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": 35.0
+          }
+        ]
+      },
+      "soy complex|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.0,
+          "hit_rate": 0.0
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": null
+          }
+        ]
+      },
+      "grains|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.0,
+          "hit_rate": 0.0
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": null
+          }
+        ]
+      },
+      "softs|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.11904761904761904,
+          "hit_rate": 0.11904761904761904
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.09523809523809523,
+            "hit_rate": 0.09523809523809523
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.11904761904761904,
+            "hit_rate": 0.11904761904761904
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": 37.0
+          }
+        ]
+      },
+      "precious|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.42857142857142855,
+          "hit_rate": 0.42857142857142855
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.40476190476190477,
+            "hit_rate": 0.40476190476190477
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.42857142857142855,
+            "hit_rate": 0.42857142857142855
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": 24.0
+          }
+        ]
+      },
+      "base metals|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.11904761904761904,
+          "hit_rate": 0.11904761904761904
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.09523809523809523,
+            "hit_rate": 0.09523809523809523
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.11904761904761904,
+            "hit_rate": 0.11904761904761904
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": 37.0
+          }
+        ]
+      },
+      "meats|volatility": {
+        "n_obs": 42,
+        "engine": {
+          "balanced_accuracy": 0.0,
+          "hit_rate": 0.0
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "class_prior": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 42,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "COVID crash",
+            "expected": "extreme",
+            "lead_lag_days": null
+          }
+        ]
+      },
+      "oil products|carry": {
+        "n_obs": 295,
+        "engine": {
+          "balanced_accuracy": 0.9322033898305084,
+          "hit_rate": 0.9322033898305084
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 295,
+            "balanced_accuracy": 0.9288135593220339,
+            "hit_rate": 0.9288135593220339
+          },
+          "class_prior": {
+            "n_obs": 295,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0
+          },
+          "markov": {
+            "n_obs": 295,
+            "balanced_accuracy": 0.9322033898305084,
+            "hit_rate": 0.9322033898305084
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0
+        },
+        "episodes": [
+          {
+            "episode": "Energy backwardation",
+            "expected": "positive",
+            "lead_lag_days": 20.0
+          }
+        ]
+      }
+    },
+    "lead_lag_days": [
+      15.0,
+      20.0,
+      -21.0,
+      -21.0,
+      110.0,
+      -18.0,
+      40.0,
+      32.0,
+      30.0,
+      35.0,
+      37.0,
+      24.0,
+      37.0,
+      20.0
+    ]
+  },
+  "mechanical_labels": {
+    "Commodities|volatility|forward_21d_vol_tercile": {
+      "n_obs": 5988,
+      "engine": {
+        "balanced_accuracy": 0.5948880793628275,
+        "hit_rate": 0.7254509018036072
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 5987,
+          "balanced_accuracy": 0.594564059749188,
+          "hit_rate": 0.7252380157006848
+        },
+        "class_prior": {
+          "n_obs": 5738,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.6781108400139422
+        },
+        "markov": {
+          "n_obs": 5738,
+          "balanced_accuracy": 0.5977551238214824,
+          "hit_rate": 0.7316138027187173
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0001742767514813524,
+        "ci95": [
+          0.0,
+          0.0005228302544440571
+        ],
+        "pvalue": 0.166
+      }
+    },
+    "FX|volatility|forward_21d_vol_tercile": {
+      "n_obs": 5960,
+      "engine": {
+        "balanced_accuracy": 0.6170040957677068,
+        "hit_rate": 0.7033557046979866
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 5959,
+          "balanced_accuracy": 0.6177612994350282,
+          "hit_rate": 0.7039771773787549
+        },
+        "class_prior": {
+          "n_obs": 5709,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.6862848134524435
+        },
+        "markov": {
+          "n_obs": 5709,
+          "balanced_accuracy": 0.626732437070498,
+          "hit_rate": 0.7104571728849185
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "oil products|volatility|forward_21d_vol_tercile": {
+      "n_obs": 5986,
+      "engine": {
+        "balanced_accuracy": 0.6301312165390596,
+        "hit_rate": 0.7019712662880053
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 5985,
+          "balanced_accuracy": 0.6279608954710253,
+          "hit_rate": 0.7000835421888053
+        },
+        "class_prior": {
+          "n_obs": 5735,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.6786399302528334
+        },
+        "markov": {
+          "n_obs": 5735,
+          "balanced_accuracy": 0.6280207211643289,
+          "hit_rate": 0.7023539668700959
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "natgas|volatility|forward_21d_vol_tercile": {
+      "n_obs": 6012,
+      "engine": {
+        "balanced_accuracy": 0.6569156739774369,
+        "hit_rate": 0.6907850964737192
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 6011,
+          "balanced_accuracy": 0.6548042791241051,
+          "hit_rate": 0.688903676592913
+        },
+        "class_prior": {
+          "n_obs": 5761,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.6816524908869988
+        },
+        "markov": {
+          "n_obs": 5761,
+          "balanced_accuracy": 0.651016062219475,
+          "hit_rate": 0.6896372157611526
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "soy complex|volatility|forward_21d_vol_tercile": {
+      "n_obs": 6043,
+      "engine": {
+        "balanced_accuracy": 0.6389796890850632,
+        "hit_rate": 0.7047823928512328
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 6043,
+          "balanced_accuracy": 0.6356399571626126,
+          "hit_rate": 0.7018037398643058
+        },
+        "class_prior": {
+          "n_obs": 5796,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.658040027605245
+        },
+        "markov": {
+          "n_obs": 5796,
+          "balanced_accuracy": 0.6405158222640366,
+          "hit_rate": 0.7035886818495514
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0001725327812284334,
+        "ci95": [
+          0.0,
+          0.0005175983436853002
+        ],
+        "pvalue": 0.286
+      }
+    },
+    "grains|volatility|forward_21d_vol_tercile": {
+      "n_obs": 6023,
+      "engine": {
+        "balanced_accuracy": 0.5689035673295388,
+        "hit_rate": 0.6334052797609165
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 6022,
+          "balanced_accuracy": 0.5677605545106397,
+          "hit_rate": 0.6323480571238791
+        },
+        "class_prior": {
+          "n_obs": 5792,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.6546961325966851
+        },
+        "markov": {
+          "n_obs": 5792,
+          "balanced_accuracy": 0.5690021097046414,
+          "hit_rate": 0.6294889502762431
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "class_prior",
+        "mean_hit_rate_diff": -0.02520718232044199,
+        "ci95": [
+          -0.07994647790055247,
+          0.035738950276243096
+        ],
+        "pvalue": 0.372
+      }
+    },
+    "softs|volatility|forward_21d_vol_tercile": {
+      "n_obs": 6166,
+      "engine": {
+        "balanced_accuracy": 0.5380569660342877,
+        "hit_rate": 0.645150827116445
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 6165,
+          "balanced_accuracy": 0.5388362477784837,
+          "hit_rate": 0.645904298459043
+        },
+        "class_prior": {
+          "n_obs": 5915,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.6718512256973795
+        },
+        "markov": {
+          "n_obs": 5915,
+          "balanced_accuracy": 0.540507632428923,
+          "hit_rate": 0.6517328825021133
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "class_prior",
+        "mean_hit_rate_diff": -0.020118343195266272,
+        "ci95": [
+          -0.06306846999154689,
+          0.021982248520710037
+        ],
+        "pvalue": 0.376
+      }
+    },
+    "precious|volatility|forward_21d_vol_tercile": {
+      "n_obs": 6084,
+      "engine": {
+        "balanced_accuracy": 0.6400366692818497,
+        "hit_rate": 0.7085798816568047
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 6084,
+          "balanced_accuracy": 0.6388041705990632,
+          "hit_rate": 0.7074293228139382
+        },
+        "class_prior": {
+          "n_obs": 6084,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.6665023011176857
+        },
+        "markov": {
+          "n_obs": 6084,
+          "balanced_accuracy": 0.6400366692818497,
+          "hit_rate": 0.7085798816568047
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "base metals|volatility|forward_21d_vol_tercile": {
+      "n_obs": 6011,
+      "engine": {
+        "balanced_accuracy": 0.55460444584269,
+        "hit_rate": 0.6147063716519714
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 6010,
+          "balanced_accuracy": 0.5537041684093127,
+          "hit_rate": 0.6139767054908486
+        },
+        "class_prior": {
+          "n_obs": 5760,
+          "balanced_accuracy": 0.49322349189476483,
+          "hit_rate": 0.6444444444444445
+        },
+        "markov": {
+          "n_obs": 5760,
+          "balanced_accuracy": 0.5521295496260602,
+          "hit_rate": 0.6090277777777777
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "class_prior",
+        "mean_hit_rate_diff": -0.035416666666666666,
+        "ci95": [
+          -0.10296440972222219,
+          0.03369357638888881
+        ],
+        "pvalue": 0.301
+      }
+    },
+    "meats|volatility|forward_21d_vol_tercile": {
+      "n_obs": 5924,
+      "engine": {
+        "balanced_accuracy": 0.5657176858937589,
+        "hit_rate": 0.6429777177582714
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 5923,
+          "balanced_accuracy": 0.5656922858462338,
+          "hit_rate": 0.6429174404862401
+        },
+        "class_prior": {
+          "n_obs": 5673,
+          "balanced_accuracy": 0.49714380421356746,
+          "hit_rate": 0.652741054115988
+        },
+        "markov": {
+          "n_obs": 5673,
+          "balanced_accuracy": 0.5633972323603096,
+          "hit_rate": 0.6497444033139432
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "class_prior",
+        "mean_hit_rate_diff": -0.0031729243786356425,
+        "ci95": [
+          -0.05624008461131675,
+          0.05412480169222629
+        ],
+        "pvalue": 0.898
+      }
+    },
+    "FX|trend|forward_63d_return_sign": {
+      "n_obs": 1772,
+      "engine": {
+        "balanced_accuracy": 0.5985973533608402,
+        "hit_rate": 0.5970654627539503
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 1739,
+          "balanced_accuracy": 0.5977625977625978,
+          "hit_rate": 0.5963197239792984
+        },
+        "class_prior": {
+          "n_obs": 0,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 1665,
+          "balanced_accuracy": 0.5827556964825603,
+          "hit_rate": 0.584984984984985
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "persistence",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "oil products|trend|forward_63d_return_sign": {
+      "n_obs": 2073,
+      "engine": {
+        "balanced_accuracy": 0.4670306025017627,
+        "hit_rate": 0.4573082489146165
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 2032,
+          "balanced_accuracy": 0.4675445645091008,
+          "hit_rate": 0.45767716535433073
+        },
+        "class_prior": {
+          "n_obs": 0,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 2001,
+          "balanced_accuracy": 0.4654588578351849,
+          "hit_rate": 0.4542728635682159
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "persistence",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "natgas|trend|forward_63d_return_sign": {
+      "n_obs": 2786,
+      "engine": {
+        "balanced_accuracy": 0.5100606148946101,
+        "hit_rate": 0.5100502512562815
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 2737,
+          "balanced_accuracy": 0.5107201466237337,
+          "hit_rate": 0.5107782243332115
+        },
+        "class_prior": {
+          "n_obs": 2,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 2694,
+          "balanced_accuracy": 0.5122160009953963,
+          "hit_rate": 0.5129918337045286
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "soy complex|trend|forward_63d_return_sign": {
+      "n_obs": 2252,
+      "engine": {
+        "balanced_accuracy": 0.532442784503401,
+        "hit_rate": 0.5412966252220248
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 2214,
+          "balanced_accuracy": 0.5307514526933943,
+          "hit_rate": 0.539747064137308
+        },
+        "class_prior": {
+          "n_obs": 0,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 2153,
+          "balanced_accuracy": 0.5340583930185662,
+          "hit_rate": 0.5415699024616814
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "grains|trend|forward_63d_return_sign": {
+      "n_obs": 2301,
+      "engine": {
+        "balanced_accuracy": 0.5055951041980998,
+        "hit_rate": 0.4980443285528031
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 2258,
+          "balanced_accuracy": 0.5058896395059383,
+          "hit_rate": 0.49822852081488045
+        },
+        "class_prior": {
+          "n_obs": 0,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 2203,
+          "balanced_accuracy": 0.5174300476024614,
+          "hit_rate": 0.5120290512936905
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "softs|trend|forward_63d_return_sign": {
+      "n_obs": 1675,
+      "engine": {
+        "balanced_accuracy": 0.529180342385731,
+        "hit_rate": 0.5343283582089552
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 1645,
+          "balanced_accuracy": 0.5297324061245514,
+          "hit_rate": 0.5343465045592705
+        },
+        "class_prior": {
+          "n_obs": 0,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 1620,
+          "balanced_accuracy": 0.5252337988711737,
+          "hit_rate": 0.5296296296296297
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "persistence",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "precious|trend|forward_63d_return_sign": {
+      "n_obs": 2037,
+      "engine": {
+        "balanced_accuracy": 0.39302538845155177,
+        "hit_rate": 0.40795287187039764
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 1999,
+          "balanced_accuracy": 0.3917220598781884,
+          "hit_rate": 0.40670335167583793
+        },
+        "class_prior": {
+          "n_obs": 0,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 2037,
+          "balanced_accuracy": 0.39302538845155177,
+          "hit_rate": 0.40795287187039764
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "base metals|trend|forward_63d_return_sign": {
+      "n_obs": 2658,
+      "engine": {
+        "balanced_accuracy": 0.5156199486545593,
+        "hit_rate": 0.5282167042889391
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 2616,
+          "balanced_accuracy": 0.5155312113331634,
+          "hit_rate": 0.5282874617737003
+        },
+        "class_prior": {
+          "n_obs": 51,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.0784313725490196
+        },
+        "markov": {
+          "n_obs": 2551,
+          "balanced_accuracy": 0.5103733657257936,
+          "hit_rate": 0.5194041552332419
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "persistence",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "meats|trend|forward_63d_return_sign": {
+      "n_obs": 1405,
+      "engine": {
+        "balanced_accuracy": 0.3938291973569298,
+        "hit_rate": 0.39786476868327403
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 1373,
+          "balanced_accuracy": 0.3898713618304409,
+          "hit_rate": 0.39402767662053895
+        },
+        "class_prior": {
+          "n_obs": 0,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 1300,
+          "balanced_accuracy": 0.40491265950824773,
+          "hit_rate": 0.4076923076923077
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "Macro|yield_curve|contemporaneous_T10Y2Y_sign": {
+      "n_obs": 4889,
+      "engine": {
+        "balanced_accuracy": 0.9809863714803316,
+        "hit_rate": 0.9907956637349151
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 4885,
+          "balanced_accuracy": 0.9809495177251659,
+          "hit_rate": 0.9907881269191402
+        },
+        "class_prior": {
+          "n_obs": 4749,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.9050326384502
+        },
+        "markov": {
+          "n_obs": 4777,
+          "balanced_accuracy": 0.9808622859050407,
+          "hit_rate": 0.9905798618379736
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "persistence",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "Commodities|term_structure|contemporaneous_f1f2_spread_sign": {
+      "n_obs": 720,
+      "engine": {
+        "balanced_accuracy": 0.6786622947777065,
+        "hit_rate": 0.6652777777777777
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 708,
+          "balanced_accuracy": 0.675947909921577,
+          "hit_rate": 0.6638418079096046
+        },
+        "class_prior": {
+          "n_obs": 0,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 634,
+          "balanced_accuracy": 0.7194260002190078,
+          "hit_rate": 0.7239747634069401
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "oil products|term_structure|contemporaneous_f1f2_spread_sign": {
+      "n_obs": 1180,
+      "engine": {
+        "balanced_accuracy": 0.8785864669016843,
+        "hit_rate": 0.8864406779661017
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 1171,
+          "balanced_accuracy": 0.8758782965240891,
+          "hit_rate": 0.8838599487617421
+        },
+        "class_prior": {
+          "n_obs": 442,
+          "balanced_accuracy": 0.6833433795459112,
+          "hit_rate": 0.8167420814479638
+        },
+        "markov": {
+          "n_obs": 1099,
+          "balanced_accuracy": 0.8750180923433203,
+          "hit_rate": 0.8798908098271155
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "persistence",
+        "mean_hit_rate_diff": 0.0017079419299743809,
+        "ci95": [
+          0.0,
+          0.004269854824935952
+        ],
+        "pvalue": 0.234
+      }
+    },
+    "natgas|term_structure|contemporaneous_f1f2_spread_sign": {
+      "n_obs": 1513,
+      "engine": {
+        "balanced_accuracy": 0.8705610555296192,
+        "hit_rate": 0.891606080634501
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 1501,
+          "balanced_accuracy": 0.8625588309800942,
+          "hit_rate": 0.8854097268487675
+        },
+        "class_prior": {
+          "n_obs": 1331,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.7355371900826446
+        },
+        "markov": {
+          "n_obs": 1331,
+          "balanced_accuracy": 0.8724942543411645,
+          "hit_rate": 0.8940646130728775
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    },
+    "precious|term_structure|contemporaneous_f1f2_spread_sign": {
+      "n_obs": 307,
+      "engine": {
+        "balanced_accuracy": 0.4276570048309179,
+        "hit_rate": 0.5244299674267101
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 300,
+          "balanced_accuracy": 0.41038593655283895,
+          "hit_rate": 0.5066666666666667
+        },
+        "class_prior": {
+          "n_obs": 0,
+          "insufficient_data": true
+        },
+        "markov": {
+          "n_obs": 307,
+          "balanced_accuracy": 0.4252415458937198,
+          "hit_rate": 0.5211726384364821
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.003257328990228013,
+        "ci95": [
+          0.0,
+          0.009771986970684038
+        ],
+        "pvalue": 0.168
+      }
+    },
+    "base metals|term_structure|contemporaneous_f1f2_spread_sign": {
+      "n_obs": 1501,
+      "engine": {
+        "balanced_accuracy": 0.6310942463066789,
+        "hit_rate": 0.6329113924050633
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 1483,
+          "balanced_accuracy": 0.604447419739791,
+          "hit_rate": 0.6055293324342549
+        },
+        "class_prior": {
+          "n_obs": 1305,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.5203065134099617
+        },
+        "markov": {
+          "n_obs": 1305,
+          "balanced_accuracy": 0.6477765178071493,
+          "hit_rate": 0.6490421455938697
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0
+      }
+    }
+  }
+}
