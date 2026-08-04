@@ -1,0 +1,24 @@
+version: "1.0.0"
+name: macro_default
+asset_class: macro
+shift: 0
+dimensions:
+  - key: risk
+    bands: [{label: risk_off, upper: -0.3}, {label: neutral, lower: -0.3, upper: 0.3}, {label: risk_on, lower: 0.3}]
+    indicators:
+      - {name: macro.vix, weight: 0.25, scaling: {method: percentile, window: 252}, direction: -1}
+      - {name: macro.hy_oas, weight: 0.15, scaling: {method: zscore, window: 252}, direction: -1}
+      - {name: macro.hy_oas_delta, weight: 0.15, scaling: {method: zscore, window: 252}, direction: -1}
+      - {name: macro.yield_curve, weight: 0.25, scaling: {method: linear, center: 1.5, half_range: 4.0}}
+      - {name: macro.fed_funds_delta, weight: 0.10, scaling: {method: zscore, window: 252}, direction: -1}
+      - {name: macro.cot_noncomm, weight: 0.10, scaling: {method: zscore, window: 252}}
+  - key: yield_curve
+    bands: [{label: inverted, upper: -0.25}, {label: flat, lower: -0.25, upper: 0.25}, {label: steep, lower: 0.25}]
+    indicators:
+      - {name: macro.yield_curve, weight: 0.50, scaling: {method: linear, half_range: 2.0}}
+      - {name: macro.yield_curve_3m10y, weight: 0.50, scaling: {method: linear, half_range: 2.0}}
+  - key: credit
+    bands: [{label: wide, upper: -0.3}, {label: neutral, lower: -0.3, upper: 0.3}, {label: tight, lower: 0.3}]
+    indicators:
+      - {name: macro.hy_oas, weight: 0.50, scaling: {method: zscore, window: 252}, direction: -1}
+      - {name: macro.ig_oas, weight: 0.50, scaling: {method: zscore, window: 252}, direction: -1}

@@ -9,7 +9,10 @@ dependencies = [
     "numpy>=2.4.6",
     "pandas",
     "polars>=1.43.0",
+    "pyarrow",
+    "pydantic>=2.0",
     "python-binance",
+    "pyyaml",
     "scipy>=1.17.1",
     "torch>=2.13.0",
     "tqdm>=4.69.1",
@@ -23,8 +26,10 @@ package = false
 [dependency-groups]
 dev = [
     "mypy>=2.3.0",
+    "pandas-stubs",
     "pytest>=8.0.0",
     "ruff>=0.16.0",
     "scipy-stubs>=1.17.1.5",
+    "types-pyyaml",
     "types-tqdm>=4.69.0.20260724",
 ]

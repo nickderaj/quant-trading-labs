@@ -1,0 +1,17 @@
+regime:
+  report:
+    enabled: true
+    history_start: 2019-01-01
+    min_bars_per_symbol: 300
+  macro: {config: macro_default, index_symbol: "ES=F", cot_market: "E-MINI S&P 500"}
+  macro_commodities: {config: commodity_default, symbols: [CL=F, BZ=F, RB=F, HO=F, NG=F, GC=F, SI=F, HG=F, PL=F, PA=F, ZC=F, ZW=F, ZS=F, ZM=F, ZL=F, SB=F, KC=F, CT=F, LE=F, HE=F]}
+  macro_fx: {config: fx_default, symbols: [6E=F, 6J=F, 6B=F, 6A=F, 6C=F, 6S=F]}
+  micro:
+    oil_products: {config: commodity_default, symbols: [CL=F, BZ=F, RB=F, HO=F]}
+    natgas: {config: commodity_default, symbols: [NG=F]}
+    soy_complex: {config: commodity_default, symbols: [ZS=F, ZM=F, ZL=F]}
+    grains: {config: commodity_default, symbols: [ZC=F, ZW=F]}
+    softs: {config: commodity_default, symbols: [KC=F, SB=F, CT=F]}
+    precious: {config: commodity_default, symbols: [GC=F, SI=F, PL=F, PA=F]}
+    base_metals: {config: commodity_default, symbols: [HG=F]}
+    meats: {config: commodity_default, symbols: [LE=F, HE=F]}

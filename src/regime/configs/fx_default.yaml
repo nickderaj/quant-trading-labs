@@ -1,0 +1,25 @@
+version: "1.0.0"
+name: fx_default
+asset_class: fx
+shift: 0
+dimensions:
+  - key: trend
+    bands: [{label: bear, upper: -0.3}, {label: sideways, lower: -0.3, upper: 0.3}, {label: bull, lower: 0.3}]
+    indicators:
+      - {name: trend.price_vs_ma, weight: 0.25, params: {window: 200}, scaling: {method: zscore, window: 252}}
+      - {name: trend.ma_slope, weight: 0.20, params: {window: 100, slope_window: 20}, scaling: {method: zscore, window: 252}}
+      - {name: trend.nday_log_return, weight: 0.20, params: {n: 60}, scaling: {method: zscore, window: 252}}
+      - {name: trend.adx, weight: 0.20, params: {window: 14}, scaling: {method: linear, half_range: 50.0}}
+      - {name: trend.efficiency_ratio, weight: 0.15, params: {window: 20}, scaling: {method: raw}}
+  - key: volatility
+    bands: [{label: low, upper: -0.5}, {label: normal, lower: -0.5, upper: 0.3}, {label: high, lower: 0.3, upper: 0.75}, {label: extreme, lower: 0.75}]
+    indicators:
+      - {name: vol.atr_percentile, weight: 0.4, scaling: {method: raw}}
+      - {name: vol.realized_vol_percentile, weight: 0.4, scaling: {method: raw}}
+      - {name: vol.vol_of_vol, weight: 0.2, scaling: {method: percentile, window: 252}}
+  - key: mean_reversion
+    bands: [{label: trending, upper: -0.2}, {label: neutral, lower: -0.2, upper: 0.2}, {label: mean_reverting, lower: 0.2}]
+    indicators:
+      - {name: mr.autocorr, weight: 0.35, params: {lag: 1, window: 60}, scaling: {method: zscore, window: 252}}
+      - {name: mr.variance_ratio, weight: 0.35, params: {q: 5, window: 252}, scaling: {method: zscore, window: 252}}
+      - {name: mr.half_life, weight: 0.30, params: {window: 252}, scaling: {method: linear, center: 16.5, half_range: 30.0}, direction: -1}
