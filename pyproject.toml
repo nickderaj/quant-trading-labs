@@ -13,6 +13,7 @@ dependencies = [
     "pydantic>=2.0",
     "python-binance",
     "pyyaml",
+    "scikit-learn>=1.9.0",
     "scipy>=1.17.1",
     "torch>=2.13.0",
     "tqdm>=4.69.1",

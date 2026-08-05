@@ -162,6 +162,41 @@ def walk_forward_splits(
     return folds
 
 
+def purged_embargoed_walk_forward_splits(
+    index: pd.DatetimeIndex,
+    min_train: int,
+    test_size: int,
+    horizon: int,
+    step: int | None = None,
+    expanding: bool = True,
+) -> list[tuple[pd.DatetimeIndex, pd.DatetimeIndex]]:
+    """``walk_forward_splits``, purged and embargoed for an ``h``-day forward
+    target (notebook 015 sec5.5).
+
+    ``walk_forward_splits`` guarantees every train end precedes its test
+    start, but applies no purge and no embargo -- with a target built from
+    ``.shift(-horizon)``, the final ``horizon`` rows of any training window
+    carry a label that resolves *inside* the adjacent test window, and the
+    first ``horizon`` rows of the test window carry a label resolving before
+    the test window's predictions can be independently evaluated. Both are
+    leakage for this class of target. This drops the final ``horizon`` rows
+    of every training window (purge) and the first ``horizon`` rows of every
+    test window (embargo), operating on the raw folds from
+    ``walk_forward_splits`` so the fold-boundary arithmetic isn't duplicated.
+    """
+    if horizon < 1:
+        raise ValueError("horizon must be positive")
+    raw_folds = walk_forward_splits(index, min_train, test_size, step, expanding)
+    folds: list[tuple[pd.DatetimeIndex, pd.DatetimeIndex]] = []
+    for train, test in raw_folds:
+        purged_train = train[:-horizon] if len(train) > horizon else train[:0]
+        embargoed_test = test[horizon:] if len(test) > horizon else test[:0]
+        if len(purged_train) == 0 or len(embargoed_test) == 0:
+            continue
+        folds.append((purged_train, embargoed_test))
+    return folds
+
+
 # --------------------------------------------------------------------------- #
 # Bundle
 # --------------------------------------------------------------------------- #
@@ -204,6 +239,7 @@ __all__ = [
     "hit_rate",
     "information_coefficient",
     "per_class_stats",
+    "purged_embargoed_walk_forward_splits",
     "transition_recall",
     "walk_forward_splits",
 ]
