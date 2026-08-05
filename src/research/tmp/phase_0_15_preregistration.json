@@ -1,0 +1,684 @@
+{
+  "notebook": "015_trend_ceiling_and_independent_validation",
+  "committed_before_first_model_fit": true,
+  "supersedes": "none -- extends 014's Phase 3/5 findings without reopening them",
+  "scope": {
+    "authorizes_trading": false,
+    "spends_holdout": false,
+    "holdouts_untouched": {
+      "crypto": "2025-07-01",
+      "futures": "2025-01-01 to 2026-07-28"
+    },
+    "truncation": "2024-12-31",
+    "note": "This notebook measures label accuracy and a ceiling on directional predictability. It builds no strategy, computes no Sharpe, models no costs. A firing gate does not authorize a backtest here -- that is notebook 016's job."
+  },
+  "track_a": {
+    "dimensions_tested": [
+      "yield_curve",
+      "term_structure",
+      "carry",
+      "carry_roll_yield_only"
+    ],
+    "disjointness_table": {
+      "dimensions": {
+        "yield_curve": {
+          "indicators": {
+            "macro.yield_curve": [
+              "FRED:T10Y2Y"
+            ],
+            "macro.yield_curve_3m10y": [
+              "FRED:T10Y3M"
+            ]
+          },
+          "inputs_union": [
+            "FRED:T10Y2Y",
+            "FRED:T10Y3M"
+          ]
+        },
+        "term_structure": {
+          "indicators": {
+            "ts.curve_slope": [
+              "curve:close_f1",
+              "curve:close_f3"
+            ],
+            "ts.calendar_spread_z": [
+              "curve:close_f1",
+              "curve:close_f2"
+            ],
+            "ts.ann_roll_yield": [
+              "curve:close_f1",
+              "curve:close_f2",
+              "curve:dte_f1",
+              "curve:dte_f2"
+            ],
+            "ts.excess_spread": [
+              "curve:close_f1",
+              "curve:close_f2"
+            ]
+          },
+          "inputs_union": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:close_f3",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ]
+        },
+        "carry": {
+          "indicators": {
+            "carry.ann_roll_yield": [
+              "curve:close_f1",
+              "curve:close_f2",
+              "curve:dte_f1",
+              "curve:dte_f2"
+            ],
+            "carry.vol_scaled": [
+              "bars:close",
+              "curve:close_f1",
+              "curve:close_f2",
+              "curve:dte_f1",
+              "curve:dte_f2"
+            ]
+          },
+          "inputs_union": [
+            "bars:close",
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ]
+        },
+        "carry_roll_yield_only": {
+          "indicators": {
+            "carry.ann_roll_yield": [
+              "curve:close_f1",
+              "curve:close_f2",
+              "curve:dte_f1",
+              "curve:dte_f2"
+            ]
+          },
+          "inputs_union": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ]
+        }
+      },
+      "targets": {
+        "A1_dff_fwd126": [
+          "FRED:DFF"
+        ],
+        "A2_es_drawdown_fwd126": [
+          "bars:ES=F"
+        ],
+        "A3_hy_oas_fwd63": [
+          "FRED:BAMLH0A0HYM2"
+        ],
+        "A4_front_month_return_21_63": [
+          "bars:close"
+        ],
+        "A5_cross_sectional_carry_spread": [
+          "bars:close"
+        ],
+        "A6_cot_positioning_fwd21": [
+          "cot:noncomm_net_pct_oi"
+        ]
+      },
+      "pairs": [
+        {
+          "dimension": "yield_curve",
+          "target": "A1_dff_fwd126",
+          "dimension_inputs": [
+            "FRED:T10Y2Y",
+            "FRED:T10Y3M"
+          ],
+          "target_inputs": [
+            "FRED:DFF"
+          ],
+          "intersection": [],
+          "disqualified": false,
+          "partial_overlap_weight": null
+        },
+        {
+          "dimension": "yield_curve",
+          "target": "A2_es_drawdown_fwd126",
+          "dimension_inputs": [
+            "FRED:T10Y2Y",
+            "FRED:T10Y3M"
+          ],
+          "target_inputs": [
+            "bars:ES=F"
+          ],
+          "intersection": [],
+          "disqualified": false,
+          "partial_overlap_weight": null
+        },
+        {
+          "dimension": "yield_curve",
+          "target": "A3_hy_oas_fwd63",
+          "dimension_inputs": [
+            "FRED:T10Y2Y",
+            "FRED:T10Y3M"
+          ],
+          "target_inputs": [
+            "FRED:BAMLH0A0HYM2"
+          ],
+          "intersection": [],
+          "disqualified": false,
+          "partial_overlap_weight": null
+        },
+        {
+          "dimension": "term_structure",
+          "target": "A4_front_month_return_21_63",
+          "dimension_inputs": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:close_f3",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ],
+          "target_inputs": [
+            "bars:close"
+          ],
+          "intersection": [],
+          "disqualified": false,
+          "partial_overlap_weight": null
+        },
+        {
+          "dimension": "term_structure",
+          "target": "A5_cross_sectional_carry_spread",
+          "dimension_inputs": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:close_f3",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ],
+          "target_inputs": [
+            "bars:close"
+          ],
+          "intersection": [],
+          "disqualified": false,
+          "partial_overlap_weight": null
+        },
+        {
+          "dimension": "term_structure",
+          "target": "A6_cot_positioning_fwd21",
+          "dimension_inputs": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:close_f3",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ],
+          "target_inputs": [
+            "cot:noncomm_net_pct_oi"
+          ],
+          "intersection": [],
+          "disqualified": false,
+          "partial_overlap_weight": null
+        },
+        {
+          "dimension": "carry",
+          "target": "A4_front_month_return_21_63",
+          "dimension_inputs": [
+            "bars:close",
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ],
+          "target_inputs": [
+            "bars:close"
+          ],
+          "intersection": [
+            "bars:close"
+          ],
+          "disqualified": true,
+          "partial_overlap_weight": 0.4
+        },
+        {
+          "dimension": "carry",
+          "target": "A5_cross_sectional_carry_spread",
+          "dimension_inputs": [
+            "bars:close",
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ],
+          "target_inputs": [
+            "bars:close"
+          ],
+          "intersection": [
+            "bars:close"
+          ],
+          "disqualified": true,
+          "partial_overlap_weight": 0.4
+        },
+        {
+          "dimension": "carry_roll_yield_only",
+          "target": "A4_front_month_return_21_63",
+          "dimension_inputs": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ],
+          "target_inputs": [
+            "bars:close"
+          ],
+          "intersection": [],
+          "disqualified": false,
+          "partial_overlap_weight": null
+        },
+        {
+          "dimension": "carry_roll_yield_only",
+          "target": "A5_cross_sectional_carry_spread",
+          "dimension_inputs": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ],
+          "target_inputs": [
+            "bars:close"
+          ],
+          "intersection": [],
+          "disqualified": false,
+          "partial_overlap_weight": null
+        }
+      ]
+    },
+    "trial_ledger": [
+      {
+        "dimension": "yield_curve",
+        "target": "A1_dff_fwd126",
+        "counts_toward_gate_IA": true
+      },
+      {
+        "dimension": "yield_curve",
+        "target": "A2_es_drawdown_fwd126",
+        "counts_toward_gate_IA": true
+      },
+      {
+        "dimension": "yield_curve",
+        "target": "A3_hy_oas_fwd63",
+        "counts_toward_gate_IA": false,
+        "reason": "underpowered: BAMLH0A0HYM2 starts 2023-07-17, ~18mo after truncation to 2024-12-31"
+      },
+      {
+        "dimension": "term_structure",
+        "target": "A4_front_month_return",
+        "horizon": 21,
+        "counts_toward_gate_IT": true
+      },
+      {
+        "dimension": "term_structure",
+        "target": "A4_front_month_return",
+        "horizon": 63,
+        "counts_toward_gate_IT": true
+      },
+      {
+        "dimension": "term_structure",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 21,
+        "counts_toward_gate_IT": true
+      },
+      {
+        "dimension": "term_structure",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 63,
+        "counts_toward_gate_IT": true
+      },
+      {
+        "dimension": "term_structure",
+        "target": "A6_cot_positioning",
+        "horizon": 21,
+        "counts_toward_gate_IT": true
+      },
+      {
+        "dimension": "carry",
+        "target": "A4_front_month_return",
+        "horizon": 21,
+        "counts_toward_gate_IC": true
+      },
+      {
+        "dimension": "carry",
+        "target": "A4_front_month_return",
+        "horizon": 63,
+        "counts_toward_gate_IC": true
+      },
+      {
+        "dimension": "carry",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 21,
+        "counts_toward_gate_IC": true
+      },
+      {
+        "dimension": "carry",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 63,
+        "counts_toward_gate_IC": true
+      },
+      {
+        "dimension": "carry_roll_yield_only",
+        "target": "A4_front_month_return",
+        "horizon": 21,
+        "counts_toward_gate_IC": false,
+        "reason": "measurement variant, reported alongside shipped config, not instead of"
+      },
+      {
+        "dimension": "carry_roll_yield_only",
+        "target": "A4_front_month_return",
+        "horizon": 63,
+        "counts_toward_gate_IC": false,
+        "reason": "measurement variant"
+      },
+      {
+        "dimension": "carry_roll_yield_only",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 21,
+        "counts_toward_gate_IC": false,
+        "reason": "measurement variant"
+      },
+      {
+        "dimension": "carry_roll_yield_only",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 63,
+        "counts_toward_gate_IC": false,
+        "reason": "measurement variant"
+      }
+    ]
+  },
+  "track_b": {
+    "panels": {
+      "Panel-L": {
+        "source": "yfinance daily",
+        "symbols": [
+          "CL=F",
+          "BZ=F",
+          "RB=F",
+          "HO=F",
+          "NG=F",
+          "ZS=F",
+          "ZM=F",
+          "ZL=F",
+          "ZC=F",
+          "ZW=F",
+          "KC=F",
+          "SB=F",
+          "CT=F",
+          "GC=F",
+          "SI=F",
+          "PL=F",
+          "PA=F",
+          "HG=F",
+          "LE=F",
+          "HE=F"
+        ],
+        "span": "2000 to 2024-12-31"
+      },
+      "Panel-D": {
+        "source": "databento per-contract",
+        "symbols": [
+          "BZ",
+          "CL",
+          "GC",
+          "HO",
+          "KE",
+          "NG",
+          "PA",
+          "PL",
+          "RB",
+          "SI",
+          "ZC",
+          "ZL",
+          "ZM",
+          "ZS",
+          "ZW"
+        ],
+        "span": "2010-06 to 2024-12-31",
+        "note": "ES dropped for the trend target (equity index, not a commodity)"
+      }
+    },
+    "horizons": [
+      5,
+      21,
+      63
+    ],
+    "feature_sets": {
+      "F0": "the engine's own trend label for that sector/date, read from regime_panel.parquet",
+      "F1": [
+        "trend.price_vs_ma (window 200, zscore 252)",
+        "trend.ma_slope (100/20, zscore 252)",
+        "trend.nday_log_return (n 60, zscore 252)",
+        "trend.adx (14, linear hr 50)",
+        "trend.efficiency_ratio (20, raw)"
+      ],
+      "F2": "F1 + volatility(3) + mean_reversion(3) + [curve-available: term_structure(4), carry(2)] + cross-sectional rank (within basket, within panel) on each F1 feature + calendar sin/cos",
+      "F3": "F2 + Panel-D per-date front-three settlement spreads and days-to-expiry"
+    },
+    "models": [
+      {
+        "id": "M0a",
+        "model": "majority class (per fold, from train)",
+        "features": null,
+        "purpose": "floor"
+      },
+      {
+        "id": "M0b",
+        "model": "persistence of yesterday's realised sign",
+        "features": null,
+        "purpose": "trivial trend rule"
+      },
+      {
+        "id": "M0c",
+        "model": "sign of trailing 60-day return",
+        "features": null,
+        "purpose": "dumbest defensible trend rule"
+      },
+      {
+        "id": "M0d",
+        "model": "engine's trend label (F0)",
+        "features": "F0",
+        "purpose": "incumbent -- the number to beat"
+      },
+      {
+        "id": "M1",
+        "model": "L2-regularized logistic regression",
+        "features": "F1",
+        "purpose": "are the shipped weights the bottleneck?"
+      },
+      {
+        "id": "M2",
+        "model": "L2-regularized logistic regression",
+        "features": "F2 (F3 on Panel-D)",
+        "purpose": "does more information help a linear model?"
+      },
+      {
+        "id": "M3",
+        "model": "HistGradientBoostingClassifier",
+        "features": "F2 (F3 on Panel-D)",
+        "purpose": "does capacity help?"
+      }
+    ],
+    "m3_fixed_hyperparameters": {
+      "max_iter": 200,
+      "max_depth": 3,
+      "learning_rate": 0.05,
+      "min_samples_leaf": 200,
+      "l2_regularization": 1.0,
+      "early_stopping": true
+    },
+    "fold_geometry": {
+      "min_train_bars": 1260,
+      "test_bars": 252,
+      "step_bars": 252,
+      "expanding": true,
+      "purge_bars": "= horizon (drops final `horizon` rows of every training window)",
+      "embargo_bars": "= horizon (drops first `horizon` rows of every test window)",
+      "panel_l_expected_folds": 19,
+      "panel_d_expected_folds": 9
+    },
+    "shuffle_control": {
+      "block_size_days": 63,
+      "n_seeds": 10,
+      "tolerance": "95% bootstrap CI over balanced accuracy covers 0.500 for every model x horizon x panel",
+      "hard_gate": true
+    },
+    "sideways_mapping": {
+      "rule": "bear -> -1, bull -> +1, sideways -> abstain (scored as the class prior on those days, not a coin flip); abstention rate reported; sideways days are never dropped from the panel",
+      "why": "Commodities/trend sits in sideways 90.24% of the time (014 Phase 2); dropping sideways days would score the incumbent on a cherry-picked 10% subsample and flatter it enormously"
+    },
+    "zero_return_rule": "drop rows where |forward return| < 1e-12 (frozen-bar rule)",
+    "neural_model_policy": "no M4/MLP unless CC fires with a Bonferroni-significant margin; torch is present but not used by default (013's LSTM/GatedLSTM already lost to linear)",
+    "no_grid_search_m3": true
+  },
+  "track_c": {
+    "power_budget": {
+      "Panel-L_h5": {
+        "panel": "Panel-L",
+        "horizon": 5,
+        "n_symbols": 20,
+        "raw_rows_pooled": 120769,
+        "non_overlapping_windows_per_symbol": 1207.7,
+        "non_overlapping_windows_total": 24153.8,
+        "mean_pairwise_correlation": 0.2266,
+        "n_eff": 4552.1,
+        "underpowered": false,
+        "minimum_detectable_effect_balanced_accuracy": 0.0426
+      },
+      "Panel-L_h21": {
+        "panel": "Panel-L",
+        "horizon": 21,
+        "n_symbols": 20,
+        "raw_rows_pooled": 120769,
+        "non_overlapping_windows_per_symbol": 287.5,
+        "non_overlapping_windows_total": 5750.9,
+        "mean_pairwise_correlation": 0.2273,
+        "n_eff": 1081.4,
+        "underpowered": false,
+        "minimum_detectable_effect_balanced_accuracy": 0.0875
+      },
+      "Panel-L_h63": {
+        "panel": "Panel-L",
+        "horizon": 63,
+        "n_symbols": 20,
+        "raw_rows_pooled": 120769,
+        "non_overlapping_windows_per_symbol": 95.8,
+        "non_overlapping_windows_total": 1917.0,
+        "mean_pairwise_correlation": 0.3004,
+        "n_eff": 285.8,
+        "underpowered": false,
+        "minimum_detectable_effect_balanced_accuracy": 0.1702
+      },
+      "Panel-D_h5": {
+        "panel": "Panel-D",
+        "horizon": 5,
+        "n_symbols": 15,
+        "raw_rows_pooled": 62218,
+        "non_overlapping_windows_per_symbol": 829.6,
+        "non_overlapping_windows_total": 12443.6,
+        "mean_pairwise_correlation": 0.1912,
+        "n_eff": 3383.8,
+        "underpowered": false,
+        "minimum_detectable_effect_balanced_accuracy": 0.0495
+      },
+      "Panel-D_h21": {
+        "panel": "Panel-D",
+        "horizon": 21,
+        "n_symbols": 15,
+        "raw_rows_pooled": 62218,
+        "non_overlapping_windows_per_symbol": 197.5,
+        "non_overlapping_windows_total": 2962.8,
+        "mean_pairwise_correlation": 0.2776,
+        "n_eff": 606.3,
+        "underpowered": false,
+        "minimum_detectable_effect_balanced_accuracy": 0.1168
+      },
+      "Panel-D_h63": {
+        "panel": "Panel-D",
+        "horizon": 63,
+        "n_symbols": 15,
+        "raw_rows_pooled": 62218,
+        "non_overlapping_windows_per_symbol": 65.8,
+        "non_overlapping_windows_total": 987.6,
+        "mean_pairwise_correlation": 0.2734,
+        "n_eff": 204.6,
+        "underpowered": false,
+        "minimum_detectable_effect_balanced_accuracy": 0.2012
+      }
+    },
+    "underpowered_rule": "any (panel, horizon) arm with N_eff < 200 is reported as underpowered and cannot fire a gate, regardless of the accuracy it produces"
+  },
+  "significance_procedure": {
+    "test": "paired block bootstrap on the daily correctness/hit-rate difference (engine or challenger minus baseline), quarterly blocks for Track A, n_boot=2000, seed=0, via research.block_bootstrap_ci and research.block_bootstrap_pvalue",
+    "family": "Track A and Track B trials pool into ONE Bonferroni family",
+    "n_trials_track_a": 16,
+    "n_trials_track_b": 24,
+    "n_trials_total": 40,
+    "alpha_family": 0.05,
+    "alpha_bonferroni": 0.00125,
+    "baseline_degeneracy_check": "for every Track A comparison, report the fraction of days the baseline and engine label differ; below 0.05, report as structurally uninformative rather than as a null (014's discovery, pre-registered here)"
+  },
+  "gates": {
+    "SC": {
+      "track": "B",
+      "claim": "Shuffle control: no model beats chance on block-shuffled targets",
+      "threshold": "every model x horizon x panel has a 95% CI covering 0.500",
+      "hard_gate": true
+    },
+    "ID": {
+      "track": "A",
+      "claim": "Independence proof: every scored (dimension, target) pair has provably disjoint raw inputs",
+      "threshold": "INPUTS(dim) intersect INPUTS(target) == empty, table emitted",
+      "hard_gate": true
+    },
+    "IA": {
+      "track": "A",
+      "claim": "yield_curve beats its best baseline on >=1 independent target",
+      "threshold": "Bonferroni-corrected p < 0.00125, excluding underpowered target A3"
+    },
+    "IT": {
+      "track": "A",
+      "claim": "term_structure beats its best baseline on >=1 independent target",
+      "threshold": "Bonferroni-corrected p < 0.00125, arm not flagged underpowered"
+    },
+    "IC": {
+      "track": "A",
+      "claim": "carry beats its best baseline on >=1 independent target",
+      "threshold": "as IT; report shipped-config and roll-yield-only variants separately"
+    },
+    "CW": {
+      "track": "B",
+      "claim": "Weights were the bottleneck: M1 (same inputs, learned weights) beats M0d",
+      "threshold": "Bonferroni-corrected p < 0.00125 at >=1 non-underpowered horizon"
+    },
+    "CC": {
+      "track": "B",
+      "claim": "Capacity helps: M3 beats M2",
+      "threshold": "Bonferroni-corrected p < 0.00125 at >=1 non-underpowered horizon"
+    },
+    "CB": {
+      "track": "B",
+      "claim": "Ceiling beaten: best model beats M0d by >= +0.05 balanced accuracy",
+      "threshold": "Bonferroni-corrected p < 0.00125, and point estimate clears +0.05"
+    },
+    "PW": {
+      "track": "C",
+      "claim": "Power is adequate to conclude: >=1 arm has N_eff >= 200",
+      "threshold": "reported per arm; determines which gates are eligible to fire"
+    }
+  },
+  "scoring": {
+    "metric": "balanced_accuracy (regime.forecast_eval.balanced_accuracy), plus Cohen's kappa, plus confusion matrix / per_class_stats for every reported pair",
+    "baselines": [
+      "persistence_forecast",
+      "markov_forecast",
+      "prior_forecast"
+    ]
+  },
+  "outcome_authorization_table": "see NEXT_PROMPT.md sec10 -- reproduced verbatim in the results file, filled in with actual outcomes"
+}

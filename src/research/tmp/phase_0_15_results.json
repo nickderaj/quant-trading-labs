@@ -1,0 +1,354 @@
+{
+  "disjointness_table": {
+    "dimensions": {
+      "yield_curve": {
+        "indicators": {
+          "macro.yield_curve": [
+            "FRED:T10Y2Y"
+          ],
+          "macro.yield_curve_3m10y": [
+            "FRED:T10Y3M"
+          ]
+        },
+        "inputs_union": [
+          "FRED:T10Y2Y",
+          "FRED:T10Y3M"
+        ]
+      },
+      "term_structure": {
+        "indicators": {
+          "ts.curve_slope": [
+            "curve:close_f1",
+            "curve:close_f3"
+          ],
+          "ts.calendar_spread_z": [
+            "curve:close_f1",
+            "curve:close_f2"
+          ],
+          "ts.ann_roll_yield": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ],
+          "ts.excess_spread": [
+            "curve:close_f1",
+            "curve:close_f2"
+          ]
+        },
+        "inputs_union": [
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:close_f3",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ]
+      },
+      "carry": {
+        "indicators": {
+          "carry.ann_roll_yield": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ],
+          "carry.vol_scaled": [
+            "bars:close",
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ]
+        },
+        "inputs_union": [
+          "bars:close",
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ]
+      },
+      "carry_roll_yield_only": {
+        "indicators": {
+          "carry.ann_roll_yield": [
+            "curve:close_f1",
+            "curve:close_f2",
+            "curve:dte_f1",
+            "curve:dte_f2"
+          ]
+        },
+        "inputs_union": [
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ]
+      }
+    },
+    "targets": {
+      "A1_dff_fwd126": [
+        "FRED:DFF"
+      ],
+      "A2_es_drawdown_fwd126": [
+        "bars:ES=F"
+      ],
+      "A3_hy_oas_fwd63": [
+        "FRED:BAMLH0A0HYM2"
+      ],
+      "A4_front_month_return_21_63": [
+        "bars:close"
+      ],
+      "A5_cross_sectional_carry_spread": [
+        "bars:close"
+      ],
+      "A6_cot_positioning_fwd21": [
+        "cot:noncomm_net_pct_oi"
+      ]
+    },
+    "pairs": [
+      {
+        "dimension": "yield_curve",
+        "target": "A1_dff_fwd126",
+        "dimension_inputs": [
+          "FRED:T10Y2Y",
+          "FRED:T10Y3M"
+        ],
+        "target_inputs": [
+          "FRED:DFF"
+        ],
+        "intersection": [],
+        "disqualified": false,
+        "partial_overlap_weight": null
+      },
+      {
+        "dimension": "yield_curve",
+        "target": "A2_es_drawdown_fwd126",
+        "dimension_inputs": [
+          "FRED:T10Y2Y",
+          "FRED:T10Y3M"
+        ],
+        "target_inputs": [
+          "bars:ES=F"
+        ],
+        "intersection": [],
+        "disqualified": false,
+        "partial_overlap_weight": null
+      },
+      {
+        "dimension": "yield_curve",
+        "target": "A3_hy_oas_fwd63",
+        "dimension_inputs": [
+          "FRED:T10Y2Y",
+          "FRED:T10Y3M"
+        ],
+        "target_inputs": [
+          "FRED:BAMLH0A0HYM2"
+        ],
+        "intersection": [],
+        "disqualified": false,
+        "partial_overlap_weight": null
+      },
+      {
+        "dimension": "term_structure",
+        "target": "A4_front_month_return_21_63",
+        "dimension_inputs": [
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:close_f3",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ],
+        "target_inputs": [
+          "bars:close"
+        ],
+        "intersection": [],
+        "disqualified": false,
+        "partial_overlap_weight": null
+      },
+      {
+        "dimension": "term_structure",
+        "target": "A5_cross_sectional_carry_spread",
+        "dimension_inputs": [
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:close_f3",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ],
+        "target_inputs": [
+          "bars:close"
+        ],
+        "intersection": [],
+        "disqualified": false,
+        "partial_overlap_weight": null
+      },
+      {
+        "dimension": "term_structure",
+        "target": "A6_cot_positioning_fwd21",
+        "dimension_inputs": [
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:close_f3",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ],
+        "target_inputs": [
+          "cot:noncomm_net_pct_oi"
+        ],
+        "intersection": [],
+        "disqualified": false,
+        "partial_overlap_weight": null
+      },
+      {
+        "dimension": "carry",
+        "target": "A4_front_month_return_21_63",
+        "dimension_inputs": [
+          "bars:close",
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ],
+        "target_inputs": [
+          "bars:close"
+        ],
+        "intersection": [
+          "bars:close"
+        ],
+        "disqualified": true,
+        "partial_overlap_weight": 0.4
+      },
+      {
+        "dimension": "carry",
+        "target": "A5_cross_sectional_carry_spread",
+        "dimension_inputs": [
+          "bars:close",
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ],
+        "target_inputs": [
+          "bars:close"
+        ],
+        "intersection": [
+          "bars:close"
+        ],
+        "disqualified": true,
+        "partial_overlap_weight": 0.4
+      },
+      {
+        "dimension": "carry_roll_yield_only",
+        "target": "A4_front_month_return_21_63",
+        "dimension_inputs": [
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ],
+        "target_inputs": [
+          "bars:close"
+        ],
+        "intersection": [],
+        "disqualified": false,
+        "partial_overlap_weight": null
+      },
+      {
+        "dimension": "carry_roll_yield_only",
+        "target": "A5_cross_sectional_carry_spread",
+        "dimension_inputs": [
+          "curve:close_f1",
+          "curve:close_f2",
+          "curve:dte_f1",
+          "curve:dte_f2"
+        ],
+        "target_inputs": [
+          "bars:close"
+        ],
+        "intersection": [],
+        "disqualified": false,
+        "partial_overlap_weight": null
+      }
+    ]
+  },
+  "power_budget": {
+    "Panel-L_h5": {
+      "panel": "Panel-L",
+      "horizon": 5,
+      "n_symbols": 20,
+      "raw_rows_pooled": 120769,
+      "non_overlapping_windows_per_symbol": 1207.7,
+      "non_overlapping_windows_total": 24153.8,
+      "mean_pairwise_correlation": 0.2266,
+      "n_eff": 4552.1,
+      "underpowered": false,
+      "minimum_detectable_effect_balanced_accuracy": 0.0426
+    },
+    "Panel-L_h21": {
+      "panel": "Panel-L",
+      "horizon": 21,
+      "n_symbols": 20,
+      "raw_rows_pooled": 120769,
+      "non_overlapping_windows_per_symbol": 287.5,
+      "non_overlapping_windows_total": 5750.9,
+      "mean_pairwise_correlation": 0.2273,
+      "n_eff": 1081.4,
+      "underpowered": false,
+      "minimum_detectable_effect_balanced_accuracy": 0.0875
+    },
+    "Panel-L_h63": {
+      "panel": "Panel-L",
+      "horizon": 63,
+      "n_symbols": 20,
+      "raw_rows_pooled": 120769,
+      "non_overlapping_windows_per_symbol": 95.8,
+      "non_overlapping_windows_total": 1917.0,
+      "mean_pairwise_correlation": 0.3004,
+      "n_eff": 285.8,
+      "underpowered": false,
+      "minimum_detectable_effect_balanced_accuracy": 0.1702
+    },
+    "Panel-D_h5": {
+      "panel": "Panel-D",
+      "horizon": 5,
+      "n_symbols": 15,
+      "raw_rows_pooled": 62218,
+      "non_overlapping_windows_per_symbol": 829.6,
+      "non_overlapping_windows_total": 12443.6,
+      "mean_pairwise_correlation": 0.1912,
+      "n_eff": 3383.8,
+      "underpowered": false,
+      "minimum_detectable_effect_balanced_accuracy": 0.0495
+    },
+    "Panel-D_h21": {
+      "panel": "Panel-D",
+      "horizon": 21,
+      "n_symbols": 15,
+      "raw_rows_pooled": 62218,
+      "non_overlapping_windows_per_symbol": 197.5,
+      "non_overlapping_windows_total": 2962.8,
+      "mean_pairwise_correlation": 0.2776,
+      "n_eff": 606.3,
+      "underpowered": false,
+      "minimum_detectable_effect_balanced_accuracy": 0.1168
+    },
+    "Panel-D_h63": {
+      "panel": "Panel-D",
+      "horizon": 63,
+      "n_symbols": 15,
+      "raw_rows_pooled": 62218,
+      "non_overlapping_windows_per_symbol": 65.8,
+      "non_overlapping_windows_total": 987.6,
+      "mean_pairwise_correlation": 0.2734,
+      "n_eff": 204.6,
+      "underpowered": false,
+      "minimum_detectable_effect_balanced_accuracy": 0.2012
+    }
+  },
+  "n_trials": {
+    "track_a": 16,
+    "track_b": 24,
+    "total": 40,
+    "alpha_bonferroni": 0.00125
+  }
+}
