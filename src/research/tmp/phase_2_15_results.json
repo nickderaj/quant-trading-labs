@@ -1,0 +1,1405 @@
+{
+  "alpha_bonferroni": 0.00125,
+  "yield_curve": {
+    "A1_dff_fwd126": {
+      "n_obs": 4424,
+      "engine": {
+        "balanced_accuracy": 0.4925223418627301,
+        "hit_rate": 0.5996835443037974
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 4420,
+          "balanced_accuracy": 0.4927325291033232,
+          "hit_rate": 0.6002262443438914,
+          "fraction_days_differs_from_engine": 0.0,
+          "structurally_uninformative": true
+        },
+        "class_prior": {
+          "n_obs": 4284,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.6388888888888888,
+          "fraction_days_differs_from_engine": 0.05368814192343604,
+          "structurally_uninformative": false
+        },
+        "markov": {
+          "n_obs": 4312,
+          "balanced_accuracy": 0.4941511191260724,
+          "hit_rate": 0.6147959183673469,
+          "fraction_days_differs_from_engine": 0.0,
+          "structurally_uninformative": true
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "class_prior",
+        "mean_hit_rate_diff": -0.020074696545284782,
+        "ci95": [
+          -0.06513188608776843,
+          0.021942110177404293
+        ],
+        "pvalue": 0.356,
+        "structurally_uninformative": false
+      }
+    },
+    "A2_es_drawdown_fwd126": {
+      "n_obs": 4815,
+      "engine": {
+        "balanced_accuracy": 0.5167642740141293,
+        "hit_rate": 0.5808930425752855
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 4811,
+          "balanced_accuracy": 0.516969707270248,
+          "hit_rate": 0.5811681563084597,
+          "fraction_days_differs_from_engine": 0.0,
+          "structurally_uninformative": true
+        },
+        "class_prior": {
+          "n_obs": 4675,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.5818181818181818,
+          "fraction_days_differs_from_engine": 0.08427807486631016,
+          "structurally_uninformative": false
+        },
+        "markov": {
+          "n_obs": 4703,
+          "balanced_accuracy": 0.5186606767255982,
+          "hit_rate": 0.588347863066128,
+          "fraction_days_differs_from_engine": 0.0,
+          "structurally_uninformative": true
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "pvalue": 1.0,
+        "structurally_uninformative": true
+      }
+    },
+    "A3_hy_oas_fwd63": {
+      "n_obs": 302,
+      "engine": {
+        "balanced_accuracy": 0.5,
+        "hit_rate": 0.2682119205298013
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 302,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.2682119205298013,
+          "fraction_days_differs_from_engine": 0.0,
+          "structurally_uninformative": true
+        },
+        "class_prior": {
+          "n_obs": 302,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.7317880794701986,
+          "fraction_days_differs_from_engine": 1.0,
+          "structurally_uninformative": false
+        },
+        "markov": {
+          "n_obs": 302,
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.2682119205298013,
+          "fraction_days_differs_from_engine": 0.0,
+          "structurally_uninformative": true
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "class_prior",
+        "mean_hit_rate_diff": -0.46357615894039733,
+        "ci95": [
+          -0.8278145695364238,
+          -0.052814569536424744
+        ],
+        "pvalue": 0.011,
+        "structurally_uninformative": false
+      },
+      "underpowered": true,
+      "underpowered_reason": "BAMLH0A0HYM2 starts 2023-07-17; ~18mo of data before truncation"
+    }
+  },
+  "term_structure_and_carry": {
+    "A4_term_structure_price_only_h21": {
+      "CL=F": {
+        "n_obs": 1210,
+        "engine": {
+          "balanced_accuracy": 0.4437841692417399,
+          "hit_rate": 0.4446280991735537
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1198,
+            "balanced_accuracy": 0.4426018417356017,
+            "hit_rate": 0.44323873121869783,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 853,
+            "balanced_accuracy": 0.38698055745591775,
+            "hit_rate": 0.3704572098475967,
+            "fraction_days_differs_from_engine": 0.3493552168815944,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1090,
+            "balanced_accuracy": 0.43419828492840384,
+            "hit_rate": 0.43853211009174314,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "NG=F": {
+        "n_obs": 1498,
+        "engine": {
+          "balanced_accuracy": 0.4586910178269952,
+          "hit_rate": 0.445260347129506
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1486,
+            "balanced_accuracy": 0.46054333294582656,
+            "hit_rate": 0.44818304172274565,
+            "fraction_days_differs_from_engine": 0.007402422611036339,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1302,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.4815668202764977,
+            "fraction_days_differs_from_engine": 0.2534562211981567,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1302,
+            "balanced_accuracy": 0.47526138578770155,
+            "hit_rate": 0.4662058371735791,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "class_prior",
+          "mean_hit_rate_diff": -0.015360983102918587,
+          "ci95": [
+            -0.10138248847926268,
+            0.0629800307219662
+          ],
+          "pvalue": 0.686,
+          "structurally_uninformative": false
+        }
+      },
+      "GC=F": {
+        "n_obs": 652,
+        "engine": {
+          "balanced_accuracy": 0.44654885794728394,
+          "hit_rate": 0.4447852760736196
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 640,
+            "balanced_accuracy": 0.4450809464508094,
+            "hit_rate": 0.44375,
+            "fraction_days_differs_from_engine": 0.0140625,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 607,
+            "balanced_accuracy": 0.4575669820496949,
+            "hit_rate": 0.4546952224052718,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "SI=F": {
+        "n_obs": 26,
+        "engine": {
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.8846153846153846
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 25,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.88,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 26,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.8846153846153846,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "HG=F": {
+        "n_obs": 1482,
+        "engine": {
+          "balanced_accuracy": 0.5017548477669562,
+          "hit_rate": 0.4966261808367072
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1466,
+            "balanced_accuracy": 0.505703720304796,
+            "hit_rate": 0.5006821282401092,
+            "fraction_days_differs_from_engine": 0.02660300136425648,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1281,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.4371584699453552,
+            "fraction_days_differs_from_engine": 0.45511319281811086,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1281,
+            "balanced_accuracy": 0.4744018723994452,
+            "hit_rate": 0.46916471506635443,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": -0.0047748976807639835,
+          "ci95": [
+            -0.01296043656207367,
+            0.004092769440654843
+          ],
+          "pvalue": 0.207,
+          "structurally_uninformative": true
+        }
+      }
+    },
+    "A4_term_structure_price_only_h63": {
+      "CL=F": {
+        "n_obs": 1188,
+        "engine": {
+          "balanced_accuracy": 0.4069267323923682,
+          "hit_rate": 0.4031986531986532
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1176,
+            "balanced_accuracy": 0.4053002223869533,
+            "hit_rate": 0.4013605442176871,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 832,
+            "balanced_accuracy": 0.3923445535296868,
+            "hit_rate": 0.3641826923076923,
+            "fraction_days_differs_from_engine": 0.359375,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1068,
+            "balanced_accuracy": 0.4276005007943271,
+            "hit_rate": 0.42696629213483145,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "NG=F": {
+        "n_obs": 1459,
+        "engine": {
+          "balanced_accuracy": 0.4628853673208512,
+          "hit_rate": 0.4674434544208362
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1447,
+            "balanced_accuracy": 0.46638169613846775,
+            "hit_rate": 0.47131997235659984,
+            "fraction_days_differs_from_engine": 0.007601935038009675,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1262,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.5110935023771791,
+            "fraction_days_differs_from_engine": 0.2622820919175911,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1262,
+            "balanced_accuracy": 0.47331800535222945,
+            "hit_rate": 0.4786053882725832,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "class_prior",
+          "mean_hit_rate_diff": -0.03248811410459588,
+          "ci95": [
+            -0.14185816164817747,
+            0.08240887480190175
+          ],
+          "pvalue": 0.576,
+          "structurally_uninformative": false
+        }
+      },
+      "GC=F": {
+        "n_obs": 610,
+        "engine": {
+          "balanced_accuracy": 0.3997099667407512,
+          "hit_rate": 0.4131147540983607
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 598,
+            "balanced_accuracy": 0.4010683760683761,
+            "hit_rate": 0.41471571906354515,
+            "fraction_days_differs_from_engine": 0.013377926421404682,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 565,
+            "balanced_accuracy": 0.39167362851573373,
+            "hit_rate": 0.4,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": -0.0033444816053511705,
+          "ci95": [
+            -0.013377926421404682,
+            0.005016722408026756
+          ],
+          "pvalue": 0.606,
+          "structurally_uninformative": true
+        }
+      },
+      "SI=F": {
+        "n_obs": 26,
+        "engine": {
+          "balanced_accuracy": 0.0,
+          "hit_rate": 0.0
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 25,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 26,
+            "balanced_accuracy": 0.0,
+            "hit_rate": 0.0,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "HG=F": {
+        "n_obs": 1441,
+        "engine": {
+          "balanced_accuracy": 0.5739538716272417,
+          "hit_rate": 0.5648854961832062
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1425,
+            "balanced_accuracy": 0.5705655818168088,
+            "hit_rate": 0.5614035087719298,
+            "fraction_days_differs_from_engine": 0.02666666666666667,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1240,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.4282258064516129,
+            "fraction_days_differs_from_engine": 0.45,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1240,
+            "balanced_accuracy": 0.5592038334143472,
+            "hit_rate": 0.5508064516129032,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.002807017543859649,
+          "ci95": [
+            -0.005614035087719298,
+            0.011929824561403509
+          ],
+          "pvalue": 0.468,
+          "structurally_uninformative": true
+        }
+      }
+    },
+    "A4_carry_price_only_h21": {
+      "CL=F": {
+        "n_obs": 919,
+        "engine": {
+          "balanced_accuracy": 0.3790399036775093,
+          "hit_rate": 0.3862894450489663
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 913,
+            "balanced_accuracy": 0.3776820530551874,
+            "hit_rate": 0.384446878422782,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 846,
+            "balanced_accuracy": 0.37152373488580387,
+            "hit_rate": 0.3806146572104019,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "NG=F": {
+        "n_obs": 1521,
+        "engine": {
+          "balanced_accuracy": 0.43991771337114227,
+          "hit_rate": 0.42143326758711375
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1510,
+            "balanced_accuracy": 0.4383807788980203,
+            "hit_rate": 0.4198675496688742,
+            "fraction_days_differs_from_engine": 0.008609271523178808,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1330,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.46691729323308273,
+            "fraction_days_differs_from_engine": 0.24436090225563908,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1330,
+            "balanced_accuracy": 0.44977730536079713,
+            "hit_rate": 0.4330827067669173,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "class_prior",
+          "mean_hit_rate_diff": -0.03383458646616541,
+          "ci95": [
+            -0.11505639097744358,
+            0.0406203007518796
+          ],
+          "pvalue": 0.399,
+          "structurally_uninformative": false
+        }
+      },
+      "GC=F": {
+        "n_obs": 849,
+        "engine": {
+          "balanced_accuracy": 0.48167492917847027,
+          "hit_rate": 0.4110718492343934
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 842,
+            "balanced_accuracy": 0.4790592334494773,
+            "hit_rate": 0.4085510688836104,
+            "fraction_days_differs_from_engine": 0.007125890736342043,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 761,
+            "balanced_accuracy": 0.4834849446442423,
+            "hit_rate": 0.4244415243101183,
+            "fraction_days_differs_from_engine": 0.001314060446780552,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": -0.001314060446780552,
+          "ci95": [
+            -0.003942181340341655,
+            0.0
+          ],
+          "pvalue": 0.527,
+          "structurally_uninformative": true
+        }
+      },
+      "SI=F": {
+        "n_obs": 69,
+        "engine": {
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.7536231884057971
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 67,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.7611940298507462,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 32,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.625,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "HG=F": {
+        "n_obs": 1731,
+        "engine": {
+          "balanced_accuracy": 0.48635328727889043,
+          "hit_rate": 0.4667822068168689
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1729,
+            "balanced_accuracy": 0.48724356061929897,
+            "hit_rate": 0.46732215153267787,
+            "fraction_days_differs_from_engine": 0.02197802197802198,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1488,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.4422043010752688,
+            "fraction_days_differs_from_engine": 0.23790322580645162,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1488,
+            "balanced_accuracy": 0.4715256161423811,
+            "hit_rate": 0.4415322580645161,
+            "fraction_days_differs_from_engine": 0.0006720430107526882,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": -0.001156737998843262,
+          "ci95": [
+            -0.008097165991902834,
+            0.00578368999421631
+          ],
+          "pvalue": 0.702,
+          "structurally_uninformative": true
+        }
+      }
+    },
+    "A4_carry_price_only_h63": {
+      "CL=F": {
+        "n_obs": 884,
+        "engine": {
+          "balanced_accuracy": 0.34457687413985616,
+          "hit_rate": 0.3190045248868778
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 878,
+            "balanced_accuracy": 0.3451437001132741,
+            "hit_rate": 0.31890660592255127,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 811,
+            "balanced_accuracy": 0.3452079510703364,
+            "hit_rate": 0.33045622688039455,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "NG=F": {
+        "n_obs": 1482,
+        "engine": {
+          "balanced_accuracy": 0.46381996643070855,
+          "hit_rate": 0.4541160593792173
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1471,
+            "balanced_accuracy": 0.4667502102482597,
+            "hit_rate": 0.45615227736233854,
+            "fraction_days_differs_from_engine": 0.008837525492861998,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1290,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.47364341085271316,
+            "fraction_days_differs_from_engine": 0.2527131782945736,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1290,
+            "balanced_accuracy": 0.4695397824373477,
+            "hit_rate": 0.4565891472868217,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "class_prior",
+          "mean_hit_rate_diff": -0.017054263565891473,
+          "ci95": [
+            -0.1310077519379845,
+            0.09534883720930233
+          ],
+          "pvalue": 0.76,
+          "structurally_uninformative": false
+        }
+      },
+      "GC=F": {
+        "n_obs": 807,
+        "engine": {
+          "balanced_accuracy": 0.5333863275039745,
+          "hit_rate": 0.27261462205700127
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 800,
+            "balanced_accuracy": 0.5335463258785943,
+            "hit_rate": 0.27,
+            "fraction_days_differs_from_engine": 0.005,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 719,
+            "balanced_accuracy": 0.5374087591240876,
+            "hit_rate": 0.2948539638386648,
+            "fraction_days_differs_from_engine": 0.0013908205841446453,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0013908205841446453,
+          "ci95": [
+            0.0,
+            0.004172461752433936
+          ],
+          "pvalue": 0.492,
+          "structurally_uninformative": true
+        }
+      },
+      "SI=F": {
+        "n_obs": 69,
+        "engine": {
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.6521739130434783
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 67,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.6567164179104478,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 32,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.53125,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "HG=F": {
+        "n_obs": 1690,
+        "engine": {
+          "balanced_accuracy": 0.5129739671760045,
+          "hit_rate": 0.4822485207100592
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1688,
+            "balanced_accuracy": 0.5103398870825886,
+            "hit_rate": 0.4792654028436019,
+            "fraction_days_differs_from_engine": 0.02132701421800948,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1447,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.42709053213545267,
+            "fraction_days_differs_from_engine": 0.22874913614374567,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1447,
+            "balanced_accuracy": 0.5041516858538185,
+            "hit_rate": 0.4644091223220456,
+            "fraction_days_differs_from_engine": 0.000691085003455425,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.002369668246445498,
+          "ci95": [
+            -0.004739336492890996,
+            0.009478672985781991
+          ],
+          "pvalue": 0.46,
+          "structurally_uninformative": true
+        }
+      }
+    },
+    "A4_carry_roll_yield_only_price_only_h21": {
+      "CL=F": {
+        "n_obs": 960,
+        "engine": {
+          "balanced_accuracy": 0.36091503267973857,
+          "hit_rate": 0.375
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 954,
+            "balanced_accuracy": 0.3594544042913608,
+            "hit_rate": 0.3731656184486373,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 888,
+            "balanced_accuracy": 0.35303524154922034,
+            "hit_rate": 0.36824324324324326,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "NG=F": {
+        "n_obs": 1571,
+        "engine": {
+          "balanced_accuracy": 0.43105489230608907,
+          "hit_rate": 0.4156588160407384
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1560,
+            "balanced_accuracy": 0.4298592032967033,
+            "hit_rate": 0.41474358974358977,
+            "fraction_days_differs_from_engine": 0.009615384615384616,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1380,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.47246376811594204,
+            "fraction_days_differs_from_engine": 0.2572463768115942,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1380,
+            "balanced_accuracy": 0.43999865165509333,
+            "hit_rate": 0.42681159420289855,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "class_prior",
+          "mean_hit_rate_diff": -0.04565217391304348,
+          "ci95": [
+            -0.12320652173913041,
+            0.02755434782608686
+          ],
+          "pvalue": 0.247,
+          "structurally_uninformative": false
+        }
+      },
+      "GC=F": {
+        "n_obs": 784,
+        "engine": {
+          "balanced_accuracy": 0.4808744447042319,
+          "hit_rate": 0.4145408163265306
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 774,
+            "balanced_accuracy": 0.47802295699845815,
+            "hit_rate": 0.41214470284237725,
+            "fraction_days_differs_from_engine": 0.007751937984496124,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 718,
+            "balanced_accuracy": 0.4812437870293053,
+            "hit_rate": 0.4178272980501393,
+            "fraction_days_differs_from_engine": 0.001392757660167131,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": -0.001392757660167131,
+          "ci95": [
+            -0.004178272980501393,
+            0.0
+          ],
+          "pvalue": 0.518,
+          "structurally_uninformative": true
+        }
+      },
+      "SI=F": {
+        "n_obs": 101,
+        "engine": {
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.42574257425742573
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 99,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.42424242424242425,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 101,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.42574257425742573,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "HG=F": {
+        "n_obs": 1731,
+        "engine": {
+          "balanced_accuracy": 0.48635328727889043,
+          "hit_rate": 0.4667822068168689
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1729,
+            "balanced_accuracy": 0.48724356061929897,
+            "hit_rate": 0.46732215153267787,
+            "fraction_days_differs_from_engine": 0.02197802197802198,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1488,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.4422043010752688,
+            "fraction_days_differs_from_engine": 0.23790322580645162,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1488,
+            "balanced_accuracy": 0.4715256161423811,
+            "hit_rate": 0.4415322580645161,
+            "fraction_days_differs_from_engine": 0.0006720430107526882,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": -0.001156737998843262,
+          "ci95": [
+            -0.008097165991902834,
+            0.00578368999421631
+          ],
+          "pvalue": 0.702,
+          "structurally_uninformative": true
+        }
+      }
+    },
+    "A4_carry_roll_yield_only_price_only_h63": {
+      "CL=F": {
+        "n_obs": 919,
+        "engine": {
+          "balanced_accuracy": 0.3188949749940462,
+          "hit_rate": 0.30467899891186073
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 913,
+            "balanced_accuracy": 0.3191974200027036,
+            "hit_rate": 0.3044906900328587,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 847,
+            "balanced_accuracy": 0.319136587870265,
+            "hit_rate": 0.3140495867768595,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "NG=F": {
+        "n_obs": 1532,
+        "engine": {
+          "balanced_accuracy": 0.4576470588235294,
+          "hit_rate": 0.45300261096605743
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1521,
+            "balanced_accuracy": 0.45943631563833137,
+            "hit_rate": 0.4543063773833005,
+            "fraction_days_differs_from_engine": 0.009861932938856016,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1340,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.48582089552238805,
+            "fraction_days_differs_from_engine": 0.2656716417910448,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1340,
+            "balanced_accuracy": 0.4625851932607867,
+            "hit_rate": 0.45597014925373136,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "class_prior",
+          "mean_hit_rate_diff": -0.029850746268656716,
+          "ci95": [
+            -0.15671641791044777,
+            0.09179104477611941
+          ],
+          "pvalue": 0.641,
+          "structurally_uninformative": false
+        }
+      },
+      "GC=F": {
+        "n_obs": 742,
+        "engine": {
+          "balanced_accuracy": 0.5371681415929204,
+          "hit_rate": 0.29514824797843664
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 732,
+            "balanced_accuracy": 0.537567084078712,
+            "hit_rate": 0.2937158469945355,
+            "fraction_days_differs_from_engine": 0.00546448087431694,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 676,
+            "balanced_accuracy": 0.5405940594059406,
+            "hit_rate": 0.3136094674556213,
+            "fraction_days_differs_from_engine": 0.0014792899408284023,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "markov",
+          "mean_hit_rate_diff": 0.0014792899408284023,
+          "ci95": [
+            0.0,
+            0.004437869822485207
+          ],
+          "pvalue": 0.503,
+          "structurally_uninformative": true
+        }
+      },
+      "SI=F": {
+        "n_obs": 101,
+        "engine": {
+          "balanced_accuracy": 0.5,
+          "hit_rate": 0.16831683168316833
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 99,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.1717171717171717,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 0,
+            "insufficient_data": true
+          },
+          "markov": {
+            "n_obs": 101,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.16831683168316833,
+            "fraction_days_differs_from_engine": 0.0,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "pvalue": 1.0,
+          "structurally_uninformative": true
+        }
+      },
+      "HG=F": {
+        "n_obs": 1690,
+        "engine": {
+          "balanced_accuracy": 0.5129739671760045,
+          "hit_rate": 0.4822485207100592
+        },
+        "baselines": {
+          "persistence": {
+            "n_obs": 1688,
+            "balanced_accuracy": 0.5103398870825886,
+            "hit_rate": 0.4792654028436019,
+            "fraction_days_differs_from_engine": 0.02132701421800948,
+            "structurally_uninformative": true
+          },
+          "class_prior": {
+            "n_obs": 1447,
+            "balanced_accuracy": 0.5,
+            "hit_rate": 0.42709053213545267,
+            "fraction_days_differs_from_engine": 0.22874913614374567,
+            "structurally_uninformative": false
+          },
+          "markov": {
+            "n_obs": 1447,
+            "balanced_accuracy": 0.5041516858538185,
+            "hit_rate": 0.4644091223220456,
+            "fraction_days_differs_from_engine": 0.000691085003455425,
+            "structurally_uninformative": true
+          }
+        },
+        "vs_best_baseline": {
+          "baseline": "persistence",
+          "mean_hit_rate_diff": 0.002369668246445498,
+          "ci95": [
+            -0.004739336492890996,
+            0.009478672985781991
+          ],
+          "pvalue": 0.46,
+          "structurally_uninformative": true
+        }
+      }
+    },
+    "A5_term_structure_cross_sectional_h21": {
+      "spread_top2_minus_bottom2": {
+        "n_obs": 83,
+        "mean": -0.01792596499720606,
+        "ci95": [
+          -0.038959778640768924,
+          0.003192831592248027
+        ],
+        "pvalue": 0.089
+      },
+      "rank_ic": {
+        "panel_ic": -0.08476736879758892,
+        "clustered_nw_tstat": -2.19864724259514,
+        "naive_tstat": -7.8992922280773294,
+        "n_obs": 8697,
+        "n_timestamps": 1741
+      }
+    },
+    "A5_term_structure_cross_sectional_h63": {
+      "spread_top2_minus_bottom2": {
+        "n_obs": 27,
+        "mean": -0.04947865105751269,
+        "ci95": [
+          -0.11481442407336544,
+          0.0207794204780711
+        ],
+        "pvalue": 0.143
+      },
+      "rank_ic": {
+        "panel_ic": -0.06382811168912038,
+        "clustered_nw_tstat": -0.9128126439759322,
+        "naive_tstat": -5.889771541926997,
+        "n_obs": 8487,
+        "n_timestamps": 1699
+      }
+    },
+    "A5_carry_cross_sectional_h21": {
+      "spread_top2_minus_bottom2": {
+        "n_obs": 83,
+        "mean": -0.022337194460967408,
+        "ci95": [
+          -0.041614400368821795,
+          -0.002762963577136243
+        ],
+        "pvalue": 0.026
+      },
+      "rank_ic": {
+        "panel_ic": -0.0992670914778866,
+        "clustered_nw_tstat": -2.614600551091095,
+        "naive_tstat": -9.26084466097936,
+        "n_obs": 8697,
+        "n_timestamps": 1741
+      }
+    },
+    "A5_carry_cross_sectional_h63": {
+      "spread_top2_minus_bottom2": {
+        "n_obs": 27,
+        "mean": -0.07457756124565976,
+        "ci95": [
+          -0.1243657049982253,
+          -0.02187858000085417
+        ],
+        "pvalue": 0.003
+      },
+      "rank_ic": {
+        "panel_ic": -0.10147155836647287,
+        "clustered_nw_tstat": -1.5331876837291207,
+        "naive_tstat": -9.385971036512402,
+        "n_obs": 8487,
+        "n_timestamps": 1699
+      }
+    },
+    "A6_cot_positioning_fwd21": {
+      "n_obs": 1180,
+      "engine": {
+        "balanced_accuracy": 0.44122969050401484,
+        "hit_rate": 0.42966101694915254
+      },
+      "baselines": {
+        "persistence": {
+          "n_obs": 1171,
+          "balanced_accuracy": 0.43954268580046185,
+          "hit_rate": 0.42783945345858243,
+          "fraction_days_differs_from_engine": 0.0017079419299743809,
+          "structurally_uninformative": true
+        },
+        "class_prior": {
+          "n_obs": 442,
+          "balanced_accuracy": 0.42575394140681055,
+          "hit_rate": 0.4117647058823529,
+          "fraction_days_differs_from_engine": 0.17647058823529413,
+          "structurally_uninformative": false
+        },
+        "markov": {
+          "n_obs": 1099,
+          "balanced_accuracy": 0.45927990708478517,
+          "hit_rate": 0.4549590536851683,
+          "fraction_days_differs_from_engine": 0.0009099181073703367,
+          "structurally_uninformative": true
+        }
+      },
+      "vs_best_baseline": {
+        "baseline": "markov",
+        "mean_hit_rate_diff": -0.0009099181073703367,
+        "ci95": [
+          -0.00272975432211101,
+          0.0
+        ],
+        "pvalue": 0.516,
+        "structurally_uninformative": true
+      }
+    }
+  }
+}

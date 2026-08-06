@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, overload
 
 sys.path.insert(0, "src")
 
@@ -30,6 +30,10 @@ DATABENTO_DIR = Path("src/research/data/market/databento/ohlcv")
 # --------------------------------------------------------------------------- #
 # Ground rule 1: truncation
 # --------------------------------------------------------------------------- #
+@overload
+def truncate(obj: pd.Series) -> pd.Series: ...
+@overload
+def truncate(obj: pd.DataFrame) -> pd.DataFrame: ...
 def truncate(obj: pd.Series | pd.DataFrame) -> pd.Series | pd.DataFrame:
     """Truncate a date-indexed series/frame to <= TRUNCATION, and assert it."""
     out = obj[obj.index <= TRUNCATION]
@@ -82,48 +86,59 @@ PANEL_D_TO_YFINANCE: dict[str, str] = {
 
 
 # --------------------------------------------------------------------------- #
-# Panel-D: front-month continuous close from per-contract databento OHLCV
+# Panel-D: front-month continuous OHLCV and curve shape from per-contract
+# databento data
 # --------------------------------------------------------------------------- #
-def load_databento_front_month_close(product: str) -> pd.Series:
-    """Front-month continuous close, one row per date: for each date, the
-    close of the contract with the nearest (smallest) YYYYMM expiry among
+def _expiry_from_ticker(ticker: str, as_of: pd.Timestamp) -> float:
+    year, month = int(ticker[-6:-2]), int(ticker[-2:])
+    expiry = pd.Timestamp(year=year, month=month, day=1) + pd.offsets.MonthEnd(0)
+    return float((expiry - as_of).days)
+
+
+def load_databento_front_month_ohlcv(product: str) -> pd.DataFrame:
+    """Front-month continuous OHLCV, one row per date: for each date, the
+    bar of the contract with the nearest (smallest) YYYYMM expiry among
     contracts trading that date -- tickers are literally f"{product}{YYYYMM}"
-    so this is a lexicographic min, equivalently the min contract_id (ids
-    are assigned in expiry order within a product).
+    so this is a lexicographic-ticker min.
 
     Disclosed limitation (NEXT_PROMPT.md sec5.1's price-only-target trap,
     applied here rather than re-derived per caller): this series is not
-    roll-adjusted, so log returns computed across a roll date contain a
-    genuine price discontinuity (the front contract changing, not the
-    commodity moving). Track B's target uses this as-is for Panel-D
-    symbols with no yfinance equivalent (KE); everywhere else it prefers
-    the yfinance continuous series, which is smoother by construction.
+    roll-adjusted, so returns computed across a roll date contain a genuine
+    price discontinuity (the front contract changing, not the commodity
+    moving). Track B prefers the yfinance continuous series wherever one
+    exists (PANEL_D_TO_YFINANCE); this is used as-is only for symbols with
+    no yfinance equivalent (KE) and for building Panel-D's curve-shape (F3)
+    features, which have no yfinance analogue at all.
     """
     frame = pl.read_parquet(DATABENTO_DIR / f"{product}.parquet")
-    front = (
-        frame.sort(["date", "ticker"])
-        .group_by("date", maintain_order=False)
-        .first()
-        .sort("date")
-    )
+    frame = frame.filter(pl.col("ticker").str.contains(r"^[A-Z]+\d{6}$"))
+    front = frame.sort(["date", "ticker"]).group_by("date", maintain_order=False).first().sort("date")
     pdf = front.to_pandas()
     pdf["date"] = pd.to_datetime(pdf["date"])
-    return pdf.set_index("date")["close"].sort_index()
+    return pdf.set_index("date")[["open", "high", "low", "close", "volume"]].sort_index()
 
 
-def load_databento_curve_shape(product: str) -> pd.DataFrame | None:
-    """Front-three settlement prices and days-to-expiry per date, for Panel-D
-    F3 features (NEXT_PROMPT.md sec5.3). Built the same way as the front-
-    month close (nearest-3 contracts by expiry, present that date); returns
-    None if fewer than 2 contracts ever trade simultaneously (no curve
-    shape to speak of)."""
+def load_databento_curve_frame(product: str) -> pd.DataFrame | None:
+    """Front-three settlement prices and days-to-expiry per date, schema
+    matching regime.loaders.load_curve exactly (close_f1, dte_f1, close_f2,
+    dte_f2, close_f3, dte_f3) so it plugs straight into RegimeInputs.curve
+    and the existing term_structure/carry dimensions run on Panel-D too
+    (NEXT_PROMPT.md sec5.3's F3). None if fewer than 2 contracts ever trade
+    simultaneously (no curve shape to speak of)."""
     frame = pl.read_parquet(DATABENTO_DIR / f"{product}.parquet").select(
-        "date", "ticker", "contract_id", "close"
+        "date", "ticker", "close"
     )
+    # A handful of rows carry a continuous-contract ticker like "PA=F"
+    # rather than the per-contract f"{product}{YYYYMM}" form -- exclude
+    # those before ranking legs by ticker, or an illiquid date with fewer
+    # than 3 real contracts can pull one in as a "leg" and crash expiry
+    # parsing (or worse, silently misrank the curve).
+    frame = frame.filter(pl.col("ticker").str.contains(r"^[A-Z]+\d{6}$"))
     pdf = frame.to_pandas()
     pdf["date"] = pd.to_datetime(pdf["date"])
     rows = []
-    for date, grp in pdf.groupby("date"):
+    for date_key, grp in pdf.groupby("date"):
+        date = cast(pd.Timestamp, date_key)
         grp = grp.sort_values("ticker")
         if len(grp) < 2:
             continue
@@ -133,27 +148,14 @@ def load_databento_curve_shape(product: str) -> pd.DataFrame | None:
             if i < len(legs):
                 leg = legs.iloc[i]
                 row[f"close_f{i + 1}"] = leg["close"]
-                row[f"expiry_f{i + 1}"] = leg["ticker"][-6:]
+                row[f"dte_f{i + 1}"] = _expiry_from_ticker(str(leg["ticker"]), date)
             else:
                 row[f"close_f{i + 1}"] = np.nan
-                row[f"expiry_f{i + 1}"] = None
+                row[f"dte_f{i + 1}"] = np.nan
         rows.append(row)
     if not rows:
         return None
-    out = pd.DataFrame(rows).set_index("date").sort_index()
-
-    def _dte(expiry_str: str | None, as_of: pd.Timestamp) -> float:
-        if expiry_str is None or pd.isna(expiry_str):
-            return float("nan")
-        year, month = int(expiry_str[:4]), int(expiry_str[4:6])
-        expiry = pd.Timestamp(year=year, month=month, day=1) + pd.offsets.MonthEnd(0)
-        return float((expiry - as_of).days)
-
-    for i in range(1, 4):
-        out[f"dte_f{i}"] = [
-            _dte(exp, ts) for exp, ts in zip(out[f"expiry_f{i}"], out.index, strict=True)
-        ]
-    return out.drop(columns=[f"expiry_f{i}" for i in range(1, 4)])
+    return pd.DataFrame(rows).set_index("date").sort_index()
 
 
 # --------------------------------------------------------------------------- #
@@ -287,7 +289,7 @@ def bars_per_symbol_panel_l() -> dict[str, int]:
 def bars_per_symbol_panel_d() -> dict[str, int]:
     out = {}
     for product in PANEL_D_SYMBOLS:
-        close = truncate(load_databento_front_month_close(product))
+        close = truncate(load_databento_front_month_ohlcv(product)["close"])
         out[product] = len(close)
     return out
 
@@ -364,7 +366,7 @@ def track_c_power_budget(
     panel_d_bars = bars_per_symbol_panel_d()
     panel_l_closes = {s: cast(pd.Series, truncate(load_bars(s)["close"])) for s in PANEL_L_SYMBOLS}
     panel_d_closes = {
-        p: cast(pd.Series, truncate(load_databento_front_month_close(p))) for p in PANEL_D_SYMBOLS
+        p: cast(pd.Series, truncate(load_databento_front_month_ohlcv(p)["close"])) for p in PANEL_D_SYMBOLS
     }
 
     out = {}
@@ -410,8 +412,8 @@ __all__ = [
     "bars_per_symbol_panel_l",
     "build_disjointness_table",
     "kish_effective_n",
-    "load_databento_curve_shape",
-    "load_databento_front_month_close",
+    "load_databento_curve_frame",
+    "load_databento_front_month_ohlcv",
     "mean_pairwise_correlation",
     "minimum_detectable_effect",
     "track_c_power_budget",
