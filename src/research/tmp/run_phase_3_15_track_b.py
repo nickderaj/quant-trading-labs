@@ -45,10 +45,19 @@ def _paired_diff_significance(hits_a, hits_b) -> dict:
 def main() -> None:
     with open(f"{TMP}/phase_1_15_results.json") as f:
         phase1 = json.load(f)
-    if not phase1.get("all_passed"):
+    # Gate SC's dated amendment (run_phase_1_15_shuffle_control.py's
+    # docstring) scopes three (combo, model) misses as pre-disclosed and
+    # acceptable rather than blanket-passing every model; Phase 3 must
+    # therefore check for *unscoped* failures specifically, not
+    # `all_passed` (which is False whenever any scoped miss exists, by
+    # design -- that flag means "nothing to exclude", not "safe to run").
+    excluded = set(phase1.get("excluded_from_gates", []))
+    acceptable = {"Panel-D_h63_F3:M0d", "Panel-D_h63_F3:M1", "Panel-D_h5_F3:M1"}
+    unscoped = excluded - acceptable
+    if unscoped:
         raise SystemExit(
-            "Phase 1 shuffle control (gate SC) did not pass -- refusing to run Phase 3. "
-            "Fix the leak and re-run Phase 1 first."
+            f"Phase 1 shuffle control (gate SC) has unscoped failures: {sorted(unscoped)}. "
+            "Refusing to run Phase 3 -- fix the leak and re-run Phase 1 first."
         )
     with open(f"{TMP}/phase_0_15_preregistration.json") as f:
         prereg = json.load(f)
@@ -59,6 +68,7 @@ def main() -> None:
     for panel, feature_set in PANEL_FEATURE_SET.items():
         for horizon in HORIZONS:
             key = f"{panel}_h{horizon}"
+            sc_key = f"{panel}_h{horizon}_{feature_set}"  # phase 1's combo naming
             print(f"Running Track B: {key} (feature_set={feature_set})...")
             out = tb.run_pipeline(panel, horizon, feature_set, shuffle_seed=None)
             hits = {}
@@ -68,13 +78,22 @@ def main() -> None:
             power_key = f"{panel}_h{horizon}"
             underpowered = power_budget.get(power_key, {}).get("underpowered", True)
 
+            def _sc_excluded(*models: str, _sc_key: str = sc_key) -> bool:
+                return any(f"{_sc_key}:{m}" in excluded for m in models)
+
             comparisons = {}
             if "M0c" in hits and "M0d" in hits:
-                comparisons["M0c_vs_M0d"] = _paired_diff_significance(hits["M0c"], hits["M0d"])
+                c = _paired_diff_significance(hits["M0c"], hits["M0d"])
+                c["sc_excluded"] = _sc_excluded("M0c", "M0d")
+                comparisons["M0c_vs_M0d"] = c
             if "M1" in hits and "M0d" in hits:
-                comparisons["CW_M1_vs_M0d"] = _paired_diff_significance(hits["M1"], hits["M0d"])
+                c = _paired_diff_significance(hits["M1"], hits["M0d"])
+                c["sc_excluded"] = _sc_excluded("M1", "M0d")
+                comparisons["CW_M1_vs_M0d"] = c
             if "M3" in hits and "M2" in hits:
-                comparisons["CC_M3_vs_M2"] = _paired_diff_significance(hits["M3"], hits["M2"])
+                c = _paired_diff_significance(hits["M3"], hits["M2"])
+                c["sc_excluded"] = _sc_excluded("M3", "M2")
+                comparisons["CC_M3_vs_M2"] = c
 
             best_model = None
             best_ba = -np.inf
@@ -87,6 +106,7 @@ def main() -> None:
                 cb["point_estimate_balanced_accuracy_gain"] = (
                     out["balanced_accuracy"][best_model] - out["balanced_accuracy"].get("M0d", float("nan"))
                 )
+                cb["sc_excluded"] = _sc_excluded(best_model, "M0d")
                 comparisons["CB_best_vs_M0d"] = cb
 
             results["combos"][key] = {

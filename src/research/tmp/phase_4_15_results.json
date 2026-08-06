@@ -1,0 +1,88 @@
+{
+  "alpha_bonferroni": 0.00125,
+  "gates": {
+    "SC": {
+      "fires": true,
+      "excluded_from_gates": [
+        "Panel-D_h5_F3:M1",
+        "Panel-D_h63_F3:M0d",
+        "Panel-D_h63_F3:M1"
+      ],
+      "unscoped_failures": [],
+      "note": "excluded_from_gates are pre-disclosed, dated-amendment misses (see run_phase_1_15_shuffle_control.py docstring); they exclude specific Phase 3 comparisons, not whole arms, and do not themselves cause SC to fail."
+    },
+    "ID": {
+      "fires": true,
+      "n_pairs_checked": 10,
+      "n_disqualified": 2,
+      "n_scored_disjoint": 8
+    },
+    "IA": {
+      "fires": false,
+      "fired_on": [],
+      "trials_considered": [
+        "A1_dff_fwd126",
+        "A2_es_drawdown_fwd126"
+      ]
+    },
+    "IT": {
+      "fires": false,
+      "fired_on": []
+    },
+    "IC": {
+      "fires": false,
+      "fired_on": []
+    },
+    "IC_roll_yield_only_informational": {
+      "fires": false,
+      "fired_on": []
+    },
+    "CW": {
+      "fires": false,
+      "fired_on": []
+    },
+    "CC": {
+      "fires": false,
+      "fired_on": []
+    },
+    "CB": {
+      "fires": false,
+      "fired_on": []
+    },
+    "M0c_vs_M0d_informational": {
+      "fires": false,
+      "fired_on": []
+    },
+    "PW": {
+      "fires": true,
+      "adequate_arms": [
+        "Panel-L_h5",
+        "Panel-L_h21",
+        "Panel-L_h63",
+        "Panel-D_h5",
+        "Panel-D_h21",
+        "Panel-D_h63"
+      ],
+      "all_arms": [
+        "Panel-L_h5",
+        "Panel-L_h21",
+        "Panel-L_h63",
+        "Panel-D_h5",
+        "Panel-D_h21",
+        "Panel-D_h63"
+      ]
+    }
+  },
+  "outcome": {
+    "hard_gates_pass": true,
+    "cw_fires": false,
+    "cc_fires": false,
+    "cb_fires": false,
+    "pw_satisfied": true,
+    "ia_fires": false,
+    "it_fires": false,
+    "ic_fires": false,
+    "authorization": "Close the directional-trend line of enquiry. Record the MDE bound. Future notebooks may use trend labels as descriptive context but may not condition a directional strategy on them.",
+    "track_a_verdict": "014's high-accuracy dimensions were arithmetic. Update the verdict table to 'No' outright and stop citing 0.981 and 0.87 anywhere."
+  }
+}
