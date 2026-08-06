@@ -14,10 +14,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+import pytest
 import yaml
 
 from regime.builder import build_regime_report
+from regime.loaders import BARS_DIR
 from regime.universe import load_regime_universe
+
+pytestmark = pytest.mark.skipif(
+    not (BARS_DIR / "ES=F.parquet").exists(),
+    reason="requires the local yfinance/FRED parquet cache (gitignored, not fetched in CI)",
+)
 
 UNIVERSE_YAML = (
     Path(__file__).resolve().parents[1] / "src" / "regime" / "configs" / "universe.yaml"
