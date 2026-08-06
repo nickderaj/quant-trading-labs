@@ -216,6 +216,7 @@ def main() -> None:
     unscoped_failures = [k for k in failed_model_combos if k not in acceptable_failures]
     results["failed_model_combos"] = failed_model_combos
     results["excluded_from_gates"] = failed_model_combos
+    results["unscoped_failures"] = unscoped_failures
     with open(f"{TMP}/phase_1_15_results.json", "w") as f:
         json.dump(results, f, indent=2, default=str)
 

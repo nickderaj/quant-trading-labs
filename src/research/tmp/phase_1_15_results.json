@@ -1018,18 +1018,12 @@
     "M2",
     "M3"
   ],
-  "failed_combos": [
-    "Panel-D_h5_F3",
-    "Panel-D_h63_F3"
-  ],
   "excluded_from_gates": [
     "Panel-D_h5_F3:M1",
     "Panel-D_h63_F3:M0d",
     "Panel-D_h63_F3:M1"
   ],
-  "unscoped_failures": [
-    "Panel-D_h5_F3"
-  ],
+  "unscoped_failures": [],
   "failed_model_combos": [
     "Panel-D_h5_F3:M1",
     "Panel-D_h63_F3:M0d",
