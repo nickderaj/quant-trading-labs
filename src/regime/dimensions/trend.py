@@ -32,7 +32,9 @@ def price_vs_ma(inputs: RegimeInputs, window: int = 200) -> pd.Series:
 
 
 @register("trend.ma_slope", {"ohlcv"}, window=100, slope_window=20)
-def trend_ma_slope(inputs: RegimeInputs, window: int = 100, slope_window: int = 20) -> pd.Series:
+def trend_ma_slope(
+    inputs: RegimeInputs, window: int = 100, slope_window: int = 20
+) -> pd.Series:
     return ma_slope(_close(inputs), window, slope_window)
 
 
@@ -45,7 +47,8 @@ def nday_log_return(inputs: RegimeInputs, n: int = 60) -> pd.Series:
 def trend_adx(inputs: RegimeInputs, window: int = 14) -> pd.Series:
     values = dmi(inputs.ohlcv, window)
     return pd.Series(
-        values["adx"] * np.sign(values["plus_di"] - values["minus_di"]), index=inputs.ohlcv.index
+        values["adx"] * np.sign(values["plus_di"] - values["minus_di"]),
+        index=inputs.ohlcv.index,
     )
 
 
@@ -58,10 +61,14 @@ def trend_efficiency(inputs: RegimeInputs, window: int = 20) -> pd.Series:
 
 
 @register("trend.ma_separation", {"ohlcv"}, fast=50, slow=200)
-def trend_separation(inputs: RegimeInputs, fast: int = 50, slow: int = 200) -> pd.Series:
+def trend_separation(
+    inputs: RegimeInputs, fast: int = 50, slow: int = 200
+) -> pd.Series:
     return ma_separation(_close(inputs), fast, slow)
 
 
 @register("trend.variance_ratio", {"ohlcv"}, q=5, window=252)
-def trend_variance_ratio(inputs: RegimeInputs, q: int = 5, window: int = 252) -> pd.Series:
+def trend_variance_ratio(
+    inputs: RegimeInputs, q: int = 5, window: int = 252
+) -> pd.Series:
     return variance_ratio(_close(inputs), q, window) - 1

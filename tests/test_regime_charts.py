@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from datetime import date
 from pathlib import Path
+from typing import Literal
 
 import matplotlib
 
@@ -24,7 +25,10 @@ def _history(dimensions: list[str], days: int = 40) -> pd.DataFrame:
     index = pd.date_range("2026-05-01", periods=days, freq="B")
     rng = np.random.default_rng(7)
     return pd.DataFrame(
-        {dimension: np.clip(rng.normal(0, 0.4, days), -1, 1) for dimension in dimensions},
+        {
+            dimension: np.clip(rng.normal(0, 0.4, days), -1, 1)
+            for dimension in dimensions
+        },
         index=index,
     )
 
@@ -33,7 +37,10 @@ def _labels(history: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(
         {
             dimension: pd.array(
-                ["bear" if v < -0.15 else "bull" if v > 0.15 else "neutral" for v in history[dimension]],
+                [
+                    "bear" if v < -0.15 else "bull" if v > 0.15 else "neutral"
+                    for v in history[dimension]
+                ],
                 dtype="string",
             )
             for dimension in history
@@ -42,7 +49,9 @@ def _labels(history: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def _sector(name: str, kind: str, latest: dict[str, tuple[str, float]]) -> SectorRegime:
+def _sector(
+    name: str, kind: Literal["macro", "basket"], latest: dict[str, tuple[str, float]]
+) -> SectorRegime:
     history = _history(list(latest))
     labels = _labels(history)
     return SectorRegime(name, kind, latest, labels, history, list(latest), [])
@@ -106,7 +115,13 @@ def test_render_regime_charts_returns_snapshot_and_history_pngs() -> None:
 
 def test_render_regime_charts_without_history_only_renders_snapshot() -> None:
     sector = SectorRegime(
-        "FX", "basket", {"trend": ("bull", 0.6)}, pd.DataFrame(), pd.DataFrame(), ["6E=F"], []
+        "FX",
+        "basket",
+        {"trend": ("bull", 0.6)},
+        pd.DataFrame(),
+        pd.DataFrame(),
+        ["6E=F"],
+        [],
     )
     charts = render_regime_charts(RegimeReport(date(2026, 7, 16), [sector], []))
 
@@ -121,7 +136,8 @@ def test_render_regime_charts_raises_on_empty_report() -> None:
 
 def test_ribbon_figure_renders_with_episode_overlay() -> None:
     fig = ribbon_figure(
-        make_report(), episodes=[EpisodeSpan("2026-05-15", "2026-05-25", "test episode")]
+        make_report(),
+        episodes=[EpisodeSpan("2026-05-15", "2026-05-25", "test episode")],
     )
     png = to_png(fig)
 

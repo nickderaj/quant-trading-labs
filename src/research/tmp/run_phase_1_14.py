@@ -25,7 +25,13 @@ import polars as pl
 import yaml
 
 from regime.builder import build_regime_report
-from regime.charts import EpisodeSpan, history_figure, ribbon_figure, snapshot_figure, to_png
+from regime.charts import (
+    EpisodeSpan,
+    history_figure,
+    ribbon_figure,
+    snapshot_figure,
+    to_png,
+)
 from regime.universe import load_regime_universe
 
 TMP = "src/research/tmp"
@@ -75,7 +81,9 @@ def main() -> None:
 
     panel = _panel_frame(report)
     panel.write_parquet(PANEL_PATH)
-    print(f"Wrote {PANEL_PATH}: {panel.height} rows, {panel['sector'].n_unique()} sectors")
+    print(
+        f"Wrote {PANEL_PATH}: {panel.height} rows, {panel['sector'].n_unique()} sectors"
+    )
 
     with open(f"{TMP}/phase_0_14_preregistration.json") as f:
         prereg = json.load(f)
@@ -105,7 +113,9 @@ def main() -> None:
     with open(ribbon_episodes_path, "wb") as f:
         f.write(
             to_png(
-                ribbon_figure(report, episodes=episodes, sectors=sorted(episode_sectors))
+                ribbon_figure(
+                    report, episodes=episodes, sectors=sorted(episode_sectors)
+                )
             )
         )
 
@@ -121,8 +131,12 @@ def main() -> None:
                 "symbols_used": sector.symbols_used,
                 "symbols_skipped": sector.symbols_skipped,
                 "rows": len(sector.score_history),
-                "first": str(sector.score_history.index.min()) if len(sector.score_history) else None,
-                "last": str(sector.score_history.index.max()) if len(sector.score_history) else None,
+                "first": str(sector.score_history.index.min())
+                if len(sector.score_history)
+                else None,
+                "last": str(sector.score_history.index.max())
+                if len(sector.score_history)
+                else None,
             }
             for sector in report.sectors
         ],

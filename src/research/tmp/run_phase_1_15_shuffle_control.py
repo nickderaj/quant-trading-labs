@@ -84,8 +84,12 @@ GATE_RELEVANT_MODELS = ["M0c", "M0d", "M1", "M2", "M3"]
 
 
 def _paired_block_bootstrap_balanced_accuracy(
-    true: np.ndarray, pred: np.ndarray, dates: np.ndarray, block_length_dates: int,
-    n_boot: int = 2000, seed: int = 0,
+    true: np.ndarray,
+    pred: np.ndarray,
+    dates: np.ndarray,
+    block_length_dates: int,
+    n_boot: int = 2000,
+    seed: int = 0,
 ) -> tuple[float, float]:
     """95% CI of balanced accuracy under a block bootstrap that resamples
     contiguous *dates* (not rows), carrying every symbol's rows for a
@@ -113,9 +117,13 @@ def _paired_block_bootstrap_balanced_accuracy(
     correct_neg = (is_neg & (pred == true)).astype(np.float64)
 
     sum_correct_pos = np.bincount(date_codes, weights=correct_pos, minlength=n_dates)
-    sum_is_pos = np.bincount(date_codes, weights=is_pos.astype(np.float64), minlength=n_dates)
+    sum_is_pos = np.bincount(
+        date_codes, weights=is_pos.astype(np.float64), minlength=n_dates
+    )
     sum_correct_neg = np.bincount(date_codes, weights=correct_neg, minlength=n_dates)
-    sum_is_neg = np.bincount(date_codes, weights=is_neg.astype(np.float64), minlength=n_dates)
+    sum_is_neg = np.bincount(
+        date_codes, weights=is_neg.astype(np.float64), minlength=n_dates
+    )
 
     rng = np.random.default_rng(seed)
     n_blocks = int(np.ceil(n_dates / block_length_dates))
@@ -140,12 +148,20 @@ def main() -> None:
     for panel, feature_set in COMBOS:
         for horizon in HORIZONS:
             key = f"{panel}_h{horizon}_{feature_set}"
-            print(f"[{time.time() - t_start:7.1f}s] shuffle control: {key} ({N_SEEDS} seeds)...")
+            print(
+                f"[{time.time() - t_start:7.1f}s] shuffle control: {key} ({N_SEEDS} seeds)..."
+            )
             per_model_pairs: dict[str, list[pd.DataFrame]] = {m: [] for m in MODEL_IDS}
             per_model_ba: dict[str, list[float]] = {m: [] for m in MODEL_IDS}
             n_folds = None
             for seed in range(N_SEEDS):
-                out = tb.run_pipeline(panel, horizon, feature_set, shuffle_seed=seed, block_size=BLOCK_SIZE)
+                out = tb.run_pipeline(
+                    panel,
+                    horizon,
+                    feature_set,
+                    shuffle_seed=seed,
+                    block_size=BLOCK_SIZE,
+                )
                 n_folds = out["n_folds"]
                 for m in MODEL_IDS:
                     if m in out["balanced_accuracy"]:
@@ -161,20 +177,29 @@ def main() -> None:
                 # Pooled across all 10 seeds, date-sorted so the block
                 # bootstrap's contiguous blocks mean contiguous *time*, not
                 # an arbitrary concatenation order.
-                pooled = pd.concat(per_model_pairs[m], ignore_index=True).sort_values("date")
+                pooled = pd.concat(per_model_pairs[m], ignore_index=True).sort_values(
+                    "date"
+                )
                 true_arr = pooled["true"].to_numpy()
                 pred_arr = pooled["pred"].to_numpy()
                 date_arr = pooled["date"].to_numpy()
                 pooled_ba = float(balanced_accuracy_score(true_arr, pred_arr))
                 lo, hi = _paired_block_bootstrap_balanced_accuracy(
-                    true_arr, pred_arr, date_arr, block_length_dates=BLOCK_SIZE, n_boot=2000, seed=0
+                    true_arr,
+                    pred_arr,
+                    date_arr,
+                    block_length_dates=BLOCK_SIZE,
+                    n_boot=2000,
+                    seed=0,
                 )
                 covers_chance = lo <= 0.5 <= hi
                 if m in GATE_RELEVANT_MODELS:
                     combo_gate_passed = combo_gate_passed and covers_chance
                 combo_result["models"][m] = {
                     "seed_balanced_accuracies": [round(v, 4) for v in per_model_ba[m]],
-                    "mean_balanced_accuracy_across_seeds": round(float(np.mean(per_model_ba[m])), 4),
+                    "mean_balanced_accuracy_across_seeds": round(
+                        float(np.mean(per_model_ba[m])), 4
+                    ),
                     "pooled_n": len(pooled),
                     "pooled_balanced_accuracy": round(pooled_ba, 4),
                     "ci95": [round(lo, 4), round(hi, 4)],
@@ -184,9 +209,13 @@ def main() -> None:
             combo_result["passed"] = combo_gate_passed
             results["combos"][key] = combo_result
             results["all_passed"] = results["all_passed"] and combo_gate_passed
-            print(f"  passed(gate-relevant)={combo_gate_passed} " + ", ".join(
-                f"{m}={combo_result['models'][m]['pooled_balanced_accuracy']:.3f}" for m in combo_result["models"]
-            ))
+            print(
+                f"  passed(gate-relevant)={combo_gate_passed} "
+                + ", ".join(
+                    f"{m}={combo_result['models'][m]['pooled_balanced_accuracy']:.3f}"
+                    for m in combo_result["models"]
+                )
+            )
 
     results["gate_relevant_models"] = GATE_RELEVANT_MODELS
     results["elapsed_sec"] = round(time.time() - t_start, 1)
@@ -202,7 +231,8 @@ def main() -> None:
     # docstring's dated amendment, point 3: M1 misses at Panel-D_h5 while
     # M2/M3 pass there, so CC/CB stay eligible even though CW doesn't).
     failed_model_combos = [
-        f"{key}:{m}" for key, v in results["combos"].items()
+        f"{key}:{m}"
+        for key, v in results["combos"].items()
         for m in GATE_RELEVANT_MODELS
         if m in v["models"] and not v["models"][m]["covers_chance"]
     ]
@@ -211,7 +241,9 @@ def main() -> None:
     # Panel-D h=5. Anything outside this exact set is a genuine, unscoped
     # leak and halts the notebook.
     acceptable_failures = {
-        "Panel-D_h63_F3:M0d", "Panel-D_h63_F3:M1", "Panel-D_h5_F3:M1",
+        "Panel-D_h63_F3:M0d",
+        "Panel-D_h63_F3:M1",
+        "Panel-D_h5_F3:M1",
     }
     unscoped_failures = [k for k in failed_model_combos if k not in acceptable_failures]
     results["failed_model_combos"] = failed_model_combos

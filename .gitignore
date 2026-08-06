@@ -20,3 +20,6 @@ src/data/
 
 # Scratch prompts (local only)
 NEXT_PROMPT.md
+
+# Local-only Claude instructions
+CLAUDE.md

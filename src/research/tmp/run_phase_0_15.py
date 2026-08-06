@@ -17,45 +17,161 @@ import lib15 as lib
 
 TMP = "src/research/tmp"
 
-N_TRIALS_TRACK_A = 16  # sec7: yield_curve(3) + term_structure(5) + carry(4+4 roll-yield-only variant)
-N_TRIALS_TRACK_B = 24  # sec9: 3 horizons x 2 panels x 4 trials/combo (M0c_vs_M0d, CW, CC, CB)
+N_TRIALS_TRACK_A = (
+    16  # sec7: yield_curve(3) + term_structure(5) + carry(4+4 roll-yield-only variant)
+)
+N_TRIALS_TRACK_B = (
+    24  # sec9: 3 horizons x 2 panels x 4 trials/combo (M0c_vs_M0d, CW, CC, CB)
+)
 N_TRIALS_TOTAL = N_TRIALS_TRACK_A + N_TRIALS_TRACK_B  # 40
 ALPHA_FAMILY = 0.05
 ALPHA_BONFERRONI = ALPHA_FAMILY / N_TRIALS_TOTAL
 
 TRACK_A_TRIAL_LEDGER = [
-    {"dimension": "yield_curve", "target": "A1_dff_fwd126", "counts_toward_gate_IA": True},
-    {"dimension": "yield_curve", "target": "A2_es_drawdown_fwd126", "counts_toward_gate_IA": True},
+    {
+        "dimension": "yield_curve",
+        "target": "A1_dff_fwd126",
+        "counts_toward_gate_IA": True,
+    },
+    {
+        "dimension": "yield_curve",
+        "target": "A2_es_drawdown_fwd126",
+        "counts_toward_gate_IA": True,
+    },
     {
         "dimension": "yield_curve",
         "target": "A3_hy_oas_fwd63",
         "counts_toward_gate_IA": False,
         "reason": "underpowered: BAMLH0A0HYM2 starts 2023-07-17, ~18mo after truncation to 2024-12-31",
     },
-    {"dimension": "term_structure", "target": "A4_front_month_return", "horizon": 21, "counts_toward_gate_IT": True},
-    {"dimension": "term_structure", "target": "A4_front_month_return", "horizon": 63, "counts_toward_gate_IT": True},
-    {"dimension": "term_structure", "target": "A5_cross_sectional_spread", "horizon": 21, "counts_toward_gate_IT": True},
-    {"dimension": "term_structure", "target": "A5_cross_sectional_spread", "horizon": 63, "counts_toward_gate_IT": True},
-    {"dimension": "term_structure", "target": "A6_cot_positioning", "horizon": 21, "counts_toward_gate_IT": True},
-    {"dimension": "carry", "target": "A4_front_month_return", "horizon": 21, "counts_toward_gate_IC": True},
-    {"dimension": "carry", "target": "A4_front_month_return", "horizon": 63, "counts_toward_gate_IC": True},
-    {"dimension": "carry", "target": "A5_cross_sectional_spread", "horizon": 21, "counts_toward_gate_IC": True},
-    {"dimension": "carry", "target": "A5_cross_sectional_spread", "horizon": 63, "counts_toward_gate_IC": True},
-    {"dimension": "carry_roll_yield_only", "target": "A4_front_month_return", "horizon": 21, "counts_toward_gate_IC": False, "reason": "measurement variant, reported alongside shipped config, not instead of"},
-    {"dimension": "carry_roll_yield_only", "target": "A4_front_month_return", "horizon": 63, "counts_toward_gate_IC": False, "reason": "measurement variant"},
-    {"dimension": "carry_roll_yield_only", "target": "A5_cross_sectional_spread", "horizon": 21, "counts_toward_gate_IC": False, "reason": "measurement variant"},
-    {"dimension": "carry_roll_yield_only", "target": "A5_cross_sectional_spread", "horizon": 63, "counts_toward_gate_IC": False, "reason": "measurement variant"},
+    {
+        "dimension": "term_structure",
+        "target": "A4_front_month_return",
+        "horizon": 21,
+        "counts_toward_gate_IT": True,
+    },
+    {
+        "dimension": "term_structure",
+        "target": "A4_front_month_return",
+        "horizon": 63,
+        "counts_toward_gate_IT": True,
+    },
+    {
+        "dimension": "term_structure",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 21,
+        "counts_toward_gate_IT": True,
+    },
+    {
+        "dimension": "term_structure",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 63,
+        "counts_toward_gate_IT": True,
+    },
+    {
+        "dimension": "term_structure",
+        "target": "A6_cot_positioning",
+        "horizon": 21,
+        "counts_toward_gate_IT": True,
+    },
+    {
+        "dimension": "carry",
+        "target": "A4_front_month_return",
+        "horizon": 21,
+        "counts_toward_gate_IC": True,
+    },
+    {
+        "dimension": "carry",
+        "target": "A4_front_month_return",
+        "horizon": 63,
+        "counts_toward_gate_IC": True,
+    },
+    {
+        "dimension": "carry",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 21,
+        "counts_toward_gate_IC": True,
+    },
+    {
+        "dimension": "carry",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 63,
+        "counts_toward_gate_IC": True,
+    },
+    {
+        "dimension": "carry_roll_yield_only",
+        "target": "A4_front_month_return",
+        "horizon": 21,
+        "counts_toward_gate_IC": False,
+        "reason": "measurement variant, reported alongside shipped config, not instead of",
+    },
+    {
+        "dimension": "carry_roll_yield_only",
+        "target": "A4_front_month_return",
+        "horizon": 63,
+        "counts_toward_gate_IC": False,
+        "reason": "measurement variant",
+    },
+    {
+        "dimension": "carry_roll_yield_only",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 21,
+        "counts_toward_gate_IC": False,
+        "reason": "measurement variant",
+    },
+    {
+        "dimension": "carry_roll_yield_only",
+        "target": "A5_cross_sectional_spread",
+        "horizon": 63,
+        "counts_toward_gate_IC": False,
+        "reason": "measurement variant",
+    },
 ]
 assert len(TRACK_A_TRIAL_LEDGER) == N_TRIALS_TRACK_A
 
 TRACK_B_MODELS = [
-    {"id": "M0a", "model": "majority class (per fold, from train)", "features": None, "purpose": "floor"},
-    {"id": "M0b", "model": "persistence of yesterday's realised sign", "features": None, "purpose": "trivial trend rule"},
-    {"id": "M0c", "model": "sign of trailing 60-day return", "features": None, "purpose": "dumbest defensible trend rule"},
-    {"id": "M0d", "model": "engine's trend label (F0)", "features": "F0", "purpose": "incumbent -- the number to beat"},
-    {"id": "M1", "model": "L2-regularized logistic regression", "features": "F1", "purpose": "are the shipped weights the bottleneck?"},
-    {"id": "M2", "model": "L2-regularized logistic regression", "features": "F2 (F3 on Panel-D)", "purpose": "does more information help a linear model?"},
-    {"id": "M3", "model": "HistGradientBoostingClassifier", "features": "F2 (F3 on Panel-D)", "purpose": "does capacity help?"},
+    {
+        "id": "M0a",
+        "model": "majority class (per fold, from train)",
+        "features": None,
+        "purpose": "floor",
+    },
+    {
+        "id": "M0b",
+        "model": "persistence of yesterday's realised sign",
+        "features": None,
+        "purpose": "trivial trend rule",
+    },
+    {
+        "id": "M0c",
+        "model": "sign of trailing 60-day return",
+        "features": None,
+        "purpose": "dumbest defensible trend rule",
+    },
+    {
+        "id": "M0d",
+        "model": "engine's trend label (F0)",
+        "features": "F0",
+        "purpose": "incumbent -- the number to beat",
+    },
+    {
+        "id": "M1",
+        "model": "L2-regularized logistic regression",
+        "features": "F1",
+        "purpose": "are the shipped weights the bottleneck?",
+    },
+    {
+        "id": "M2",
+        "model": "L2-regularized logistic regression",
+        "features": "F2 (F3 on Panel-D)",
+        "purpose": "does more information help a linear model?",
+    },
+    {
+        "id": "M3",
+        "model": "HistGradientBoostingClassifier",
+        "features": "F2 (F3 on Panel-D)",
+        "purpose": "does capacity help?",
+    },
 ]
 M3_FIXED_HYPERPARAMS = {
     "max_iter": 200,
@@ -111,24 +227,53 @@ SIGNIFICANCE_PROCEDURE = {
 }
 
 GATES = {
-    "SC": {"track": "B", "claim": "Shuffle control: no model beats chance on block-shuffled targets",
-           "threshold": "every model x horizon x panel has a 95% CI covering 0.500", "hard_gate": True},
-    "ID": {"track": "A", "claim": "Independence proof: every scored (dimension, target) pair has provably disjoint raw inputs",
-           "threshold": "INPUTS(dim) intersect INPUTS(target) == empty, table emitted", "hard_gate": True},
-    "IA": {"track": "A", "claim": "yield_curve beats its best baseline on >=1 independent target",
-           "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f}, excluding underpowered target A3"},
-    "IT": {"track": "A", "claim": "term_structure beats its best baseline on >=1 independent target",
-           "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f}, arm not flagged underpowered"},
-    "IC": {"track": "A", "claim": "carry beats its best baseline on >=1 independent target",
-           "threshold": "as IT; report shipped-config and roll-yield-only variants separately"},
-    "CW": {"track": "B", "claim": "Weights were the bottleneck: M1 (same inputs, learned weights) beats M0d",
-           "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f} at >=1 non-underpowered horizon"},
-    "CC": {"track": "B", "claim": "Capacity helps: M3 beats M2",
-           "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f} at >=1 non-underpowered horizon"},
-    "CB": {"track": "B", "claim": "Ceiling beaten: best model beats M0d by >= +0.05 balanced accuracy",
-           "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f}, and point estimate clears +0.05"},
-    "PW": {"track": "C", "claim": "Power is adequate to conclude: >=1 arm has N_eff >= 200",
-           "threshold": "reported per arm; determines which gates are eligible to fire"},
+    "SC": {
+        "track": "B",
+        "claim": "Shuffle control: no model beats chance on block-shuffled targets",
+        "threshold": "every model x horizon x panel has a 95% CI covering 0.500",
+        "hard_gate": True,
+    },
+    "ID": {
+        "track": "A",
+        "claim": "Independence proof: every scored (dimension, target) pair has provably disjoint raw inputs",
+        "threshold": "INPUTS(dim) intersect INPUTS(target) == empty, table emitted",
+        "hard_gate": True,
+    },
+    "IA": {
+        "track": "A",
+        "claim": "yield_curve beats its best baseline on >=1 independent target",
+        "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f}, excluding underpowered target A3",
+    },
+    "IT": {
+        "track": "A",
+        "claim": "term_structure beats its best baseline on >=1 independent target",
+        "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f}, arm not flagged underpowered",
+    },
+    "IC": {
+        "track": "A",
+        "claim": "carry beats its best baseline on >=1 independent target",
+        "threshold": "as IT; report shipped-config and roll-yield-only variants separately",
+    },
+    "CW": {
+        "track": "B",
+        "claim": "Weights were the bottleneck: M1 (same inputs, learned weights) beats M0d",
+        "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f} at >=1 non-underpowered horizon",
+    },
+    "CC": {
+        "track": "B",
+        "claim": "Capacity helps: M3 beats M2",
+        "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f} at >=1 non-underpowered horizon",
+    },
+    "CB": {
+        "track": "B",
+        "claim": "Ceiling beaten: best model beats M0d by >= +0.05 balanced accuracy",
+        "threshold": f"Bonferroni-corrected p < {ALPHA_BONFERRONI:.5f}, and point estimate clears +0.05",
+    },
+    "PW": {
+        "track": "C",
+        "claim": "Power is adequate to conclude: >=1 arm has N_eff >= 200",
+        "threshold": "reported per arm; determines which gates are eligible to fire",
+    },
 }
 
 SCORING = {
@@ -153,22 +298,38 @@ def build_preregistration(disjointness: dict, power_budget: dict) -> dict:
         "scope": {
             "authorizes_trading": False,
             "spends_holdout": False,
-            "holdouts_untouched": {"crypto": "2025-07-01", "futures": "2025-01-01 to 2026-07-28"},
+            "holdouts_untouched": {
+                "crypto": "2025-07-01",
+                "futures": "2025-01-01 to 2026-07-28",
+            },
             "truncation": str(lib.TRUNCATION.date()),
             "note": "This notebook measures label accuracy and a ceiling on directional "
             "predictability. It builds no strategy, computes no Sharpe, models no costs. "
             "A firing gate does not authorize a backtest here -- that is notebook 016's job.",
         },
         "track_a": {
-            "dimensions_tested": ["yield_curve", "term_structure", "carry", "carry_roll_yield_only"],
+            "dimensions_tested": [
+                "yield_curve",
+                "term_structure",
+                "carry",
+                "carry_roll_yield_only",
+            ],
             "disjointness_table": disjointness,
             "trial_ledger": TRACK_A_TRIAL_LEDGER,
         },
         "track_b": {
             "panels": {
-                "Panel-L": {"source": "yfinance daily", "symbols": lib.PANEL_L_SYMBOLS, "span": "2000 to 2024-12-31"},
-                "Panel-D": {"source": "databento per-contract", "symbols": lib.PANEL_D_SYMBOLS, "span": "2010-06 to 2024-12-31",
-                            "note": "ES dropped for the trend target (equity index, not a commodity)"},
+                "Panel-L": {
+                    "source": "yfinance daily",
+                    "symbols": lib.PANEL_L_SYMBOLS,
+                    "span": "2000 to 2024-12-31",
+                },
+                "Panel-D": {
+                    "source": "databento per-contract",
+                    "symbols": lib.PANEL_D_SYMBOLS,
+                    "span": "2010-06 to 2024-12-31",
+                    "note": "ES dropped for the trend target (equity index, not a commodity)",
+                },
             },
             "horizons": HORIZONS,
             "feature_sets": FEATURE_SETS,
@@ -199,14 +360,20 @@ def main() -> None:
     print("Building Track A disjointness table (gate ID)...")
     disjointness = lib.build_disjointness_table()
     n_disqualified = sum(1 for p in disjointness["pairs"] if p["disqualified"])
-    print(f"  {len(disjointness['pairs'])} (dimension, target) pairs checked, "
-          f"{n_disqualified} disqualified by non-empty intersection")
+    print(
+        f"  {len(disjointness['pairs'])} (dimension, target) pairs checked, "
+        f"{n_disqualified} disqualified by non-empty intersection"
+    )
 
     print("Computing Track C power budget (N_eff, MDE) for Panel-L and Panel-D...")
-    power_budget = lib.track_c_power_budget(horizons=tuple(HORIZONS), alpha=ALPHA_BONFERRONI)
+    power_budget = lib.track_c_power_budget(
+        horizons=tuple(HORIZONS), alpha=ALPHA_BONFERRONI
+    )
     for key, row in power_budget.items():
-        print(f"  {key}: N_eff={row['n_eff']} underpowered={row['underpowered']} "
-              f"MDE={row['minimum_detectable_effect_balanced_accuracy']}")
+        print(
+            f"  {key}: N_eff={row['n_eff']} underpowered={row['underpowered']} "
+            f"MDE={row['minimum_detectable_effect_balanced_accuracy']}"
+        )
 
     results = {
         "disjointness_table": disjointness,
@@ -225,7 +392,9 @@ def main() -> None:
     with open(f"{TMP}/phase_0_15_preregistration.json", "w") as f:
         json.dump(prereg, f, indent=2, default=str)
 
-    print(f"n_trials: track_a={N_TRIALS_TRACK_A} track_b={N_TRIALS_TRACK_B} total={N_TRIALS_TOTAL}")
+    print(
+        f"n_trials: track_a={N_TRIALS_TRACK_A} track_b={N_TRIALS_TRACK_B} total={N_TRIALS_TOTAL}"
+    )
     print(f"alpha_bonferroni = 0.05/{N_TRIALS_TOTAL} = {ALPHA_BONFERRONI:.6f}")
     print("Wrote phase_0_15_results.json and phase_0_15_preregistration.json")
 

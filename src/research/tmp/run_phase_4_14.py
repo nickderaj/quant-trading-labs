@@ -40,16 +40,18 @@ def main() -> None:
     bonferroni_threshold = BONFERRONI_ALPHA / n_trials
 
     # NL -- hard gate, already run in Phase 0.
-    nl_pass = phase0["no_lookahead_gate"]["all_passed"] and phase0["no_lookahead_gate"][
-        "oil_products_cot_opt_in"
-    ]["passed"]
+    nl_pass = (
+        phase0["no_lookahead_gate"]["all_passed"]
+        and phase0["no_lookahead_gate"]["oil_products_cot_opt_in"]["passed"]
+    )
 
     # RC -- port fidelity.
     fidelity = phase0["port_fidelity"]
     rc_pass = all(fidelity.get("config_hash_equal", {}).values())
     if fidelity.get("end_to_end_equal") is not None:
         rc_pass = rc_pass and all(
-            v["scores_equal"] and v["labels_equal"] for v in fidelity["end_to_end_equal"].values()
+            v["scores_equal"] and v["labels_equal"]
+            for v in fidelity["end_to_end_equal"].values()
         )
 
     # RS -- descriptive sanity: no scored (non-disqualified) dimension trips

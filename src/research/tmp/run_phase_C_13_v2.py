@@ -34,7 +34,7 @@ Writes phase_C_13_v2_results.json.
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 import polars as pl
@@ -52,10 +52,10 @@ ORIGIN_OFFSETS = [0, 7 * 4, 14 * 4, 21 * 4]
 N_TRIALS_POOLED = 18
 TAKER_FEE = 0.0004
 SLIPPAGE = 0.0001
-CALIB_START = datetime(2021, 7, 1, tzinfo=timezone.utc)
-CALIB_END = datetime(2021, 12, 31, tzinfo=timezone.utc)
-DEV_START = datetime(2022, 1, 1, tzinfo=timezone.utc)
-DEV_END = datetime(2025, 6, 30, tzinfo=timezone.utc)
+CALIB_START = datetime(2021, 7, 1, tzinfo=UTC)
+CALIB_END = datetime(2021, 12, 31, tzinfo=UTC)
+DEV_START = datetime(2022, 1, 1, tzinfo=UTC)
+DEV_END = datetime(2025, 6, 30, tzinfo=UTC)
 DEV_START_NAIVE = DEV_START.replace(tzinfo=None)
 DEV_END_NAIVE = DEV_END.replace(tzinfo=None)
 CALIB_START_NAIVE = CALIB_START.replace(tzinfo=None)
@@ -71,18 +71,24 @@ DOWNLOAD_DIR = "/tmp/claude-1000/-home-nick-Documents-quant-trading-labs/47229a3
 
 
 def load_universe() -> list[str]:
-    return json.load(open("src/research/tmp/design_c_v2_universe.json"))
+    with open("src/research/tmp/design_c_v2_universe.json") as f:
+        return json.load(f)
 
 
 def load_market_cap() -> dict[str, float]:
-    mc = json.load(open("src/research/tmp/design_c_v2_marketcap.json"))
-    return mc
+    with open("src/research/tmp/design_c_v2_marketcap.json") as f:
+        return json.load(f)
 
 
 def load_panel(symbols: list[str]) -> pl.DataFrame:
     panel = research.load_universe_panel(
-        symbols, "6h", CALIB_START, DEV_END,
-        download_dir=DOWNLOAD_DIR, cache_dir="src/research/cache", min_cross_section=5,
+        symbols,
+        "6h",
+        CALIB_START,
+        DEV_END,
+        download_dir=DOWNLOAD_DIR,
+        cache_dir="src/research/cache",
+        min_cross_section=5,
     )
     return panel.sort(["symbol", "datetime"])
 
@@ -91,14 +97,25 @@ def load_funding(symbols: list[str]) -> pl.DataFrame:
     frames = []
     for sym in symbols:
         try:
-            df = download_funding_rate_range(sym, "2021-07-01", "2025-06-30", cache_dir="src/research/cache")
-        except Exception:
+            df = download_funding_rate_range(
+                sym, "2021-07-01", "2025-06-30", cache_dir="src/research/cache"
+            )
+        except Exception as exc:  # noqa: BLE001 - skip symbols with unavailable funding data
+            print(f"skipping {sym}: {exc}", flush=True)
             continue
         if df.height == 0:
             continue
         cols = df.columns
-        rate_col = "fundingRate" if "fundingRate" in cols else ("funding_rate" if "funding_rate" in cols else None)
-        time_col = "fundingTime" if "fundingTime" in cols else ("datetime" if "datetime" in cols else None)
+        rate_col = (
+            "fundingRate"
+            if "fundingRate" in cols
+            else ("funding_rate" if "funding_rate" in cols else None)
+        )
+        time_col = (
+            "fundingTime"
+            if "fundingTime" in cols
+            else ("datetime" if "datetime" in cols else None)
+        )
         if rate_col is None or time_col is None:
             continue
         sub = df.select(
@@ -107,28 +124,52 @@ def load_funding(symbols: list[str]) -> pl.DataFrame:
             pl.lit(sym).alias("symbol"),
         )
         if sub["datetime"].dtype != pl.Datetime:
-            sub = sub.with_columns(pl.from_epoch("datetime", time_unit="ms").alias("datetime"))
+            sub = sub.with_columns(
+                pl.from_epoch("datetime", time_unit="ms").alias("datetime")
+            )
         frames.append(sub)
-    return pl.concat(frames).sort(["symbol", "datetime"]) if frames else pl.DataFrame(
-        schema={"datetime": pl.Datetime, "funding_rate": pl.Float64, "symbol": pl.Utf8}
+    return (
+        pl.concat(frames).sort(["symbol", "datetime"])
+        if frames
+        else pl.DataFrame(
+            schema={
+                "datetime": pl.Datetime,
+                "funding_rate": pl.Float64,
+                "symbol": pl.Utf8,
+            }
+        )
     )
 
 
 def add_features(panel: pl.DataFrame, market_cap: dict[str, float]) -> pl.DataFrame:
     panel = panel.with_columns(
-        (pl.col("close").log() - pl.col("close").log().shift(1)).over("symbol").alias("log_return")
+        (pl.col("close").log() - pl.col("close").log().shift(1))
+        .over("symbol")
+        .alias("log_return")
     )
     panel = panel.with_columns(
         (
             pl.col("log_return").rolling_mean(window_size=120).over("symbol")
-            / pl.col("log_return").rolling_std(window_size=120).over("symbol").clip(lower_bound=1e-9)
+            / pl.col("log_return")
+            .rolling_std(window_size=120)
+            .over("symbol")
+            .clip(lower_bound=1e-9)
             * np.sqrt(365 * 4)
-        ).shift(1).over("symbol").alias("trailing_sharpe_1m")
+        )
+        .shift(1)
+        .over("symbol")
+        .alias("trailing_sharpe_1m")
     )
     panel = panel.with_columns(
-        pl.col("log_return").rolling_std(window_size=20).shift(1).over("symbol").alias("realized_vol_20")
+        pl.col("log_return")
+        .rolling_std(window_size=20)
+        .shift(1)
+        .over("symbol")
+        .alias("realized_vol_20")
     )
-    mc_expr = pl.col("symbol").replace_strict(market_cap, default=0.0, return_dtype=pl.Float64)
+    mc_expr = pl.col("symbol").replace_strict(
+        market_cap, default=0.0, return_dtype=pl.Float64
+    )
     panel = panel.with_columns(mc_expr.alias("market_cap"))
     return panel.filter(pl.col("realized_vol_20") > 1e-12)
 
@@ -137,11 +178,13 @@ def month_key(dt) -> str:
     return str(dt)[:7]
 
 
-def score_month_config(month_df: pl.DataFrame, L: int, theta: float, alpha: float) -> float:
+def score_month_config(
+    month_df: pl.DataFrame, L: int, theta: float, alpha: float
+) -> float:
     sharpes = []
     for sym, g in month_df.group_by("symbol"):
         g = g.sort("datetime")
-        close, high, low = g["close"].to_numpy(), g["high"].to_numpy(), g["low"].to_numpy()
+        close = g["close"].to_numpy()
         if len(close) < L + 10:
             continue
         entry = E.rate_of_change_entry(close, L, theta)
@@ -155,7 +198,9 @@ def score_month_config(month_df: pl.DataFrame, L: int, theta: float, alpha: floa
 
 
 def monthly_panel_regrid(panel: pl.DataFrame, grid: dict) -> dict[str, tuple]:
-    panel = panel.with_columns(pl.col("datetime").map_elements(month_key, return_dtype=pl.Utf8).alias("_month"))
+    panel = panel.with_columns(
+        pl.col("datetime").map_elements(month_key, return_dtype=pl.Utf8).alias("_month")
+    )
     months = sorted(panel["_month"].unique().to_list())
     fitted = {}
     for i in range(1, len(months)):
@@ -168,11 +213,14 @@ def monthly_panel_regrid(panel: pl.DataFrame, grid: dict) -> dict[str, tuple]:
                     score = score_month_config(month_df, L, theta, alpha)
                     if best is None or score > best[0]:
                         best = (score, L, theta, alpha)
+        assert best is not None
         fitted[applied_month] = (best[1], best[2], best[3])
     return fitted
 
 
-def market_cap_eligibility(mkt_cap: np.ndarray, k_long: int, k_short: int) -> tuple[np.ndarray, np.ndarray]:
+def market_cap_eligibility(
+    mkt_cap: np.ndarray, k_long: int, k_short: int
+) -> tuple[np.ndarray, np.ndarray]:
     """Boolean (long_eligible, short_eligible) for one bar's cross-section:
     top-k_long by market cap for longs, bottom-k_short (among symbols with a
     mapped market cap > 0) for shorts -- the paper's literal KL/KS rule,
@@ -204,35 +252,44 @@ def simulate_book(
     df = panel
     if exclude_delisted:
         df = df.filter(~pl.col("symbol").is_in(list(DELISTED)))
-    df = df.filter(pl.col("datetime") >= DEV_START_NAIVE, pl.col("datetime") <= DEV_END_NAIVE)
+    df = df.filter(
+        pl.col("datetime") >= DEV_START_NAIVE, pl.col("datetime") <= DEV_END_NAIVE
+    )
     if origin_offset_bars:
         all_dt = sorted(df["datetime"].unique().to_list())
         keep = set(all_dt[origin_offset_bars:])
         df = df.filter(pl.col("datetime").is_in(list(keep)))
 
-    df = df.with_columns(pl.col("datetime").map_elements(month_key, return_dtype=pl.Utf8).alias("_month"))
+    df = df.with_columns(
+        pl.col("datetime").map_elements(month_key, return_dtype=pl.Utf8).alias("_month")
+    )
 
     funding_map = {}
     if use_funding and funding.height:
-        f = funding.filter(pl.col("datetime") >= DEV_START_NAIVE, pl.col("datetime") <= DEV_END_NAIVE)
+        f = funding.filter(
+            pl.col("datetime") >= DEV_START_NAIVE, pl.col("datetime") <= DEV_END_NAIVE
+        )
         for sym, g in f.group_by("symbol"):
             funding_map[sym] = (g["datetime"].to_numpy(), g["funding_rate"].to_numpy())
 
     rows = []
-    market_cap_by_date = df.select("datetime", "symbol", "market_cap")
 
     for sym, g in df.group_by("symbol"):
         g = g.sort("datetime")
         n = len(g)
         if n < 30:
             continue
-        close, high, low = g["close"].to_numpy(), g["high"].to_numpy(), g["low"].to_numpy()
+        close, high, low = (
+            g["close"].to_numpy(),
+            g["high"].to_numpy(),
+            g["low"].to_numpy(),
+        )
         months = g["_month"].to_list()
         tsharpe = g["trailing_sharpe_1m"].to_numpy()
         mkt_cap = g["market_cap"].to_numpy()
 
         if isinstance(params_by_month, tuple):
-            L, theta, alpha = params_by_month
+            L, theta, _alpha = params_by_month
             entry = E.rate_of_change_entry(close, L, theta)
         else:
             entry = np.zeros(n)
@@ -241,9 +298,9 @@ def simulate_book(
                     continue
                 L, theta, _alpha = params_by_month[m]
                 idx = [i for i, mm in enumerate(months) if mm == m]
-                sub_close = close[max(0, idx[0] - L - 1): idx[-1] + 1]
+                sub_close = close[max(0, idx[0] - L - 1) : idx[-1] + 1]
                 sig = E.rate_of_change_entry(sub_close, L, theta)
-                entry[idx] = sig[-len(idx):]
+                entry[idx] = sig[-len(idx) :]
 
         if use_stop:
             atr_mult = (
@@ -253,7 +310,9 @@ def simulate_book(
             )
             stop = E.trailing_atr_stop(close, high, low, entry, atr_mult=atr_mult)
             open_ = np.roll(close, 1)
-            exit_mask, _ = E.apply_stop_fill(open_, high, low, stop, entry, optimistic=False)
+            exit_mask, _ = E.apply_stop_fill(
+                open_, high, low, stop, entry, optimistic=False
+            )
             realized_entry = entry.copy()
             flat_until_flip = False
             last_sign = 0.0
@@ -272,7 +331,9 @@ def simulate_book(
             realized_entry = entry
 
         if use_selection:
-            long_mc_elig, short_mc_elig = market_cap_eligibility(mkt_cap, K_LONG, K_SHORT)
+            long_mc_elig, short_mc_elig = market_cap_eligibility(
+                mkt_cap, K_LONG, K_SHORT
+            )
             quality_long = tsharpe >= LONG_QUALITY
             quality_short = tsharpe <= -SHORT_QUALITY
             eligible_long = long_mc_elig & quality_long & np.isfinite(tsharpe)
@@ -282,7 +343,8 @@ def simulate_book(
             eligible_short = np.ones(n, dtype=bool)
 
         leg_position = np.where(
-            realized_entry > 0, np.where(eligible_long, 1.0, 0.0),
+            realized_entry > 0,
+            np.where(eligible_long, 1.0, 0.0),
             np.where(realized_entry < 0, np.where(eligible_short, -1.0, 0.0), 0.0),
         )
         ret = np.diff(np.log(close), prepend=np.log(close[0]))
@@ -296,13 +358,20 @@ def simulate_book(
             for t in range(n):
                 r = fr_lookup.get(dt_arr[t])
                 if r is not None and leg_position[t] != 0:
-                    funding_cost[t] = -leg_position[t] * r  # long pays positive funding, receives negative
+                    funding_cost[t] = (
+                        -leg_position[t] * r
+                    )  # long pays positive funding, receives negative
 
         for t in range(n):
-            rows.append({
-                "datetime": g["datetime"][t], "symbol": sym,
-                "leg_position": leg_position[t], "ret": ret[t], "funding_cost": funding_cost[t],
-            })
+            rows.append(
+                {
+                    "datetime": g["datetime"][t],
+                    "symbol": sym,
+                    "leg_position": leg_position[t],
+                    "ret": ret[t],
+                    "funding_cost": funding_cost[t],
+                }
+            )
 
     return pl.DataFrame(rows)
 
@@ -313,9 +382,15 @@ def book_returns(sim: pl.DataFrame) -> pl.DataFrame:
         n_active = leg.group_by("datetime").agg(pl.len().alias("n"))
         leg = leg.join(n_active, on="datetime")
         leg = leg.with_columns(
-            ((pl.col("ret") * sign + pl.col("funding_cost")) * capital_frac / pl.col("n")).alias("weighted_ret")
+            (
+                (pl.col("ret") * sign + pl.col("funding_cost"))
+                * capital_frac
+                / pl.col("n")
+            ).alias("weighted_ret")
         )
-        return leg.group_by("datetime").agg(pl.col("weighted_ret").sum().alias("leg_ret"))
+        return leg.group_by("datetime").agg(
+            pl.col("weighted_ret").sum().alias("leg_ret")
+        )
 
     longs = leg_return(sim, 1, LONG_FRAC)
     shorts = leg_return(sim, -1, SHORT_FRAC)
@@ -324,19 +399,32 @@ def book_returns(sim: pl.DataFrame) -> pl.DataFrame:
         all_dates.join(longs, on="datetime", how="left")
         .join(shorts, on="datetime", how="left", suffix="_short")
         .fill_null(0.0)
-        .with_columns((pl.col("leg_ret") + pl.col("leg_ret_short")).alias("trade_log_return"))
+        .with_columns(
+            (pl.col("leg_ret") + pl.col("leg_ret_short")).alias("trade_log_return")
+        )
         .sort("datetime")
     )
     n_symbols = sim["symbol"].n_unique()
     turnover = (
         sim.sort(["symbol", "datetime"])
-        .with_columns(pl.col("leg_position").diff().fill_null(pl.col("leg_position")).abs().over("symbol").alias("d_pos"))
+        .with_columns(
+            pl.col("leg_position")
+            .diff()
+            .fill_null(pl.col("leg_position"))
+            .abs()
+            .over("symbol")
+            .alias("d_pos")
+        )
         .group_by("datetime")
         .agg((pl.col("d_pos").sum() / n_symbols).alias("turnover"))
     )
     out = out.join(turnover, on="datetime", how="left").fill_null(0.0)
     cost = TAKER_FEE + SLIPPAGE
-    out = out.with_columns((pl.col("trade_log_return") - cost * pl.col("turnover")).alias("trade_log_return_net"))
+    out = out.with_columns(
+        (pl.col("trade_log_return") - cost * pl.col("turnover")).alias(
+            "trade_log_return_net"
+        )
+    )
     return out
 
 
@@ -348,7 +436,8 @@ def series_metrics(x: np.ndarray, label: str) -> dict:
     cum = np.cumsum(x)
     dd = cum - np.maximum.accumulate(cum)
     return {
-        "label": label, "no_bars": len(x),
+        "label": label,
+        "no_bars": len(x),
         "sharpe": (mean / std) * ANNUALIZED_RATE if std > 0 else 0.0,
         "total_log_return": float(np.sum(x)),
         "max_drawdown": float(np.min(dd)),
@@ -356,20 +445,33 @@ def series_metrics(x: np.ndarray, label: str) -> dict:
 
 
 def evaluate(panel, funding, params, exclude_delisted=False, **kwargs) -> dict:
-    sim = simulate_book(panel, funding, params, exclude_delisted=exclude_delisted, **kwargs)
+    sim = simulate_book(
+        panel, funding, params, exclude_delisted=exclude_delisted, **kwargs
+    )
     br = book_returns(sim)
     net = br["trade_log_return_net"].to_numpy()
     gross = br["trade_log_return"].to_numpy()
-    ci_lo, ci_hi = research.block_bootstrap_ci(net, seed=0) if len(net) > 30 else (None, None)
+    ci_lo, ci_hi = (
+        research.block_bootstrap_ci(net, seed=0) if len(net) > 30 else (None, None)
+    )
     dsr = (
-        research.deflated_sharpe_prob(series_metrics(net, "x")["sharpe"] / ANNUALIZED_RATE, N_TRIALS_POOLED, len(net))
-        if len(net) > 30 else float("nan")
+        research.deflated_sharpe_prob(
+            series_metrics(net, "x")["sharpe"] / ANNUALIZED_RATE,
+            N_TRIALS_POOLED,
+            len(net),
+        )
+        if len(net) > 30
+        else float("nan")
     )
     return {
-        "net": series_metrics(net, "net"), "gross": series_metrics(gross, "gross"),
+        "net": series_metrics(net, "net"),
+        "gross": series_metrics(gross, "gross"),
         "ci_95": [ci_lo, ci_hi],
-        "ci_excludes_zero": bool(ci_lo is not None and (ci_lo > 0 or ci_hi < 0)),
-        "dsr": dsr, "n_bars": len(net),
+        "ci_excludes_zero": bool(
+            ci_lo is not None and ci_hi is not None and (ci_lo > 0 or ci_hi < 0)
+        ),
+        "dsr": dsr,
+        "n_bars": len(net),
     }
 
 
@@ -379,11 +481,16 @@ def main():
     market_cap = load_market_cap()
     panel = load_panel(symbols)
     funding = load_funding(symbols)
-    print(f"Panel: {panel.height} rows, {panel['symbol'].n_unique()} symbols; funding: {funding.height} rows", flush=True)
+    print(
+        f"Panel: {panel.height} rows, {panel['symbol'].n_unique()} symbols; funding: {funding.height} rows",
+        flush=True,
+    )
 
     panel = add_features(panel, market_cap)
 
-    calib = panel.filter(pl.col("datetime") >= CALIB_START_NAIVE, pl.col("datetime") <= CALIB_END_NAIVE)
+    calib = panel.filter(
+        pl.col("datetime") >= CALIB_START_NAIVE, pl.col("datetime") <= CALIB_END_NAIVE
+    )
     print("Fitting frozen params on 2021H2 calibration window...", flush=True)
     best = None
     for L in GRID["L"]:
@@ -396,7 +503,9 @@ def main():
     print("Frozen params:", frozen_params, flush=True)
 
     print("Fitting monthly adaptive grid (causal)...", flush=True)
-    monthly_fit_input = panel.filter(pl.col("datetime") >= CALIB_START_NAIVE, pl.col("datetime") <= DEV_END_NAIVE)
+    monthly_fit_input = panel.filter(
+        pl.col("datetime") >= CALIB_START_NAIVE, pl.col("datetime") <= DEV_END_NAIVE
+    )
     adaptive_params = monthly_panel_regrid(monthly_fit_input, GRID)
 
     trials = {}
@@ -405,34 +514,52 @@ def main():
     print("Evaluating: frozen twin...", flush=True)
     trials["frozen_twin"] = evaluate(panel, funding, frozen_params)
     print("Evaluating: adaptive, no funding modelled...", flush=True)
-    trials["adaptive_no_funding"] = evaluate(panel, funding, adaptive_params, use_funding=False)
+    trials["adaptive_no_funding"] = evaluate(
+        panel, funding, adaptive_params, use_funding=False
+    )
     print("Evaluating: ablation no_stop...", flush=True)
-    trials["ablation_no_stop"] = evaluate(panel, funding, adaptive_params, use_stop=False)
+    trials["ablation_no_stop"] = evaluate(
+        panel, funding, adaptive_params, use_stop=False
+    )
     print("Evaluating: ablation no_selection...", flush=True)
-    trials["ablation_no_selection"] = evaluate(panel, funding, adaptive_params, use_selection=False)
+    trials["ablation_no_selection"] = evaluate(
+        panel, funding, adaptive_params, use_selection=False
+    )
     print("Evaluating: ablation no_adaptation (=frozen)...", flush=True)
     trials["ablation_no_adaptation"] = trials["frozen_twin"]
     print("Survivorship: adaptive excluding LUNA/FTT...", flush=True)
-    trials["adaptive_excl_delisted"] = evaluate(panel, funding, adaptive_params, exclude_delisted=True)
+    trials["adaptive_excl_delisted"] = evaluate(
+        panel, funding, adaptive_params, exclude_delisted=True
+    )
 
     print("Origin offsets...", flush=True)
     by_offset = {}
     for off in ORIGIN_OFFSETS:
-        by_offset[f"offset_{off}"] = evaluate(panel, funding, adaptive_params, origin_offset_bars=off)
+        by_offset[f"offset_{off}"] = evaluate(
+            panel, funding, adaptive_params, origin_offset_bars=off
+        )
 
     sim_a = simulate_book(panel, funding, adaptive_params)
     sim_f = simulate_book(panel, funding, frozen_params)
     br_a, br_f = book_returns(sim_a), book_returns(sim_f)
     joined = br_a.join(br_f, on="datetime", suffix="_frozen")
-    diff = (joined["trade_log_return_net"] - joined["trade_log_return_net_frozen"]).to_numpy()
-    diff_ci = research.block_bootstrap_ci(diff, seed=0) if len(diff) > 30 else (None, None)
+    diff = (
+        joined["trade_log_return_net"] - joined["trade_log_return_net_frozen"]
+    ).to_numpy()
+    diff_ci = (
+        research.block_bootstrap_ci(diff, seed=0) if len(diff) > 30 else (None, None)
+    )
     adaptive_beats_frozen = bool(diff_ci[0] is not None and diff_ci[0] > 0)
 
     adaptive_net = trials["adaptive"]["net"]["sharpe"]
     ablation_predicted_direction = {
         "no_stop": bool(trials["ablation_no_stop"]["net"]["sharpe"] < adaptive_net),
-        "no_selection": bool(trials["ablation_no_selection"]["net"]["sharpe"] < adaptive_net),
-        "no_adaptation": bool(trials["ablation_no_adaptation"]["net"]["sharpe"] < adaptive_net),
+        "no_selection": bool(
+            trials["ablation_no_selection"]["net"]["sharpe"] < adaptive_net
+        ),
+        "no_adaptation": bool(
+            trials["ablation_no_adaptation"]["net"]["sharpe"] < adaptive_net
+        ),
     }
     n_correct = sum(ablation_predicted_direction.values())
 
@@ -441,7 +568,8 @@ def main():
         and trials["adaptive"]["dsr"] >= 0.95
         and adaptive_net > 1.5
         and adaptive_beats_frozen
-        and n_correct >= 2  # 2 of 3 ablations tracked here (liquidity-filter ablation dropped, selection is now market-cap based)
+        and n_correct
+        >= 2  # 2 of 3 ablations tracked here (liquidity-filter ablation dropped, selection is now market-cap based)
     )
 
     n_mapped_market_cap = sum(1 for v in market_cap.values() if v > 0)
@@ -470,7 +598,11 @@ def main():
     }
     with open("src/research/tmp/phase_C_13_v2_results.json", "w") as f:
         json.dump(out, f, indent=2, default=str)
-    print(json.dumps({k: v for k, v in out.items() if k != "by_offset"}, indent=2, default=str)[:4000])
+    print(
+        json.dumps(
+            {k: v for k, v in out.items() if k != "by_offset"}, indent=2, default=str
+        )[:4000]
+    )
 
 
 if __name__ == "__main__":

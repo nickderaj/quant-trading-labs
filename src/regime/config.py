@@ -84,5 +84,7 @@ class RegimeConfig(BaseModel):
         return cls.model_validate(payload)
 
     def config_hash(self) -> str:
-        encoded = json.dumps(self.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+        encoded = json.dumps(
+            self.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
+        )
         return hashlib.sha256(encoded.encode()).hexdigest()

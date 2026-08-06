@@ -16,7 +16,9 @@ from regime.forecast_eval import (
 )
 
 
-def _jump_frame(n: int, horizon: int, jump_pos: int, jump_size: float = 500.0) -> pd.Series:
+def _jump_frame(
+    n: int, horizon: int, jump_pos: int, jump_size: float = 500.0
+) -> pd.Series:
     """A driftless random walk with one large deterministic jump inserted at
     ``jump_pos``. sign(forward h-day return) is ~50/50 everywhere except in
     the +-horizon neighbourhood of the jump, where every overlapping label
@@ -28,7 +30,9 @@ def _jump_frame(n: int, horizon: int, jump_pos: int, jump_size: float = 500.0) -
     rng = np.random.default_rng(0)
     steps = rng.standard_normal(n)
     steps[jump_pos] += jump_size
-    return pd.Series(np.cumsum(steps), index=pd.date_range("2000-01-01", periods=n, freq="B"))
+    return pd.Series(
+        np.cumsum(steps), index=pd.date_range("2000-01-01", periods=n, freq="B")
+    )
 
 
 def _majority_vote_model(train_target: pd.Series, tail: int) -> str:
@@ -56,11 +60,16 @@ def test_purge_and_embargo_remove_the_shared_event_contamination() -> None:
     value = _jump_frame(n, horizon, jump_pos)
     with np.errstate(invalid="ignore"):
         fwd = value.shift(-horizon) - value
-    target = fwd.apply(lambda x: "up" if x > 0 else ("down" if x < 0 else "flat")).astype("string")
-    target[fwd.isna()] = pd.NA
+    target = fwd.apply(
+        lambda x: "up" if x > 0 else ("down" if x < 0 else "flat")
+    ).astype("string")
+    target[fwd.isna()] = pd.NA  # type: ignore[call-overload]
 
-    raw_folds = walk_forward_splits(value.index, min_train, test_size, step)
-    clean_folds = purged_embargoed_walk_forward_splits(value.index, min_train, test_size, horizon, step)
+    value_index = pd.DatetimeIndex(value.index)
+    raw_folds = walk_forward_splits(value_index, min_train, test_size, step)
+    clean_folds = purged_embargoed_walk_forward_splits(
+        value_index, min_train, test_size, horizon, step
+    )
     assert raw_folds and clean_folds
 
     train_idx, raw_test_idx = raw_folds[0]
@@ -96,9 +105,13 @@ def test_purge_and_embargo_remove_the_shared_event_contamination() -> None:
 def test_purged_splits_drop_final_horizon_train_rows() -> None:
     idx = pd.date_range("2000-01-01", periods=800, freq="B")
     raw = walk_forward_splits(idx, min_train=300, test_size=100, step=100)
-    clean = purged_embargoed_walk_forward_splits(idx, min_train=300, test_size=100, horizon=21, step=100)
+    clean = purged_embargoed_walk_forward_splits(
+        idx, min_train=300, test_size=100, horizon=21, step=100
+    )
     assert len(clean) == len(raw)
-    for (raw_train, raw_test), (clean_train, clean_test) in zip(raw, clean, strict=True):
+    for (raw_train, raw_test), (clean_train, clean_test) in zip(
+        raw, clean, strict=True
+    ):
         assert len(clean_train) == len(raw_train) - 21
         assert len(clean_test) == len(raw_test) - 21
         assert clean_train.equals(raw_train[:-21])

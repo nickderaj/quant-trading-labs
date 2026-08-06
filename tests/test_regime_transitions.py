@@ -22,7 +22,10 @@ def test_hand_computable_transitions_and_predictions() -> None:
     counts = transition_matrix(labels, normalize=False)
     matrix = transition_matrix(labels)
 
-    assert counts.to_dict() == {"bear": {"bear": 1, "bull": 1}, "bull": {"bear": 1, "bull": 1}}
+    assert counts.to_dict() == {
+        "bear": {"bear": 1, "bull": 1},
+        "bull": {"bear": 1, "bull": 1},
+    }
     assert matrix.loc["bull", "bear"] == 0.5
     assert predict_next("bull", matrix, 2).to_dict() == {"bear": 0.5, "bull": 0.5}
     assert expected_remaining_duration(matrix).to_dict() == {"bear": 2.0, "bull": 2.0}

@@ -35,4 +35,6 @@ def carry_annualized_roll_yield(inputs: RegimeInputs) -> pd.Series:
 
 @register("carry.vol_scaled", {"curve"}, vol_window=20)
 def carry_vol_scaled(inputs: RegimeInputs, vol_window: int = 20) -> pd.Series:
-    return vol_scaled_carry(_annualized(inputs), realized_vol(inputs.ohlcv["close"], vol_window))
+    return vol_scaled_carry(
+        _annualized(inputs), realized_vol(inputs.ohlcv["close"], vol_window)
+    )

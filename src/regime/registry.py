@@ -51,7 +51,9 @@ def get(key: str) -> tuple[RegimeIndicator, IndicatorMeta]:
     try:
         return _REGISTRY[key]
     except KeyError as exc:
-        raise KeyError(f"Unknown regime indicator {key!r}; available: {sorted(_REGISTRY)}") from exc
+        raise KeyError(
+            f"Unknown regime indicator {key!r}; available: {sorted(_REGISTRY)}"
+        ) from exc
 
 
 def available() -> dict[str, IndicatorMeta]:

@@ -54,13 +54,17 @@ def load_regime_universe(config: dict[str, Any]) -> RegimeUniverse:
     report = raw["report"]
     macro_raw = raw["macro"]
     macro = MacroDefinition(
-        str(macro_raw["config"]), str(macro_raw["index_symbol"]), str(macro_raw["cot_market"])
+        str(macro_raw["config"]),
+        str(macro_raw["index_symbol"]),
+        str(macro_raw["cot_market"]),
     )
     baskets = [
         _basket("Commodities", raw["macro_commodities"]),
         _basket("FX", raw["macro_fx"]),
     ]
-    baskets.extend(_basket(name.replace("_", " "), value) for name, value in raw["micro"].items())
+    baskets.extend(
+        _basket(name.replace("_", " "), value) for name, value in raw["micro"].items()
+    )
     return RegimeUniverse(
         bool(report.get("enabled", True)),
         date.fromisoformat(str(report["history_start"])),

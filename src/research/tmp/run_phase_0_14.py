@@ -24,10 +24,8 @@ from regime.align import align_frame_to_daily
 from regime.engine import RegimeEngine, RegimeInputs
 from regime.evaluation import no_lookahead_check
 from regime.loaders import (
-    BARS_DIR,
     COT_PATH,
     COT_SYMBOL,
-    CURVE_DIR,
     CURVE_SYMBOLS,
     FRED_DIR,
     FRED_SERIES,
@@ -60,11 +58,11 @@ def introspect_data(universe) -> dict:
     fred: dict[str, dict] = {}
     for series in FRED_SERIES:
         path = FRED_DIR / f"{series}.parquet"
-        df = pl.read_parquet(path)
+        fred_df = pl.read_parquet(path)
         fred[series] = {
-            "rows": df.height,
-            "first": str(df["date"].min()),
-            "last": str(df["date"].max()),
+            "rows": fred_df.height,
+            "first": str(fred_df["date"].min()),
+            "last": str(fred_df["date"].max()),
         }
 
     cot_raw = load_cot_raw()
@@ -78,33 +76,48 @@ def introspect_data(universe) -> dict:
 
     curves: dict[str, dict] = {}
     for symbol, stem in CURVE_SYMBOLS.items():
-        df = load_curve(symbol)
+        curve_df = load_curve(symbol)
+        assert curve_df is not None
         curves[symbol] = {
             "stem": stem,
-            "rows": len(df),
-            "first": df.index.min().date().isoformat(),
-            "last": df.index.max().date().isoformat(),
-            "columns": list(df.columns),
+            "rows": len(curve_df),
+            "first": curve_df.index.min().date().isoformat(),
+            "last": curve_df.index.max().date().isoformat(),
+            "columns": list(curve_df.columns),
         }
 
     gaps = [
-        "COT: only 067651 (CRUDE OIL, LIGHT SWEET) present; macro sector's "
-        "cot_market ('E-MINI S&P 500') has no series in this repo -- macro "
-        "sector cot input is always None (see regime/builder.py docstring).",
-        "Curves: only 5 of 20 Commodities-basket symbols have a curve file "
-        "(CL, NG, GC, SI, HG); the other 15 legs are permanently curve=None, "
-        "so term_structure/carry for the Commodities basket are always a "
-        "5-symbol aggregate, never 20.",
-        "Curves start 2018-01-02 while bars start as early as 2000 for some "
-        "symbols; term_structure/carry are NaN for all curve symbols before "
-        "their curve's start date.",
-        "curve_slope is called with far='close_f3' (regime/dimensions/"
-        "term_structure.py), not production's far='close_f12' default -- "
-        "this repo's curves have only 3 legs, so term_structure/carry are "
-        "scored on a 3-month slope, not a 12-month slope.",
+        (
+            "COT: only 067651 (CRUDE OIL, LIGHT SWEET) present; macro sector's "
+            "cot_market ('E-MINI S&P 500') has no series in this repo -- macro "
+            "sector cot input is always None (see regime/builder.py docstring)."
+        ),
+        (
+            "Curves: only 5 of 20 Commodities-basket symbols have a curve file "
+            "(CL, NG, GC, SI, HG); the other 15 legs are permanently curve=None, "
+            "so term_structure/carry for the Commodities basket are always a "
+            "5-symbol aggregate, never 20."
+        ),
+        (
+            "Curves start 2018-01-02 while bars start as early as 2000 for some "
+            "symbols; term_structure/carry are NaN for all curve symbols before "
+            "their curve's start date."
+        ),
+        (
+            "curve_slope is called with far='close_f3' (regime/dimensions/"
+            "term_structure.py), not production's far='close_f12' default -- "
+            "this repo's curves have only 3 legs, so term_structure/carry are "
+            "scored on a 3-month slope, not a 12-month slope."
+        ),
     ]
 
-    return {"bars": bars, "fred": fred, "cot": cot, "curves": curves, "disclosed_gaps": gaps}
+    return {
+        "bars": bars,
+        "fred": fred,
+        "cot": cot,
+        "curves": curves,
+        "disclosed_gaps": gaps,
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -133,15 +146,24 @@ def port_fidelity_check() -> dict:
     )
     try:
         proc = subprocess.run(
-            ["uv", "run", "--project", ULTRON_FINANCE, "python3", "-c", source_hash_script],
+            [
+                "uv",
+                "run",
+                "--project",
+                ULTRON_FINANCE,
+                "python3",
+                "-c",
+                source_hash_script,
+            ],
             cwd=ULTRON_FINANCE,
             capture_output=True,
             text=True,
             timeout=60,
+            check=False,
         )
         source_hashes = json.loads(proc.stdout.strip().splitlines()[-1])
-        for name in port_hashes:
-            result["config_hash_equal"][name] = source_hashes[name] == port_hashes[name]
+        for name, port_hash in port_hashes.items():
+            result["config_hash_equal"][name] = source_hashes[name] == port_hash
         source_reachable = True
     except Exception as exc:  # noqa: BLE001 - fall back to hash-only if source venv unreachable
         result["source_unreachable_reason"] = str(exc)
@@ -156,7 +178,15 @@ def port_fidelity_check() -> dict:
     source_out = f"{TMP}/_fidelity_source.json"
     port_out = f"{TMP}/_fidelity_port.json"
     subprocess.run(
-        ["uv", "run", "--project", ULTRON_FINANCE, "python3", f"{TMP}/fidelity_source_14.py", source_out],
+        [
+            "uv",
+            "run",
+            "--project",
+            ULTRON_FINANCE,
+            "python3",
+            f"{TMP}/fidelity_source_14.py",
+            source_out,
+        ],
         check=True,
         capture_output=True,
         text=True,
@@ -177,10 +207,14 @@ def port_fidelity_check() -> dict:
     equal = {}
     for name in ("macro_default", "commodity_default"):
         equal[name] = {
-            "scores_equal": source_payload[name]["scores"] == port_payload[name]["scores"],
-            "labels_equal": source_payload[name]["labels"] == port_payload[name]["labels"],
+            "scores_equal": source_payload[name]["scores"]
+            == port_payload[name]["scores"],
+            "labels_equal": source_payload[name]["labels"]
+            == port_payload[name]["labels"],
         }
-    result["method"] = "config_hash + end_to_end synthetic-fixture run, source venv reachable"
+    result["method"] = (
+        "config_hash + end_to_end synthetic-fixture run, source venv reachable"
+    )
     result["end_to_end_equal"] = equal
     return result
 
@@ -192,7 +226,9 @@ def run_no_lookahead_gate(universe) -> dict:
     per_symbol: dict[str, dict] = {}
     macro_frame = load_fred_frame()
 
-    symbol_configs: list[tuple[str, str]] = [(universe.macro.index_symbol, universe.macro.config)]
+    symbol_configs: list[tuple[str, str]] = [
+        (universe.macro.index_symbol, universe.macro.config)
+    ]
     seen = {universe.macro.index_symbol}
     for basket in universe.baskets:
         for symbol in basket.symbols:
@@ -214,7 +250,9 @@ def run_no_lookahead_gate(universe) -> dict:
         inputs = RegimeInputs(ohlcv=bars, curve=curve, macro=macro, cot=cot)
         valid_truncations = [t for t in TRUNCATIONS if t < len(bars)]
         start = time.time()
-        passed = no_lookahead_check(engine, inputs, truncations=tuple(valid_truncations))
+        passed = no_lookahead_check(
+            engine, inputs, truncations=tuple(valid_truncations)
+        )
         elapsed = time.time() - start
         per_symbol[symbol] = {
             "config": config_name,
@@ -231,14 +269,21 @@ def run_no_lookahead_oil_products_cot(universe) -> dict:
     """Separately gate the opt-in oil_products COT wiring path (CL=F only)."""
     bars = load_bars(COT_SYMBOL)
     curve = load_curve(COT_SYMBOL)
+    assert curve is not None
     curve = align_frame_to_daily(pd.DatetimeIndex(bars.index), curve)
     raw = net_positioning(load_cot_raw())
-    cot = align_frame_to_daily(pd.DatetimeIndex(bars.index), raw[["noncomm_net_pct_oi"]], lags=3)
+    cot = align_frame_to_daily(
+        pd.DatetimeIndex(bars.index), raw[["noncomm_net_pct_oi"]], lags=3
+    )
     engine = RegimeEngine.from_default("commodity_default")
     inputs = RegimeInputs(ohlcv=bars, curve=curve, cot=cot)
     valid_truncations = [t for t in TRUNCATIONS if t < len(bars)]
     passed = no_lookahead_check(engine, inputs, truncations=tuple(valid_truncations))
-    return {"symbol": COT_SYMBOL, "truncations_tested": valid_truncations, "passed": passed}
+    return {
+        "symbol": COT_SYMBOL,
+        "truncations_tested": valid_truncations,
+        "passed": passed,
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -329,7 +374,9 @@ GATES = {
         "claim": "No scored dimension exceeds 90% single-label occupancy or flips "
         "more than once per 10 bars",
     },
-    "RC": {"claim": "Port fidelity: ported engine matches source scores where checkable"},
+    "RC": {
+        "claim": "Port fidelity: ported engine matches source scores where checkable"
+    },
 }
 
 
@@ -378,9 +425,15 @@ def main() -> None:
     print("Running port-fidelity check...")
     fidelity = port_fidelity_check()
 
-    print("Running no_lookahead_check hard gate over all", len(universe.symbols), "symbols...")
+    print(
+        "Running no_lookahead_check hard gate over all",
+        len(universe.symbols),
+        "symbols...",
+    )
     no_lookahead = run_no_lookahead_gate(universe)
-    no_lookahead["oil_products_cot_opt_in"] = run_no_lookahead_oil_products_cot(universe)
+    no_lookahead["oil_products_cot_opt_in"] = run_no_lookahead_oil_products_cot(
+        universe
+    )
 
     results = {
         "data_introspection": data_intro,
@@ -395,12 +448,17 @@ def main() -> None:
         json.dump(prereg, f, indent=2, default=str)
 
     print("NL gate all_passed:", no_lookahead["all_passed"])
-    print("oil_products COT opt-in NL gate passed:", no_lookahead["oil_products_cot_opt_in"]["passed"])
+    print(
+        "oil_products COT opt-in NL gate passed:",
+        no_lookahead["oil_products_cot_opt_in"]["passed"],
+    )
     print("Config hash equality:", fidelity.get("config_hash_equal"))
     print("Wrote phase_0_14_results.json and phase_0_14_preregistration.json")
 
     if not no_lookahead["all_passed"]:
-        raise SystemExit("HARD GATE FAILURE: no_lookahead_check failed for at least one symbol")
+        raise SystemExit(
+            "HARD GATE FAILURE: no_lookahead_check failed for at least one symbol"
+        )
 
 
 if __name__ == "__main__":

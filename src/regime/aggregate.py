@@ -31,10 +31,14 @@ def aggregate_scores(
     unknown = set(weights or ()).difference(per_symbol)
     if unknown:
         raise ValueError(f"weights contains unknown symbols: {sorted(unknown)}")
-    symbol_weights = pd.Series({key: (weights or {}).get(key, 1.0) for key in per_symbol})
+    symbol_weights = pd.Series(
+        {key: (weights or {}).get(key, 1.0) for key in per_symbol}
+    )
     if (symbol_weights <= 0).any():
         raise ValueError("weights must be positive")
-    dimensions = sorted({str(column) for frame in per_symbol.values() for column in frame})
+    dimensions = sorted(
+        {str(column) for frame in per_symbol.values() for column in frame}
+    )
     result: dict[str, pd.Series] = {}
     for dimension in dimensions:
         values = pd.concat(
@@ -51,9 +55,13 @@ def aggregate_scores(
             coverage = values.notna().mean(axis=1)
         else:
             available_weights = (
-                values.notna().mul(symbol_weights.reindex(values.columns), axis=1).sum(axis=1)
+                values.notna()
+                .mul(symbol_weights.reindex(values.columns), axis=1)
+                .sum(axis=1)
             )
-            score = values.mul(symbol_weights.reindex(values.columns), axis=1).sum(axis=1)
+            score = values.mul(symbol_weights.reindex(values.columns), axis=1).sum(
+                axis=1
+            )
             score = score / available_weights.replace(0, float("nan"))
             coverage = available_weights / symbol_weights.reindex(values.columns).sum()
         result[dimension] = score.where(coverage >= min_coverage)

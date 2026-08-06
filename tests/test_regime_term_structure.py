@@ -14,7 +14,9 @@ from regime import RegimeEngine, RegimeInputs
 def _inputs(front: float, deferred: float, rows: int = 300) -> RegimeInputs:
     index = pd.date_range("2020-01-01", periods=rows, freq="B")
     close = pd.Series(100.0 + np.arange(rows) * 0.01, index=index)
-    ohlcv = pd.DataFrame({"open": close, "high": close + 1, "low": close - 1, "close": close})
+    ohlcv = pd.DataFrame(
+        {"open": close, "high": close + 1, "low": close - 1, "close": close}
+    )
     curve = pd.DataFrame(
         {
             "close_f1": front,
@@ -35,7 +37,9 @@ def test_commodity_curve_labels_contango_and_negative_carry() -> None:
 
 
 def test_commodity_curve_labels_backwardation_and_positive_carry() -> None:
-    result = RegimeEngine.from_default("commodity_default").detect(_inputs(110.0, 100.0))
+    result = RegimeEngine.from_default("commodity_default").detect(
+        _inputs(110.0, 100.0)
+    )
 
     assert result.labels["term_structure"].dropna().iloc[-1] == "backwardation"
     assert result.labels["carry"].dropna().iloc[-1] == "positive"

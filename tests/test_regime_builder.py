@@ -19,7 +19,9 @@ import yaml
 from regime.builder import build_regime_report
 from regime.universe import load_regime_universe
 
-UNIVERSE_YAML = Path(__file__).resolve().parents[1] / "src" / "regime" / "configs" / "universe.yaml"
+UNIVERSE_YAML = (
+    Path(__file__).resolve().parents[1] / "src" / "regime" / "configs" / "universe.yaml"
+)
 
 
 def _cfg():

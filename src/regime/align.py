@@ -59,7 +59,9 @@ def align_frame_to_daily(
     if isinstance(lags, int):
         return pd.DataFrame(
             {
-                column: align_to_daily(target_index, df[column], lags, max_staleness_days)
+                column: align_to_daily(
+                    target_index, df[column], lags, max_staleness_days
+                )
                 for column in df
             },
             index=target_index,

@@ -27,6 +27,7 @@ from regime.loaders import load_bars
 TRUNCATION = pd.Timestamp("2024-12-31")  # inclusive; both holdouts start after this
 DATABENTO_DIR = Path("src/research/data/market/databento/ohlcv")
 
+
 # --------------------------------------------------------------------------- #
 # Ground rule 1: truncation
 # --------------------------------------------------------------------------- #
@@ -65,23 +66,52 @@ BASKET_SYMBOLS: dict[str, list[str]] = {
     "meats": ["LE=F", "HE=F"],
 }
 PANEL_L_SYMBOLS: list[str] = [s for syms in BASKET_SYMBOLS.values() for s in syms]
-SYMBOL_TO_BASKET: dict[str, str] = {s: b for b, syms in BASKET_SYMBOLS.items() for s in syms}
+SYMBOL_TO_BASKET: dict[str, str] = {
+    s: b for b, syms in BASKET_SYMBOLS.items() for s in syms
+}
 
 # Panel-D: the 16 databento products present (NEXT_PROMPT.md sec5.1). ES is
 # dropped for the trend target (equity index, not a commodity -- sec5.1);
 # it stays in PANEL_D_PRODUCTS_ALL for completeness/disclosure but is
 # excluded from PANEL_D_SYMBOLS, which is what Track B actually pools.
 PANEL_D_PRODUCTS_ALL: list[str] = [
-    "BZ", "CL", "ES", "GC", "HO", "KE", "NG", "PA", "PL", "RB", "SI", "ZC", "ZL", "ZM", "ZS", "ZW",
+    "BZ",
+    "CL",
+    "ES",
+    "GC",
+    "HO",
+    "KE",
+    "NG",
+    "PA",
+    "PL",
+    "RB",
+    "SI",
+    "ZC",
+    "ZL",
+    "ZM",
+    "ZS",
+    "ZW",
 ]
 PANEL_D_SYMBOLS: list[str] = [p for p in PANEL_D_PRODUCTS_ALL if p != "ES"]
 
 # yfinance-equivalent symbol for a databento product, where one exists (all
 # but KE -- HRW wheat has no yfinance continuous series in this repo).
 PANEL_D_TO_YFINANCE: dict[str, str] = {
-    "BZ": "BZ=F", "CL": "CL=F", "ES": "ES=F", "GC": "GC=F", "HO": "HO=F",
-    "NG": "NG=F", "PA": "PA=F", "PL": "PL=F", "RB": "RB=F", "SI": "SI=F",
-    "ZC": "ZC=F", "ZL": "ZL=F", "ZM": "ZM=F", "ZS": "ZS=F", "ZW": "ZW=F",
+    "BZ": "BZ=F",
+    "CL": "CL=F",
+    "ES": "ES=F",
+    "GC": "GC=F",
+    "HO": "HO=F",
+    "NG": "NG=F",
+    "PA": "PA=F",
+    "PL": "PL=F",
+    "RB": "RB=F",
+    "SI": "SI=F",
+    "ZC": "ZC=F",
+    "ZL": "ZL=F",
+    "ZM": "ZM=F",
+    "ZS": "ZS=F",
+    "ZW": "ZW=F",
 }
 
 
@@ -112,10 +142,17 @@ def load_databento_front_month_ohlcv(product: str) -> pd.DataFrame:
     """
     frame = pl.read_parquet(DATABENTO_DIR / f"{product}.parquet")
     frame = frame.filter(pl.col("ticker").str.contains(r"^[A-Z]+\d{6}$"))
-    front = frame.sort(["date", "ticker"]).group_by("date", maintain_order=False).first().sort("date")
+    front = (
+        frame.sort(["date", "ticker"])
+        .group_by("date", maintain_order=False)
+        .first()
+        .sort("date")
+    )
     pdf = front.to_pandas()
     pdf["date"] = pd.to_datetime(pdf["date"])
-    return pdf.set_index("date")[["open", "high", "low", "close", "volume"]].sort_index()
+    return pdf.set_index("date")[
+        ["open", "high", "low", "close", "volume"]
+    ].sort_index()
 
 
 def load_databento_curve_frame(product: str) -> pd.DataFrame | None:
@@ -170,14 +207,31 @@ INDICATOR_INPUTS: dict[str, set[str]] = {
     "macro.yield_curve": {"FRED:T10Y2Y"},
     "macro.yield_curve_3m10y": {"FRED:T10Y3M"},
     # regime/dimensions/term_structure.py
-    "ts.curve_slope": {"curve:close_f1", "curve:close_f3"},  # curve_slope(far="close_f3")
+    "ts.curve_slope": {
+        "curve:close_f1",
+        "curve:close_f3",
+    },  # curve_slope(far="close_f3")
     "ts.calendar_spread_z": {"curve:close_f1", "curve:close_f2"},
-    "ts.ann_roll_yield": {"curve:close_f1", "curve:close_f2", "curve:dte_f1", "curve:dte_f2"},
+    "ts.ann_roll_yield": {
+        "curve:close_f1",
+        "curve:close_f2",
+        "curve:dte_f1",
+        "curve:dte_f2",
+    },
     "ts.excess_spread": {"curve:close_f1", "curve:close_f2"},
     # regime/dimensions/carry.py
-    "carry.ann_roll_yield": {"curve:close_f1", "curve:close_f2", "curve:dte_f1", "curve:dte_f2"},
+    "carry.ann_roll_yield": {
+        "curve:close_f1",
+        "curve:close_f2",
+        "curve:dte_f1",
+        "curve:dte_f2",
+    },
     "carry.vol_scaled": {  # vol_scaled_carry(ann_roll_yield(...), realized_vol(ohlcv.close))
-        "curve:close_f1", "curve:close_f2", "curve:dte_f1", "curve:dte_f2", "bars:close",
+        "curve:close_f1",
+        "curve:close_f2",
+        "curve:dte_f1",
+        "curve:dte_f2",
+        "bars:close",
     },
 }
 
@@ -185,11 +239,15 @@ INDICATOR_INPUTS: dict[str, set[str]] = {
 DIMENSION_INDICATOR_WEIGHTS: dict[str, dict[str, float]] = {
     "yield_curve": {"macro.yield_curve": 0.50, "macro.yield_curve_3m10y": 0.50},
     "term_structure": {
-        "ts.curve_slope": 0.30, "ts.calendar_spread_z": 0.20,
-        "ts.ann_roll_yield": 0.30, "ts.excess_spread": 0.20,
+        "ts.curve_slope": 0.30,
+        "ts.calendar_spread_z": 0.20,
+        "ts.ann_roll_yield": 0.30,
+        "ts.excess_spread": 0.20,
     },
     "carry": {"carry.ann_roll_yield": 0.60, "carry.vol_scaled": 0.40},
-    "carry_roll_yield_only": {"carry.ann_roll_yield": 1.0},  # sec4.2's measurement-only variant
+    "carry_roll_yield_only": {
+        "carry.ann_roll_yield": 1.0
+    },  # sec4.2's measurement-only variant
 }
 
 
@@ -258,7 +316,8 @@ def build_disjointness_table() -> dict[str, Any]:
             # touching bars:close -- quantify the overlap's weight rather
             # than just flagging it (sec4.1's "disclose ... and its weight").
             pair_carry_weight = sum(
-                w for name, w in DIMENSION_INDICATOR_WEIGHTS[dim].items()
+                w
+                for name, w in DIMENSION_INDICATOR_WEIGHTS[dim].items()
                 if intersection and (INDICATOR_INPUTS[name] & tgt_inputs)
             )
         pairs_entry = {
@@ -301,7 +360,9 @@ def non_overlapping_forward_returns(close: pd.Series, horizon: int) -> pd.Series
     return fwd.iloc[::horizon].dropna()
 
 
-def mean_pairwise_correlation(symbol_closes: dict[str, pd.Series], horizon: int) -> float:
+def mean_pairwise_correlation(
+    symbol_closes: dict[str, pd.Series], horizon: int
+) -> float:
     """rho-bar: mean pairwise correlation of non-overlapping forward h-day
     returns across the panel's symbols (sec6.3 bullet 3).
 
@@ -322,7 +383,8 @@ def mean_pairwise_correlation(symbol_closes: dict[str, pd.Series], horizon: int)
         freq="B",
     )
     aligned = {
-        symbol: close.reindex(calendar).ffill() for symbol, close in symbol_closes.items()
+        symbol: close.reindex(calendar).ffill()
+        for symbol, close in symbol_closes.items()
     }
     frame = pd.DataFrame(aligned)
     with np.errstate(invalid="ignore", divide="ignore"):
@@ -336,7 +398,9 @@ def mean_pairwise_correlation(symbol_closes: dict[str, pd.Series], horizon: int)
     return float(np.nanmean(off_diag))
 
 
-def kish_effective_n(n_windows_per_symbol: float, n_symbols: int, rho_bar: float) -> float:
+def kish_effective_n(
+    n_windows_per_symbol: float, n_symbols: int, rho_bar: float
+) -> float:
     """N_eff = N*n / (1 + (n-1)*rho_bar) (sec6.3 bullet 4)."""
     if not np.isfinite(rho_bar):
         return float("nan")
@@ -346,7 +410,9 @@ def kish_effective_n(n_windows_per_symbol: float, n_symbols: int, rho_bar: float
     return float(n_windows_per_symbol * n_symbols / denom)
 
 
-def minimum_detectable_effect(n_eff: float, alpha: float, power: float = 0.8, p: float = 0.5) -> float:
+def minimum_detectable_effect(
+    n_eff: float, alpha: float, power: float = 0.8, p: float = 0.5
+) -> float:
     """Balanced-accuracy improvement detectable at `power` given `n_eff`
     effective observations and a Bonferroni-corrected `alpha`, treating the
     comparison as a two-proportion test with variance p(1-p) on each side
@@ -364,9 +430,12 @@ def track_c_power_budget(
 ) -> dict:
     panel_l_bars = bars_per_symbol_panel_l()
     panel_d_bars = bars_per_symbol_panel_d()
-    panel_l_closes = {s: cast(pd.Series, truncate(load_bars(s)["close"])) for s in PANEL_L_SYMBOLS}
+    panel_l_closes = {
+        s: cast(pd.Series, truncate(load_bars(s)["close"])) for s in PANEL_L_SYMBOLS
+    }
     panel_d_closes = {
-        p: cast(pd.Series, truncate(load_databento_front_month_ohlcv(p)["close"])) for p in PANEL_D_SYMBOLS
+        p: cast(pd.Series, truncate(load_databento_front_month_ohlcv(p)["close"]))
+        for p in PANEL_D_SYMBOLS
     }
 
     out = {}
@@ -389,7 +458,9 @@ def track_c_power_budget(
                 "raw_rows_pooled": int(sum(bars.values())),
                 "non_overlapping_windows_per_symbol": round(non_overlap_per_symbol, 1),
                 "non_overlapping_windows_total": round(non_overlap_total, 1),
-                "mean_pairwise_correlation": round(rho_bar, 4) if np.isfinite(rho_bar) else None,
+                "mean_pairwise_correlation": round(rho_bar, 4)
+                if np.isfinite(rho_bar)
+                else None,
                 "n_eff": round(n_eff, 1) if np.isfinite(n_eff) else None,
                 "underpowered": (not np.isfinite(n_eff)) or n_eff < 200,
                 "minimum_detectable_effect_balanced_accuracy": round(mde, 4)

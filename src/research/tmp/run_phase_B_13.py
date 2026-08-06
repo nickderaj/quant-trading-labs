@@ -26,7 +26,7 @@ import sys
 import numpy as np
 import polars as pl
 import torch
-import torch.nn as nn
+from torch import nn
 
 sys.path.insert(0, "src/research/tmp")
 sys.path.insert(0, "src")
@@ -40,20 +40,48 @@ ANNUALIZED_RATE = float(np.sqrt(252))
 ORIGIN_OFFSETS = [0, 7, 14, 21]
 N_TRIALS_POOLED = 18
 DEV_END = pl.date(2024, 12, 31)
-DATABENTO_PRODUCTS = ["BZ", "CL", "ES", "GC", "HO", "KE", "NG", "PA", "PL", "RB", "SI", "ZC", "ZL", "ZM", "ZS", "ZW"]
+DATABENTO_PRODUCTS = [
+    "BZ",
+    "CL",
+    "ES",
+    "GC",
+    "HO",
+    "KE",
+    "NG",
+    "PA",
+    "PL",
+    "RB",
+    "SI",
+    "ZC",
+    "ZL",
+    "ZM",
+    "ZS",
+    "ZW",
+]
 YFINANCE_TICKERS = ["6A=F", "6B=F", "6C=F", "6E=F", "6J=F", "6S=F"]
-YFINANCE_TO_PRODUCT = {"6A=F": "6A", "6B=F": "6B", "6C=F": "6C", "6E=F": "6E", "6J=F": "6J", "6S=F": "6S"}
+YFINANCE_TO_PRODUCT = {
+    "6A=F": "6A",
+    "6B=F": "6B",
+    "6C=F": "6C",
+    "6E=F": "6E",
+    "6J=F": "6J",
+    "6S=F": "6S",
+}
 LOOKBACK = 20
 TRAIN_BARS = 252 * 5
 TEST_BARS = 252
-STEP_BARS = 252 * 3  # 3y roll step, not 1y -- runtime tradeoff, disclosed: fewer but still genuinely walk-forward, non-overlapping-test folds
+STEP_BARS = (
+    252 * 3
+)  # 3y roll step, not 1y -- runtime tradeoff, disclosed: fewer but still genuinely walk-forward, non-overlapping-test folds
 N_SEEDS = 5
 N_EPOCHS = 60
 HIDDEN_DIM = 16
 
 
 def load_databento_product(product: str) -> pl.DataFrame:
-    ohlcv = pl.read_parquet(f"src/research/data/market/databento/ohlcv/{product}.parquet")
+    ohlcv = pl.read_parquet(
+        f"src/research/data/market/databento/ohlcv/{product}.parquet"
+    )
     contracts = pl.read_parquet("src/research/data/market/databento/contracts.parquet")
     roll = pl.read_parquet("src/research/data/market/databento/roll_calendar.parquet")
     df = ohlcv.filter(pl.col("product") == product)
@@ -84,18 +112,26 @@ def load_yfinance_ticker(ticker: str) -> pl.DataFrame:
     ).filter(pl.col("close") > 0, pl.col("datetime") <= DEV_END)
 
 
-def build_panel() -> pl.DataFrame:
+def build_panel() -> tuple[pl.DataFrame, list[str]]:
     frames = [load_databento_product(p) for p in DATABENTO_PRODUCTS]
     frames += [load_yfinance_ticker(t) for t in YFINANCE_TICKERS]
     panel = pl.concat(frames).sort(["symbol", "datetime"])
     panel = panel.with_columns(
-        (pl.col("close").log() - pl.col("close").log().shift(1)).over("symbol").alias("log_return_1")
+        (pl.col("close").log() - pl.col("close").log().shift(1))
+        .over("symbol")
+        .alias("log_return_1")
     )
     panel = panel.with_columns(
-        pl.col("log_return_1").rolling_std(window_size=20).shift(1).over("symbol").alias("vol_20d")
+        pl.col("log_return_1")
+        .rolling_std(window_size=20)
+        .shift(1)
+        .over("symbol")
+        .alias("vol_20d")
     )
     panel = panel.with_columns(
-        research.vol_normalized_target("log_return_1", "vol_20d").alias("target_vol_norm")
+        research.vol_normalized_target("log_return_1", "vol_20d").alias(
+            "target_vol_norm"
+        )
     )
     # 5 lagged returns as the feature pool -- one MSE-point-forecast-style
     # feature set shared by every architecture, so the comparison isolates
@@ -118,7 +154,9 @@ def build_panel() -> pl.DataFrame:
     return panel, feature_cols
 
 
-def make_windows(panel: pl.DataFrame, feature_cols: list[str], idx: np.ndarray) -> tuple:
+def make_windows(
+    panel: pl.DataFrame, feature_cols: list[str], idx: np.ndarray
+) -> tuple:
     """Build (n, LOOKBACK, n_features) tensors from the per-symbol lag
     features already computed causally in `panel` -- each row at index i
     already only depends on data through datetime[i]-1, so a LOOKBACK
@@ -164,17 +202,31 @@ def run_architecture(panel, feature_cols, splits, model_factory, name, n_seeds=N
     per_seed_stitched = []
     for seed in range(n_seeds):
         research.set_seed(seed)
-        stitched_position, stitched_return, stitched_vol, stitched_sym, stitched_price = [], [], [], [], []
+        (
+            stitched_position,
+            stitched_return,
+            stitched_vol,
+            stitched_sym,
+            stitched_price,
+        ) = [], [], [], [], []
         for train_idx, test_idx in splits:
             x_train, y_train, _, _, _ = make_windows(panel, feature_cols, train_idx)
-            x_test, y_test, vol_test, sym_test, price_test = make_windows(panel, feature_cols, test_idx)
+            x_test, y_test, vol_test, sym_test, price_test = make_windows(
+                panel, feature_cols, test_idx
+            )
             if x_train is None or x_test is None:
                 continue
             model = model_factory()
             optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
             preds_test = research.batch_train_reg(
-                model, x_train, x_test, y_train, y_test,
-                no_epochs=N_EPOCHS, loss=SharpeLoss(), optimizer=optimizer,
+                model,
+                x_train,
+                x_test,
+                y_train,
+                y_test,
+                no_epochs=N_EPOCHS,
+                loss=SharpeLoss(),
+                optimizer=optimizer,
             )
             position = np.clip(preds_test.detach().numpy(), -3, 3)
             stitched_position.append(position)
@@ -190,17 +242,26 @@ def run_architecture(panel, feature_cols, splits, model_factory, name, n_seeds=N
         sym_arr = np.concatenate(stitched_sym)
         price_arr = np.concatenate(stitched_price)
 
-        sized_position = np.clip(position, -1, 1) * (0.01 / np.where(vol > 1e-8, vol, np.nan))
+        sized_position = np.clip(position, -1, 1) * (
+            0.01 / np.where(vol > 1e-8, vol, np.nan)
+        )
         sized_position = np.nan_to_num(sized_position, nan=0.0)
         gross = sized_position * fwd_return
         turnover = np.abs(np.diff(sized_position, prepend=0.0))
         # headline futures cost per sec2/prereg: commod_lib8's own round-turn
         # cost as a fraction of notional, per instrument, not a flat convention.
         cost_frac = np.array(
-            [C.cost_per_unit_notional(s, p) for s, p in zip(sym_arr, price_arr, strict=True)]
+            [
+                C.cost_per_unit_notional(s, p)
+                for s, p in zip(sym_arr, price_arr, strict=True)
+            ]
         )
         net = gross - cost_frac * turnover
-        sharpe = float(np.mean(net) / np.std(net) * ANNUALIZED_RATE) if np.std(net) > 0 else 0.0
+        sharpe = (
+            float(np.mean(net) / np.std(net) * ANNUALIZED_RATE)
+            if np.std(net) > 0
+            else 0.0
+        )
         per_seed_net_sharpes.append(sharpe)
         per_seed_stitched.append({"gross": gross, "net": net, "turnover": turnover})
 
@@ -211,7 +272,9 @@ def run_architecture(panel, feature_cols, splits, model_factory, name, n_seeds=N
     median_stitch = per_seed_stitched[median_idx]
     ci_lo, ci_hi = research.block_bootstrap_ci(median_stitch["net"], seed=0)
     dsr = research.deflated_sharpe_prob(
-        np.median(per_seed_net_sharpes) / ANNUALIZED_RATE, n_trials=N_TRIALS_POOLED, n_obs=len(median_stitch["net"])
+        np.median(per_seed_net_sharpes) / ANNUALIZED_RATE,
+        n_trials=N_TRIALS_POOLED,
+        n_obs=len(median_stitch["net"]),
     )
     breakeven = E.breakeven_cost_bps(median_stitch["gross"], median_stitch["turnover"])
 
@@ -232,33 +295,60 @@ def run_architecture(panel, feature_cols, splits, model_factory, name, n_seeds=N
 
 def main():
     panel, feature_cols = build_panel()
-    print(f"Panel: {panel.height} rows, {panel['symbol'].n_unique()} symbols", flush=True)
+    print(
+        f"Panel: {panel.height} rows, {panel['symbol'].n_unique()} symbols", flush=True
+    )
 
     splits = research.panel_walk_forward_splits(
-        panel, TRAIN_BARS, TEST_BARS, step_bars=STEP_BARS, mode="rolling", datetime_col="datetime"
+        panel,
+        TRAIN_BARS,
+        TEST_BARS,
+        step_bars=STEP_BARS,
+        mode="rolling",
+        datetime_col="datetime",
     )
     print(f"{len(splits)} walk-forward folds", flush=True)
 
     linear = research.benchmark_linear_models(
-        panel, target="fwd_return_1", feature_pool=feature_cols, annualized_rate=ANNUALIZED_RATE, max_no_features=3,
+        panel,
+        target="fwd_return_1",
+        feature_pool=feature_cols,
+        annualized_rate=ANNUALIZED_RATE,
+        max_no_features=3,
     )
-    linear_best = linear.sort("sharpe", descending=True).head(1).to_dicts()[0] if linear.height else {}
+    linear_best = (
+        linear.sort("sharpe", descending=True).head(1).to_dicts()[0]
+        if linear.height
+        else {}
+    )
 
     results = {"linear_baseline": linear_best}
 
     lstm_result = run_architecture(
-        panel, feature_cols, splits, lambda: E.LSTMForecaster(len(feature_cols), HIDDEN_DIM), "LSTM"
+        panel,
+        feature_cols,
+        splits,
+        lambda: E.LSTMForecaster(len(feature_cols), HIDDEN_DIM),
+        "LSTM",
     )
     results["LSTM"] = lstm_result
 
     gated_result = run_architecture(
-        panel, feature_cols, splits, lambda: E.GatedLSTMForecaster(len(feature_cols), HIDDEN_DIM), "GatedLSTM"
+        panel,
+        feature_cols,
+        splits,
+        lambda: E.GatedLSTMForecaster(len(feature_cols), HIDDEN_DIM),
+        "GatedLSTM",
     )
     results["GatedLSTM"] = gated_result
 
     best_name = max(
         ["LSTM", "GatedLSTM"],
-        key=lambda n: results[n].get("median_sharpe", -np.inf) if "error" not in results[n] else -np.inf,
+        key=lambda n: (
+            results[n].get("median_sharpe", -np.inf)
+            if "error" not in results[n]
+            else -np.inf
+        ),
     )
     best = results[best_name]
     linear_sharpe = linear_best.get("sharpe", 0.0)

@@ -51,7 +51,9 @@ def main() -> None:
 
     rows = []
     disqualified: list[dict] = []
-    for (sector, dimension), group in panel.group_by(["sector", "dimension"], maintain_order=True):
+    for (sector, dimension), group in panel.group_by(
+        ["sector", "dimension"], maintain_order=True
+    ):
         labels = (
             group.sort("date")
             .select("date", "label")
@@ -96,16 +98,25 @@ def main() -> None:
             "max_single_label_occupancy": max_occupancy,
             "occupancy_by_label": occupancy.to_dict(),
             "durations_by_label": durations.to_dict(orient="index"),
-            "expected_remaining_duration": remaining.to_dict() if remaining is not None else {},
+            "expected_remaining_duration": remaining.to_dict()
+            if remaining is not None
+            else {},
             "disqualified": bool(reasons),
             "disqualification_reasons": reasons,
         }
         rows.append(entry)
         if reasons:
-            disqualified.append({"sector": sector, "dimension": dimension, "reasons": reasons})
+            disqualified.append(
+                {"sector": sector, "dimension": dimension, "reasons": reasons}
+            )
 
     with open(f"{TMP}/phase_2_14_results.json", "w") as f:
-        json.dump({"per_sector_dimension": rows, "disqualified": disqualified}, f, indent=2, default=str)
+        json.dump(
+            {"per_sector_dimension": rows, "disqualified": disqualified},
+            f,
+            indent=2,
+            default=str,
+        )
 
     print(f"{len(rows)} sector x dimension pairs evaluated")
     print(f"{len(disqualified)} disqualified from Phase 3 scoring:")

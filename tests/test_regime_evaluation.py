@@ -15,7 +15,9 @@ from regime.evaluation import evaluate, label_stability, no_lookahead_check
 def _inputs(rows: int = 600) -> RegimeInputs:
     index = pd.date_range("2020-01-01", periods=rows, freq="B")
     close = pd.Series(100.0 * np.exp(np.arange(rows) / 1_000), index=index)
-    return RegimeInputs(pd.DataFrame({"open": close, "high": close, "low": close, "close": close}))
+    return RegimeInputs(
+        pd.DataFrame({"open": close, "high": close, "low": close, "close": close})
+    )
 
 
 def test_evaluation_and_walk_forward_smoke() -> None:

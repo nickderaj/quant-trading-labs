@@ -55,7 +55,9 @@ _BASELINE = "#c3c2b7"
 
 # Diverging pair (blue <-> red poles, neutral gray midpoint): -1 renders red
 # (bear / risk-off / wide), +1 renders blue (bull / risk-on / tight).
-_DIVERGING = LinearSegmentedColormap.from_list("regime", ["#e34948", "#f0efec", "#2a78d6"])
+_DIVERGING = LinearSegmentedColormap.from_list(
+    "regime", ["#e34948", "#f0efec", "#2a78d6"]
+)
 _NORM = Normalize(vmin=-1.0, vmax=1.0)
 
 # Each dimension owns one categorical slot, identical in every chart, so a
@@ -94,12 +96,20 @@ def _tidy(text: str) -> str:
 
 def to_png(fig: Figure) -> bytes:
     buffer = io.BytesIO()
-    fig.savefig(buffer, format="png", dpi=180, facecolor=fig.get_facecolor(), bbox_inches="tight")
+    fig.savefig(
+        buffer,
+        format="png",
+        dpi=180,
+        facecolor=fig.get_facecolor(),
+        bbox_inches="tight",
+    )
     plt.close(fig)
     return buffer.getvalue()
 
 
-def _heatmap_panel(axis: Axes, sectors: list[SectorRegime], show_column_labels: bool) -> None:
+def _heatmap_panel(
+    axis: Axes, sectors: list[SectorRegime], show_column_labels: bool
+) -> None:
     dimensions = _ordered_dimensions(sectors)
     axis.set_facecolor(_SURFACE)
     axis.set_xlim(0, len(dimensions))
@@ -107,7 +117,9 @@ def _heatmap_panel(axis: Axes, sectors: list[SectorRegime], show_column_labels: 
     axis.invert_yaxis()
     axis.set_xticks([])
     axis.set_yticks([position + 0.5 for position in range(len(sectors))])
-    axis.set_yticklabels([sector.name for sector in sectors], fontsize=9, color=_INK_SECONDARY)
+    axis.set_yticklabels(
+        [sector.name for sector in sectors], fontsize=9, color=_INK_SECONDARY
+    )
     axis.tick_params(length=0)
     for spine in axis.spines.values():
         spine.set_visible(False)
@@ -177,7 +189,9 @@ def snapshot_figure(report: RegimeReport) -> Figure:
         height_ratios=[count + 0.45 for count in row_counts],
         facecolor=_SURFACE,
     )
-    for axis, group in zip([axes] if len(panels) == 1 else list(axes), panels, strict=True):
+    for axis, group in zip(
+        [axes] if len(panels) == 1 else list(axes), panels, strict=True
+    ):
         _heatmap_panel(axis, group, show_column_labels=True)
     as_of = report.as_of.isoformat() if report.as_of is not None else "latest"
     fig.suptitle(
@@ -228,7 +242,12 @@ def _history_panel(axis: Axes, sector: SectorRegime) -> None:
     for spine in axis.spines.values():
         spine.set_visible(False)
     axis.set_title(
-        sector.name, loc="left", fontsize=10, fontweight="bold", color=_INK_PRIMARY, pad=4
+        sector.name,
+        loc="left",
+        fontsize=10,
+        fontweight="bold",
+        color=_INK_PRIMARY,
+        pad=4,
     )
     # Anchored above the plot area (sharing the title row) so the legend can
     # never sit on top of the lines.
@@ -260,7 +279,9 @@ def history_figure(report: RegimeReport) -> Figure | None:
         sharex=True,
         facecolor=_SURFACE,
     )
-    for axis, sector in zip([axes] if len(sectors) == 1 else list(axes), sectors, strict=True):
+    for axis, sector in zip(
+        [axes] if len(sectors) == 1 else list(axes), sectors, strict=True
+    ):
         _history_panel(axis, sector)
     fig.suptitle(
         "Regime scores — last 6 months",
@@ -278,7 +299,9 @@ def _row_label(sector: SectorRegime, dimension: str) -> str:
     return f"{sector.name} · {_tidy(dimension)}"
 
 
-def _label_color(sector: SectorRegime, dimension: str, label: object) -> tuple[float, float, float, float]:
+def _label_color(
+    sector: SectorRegime, dimension: str, label: object
+) -> tuple[float, float, float, float]:
     """Colour a categorical label by the mean score observed while it was
     active, so the ribbon uses the same diverging scale as every other
     chart without needing the dimension's band config."""
@@ -397,5 +420,7 @@ def render_regime_charts(report: RegimeReport) -> list[tuple[bytes, str]]:
     ]
     history = history_figure(report)
     if history is not None:
-        charts.append((to_png(history), "Macro / Commodities / FX regime scores, last 6 months"))
+        charts.append(
+            (to_png(history), "Macro / Commodities / FX regime scores, last 6 months")
+        )
     return charts

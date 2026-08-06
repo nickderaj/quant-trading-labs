@@ -17,9 +17,7 @@ sys.path.insert(0, "src")
 
 import numpy as np
 import polars as pl
-
-from spread_lib11 import true_atr_series, sma_causal  # noqa: E402
-
+from spread_lib11 import true_atr_series
 
 # ---------------------------------------------------------------------------
 # Design A -- trend/momentum state, sizing, exits, capacity
@@ -55,7 +53,9 @@ def trend_momentum_state(
     ema_fast = log_s.ewm_mean(span=fast).shift(1).to_numpy()
     ema_slow = log_s.ewm_mean(span=slow).shift(1).to_numpy()
     atr = true_atr_series(high, low, close, window=atr_window)
-    atr_frac = np.where(atr > 1e-12, atr / np.where(close > 1e-12, close, np.nan), np.nan)
+    atr_frac = np.where(
+        atr > 1e-12, atr / np.where(close > 1e-12, close, np.nan), np.nan
+    )
 
     trend_term = (ema_fast - ema_slow) / np.where(atr_frac > 1e-12, atr_frac, np.nan)
 
@@ -107,7 +107,7 @@ def capacity_curve(
     adv_notional: np.ndarray,
     base_sharpe: float,
     impact_coefficient: float = 0.1,
-) -> dict[str, float]:
+) -> dict[str, float | None]:
     """AUM at which the impact discount alone would degrade net Sharpe by
     25% and 50% relative to `base_sharpe`, holding position sizing rules
     fixed and scaling AUM (and therefore intended notional) up uniformly.
@@ -177,10 +177,14 @@ def trailing_atr_stop(
             prev_stop = np.nan
         if pos_sign > 0:
             candidate = close[t] - atr_mult * atr[t]
-            prev_stop = candidate if not np.isfinite(prev_stop) else max(prev_stop, candidate)
+            prev_stop = (
+                candidate if not np.isfinite(prev_stop) else max(prev_stop, candidate)
+            )
         else:
             candidate = close[t] + atr_mult * atr[t]
-            prev_stop = candidate if not np.isfinite(prev_stop) else min(prev_stop, candidate)
+            prev_stop = (
+                candidate if not np.isfinite(prev_stop) else min(prev_stop, candidate)
+            )
         stop[t] = prev_stop
         prev_pos_sign = pos_sign
     return stop
@@ -275,6 +279,7 @@ def causal_monthly_regrid_search(
                     score = score_fn(c_fit, h_fit, l_fit, L, theta, alpha)
                     if best is None or score > best[0]:
                         best = (score, L, theta, alpha)
+        assert best is not None
 
         rows.append(
             {
@@ -347,9 +352,9 @@ def rolling_causal_corr_graph(
     strictly before that date, asserted by
     `tests/test_exec_lib13.py::test_corr_graph_no_future_leakage`.
     """
-    wide = returns.pivot(
-        index=datetime_col, on=symbol_col, values=return_col
-    ).sort(datetime_col)
+    wide = returns.pivot(index=datetime_col, on=symbol_col, values=return_col).sort(
+        datetime_col
+    )
     symbols = sorted(c for c in wide.columns if c != datetime_col)
     dates = wide[datetime_col].to_numpy()
     mat = wide.select(symbols).to_numpy()
@@ -378,12 +383,15 @@ def node_degree_stats(graphs: dict[Any, np.ndarray]) -> dict[str, float]:
     if not degrees:
         return {"mean_degree": float("nan"), "median_degree": float("nan")}
     all_deg = np.concatenate(degrees)
-    return {"mean_degree": float(np.mean(all_deg)), "median_degree": float(np.median(all_deg))}
+    return {
+        "mean_degree": float(np.mean(all_deg)),
+        "median_degree": float(np.median(all_deg)),
+    }
 
 
 try:
     import torch
-    import torch.nn as nn
+    from torch import nn
 
     class GraphAttentionPredictor(nn.Module):
         """Single-head additive graph attention over each node's neighbours
@@ -417,7 +425,7 @@ try:
             self.attn_key = nn.Linear(hidden_dim, hidden_dim)
             self.out = nn.Linear(hidden_dim * 2, 1)
 
-        def encode_nodes(self, x: "torch.Tensor") -> "torch.Tensor":
+        def encode_nodes(self, x: torch.Tensor) -> torch.Tensor:
             # x: (n_nodes, time_window, n_features) if use_time_mixing else
             # (n_nodes, n_features)
             if self.use_time_mixing:
@@ -425,7 +433,7 @@ try:
                 x = h_n.squeeze(0)
             return torch.relu(self.node_proj(x))
 
-        def forward(self, x: "torch.Tensor", adjacency: "torch.Tensor") -> "torch.Tensor":
+        def forward(self, x: torch.Tensor, adjacency: torch.Tensor) -> torch.Tensor:
             h = self.encode_nodes(x)  # (n_nodes, hidden_dim)
             q = self.attn_query(h)
             k = self.attn_key(h)
@@ -436,7 +444,9 @@ try:
             weights = torch.softmax(scores, dim=1)
             weights = torch.nan_to_num(weights, nan=0.0)
             neighbour_agg = weights @ h
-            neighbour_agg = torch.where(has_neighbour.unsqueeze(1), neighbour_agg, torch.zeros_like(h))
+            neighbour_agg = torch.where(
+                has_neighbour.unsqueeze(1), neighbour_agg, torch.zeros_like(h)
+            )
             combined = torch.cat([h, neighbour_agg], dim=1)
             return self.out(combined).squeeze(-1)
 
@@ -447,10 +457,12 @@ try:
 
         def __init__(self, n_features: int, hidden_dim: int = 32, n_layers: int = 1):
             super().__init__()
-            self.lstm = nn.LSTM(n_features, hidden_dim, num_layers=n_layers, batch_first=True)
+            self.lstm = nn.LSTM(
+                n_features, hidden_dim, num_layers=n_layers, batch_first=True
+            )
             self.head = nn.Linear(hidden_dim, 1)
 
-        def forward(self, x: "torch.Tensor") -> "torch.Tensor":
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
             out, _ = self.lstm(x)
             return self.head(out[:, -1, :]).squeeze(-1)
 
@@ -463,17 +475,19 @@ try:
         def __init__(self, n_features: int, hidden_dim: int = 32, n_layers: int = 1):
             super().__init__()
             self.gate = nn.Sequential(nn.Linear(n_features, n_features), nn.Sigmoid())
-            self.lstm = nn.LSTM(n_features, hidden_dim, num_layers=n_layers, batch_first=True)
+            self.lstm = nn.LSTM(
+                n_features, hidden_dim, num_layers=n_layers, batch_first=True
+            )
             self.head = nn.Linear(hidden_dim, 1)
 
-        def forward(self, x: "torch.Tensor") -> "torch.Tensor":
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
             gated = x * self.gate(x)
             out, _ = self.lstm(gated)
             return self.head(out[:, -1, :]).squeeze(-1)
 
     def negative_sharpe_loss(
-        position: "torch.Tensor", forward_return: "torch.Tensor", eps: float = 1e-6
-    ) -> "torch.Tensor":
+        position: torch.Tensor, forward_return: torch.Tensor, eps: float = 1e-6
+    ) -> torch.Tensor:
         """Design B's central methodological claim (NEXT_PROMPT.md sec4.B):
         train on negative realized Sharpe of the induced position rather
         than MSE. `pnl = position * forward_return`; loss is
@@ -483,10 +497,10 @@ try:
         return -pnl.mean() / (pnl.std(unbiased=False) + eps)
 
 except ImportError:  # torch optional at import time for lighter test runs
-    GraphAttentionPredictor = None
-    LSTMForecaster = None
-    GatedLSTMForecaster = None
-    negative_sharpe_loss = None
+    GraphAttentionPredictor = None  # type: ignore[assignment,misc]
+    LSTMForecaster = None  # type: ignore[assignment,misc]
+    GatedLSTMForecaster = None  # type: ignore[assignment,misc]
+    negative_sharpe_loss = None  # type: ignore[assignment]
 
 
 # ---------------------------------------------------------------------------

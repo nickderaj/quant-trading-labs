@@ -39,7 +39,9 @@ def _inputs(stress: bool, rows: int = 700) -> RegimeInputs:
         fed[-100:] = fed[-101] - np.arange(1, 101) * 0.03
         cot[-100:] = 0.5
     close = pd.Series(100.0 + np.arange(rows) * 0.1, index=index)
-    ohlcv = pd.DataFrame({"open": close, "high": close + 1, "low": close - 1, "close": close})
+    ohlcv = pd.DataFrame(
+        {"open": close, "high": close + 1, "low": close - 1, "close": close}
+    )
     macro = pd.DataFrame(
         {
             "VIXCLS": vix,

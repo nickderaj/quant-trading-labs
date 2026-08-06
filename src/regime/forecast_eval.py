@@ -41,7 +41,9 @@ def forward_log_return(close: pd.Series, horizon: int) -> pd.Series:
         return cast(pd.Series, np.log(close.shift(-horizon) / close))
 
 
-def forward_realized_vol(close: pd.Series, horizon: int, annualize: bool = True) -> pd.Series:
+def forward_realized_vol(
+    close: pd.Series, horizon: int, annualize: bool = True
+) -> pd.Series:
     """Realized vol of daily log returns over (t, t+h], indexed at t."""
     if horizon < 1:
         raise ValueError("horizon must be positive")
@@ -83,7 +85,9 @@ def per_class_stats(pred: pd.Series, target: pd.Series) -> pd.DataFrame:
             "recall": tp / support if support else float("nan"),
             "support": float(support),
         }
-    return pd.DataFrame.from_dict(rows, orient="index", columns=["precision", "recall", "support"])
+    return pd.DataFrame.from_dict(
+        rows, orient="index", columns=["precision", "recall", "support"]
+    )
 
 
 def balanced_accuracy(pred: pd.Series, target: pd.Series) -> float:
@@ -218,7 +222,9 @@ def evaluate_forecast(
         "balanced_accuracy": balanced_accuracy(pred_labels, target_labels),
     }
     if current_labels is not None:
-        out["transition_recall"] = transition_recall(pred_labels, target_labels, current_labels)
+        out["transition_recall"] = transition_recall(
+            pred_labels, target_labels, current_labels
+        )
     if probs is not None:
         out["brier"] = brier_score(probs, target_labels)
     if score is not None and fwd_return is not None:

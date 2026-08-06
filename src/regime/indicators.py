@@ -73,7 +73,9 @@ def atr(df: pd.DataFrame, window: int = 14) -> pd.Series:
     high_prev_close = (high - prev_close).abs()
     low_prev_close = (low - prev_close).abs()
 
-    true_range = pd.concat([high_low, high_prev_close, low_prev_close], axis=1).max(axis=1)
+    true_range = pd.concat([high_low, high_prev_close, low_prev_close], axis=1).max(
+        axis=1
+    )
     true_range.iloc[0] = high_low.iloc[0]
 
     wilder = true_range.ewm(alpha=1.0 / window, adjust=False, min_periods=window).mean()
@@ -88,16 +90,20 @@ def dmi(df: pd.DataFrame, window: int = 14) -> pd.DataFrame:
     plus_dm = up_move.where((up_move > down_move) & (up_move > 0), 0.0)
     minus_dm = down_move.where((down_move > up_move) & (down_move > 0), 0.0)
     prev_close = close.shift()
-    tr = pd.concat([high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1).max(
-        axis=1
-    )
+    tr = pd.concat(
+        [high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1
+    ).max(axis=1)
     tr.iloc[0] = high.iloc[0] - low.iloc[0]
     smooth_tr = tr.ewm(alpha=1 / window, adjust=False, min_periods=window).mean()
     plus_di = (
-        100 * plus_dm.ewm(alpha=1 / window, adjust=False, min_periods=window).mean() / smooth_tr
+        100
+        * plus_dm.ewm(alpha=1 / window, adjust=False, min_periods=window).mean()
+        / smooth_tr
     )
     minus_di = (
-        100 * minus_dm.ewm(alpha=1 / window, adjust=False, min_periods=window).mean() / smooth_tr
+        100
+        * minus_dm.ewm(alpha=1 / window, adjust=False, min_periods=window).mean()
+        / smooth_tr
     )
     dx = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di).replace(0, np.nan)
     adx_value = dx.ewm(alpha=1 / window, adjust=False, min_periods=window).mean()
@@ -112,7 +118,9 @@ def efficiency_ratio(close: pd.Series, window: int = 20) -> pd.Series:
     return (change / volatility.replace(0, np.nan)).clip(0, 1)
 
 
-def realized_vol(close: pd.Series, window: int = 20, periods_per_year: int = 252) -> pd.Series:
+def realized_vol(
+    close: pd.Series, window: int = 20, periods_per_year: int = 252
+) -> pd.Series:
     """Annualized rolling standard deviation of log returns."""
     _warn_if_short(len(close), window, "realized_vol")
     return log_returns(close).rolling(window, min_periods=window).std() * float(
@@ -120,10 +128,16 @@ def realized_vol(close: pd.Series, window: int = 20, periods_per_year: int = 252
     )
 
 
-def vol_of_vol(close: pd.Series, vol_window: int = 20, vov_window: int = 60) -> pd.Series:
+def vol_of_vol(
+    close: pd.Series, vol_window: int = 20, vov_window: int = 60
+) -> pd.Series:
     """Rolling volatility of annualized realized volatility."""
     _warn_if_short(len(close), vol_window + vov_window, "vol_of_vol")
-    return realized_vol(close, vol_window).rolling(vov_window, min_periods=vov_window).std()
+    return (
+        realized_vol(close, vol_window)
+        .rolling(vov_window, min_periods=vov_window)
+        .std()
+    )
 
 
 def rolling_autocorr(returns: pd.Series, lag: int = 1, window: int = 60) -> pd.Series:
@@ -153,14 +167,18 @@ def ma_separation(close: pd.Series, fast: int = 50, slow: int = 200) -> pd.Serie
     return (sma(close, fast) - slow_average) / slow_average
 
 
-def bollinger_width(close: pd.Series, window: int = 20, num_std: float = 2.0) -> pd.Series:
+def bollinger_width(
+    close: pd.Series, window: int = 20, num_std: float = 2.0
+) -> pd.Series:
     """Bollinger band width as a fraction of the moving average."""
     average = sma(close, window)
     std = close.rolling(window, min_periods=window).std()
     return 2 * num_std * std / average
 
 
-def rolling_percentile_rank(s: pd.Series, window: int = 252, min_periods: int = 60) -> pd.Series:
+def rolling_percentile_rank(
+    s: pd.Series, window: int = 252, min_periods: int = 60
+) -> pd.Series:
     """Percentile rank of each observation in its inclusive trailing window."""
     _warn_if_short(len(s), min_periods, "rolling_percentile_rank")
 
@@ -225,10 +243,14 @@ def annualized_roll_yield(
     return ((front / deferred) - 1) * (365.0 / days_between)
 
 
-def curve_slope(curve: pd.DataFrame, near: str = "close_f1", far: str = "close_f12") -> pd.Series:
+def curve_slope(
+    curve: pd.DataFrame, near: str = "close_f1", far: str = "close_f12"
+) -> pd.Series:
     if near not in curve:
         raise KeyError(f"Curve has no {near!r} column")
-    candidates = [str(column) for column in curve.columns if str(column).startswith("close_f")]
+    candidates = [
+        str(column) for column in curve.columns if str(column).startswith("close_f")
+    ]
     far_column = (
         far
         if far in curve

@@ -48,7 +48,9 @@ class RegimeResult:
     contributions: pd.DataFrame
     config: RegimeConfig
 
-    def composite_label(self, dims: Sequence[str] | None = None, sep: str = "|") -> pd.Series:
+    def composite_label(
+        self, dims: Sequence[str] | None = None, sep: str = "|"
+    ) -> pd.Series:
         selected = list(dims) if dims is not None else list(self.labels.columns)
         return self.labels[selected].astype("string").agg(sep.join, axis=1)
 
@@ -91,7 +93,10 @@ class RegimeEngine:
             skipped = False
             for indicator_config in dimension.indicators:
                 indicator, meta = get(indicator_config.name)
-                if any(getattr(inputs, requirement) is None for requirement in meta.requires):
+                if any(
+                    getattr(inputs, requirement) is None
+                    for requirement in meta.requires
+                ):
                     logger.warning(
                         "regime dimension skipped because input is absent: "
                         "dimension=%s indicator=%s",
@@ -107,7 +112,8 @@ class RegimeEngine:
                 scaling = indicator_config.scaling
                 if scaling.method == "zscore":
                     scaled = squash_z(
-                        rolling_zscore(raw, scaling.window, scaling.min_periods), scaling.scale
+                        rolling_zscore(raw, scaling.window, scaling.min_periods),
+                        scaling.scale,
                     )
                 elif scaling.method == "percentile":
                     scaled = percentile_to_score(
@@ -123,14 +129,17 @@ class RegimeEngine:
             scaled_frame = pd.DataFrame(values, index=index)
             weights = {item.name: item.weight for item in dimension.indicators}
             score = smooth(
-                combine(scaled_frame, weights, dimension.min_coverage), dimension.smoothing_span
+                combine(scaled_frame, weights, dimension.min_coverage),
+                dimension.smoothing_span,
             )
             scores[dimension.key] = score
             labels[dimension.key] = label_with_hysteresis(
                 score, dimension.bands, dimension.hysteresis_margin, dimension.min_dwell
             )
             contribution_frames.extend(
-                (scaled_frame[str(name)] * weights[str(name)]).rename(f"{dimension.key}.{name}")
+                (scaled_frame[str(name)] * weights[str(name)]).rename(
+                    f"{dimension.key}.{name}"
+                )
                 for name in scaled_frame.columns
             )
         score_frame = pd.DataFrame(scores, index=index)
@@ -141,7 +150,9 @@ class RegimeEngine:
         return RegimeResult(
             scores=score_frame,
             labels=label_frame,
-            indicators=pd.concat(raw_frames, axis=1) if raw_frames else pd.DataFrame(index=index),
+            indicators=pd.concat(raw_frames, axis=1)
+            if raw_frames
+            else pd.DataFrame(index=index),
             contributions=pd.concat(contribution_frames, axis=1)
             if contribution_frames
             else pd.DataFrame(index=index),

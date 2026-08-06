@@ -61,7 +61,9 @@ def calendar_spread_z(inputs: RegimeInputs, window: int = 252) -> pd.Series:
 @register("ts.ann_roll_yield", {"curve"})
 def term_structure_roll_yield(inputs: RegimeInputs) -> pd.Series:
     curve = _curve(inputs)
-    return annualized_roll_yield(curve["close_f1"], curve["close_f2"], _days_between(curve))
+    return annualized_roll_yield(
+        curve["close_f1"], curve["close_f2"], _days_between(curve)
+    )
 
 
 @register("ts.excess_spread", {"curve"})

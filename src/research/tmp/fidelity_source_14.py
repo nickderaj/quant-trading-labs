@@ -17,8 +17,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fidelity_fixture_14 import commodity_inputs, macro_inputs
-
-from ultron_finance.regime import RegimeEngine, RegimeInputs
+from ultron_finance.regime import (  # type: ignore[import-not-found]
+    RegimeEngine,
+    RegimeInputs,
+)
 
 
 def _frame_to_records(frame):

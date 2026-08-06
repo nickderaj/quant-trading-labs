@@ -106,7 +106,9 @@ def net_positioning(df: pd.DataFrame) -> pd.DataFrame:
     result["noncomm_net"] = (
         result["noncomm_positions_long_all"] - result["noncomm_positions_short_all"]
     )
-    result["comm_net"] = result["comm_positions_long_all"] - result["comm_positions_short_all"]
+    result["comm_net"] = (
+        result["comm_positions_long_all"] - result["comm_positions_short_all"]
+    )
     open_interest = result["open_interest_all"].replace(0, float("nan"))
     result["noncomm_net_pct_oi"] = result["noncomm_net"] / open_interest
     result["comm_net_pct_oi"] = result["comm_net"] / open_interest

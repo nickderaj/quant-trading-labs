@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -38,7 +38,7 @@ def _synthetic_ohlc(n=300, seed=0, trend=0.0005):
 
 
 def test_trend_momentum_state_no_lookahead():
-    open_, high, low, close = _synthetic_ohlc()
+    _open, high, low, close = _synthetic_ohlc()
     state_full = trend_momentum_state(close, high=high, low=low)
     # perturb only the last bar; every earlier state value must be identical.
     close_pert = close.copy()
@@ -77,7 +77,7 @@ def test_capacity_curve_degrades_with_aum():
 
 
 def test_trailing_atr_stop_only_tightens_favourably():
-    open_, high, low, close = _synthetic_ohlc(trend=0.002)
+    _open, high, low, close = _synthetic_ohlc(trend=0.002)
     position = np.ones(len(close))
     stop = trailing_atr_stop(close, high, low, position, atr_mult=2.0)
     valid = np.isfinite(stop)
@@ -115,8 +115,12 @@ def test_apply_stop_fill_optimistic_convention_differs():
     low = np.array([89.0])
     stop_level = np.array([95.0])
     position = np.array([1.0])
-    _, fill_required = apply_stop_fill(open_, high, low, stop_level, position, optimistic=False)
-    _, fill_optimistic = apply_stop_fill(open_, high, low, stop_level, position, optimistic=True)
+    _, fill_required = apply_stop_fill(
+        open_, high, low, stop_level, position, optimistic=False
+    )
+    _, fill_optimistic = apply_stop_fill(
+        open_, high, low, stop_level, position, optimistic=True
+    )
     assert fill_required[0] < fill_optimistic[0]
 
 
@@ -142,7 +146,7 @@ def test_monthly_regrid_no_future_leakage():
     dates = np.array(
         [np.datetime64("2022-01-01") + np.timedelta64(i, "D") for i in range(90)]
     )
-    open_, high, low, close = _synthetic_ohlc(n=90, seed=1)
+    _open, high, low, close = _synthetic_ohlc(n=90, seed=1)
 
     def score_fn(c, h, l, L, theta, alpha):
         return float(np.nanmean(np.diff(np.log(c))))
@@ -155,7 +159,9 @@ def test_monthly_regrid_no_future_leakage():
     close_pert = close.copy()
     boundary = np.where(np.array([str(d)[:7] for d in dates]) == "2022-02")[0][0]
     close_pert[boundary:] *= 1.7
-    fits_pert = causal_monthly_regrid_search(dates, close_pert, high, low, grid, score_fn)
+    fits_pert = causal_monthly_regrid_search(
+        dates, close_pert, high, low, grid, score_fn
+    )
 
     first_full = fits_full.filter(pl.col("fit_month") == "2022-01").row(0, named=True)
     first_pert = fits_pert.filter(pl.col("fit_month") == "2022-01").row(0, named=True)
@@ -168,11 +174,13 @@ def test_monthly_regrid_no_future_leakage():
 def _synthetic_returns_panel(n_times=60, symbols=("A", "B", "C", "D"), seed=0):
     rng = np.random.default_rng(seed)
     rows = []
-    base = datetime(2022, 1, 1)
+    base = datetime(2022, 1, 1, tzinfo=UTC).replace(tzinfo=None)
     for t in range(n_times):
         dt = base + timedelta(days=t)
         for s in symbols:
-            rows.append({"datetime": dt, "symbol": s, "ret": float(rng.normal(0, 0.02))})
+            rows.append(
+                {"datetime": dt, "symbol": s, "ret": float(rng.normal(0, 0.02))}
+            )
     return pl.DataFrame(rows)
 
 
@@ -241,7 +249,9 @@ def test_graph_attention_time_mixing_shapes():
     out_no_mix = model_no_mix(x_no_mix, adjacency)
     assert out_no_mix.shape == (n_nodes,)
 
-    model_mix = GraphAttentionPredictor(n_features, use_time_mixing=True, time_window=window)
+    model_mix = GraphAttentionPredictor(
+        n_features, use_time_mixing=True, time_window=window
+    )
     x_mix = torch.randn(n_nodes, window, n_features)
     out_mix = model_mix(x_mix, adjacency)
     assert out_mix.shape == (n_nodes,)

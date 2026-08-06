@@ -110,7 +110,8 @@ def basket_scaled_frame(
     """Aggregate per-symbol scaled-indicator frames into one basket-level frame,
     reusing ``aggregate_scores`` (NaN-aware weighted cross-symbol mean)."""
     per_symbol = {
-        symbol: scaled_indicator_frame(result, dimension) for symbol, result in results.items()
+        symbol: scaled_indicator_frame(result, dimension)
+        for symbol, result in results.items()
     }
     return aggregate_scores(per_symbol, symbol_weights, "mean", min_coverage)
 
@@ -200,7 +201,9 @@ def markov_forecast(
         seen += 1
         if seen >= min_history and label in idx:
             row_sums = counts.sum(axis=1, keepdims=True)
-            probs = np.divide(counts, row_sums, out=np.zeros_like(counts), where=row_sums > 0)
+            probs = np.divide(
+                counts, row_sums, out=np.zeros_like(counts), where=row_sums > 0
+            )
             powered = np.linalg.matrix_power(probs, horizon)
             out.iloc[pos] = powered[idx[label]]
         prev = label
@@ -262,7 +265,9 @@ def forecast(
     )
 
 
-def forecast_from_result(result: RegimeResult, config: ForecastConfig) -> ForecastResult:
+def forecast_from_result(
+    result: RegimeResult, config: ForecastConfig
+) -> ForecastResult:
     """Convenience wrapper for the single-symbol case."""
     dim = _dimension_config(result, config.dimension)
     scaled = scaled_indicator_frame(result, config.dimension)

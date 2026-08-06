@@ -31,7 +31,11 @@ def test_hysteresis_honours_dwell_and_nan() -> None:
         min_dwell=2,
     )
     assert labels.tolist() == ["bear", "bear", "bull", pd.NA, "bull", "bull"]
-    assert linear_score(pd.Series([-10.0, 0.0, 10.0]), 0, 1).tolist() == [-1.0, 0.0, 1.0]
+    assert linear_score(pd.Series([-10.0, 0.0, 10.0]), 0, 1).tolist() == [
+        -1.0,
+        0.0,
+        1.0,
+    ]
 
 
 def test_hysteresis_honours_margin_and_initializes_first_bar() -> None:

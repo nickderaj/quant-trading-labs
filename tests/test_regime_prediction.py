@@ -14,8 +14,12 @@ from regime.engine import RegimeEngine, RegimeInputs
 
 def _macro_inputs(n: int = 700, phase: float = 0.0) -> RegimeInputs:
     idx = pd.date_range("2016-01-01", periods=n, freq="B")
-    close = pd.Series(100 * np.exp(np.cumsum(np.sin(np.arange(n) / 17 + phase) / 100)), index=idx)
-    ohlcv = pd.DataFrame({"open": close, "high": close * 1.01, "low": close * 0.99, "close": close})
+    close = pd.Series(
+        100 * np.exp(np.cumsum(np.sin(np.arange(n) / 17 + phase) / 100)), index=idx
+    )
+    ohlcv = pd.DataFrame(
+        {"open": close, "high": close * 1.01, "low": close * 0.99, "close": close}
+    )
     macro = pd.DataFrame(
         {
             "VIXCLS": 20 + np.sin(np.arange(n) / 13 + phase),
@@ -27,7 +31,9 @@ def _macro_inputs(n: int = 700, phase: float = 0.0) -> RegimeInputs:
         },
         index=idx,
     )
-    cot = pd.DataFrame({"noncomm_net_pct_oi": np.sin(np.arange(n) / 23 + phase)}, index=idx)
+    cot = pd.DataFrame(
+        {"noncomm_net_pct_oi": np.sin(np.arange(n) / 23 + phase)}, index=idx
+    )
     return RegimeInputs(ohlcv=ohlcv, macro=macro, cot=cot)
 
 
@@ -100,7 +106,9 @@ def test_markov_forecast_matches_predict_next_final_bar() -> None:
     states = ["a", "b", "c"]
     mf = pred.markov_forecast(labels, horizon=3, states=states, min_history=1)
     expected = (
-        predict_next(str(labels.iloc[-1]), transition_matrix(labels), 3).reindex(states).fillna(0.0)
+        predict_next(str(labels.iloc[-1]), transition_matrix(labels), 3)
+        .reindex(states)
+        .fillna(0.0)
     )
     np.testing.assert_allclose(
         mf.iloc[-1].to_numpy(dtype=float), expected.to_numpy(dtype=float), atol=1e-9
@@ -141,7 +149,9 @@ def test_basket_scaled_frame() -> None:
     frame_b = pred.scaled_indicator_frame(result_b, "risk")
 
     for col in ("macro.vix", "macro.yield_curve"):
-        expected = pd.concat([frame_a[col], frame_b[col]], axis=1).mean(axis=1, skipna=True)
+        expected = pd.concat([frame_a[col], frame_b[col]], axis=1).mean(
+            axis=1, skipna=True
+        )
         pd.testing.assert_series_equal(
             basket[col].dropna(), expected.dropna(), check_names=False, atol=1e-12
         )

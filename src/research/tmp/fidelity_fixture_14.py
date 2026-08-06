@@ -14,7 +14,9 @@ import pandas as pd
 
 def macro_inputs(n: int = 700):
     idx = pd.date_range("2016-01-01", periods=n, freq="B")
-    close = pd.Series(100 * np.exp(np.cumsum(np.sin(np.arange(n) / 17) / 100)), index=idx)
+    close = pd.Series(
+        100 * np.exp(np.cumsum(np.sin(np.arange(n) / 17) / 100)), index=idx
+    )
     ohlcv = pd.DataFrame(
         {"open": close, "high": close * 1.01, "low": close * 0.99, "close": close}
     )
@@ -35,7 +37,9 @@ def macro_inputs(n: int = 700):
 
 def commodity_inputs(n: int = 700):
     idx = pd.date_range("2016-01-01", periods=n, freq="B")
-    close = pd.Series(100.0 + np.arange(n) * 0.013 + 3 * np.sin(np.arange(n) / 31), index=idx)
+    close = pd.Series(
+        100.0 + np.arange(n) * 0.013 + 3 * np.sin(np.arange(n) / 31), index=idx
+    )
     ohlcv = pd.DataFrame(
         {"open": close, "high": close * 1.008, "low": close * 0.992, "close": close}
     )

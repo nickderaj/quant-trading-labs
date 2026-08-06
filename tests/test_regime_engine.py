@@ -15,7 +15,9 @@ from regime import RegimeEngine, RegimeInputs
 def _ohlcv(rows: int = 600) -> pd.DataFrame:
     index = pd.date_range("2020-01-01", periods=rows, freq="B")
     close = pd.Series(np.exp(np.linspace(0, 1, rows)), index=index)
-    return pd.DataFrame({"open": close, "high": close * 1.01, "low": close * 0.99, "close": close})
+    return pd.DataFrame(
+        {"open": close, "high": close * 1.01, "low": close * 0.99, "close": close}
+    )
 
 
 def test_default_engine_detects_and_is_no_lookahead() -> None:
@@ -25,7 +27,9 @@ def test_default_engine_detects_and_is_no_lookahead() -> None:
     truncated = engine.detect(RegimeInputs(ohlcv.iloc[:595]))
 
     assert {"trend", "volatility", "mean_reversion"} <= set(full.scores)
-    pd.testing.assert_frame_equal(full.scores.iloc[:595], truncated.scores, check_exact=False)
+    pd.testing.assert_frame_equal(
+        full.scores.iloc[:595], truncated.scores, check_exact=False
+    )
     pd.testing.assert_frame_equal(full.labels.iloc[:595], truncated.labels)
 
 
@@ -42,7 +46,9 @@ def test_geometric_uptrend_labels_bull() -> None:
 
 def test_sine_wave_labels_mean_reverting() -> None:
     index = pd.date_range("2020-01-01", periods=1200, freq="B")
-    close = pd.Series(100.0 + 5.0 * np.sin(2 * np.pi * np.arange(1200) / 10.0), index=index)
+    close = pd.Series(
+        100.0 + 5.0 * np.sin(2 * np.pi * np.arange(1200) / 10.0), index=index
+    )
     ohlcv = pd.DataFrame(
         {"open": close, "high": close * 1.005, "low": close * 0.995, "close": close}
     )
@@ -59,7 +65,9 @@ def test_vol_spike_labels_high_or_extreme() -> None:
     spike = rng.normal(0, 0.09, 50)
     returns = np.concatenate([calm, spike])
     close = pd.Series(100.0 * np.exp(np.cumsum(returns)), index=index)
-    ohlcv = pd.DataFrame({"open": close, "high": close * 1.02, "low": close * 0.98, "close": close})
+    ohlcv = pd.DataFrame(
+        {"open": close, "high": close * 1.02, "low": close * 0.98, "close": close}
+    )
     result = RegimeEngine.from_default("commodity_default").detect(RegimeInputs(ohlcv))
 
     assert result.labels["volatility"].iloc[-1] in {"high", "extreme"}

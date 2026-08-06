@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import sys
+from typing import Any
 
 sys.path.insert(0, "src")
 sys.path.insert(0, "src/research/tmp")
@@ -31,14 +32,22 @@ import pandas as pd
 import polars as pl
 
 import research
-from regime.forecast_eval import balanced_accuracy, forward_log_return, forward_realized_vol
+from regime.forecast_eval import (
+    balanced_accuracy,
+    forward_log_return,
+    forward_realized_vol,
+)
 from regime.loaders import load_bars, load_curve
 from regime.prediction import markov_forecast, prior_forecast
 
 TMP = "src/research/tmp"
 PANEL_PATH = "src/research/data/market/research/regime_panel.parquet"
-SCORING_CUTOFF = pd.Timestamp("2025-01-01")  # futures holdout start; crypto holdout is N/A here
-MIN_HISTORY = 252  # class-prior / Markov baselines need a burn-in, matches prediction.py default
+SCORING_CUTOFF = pd.Timestamp(
+    "2025-01-01"
+)  # futures holdout start; crypto holdout is N/A here
+MIN_HISTORY = (
+    252  # class-prior / Markov baselines need a burn-in, matches prediction.py default
+)
 N_BOOT = 2000
 
 
@@ -74,7 +83,9 @@ def _baselines(labels: pd.Series) -> dict[str, pd.Series]:
     persistence = labels.shift(1)
     prior_probs = prior_forecast(labels, states, min_history=MIN_HISTORY)
     prior_pred = _rowwise_idxmax(prior_probs)
-    markov_probs = markov_forecast(labels, horizon=1, states=states, min_history=MIN_HISTORY)
+    markov_probs = markov_forecast(
+        labels, horizon=1, states=states, min_history=MIN_HISTORY
+    )
     markov_pred = _rowwise_idxmax(markov_probs)
     return {
         "persistence": persistence.astype("string"),
@@ -98,9 +109,12 @@ def _score_against_target(
         return {"n_obs": len(t), "insufficient_data": True}
 
     engine_hit = (p.to_numpy() == t.to_numpy()).astype(float)
-    out = {
-        "n_obs": int(len(t)),
-        "engine": {"balanced_accuracy": balanced_accuracy(p, t), "hit_rate": float(engine_hit.mean())},
+    out: dict[str, Any] = {
+        "n_obs": len(t),
+        "engine": {
+            "balanced_accuracy": balanced_accuracy(p, t),
+            "hit_rate": float(engine_hit.mean()),
+        },
         "baselines": {},
     }
     best_baseline_name, best_baseline_hit = None, -np.inf
@@ -108,7 +122,10 @@ def _score_against_target(
         b = series.reindex(idx).astype("string")
         b_valid = b.notna()
         if b_valid.sum() < 5:
-            out["baselines"][name] = {"n_obs": int(b_valid.sum()), "insufficient_data": True}
+            out["baselines"][name] = {
+                "n_obs": int(b_valid.sum()),
+                "insufficient_data": True,
+            }
             continue
         b_hit = (b[b_valid].to_numpy() == t[b_valid].to_numpy()).astype(float)
         out["baselines"][name] = {
@@ -127,7 +144,9 @@ def _score_against_target(
         ).astype(float)
         if len(diff) >= 5:
             lo, hi = research.block_bootstrap_ci(diff, n_boot=N_BOOT, seed=0)
-            pvalue = research.block_bootstrap_pvalue(diff, null_value=0.0, n_boot=N_BOOT, seed=0)
+            pvalue = research.block_bootstrap_pvalue(
+                diff, null_value=0.0, n_boot=N_BOOT, seed=0
+            )
             out["vs_best_baseline"] = {
                 "baseline": best_baseline_name,
                 "mean_hit_rate_diff": float(diff.mean()),
@@ -145,8 +164,16 @@ def _score_against_target(
 # "all volatility" is expanded to every basket sector that has a
 # volatility dimension.
 _ALL_VOL_SECTORS = [
-    "Commodities", "FX", "oil products", "natgas", "soy complex", "grains", "softs",
-    "precious", "base metals", "meats",
+    "Commodities",
+    "FX",
+    "oil products",
+    "natgas",
+    "soy complex",
+    "grains",
+    "softs",
+    "precious",
+    "base metals",
+    "meats",
 ]
 
 
@@ -156,33 +183,134 @@ def _episode_targets(episode_table: list[dict]) -> list[dict]:
         name, start, end = ep["episode"], ep["start"], ep["end"]
         if name == "GFC":
             targets += [
-                {"sector": "Macro", "dimension": "risk", "label": "risk_off", "episode": name, "start": start, "end": end},
-                {"sector": "Macro", "dimension": "credit", "label": "wide", "episode": name, "start": start, "end": end},
+                {
+                    "sector": "Macro",
+                    "dimension": "risk",
+                    "label": "risk_off",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                },
+                {
+                    "sector": "Macro",
+                    "dimension": "credit",
+                    "label": "wide",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                },
             ]
         elif name == "Euro crisis":
-            targets.append({"sector": "Macro", "dimension": "risk", "label": "risk_off", "episode": name, "start": start, "end": end})
+            targets.append(
+                {
+                    "sector": "Macro",
+                    "dimension": "risk",
+                    "label": "risk_off",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                }
+            )
         elif name == "Taper tantrum":
-            targets.append({"sector": "Macro", "dimension": "yield_curve", "label": "steep", "episode": name, "start": start, "end": end})
+            targets.append(
+                {
+                    "sector": "Macro",
+                    "dimension": "yield_curve",
+                    "label": "steep",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                }
+            )
         elif name == "Oil glut":
             targets += [
-                {"sector": "Commodities", "dimension": "trend", "label": "bear", "episode": name, "start": start, "end": end},
-                {"sector": "oil products", "dimension": "term_structure", "label": "contango", "episode": name, "start": start, "end": end},
+                {
+                    "sector": "Commodities",
+                    "dimension": "trend",
+                    "label": "bear",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                },
+                {
+                    "sector": "oil products",
+                    "dimension": "term_structure",
+                    "label": "contango",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                },
             ]
         elif name == "COVID crash":
-            targets.append({"sector": "Macro", "dimension": "risk", "label": "risk_off", "episode": name, "start": start, "end": end})
+            targets.append(
+                {
+                    "sector": "Macro",
+                    "dimension": "risk",
+                    "label": "risk_off",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                }
+            )
             for sector in _ALL_VOL_SECTORS:
-                targets.append({"sector": sector, "dimension": "volatility", "label": "extreme", "episode": name, "start": start, "end": end})
+                targets.append(
+                    {
+                        "sector": sector,
+                        "dimension": "volatility",
+                        "label": "extreme",
+                        "episode": name,
+                        "start": start,
+                        "end": end,
+                    }
+                )
         elif name == "Post-COVID commodity bull":
-            targets.append({"sector": "Commodities", "dimension": "trend", "label": "bull", "episode": name, "start": start, "end": end})
+            targets.append(
+                {
+                    "sector": "Commodities",
+                    "dimension": "trend",
+                    "label": "bull",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                }
+            )
         elif name == "Energy backwardation":
             targets += [
-                {"sector": "oil products", "dimension": "term_structure", "label": "backwardation", "episode": name, "start": start, "end": end},
-                {"sector": "oil products", "dimension": "carry", "label": "positive", "episode": name, "start": start, "end": end},
+                {
+                    "sector": "oil products",
+                    "dimension": "term_structure",
+                    "label": "backwardation",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                },
+                {
+                    "sector": "oil products",
+                    "dimension": "carry",
+                    "label": "positive",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                },
             ]
         elif name == "Hiking cycle / inversion":
             targets += [
-                {"sector": "Macro", "dimension": "yield_curve", "label": "inverted", "episode": name, "start": start, "end": end},
-                {"sector": "Macro", "dimension": "risk", "label": "risk_off", "episode": name, "start": start, "end": end},
+                {
+                    "sector": "Macro",
+                    "dimension": "yield_curve",
+                    "label": "inverted",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                },
+                {
+                    "sector": "Macro",
+                    "dimension": "risk",
+                    "label": "risk_off",
+                    "episode": name,
+                    "start": start,
+                    "end": end,
+                },
             ]
     return targets
 
@@ -202,7 +330,9 @@ def _lead_lag(labels: pd.Series, expected: str, start: str, end: str) -> float |
     return float(first_match_pos - onset_pos)
 
 
-def score_episode_table(panel: pl.DataFrame, prereg: dict, disqualified: set[tuple[str, str]]) -> dict:
+def score_episode_table(
+    panel: pl.DataFrame, prereg: dict, disqualified: set[tuple[str, str]]
+) -> dict:
     targets = _episode_targets(prereg["episode_table"])
     by_dim: dict[tuple[str, str], list[dict]] = {}
     for t in targets:
@@ -212,25 +342,44 @@ def score_episode_table(panel: pl.DataFrame, prereg: dict, disqualified: set[tup
     lags = []
     for (sector, dimension), rows in by_dim.items():
         if (sector, dimension) in disqualified:
-            results[f"{sector}|{dimension}"] = {"excluded": True, "reason": "disqualified in Phase 2"}
+            results[f"{sector}|{dimension}"] = {
+                "excluded": True,
+                "reason": "disqualified in Phase 2",
+            }
             continue
         labels = _sector_labels(panel, sector, dimension)
         if labels.empty:
-            results[f"{sector}|{dimension}"] = {"excluded": True, "reason": "no data for this sector/dimension"}
+            results[f"{sector}|{dimension}"] = {
+                "excluded": True,
+                "reason": "no data for this sector/dimension",
+            }
             continue
         target = pd.Series(pd.NA, index=labels.index, dtype="string")
         row_detail = []
         for row in rows:
             start_ts, end_ts = pd.Timestamp(row["start"]), pd.Timestamp(row["end"])
-            mask = (labels.index >= start_ts) & (labels.index <= end_ts) & (labels.index < SCORING_CUTOFF)
+            mask = (
+                (labels.index >= start_ts)
+                & (labels.index <= end_ts)
+                & (labels.index < SCORING_CUTOFF)
+            )
             if mask.any():
                 target.loc[mask] = row["label"]
             lag = _lead_lag(labels, row["label"], row["start"], row["end"])
-            row_detail.append({"episode": row["episode"], "expected": row["label"], "lead_lag_days": lag})
+            row_detail.append(
+                {
+                    "episode": row["episode"],
+                    "expected": row["label"],
+                    "lead_lag_days": lag,
+                }
+            )
             if lag is not None:
                 lags.append(lag)
         if target.notna().sum() == 0:
-            results[f"{sector}|{dimension}"] = {"excluded": True, "reason": "episode windows outside available history"}
+            results[f"{sector}|{dimension}"] = {
+                "excluded": True,
+                "reason": "episode windows outside available history",
+            }
             continue
         baselines = _baselines(labels)
         scored = _score_against_target(labels, baselines, target)
@@ -251,7 +400,9 @@ def _representative_close(sector: str, sectors_meta: dict) -> pd.Series | None:
     return close[close.index < SCORING_CUTOFF]
 
 
-def score_mechanical_labels(panel: pl.DataFrame, sectors_meta: dict, disqualified: set[tuple[str, str]]) -> dict:
+def score_mechanical_labels(
+    panel: pl.DataFrame, sectors_meta: dict, disqualified: set[tuple[str, str]]
+) -> dict:
     results = {}
 
     # volatility: forward 21d realized-vol top-tercile vs label in {high, extreme}
@@ -268,21 +419,33 @@ def score_mechanical_labels(panel: pl.DataFrame, sectors_meta: dict, disqualifie
         if len(fwd_vol) < MIN_HISTORY:
             continue
         threshold = fwd_vol.quantile(2 / 3)
-        target = pd.Series(np.where(fwd_vol >= threshold, "high_tercile", "not_high_tercile"), index=fwd_vol.index, dtype="string")
+        target = pd.Series(
+            np.where(fwd_vol >= threshold, "high_tercile", "not_high_tercile"),
+            index=fwd_vol.index,
+            dtype="string",
+        )
         pred = pd.Series(
-            np.where(labels.reindex(target.index).isin(["high", "extreme"]), "high_tercile", "not_high_tercile"),
+            np.where(
+                labels.reindex(target.index).isin(["high", "extreme"]),
+                "high_tercile",
+                "not_high_tercile",
+            ),
             index=target.index,
             dtype="string",
         )
         pred = pred.where(labels.reindex(target.index).notna())
         baselines = _baselines(labels)
         binarized = {
-            name: series.reindex(target.index).isin(["high", "extreme"]).map(
-                {True: "high_tercile", False: "not_high_tercile"}
-            ).astype("string").where(series.reindex(target.index).notna())
+            name: series.reindex(target.index)
+            .isin(["high", "extreme"])
+            .map({True: "high_tercile", False: "not_high_tercile"})
+            .astype("string")
+            .where(series.reindex(target.index).notna())
             for name, series in baselines.items()
         }
-        results[f"{sector}|volatility|forward_21d_vol_tercile"] = _score_against_target(pred, binarized, target)
+        results[f"{sector}|volatility|forward_21d_vol_tercile"] = _score_against_target(
+            pred, binarized, target
+        )
 
     # trend: sign of forward 63d return vs label in {bull vs bear} (sideways dropped)
     for sector in sectors_meta:
@@ -295,7 +458,9 @@ def score_mechanical_labels(panel: pl.DataFrame, sectors_meta: dict, disqualifie
             continue
         fwd_ret = forward_log_return(close, horizon=63)
         fwd_ret = fwd_ret[fwd_ret.index < SCORING_CUTOFF].dropna()
-        target = pd.Series(np.where(fwd_ret > 0, "up", "down"), index=fwd_ret.index, dtype="string")
+        target = pd.Series(
+            np.where(fwd_ret > 0, "up", "down"), index=fwd_ret.index, dtype="string"
+        )
         directional = labels.isin(["bull", "bear"])
         pred = labels.map({"bull": "up", "bear": "down"}).astype("string")
         pred = pred.where(directional)
@@ -305,7 +470,9 @@ def score_mechanical_labels(panel: pl.DataFrame, sectors_meta: dict, disqualifie
             name: series.map({"bull": "up", "bear": "down"}).astype("string")
             for name, series in baselines.items()
         }
-        results[f"{sector}|trend|forward_63d_return_sign"] = _score_against_target(pred, binarized, target)
+        results[f"{sector}|trend|forward_63d_return_sign"] = _score_against_target(
+            pred, binarized, target
+        )
 
     # yield_curve (Macro only): contemporaneous sign of T10Y2Y vs {steep vs inverted}
     key = ("Macro", "yield_curve")
@@ -317,17 +484,27 @@ def score_mechanical_labels(panel: pl.DataFrame, sectors_meta: dict, disqualifie
             t10y2y = load_fred_frame(("T10Y2Y",))["T10Y2Y"]
             t10y2y = t10y2y[t10y2y.index < SCORING_CUTOFF].reindex(labels.index).ffill()
             directional = labels.isin(["steep", "inverted"])
-            target = pd.Series(np.where(t10y2y > 0, "steep_side", "inverted_side"), index=labels.index, dtype="string")
+            target = pd.Series(
+                np.where(t10y2y > 0, "steep_side", "inverted_side"),
+                index=labels.index,
+                dtype="string",
+            )
             target = target.where(t10y2y.notna())
-            pred = labels.map({"steep": "steep_side", "inverted": "inverted_side"}).astype("string")
+            pred = labels.map(
+                {"steep": "steep_side", "inverted": "inverted_side"}
+            ).astype("string")
             pred = pred.where(directional)
             target = target.where(pred.notna())
             baselines = _baselines(labels)
             binarized = {
-                name: series.map({"steep": "steep_side", "inverted": "inverted_side"}).astype("string")
+                name: series.map(
+                    {"steep": "steep_side", "inverted": "inverted_side"}
+                ).astype("string")
                 for name, series in baselines.items()
             }
-            results["Macro|yield_curve|contemporaneous_T10Y2Y_sign"] = _score_against_target(pred, binarized, target)
+            results["Macro|yield_curve|contemporaneous_T10Y2Y_sign"] = (
+                _score_against_target(pred, binarized, target)
+            )
 
     # term_structure: contemporaneous sign of f1-f2 spread vs {backwardation vs contango}
     for sector in sectors_meta:
@@ -342,20 +519,31 @@ def score_mechanical_labels(panel: pl.DataFrame, sectors_meta: dict, disqualifie
         if curve_symbol is None:
             continue
         curve = load_curve(curve_symbol)
+        assert curve is not None
         curve = curve[curve.index < SCORING_CUTOFF]
         spread = (curve["close_f1"] - curve["close_f2"]).reindex(labels.index).ffill()
         directional = labels.isin(["backwardation", "contango"])
-        target = pd.Series(np.where(spread > 0, "backwardation_side", "contango_side"), index=labels.index, dtype="string")
+        target = pd.Series(
+            np.where(spread > 0, "backwardation_side", "contango_side"),
+            index=labels.index,
+            dtype="string",
+        )
         target = target.where(spread.notna())
-        pred = labels.map({"backwardation": "backwardation_side", "contango": "contango_side"}).astype("string")
+        pred = labels.map(
+            {"backwardation": "backwardation_side", "contango": "contango_side"}
+        ).astype("string")
         pred = pred.where(directional)
         target = target.where(pred.notna())
         baselines = _baselines(labels)
         binarized = {
-            name: series.map({"backwardation": "backwardation_side", "contango": "contango_side"}).astype("string")
+            name: series.map(
+                {"backwardation": "backwardation_side", "contango": "contango_side"}
+            ).astype("string")
             for name, series in baselines.items()
         }
-        results[f"{sector}|term_structure|contemporaneous_f1f2_spread_sign"] = _score_against_target(pred, binarized, target)
+        results[f"{sector}|term_structure|contemporaneous_f1f2_spread_sign"] = (
+            _score_against_target(pred, binarized, target)
+        )
 
     return results
 
@@ -379,22 +567,32 @@ def main() -> None:
     mechanical_results = score_mechanical_labels(panel, sectors_meta, disqualified)
 
     n_trials_a = sum(
-        1 for v in episode_results["per_sector_dimension"].values() if not v.get("excluded")
+        1
+        for v in episode_results["per_sector_dimension"].values()
+        if not v.get("excluded")
     )
-    n_trials_b = sum(1 for v in mechanical_results.values() if not v.get("insufficient_data"))
+    n_trials_b = sum(
+        1 for v in mechanical_results.values() if not v.get("insufficient_data")
+    )
     n_trials = n_trials_a + n_trials_b
 
     out = {
         "scoring_cutoff": str(SCORING_CUTOFF.date()),
         "disqualified_excluded": sorted(f"{s}|{d}" for s, d in disqualified),
-        "n_trials": {"episode_table": n_trials_a, "mechanical_labels": n_trials_b, "total": n_trials},
+        "n_trials": {
+            "episode_table": n_trials_a,
+            "mechanical_labels": n_trials_b,
+            "total": n_trials,
+        },
         "episode_table": episode_results,
         "mechanical_labels": mechanical_results,
     }
     with open(f"{TMP}/phase_3_14_results.json", "w") as f:
         json.dump(out, f, indent=2, default=str)
 
-    print(f"n_trials: episode_table={n_trials_a} mechanical={n_trials_b} total={n_trials}")
+    print(
+        f"n_trials: episode_table={n_trials_a} mechanical={n_trials_b} total={n_trials}"
+    )
     lags = episode_results["lead_lag_days"]
     if lags:
         print(f"Median lead-lag: {np.median(lags):.1f} trading days (n={len(lags)})")

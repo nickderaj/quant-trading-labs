@@ -15,12 +15,16 @@ import pandas as pd
 from regime.config import LabelBand
 
 
-def rolling_zscore(s: pd.Series, window: int, min_periods: int | None = None) -> pd.Series:
+def rolling_zscore(
+    s: pd.Series, window: int, min_periods: int | None = None
+) -> pd.Series:
     rolling = s.rolling(window, min_periods=min_periods or window)
     return (s - rolling.mean()) / rolling.std().replace(0, np.nan)
 
 
-def rolling_percentile(s: pd.Series, window: int, min_periods: int | None = None) -> pd.Series:
+def rolling_percentile(
+    s: pd.Series, window: int, min_periods: int | None = None
+) -> pd.Series:
     required = min_periods or window
 
     def rank(values: np.ndarray[Any, np.dtype[np.float64]]) -> float:
@@ -50,10 +54,14 @@ def combine(
     scores: pd.DataFrame, weights: Mapping[str, float], min_coverage: float = 0.5
 ) -> pd.Series:
     columns = [str(column) for column in scores if str(column) in weights]
-    weight_series = pd.Series({column: weights[column] for column in columns}, dtype=float)
+    weight_series = pd.Series(
+        {column: weights[column] for column in columns}, dtype=float
+    )
     available = scores[columns].notna().mul(weight_series, axis=1).sum(axis=1)
     total = weight_series.sum()
-    combined = scores[columns].mul(weight_series, axis=1).sum(axis=1) / available.replace(0, np.nan)
+    combined = scores[columns].mul(weight_series, axis=1).sum(
+        axis=1
+    ) / available.replace(0, np.nan)
     return combined.where(available >= min_coverage * total)
 
 
@@ -70,7 +78,9 @@ def _instantaneous(value: float, bands: Sequence[LabelBand]) -> str:
     raise ValueError(f"Score {value} is outside configured label bands")
 
 
-def _inside_expanded(value: float, label: str, bands: Sequence[LabelBand], margin: float) -> bool:
+def _inside_expanded(
+    value: float, label: str, bands: Sequence[LabelBand], margin: float
+) -> bool:
     band = next(item for item in bands if item.label == label)
     lower = -float("inf") if band.lower is None else band.lower - margin
     upper = float("inf") if band.upper is None else band.upper + margin

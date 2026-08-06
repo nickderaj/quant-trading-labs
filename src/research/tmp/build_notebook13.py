@@ -360,4 +360,6 @@ with open("src/research/013_four_outside_designs_rebuilt_and_scored.ipynb", "w")
         f,
         indent=1,
     )
-print(f"written src/research/013_four_outside_designs_rebuilt_and_scored.ipynb ({len(cells)} cells)")
+print(
+    f"written src/research/013_four_outside_designs_rebuilt_and_scored.ipynb ({len(cells)} cells)"
+)

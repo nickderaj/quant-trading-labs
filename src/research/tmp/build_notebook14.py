@@ -455,4 +455,6 @@ with open("src/research/014_market_regime_engine_and_accuracy.ipynb", "w") as f:
         f,
         indent=1,
     )
-print(f"written src/research/014_market_regime_engine_and_accuracy.ipynb ({len(cells)} cells)")
+print(
+    f"written src/research/014_market_regime_engine_and_accuracy.ipynb ({len(cells)} cells)"
+)

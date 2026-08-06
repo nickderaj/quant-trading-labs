@@ -25,7 +25,7 @@ import pandas as pd
 import polars as pl
 
 import research
-from regime.engine import RegimeEngine, RegimeInputs
+from regime.engine import RegimeEngine, RegimeInputs, RegimeResult
 from regime.forecast_eval import balanced_accuracy
 from regime.loaders import (
     load_bars,
@@ -71,7 +71,9 @@ def _baselines(labels: pd.Series) -> dict[str, pd.Series]:
     persistence = labels.shift(1)
     prior_probs = prior_forecast(labels, states, min_history=MIN_HISTORY)
     prior_pred = _rowwise_idxmax(prior_probs)
-    markov_probs = markov_forecast(labels, horizon=1, states=states, min_history=MIN_HISTORY)
+    markov_probs = markov_forecast(
+        labels, horizon=1, states=states, min_history=MIN_HISTORY
+    )
     markov_pred = _rowwise_idxmax(markov_probs)
     return {
         "persistence": persistence.astype("string"),
@@ -80,7 +82,9 @@ def _baselines(labels: pd.Series) -> dict[str, pd.Series]:
     }
 
 
-def _score_against_target(pred_engine: pd.Series, baselines: dict[str, pd.Series], target: pd.Series) -> dict:
+def _score_against_target(
+    pred_engine: pd.Series, baselines: dict[str, pd.Series], target: pd.Series
+) -> dict:
     idx = target.dropna().index
     t = target.reindex(idx).astype("string")
     p = pred_engine.reindex(idx).astype("string")
@@ -92,7 +96,10 @@ def _score_against_target(pred_engine: pd.Series, baselines: dict[str, pd.Series
     engine_hit = (p.to_numpy() == t.to_numpy()).astype(float)
     out: dict = {
         "n_obs": len(t),
-        "engine": {"balanced_accuracy": balanced_accuracy(p, t), "hit_rate": float(engine_hit.mean())},
+        "engine": {
+            "balanced_accuracy": balanced_accuracy(p, t),
+            "hit_rate": float(engine_hit.mean()),
+        },
         "baselines": {},
     }
     best_name, best_hit = None, -np.inf
@@ -100,10 +107,15 @@ def _score_against_target(pred_engine: pd.Series, baselines: dict[str, pd.Series
         b = series.reindex(idx).astype("string")
         b_valid = b.notna()
         if b_valid.sum() < 5:
-            out["baselines"][name] = {"n_obs": int(b_valid.sum()), "insufficient_data": True}
+            out["baselines"][name] = {
+                "n_obs": int(b_valid.sum()),
+                "insufficient_data": True,
+            }
             continue
         b_hit = (b[b_valid].to_numpy() == t[b_valid].to_numpy()).astype(float)
-        differ_frac = float((b[b_valid].to_numpy() != p.reindex(idx)[b_valid].to_numpy()).mean())
+        differ_frac = float(
+            (b[b_valid].to_numpy() != p.reindex(idx)[b_valid].to_numpy()).mean()
+        )
         out["baselines"][name] = {
             "n_obs": int(b_valid.sum()),
             "balanced_accuracy": balanced_accuracy(b, t),
@@ -117,16 +129,22 @@ def _score_against_target(pred_engine: pd.Series, baselines: dict[str, pd.Series
     if best_name is not None:
         b = baselines[best_name].reindex(idx).astype("string")
         b_valid = b.notna()
-        diff = engine_hit[b_valid.to_numpy()] - (b[b_valid].to_numpy() == t[b_valid].to_numpy()).astype(float)
+        diff = engine_hit[b_valid.to_numpy()] - (
+            b[b_valid].to_numpy() == t[b_valid].to_numpy()
+        ).astype(float)
         if len(diff) >= 5:
             lo, hi = research.block_bootstrap_ci(diff, n_boot=N_BOOT, seed=0)
-            pvalue = research.block_bootstrap_pvalue(diff, null_value=0.0, n_boot=N_BOOT, seed=0)
+            pvalue = research.block_bootstrap_pvalue(
+                diff, null_value=0.0, n_boot=N_BOOT, seed=0
+            )
             out["vs_best_baseline"] = {
                 "baseline": best_name,
                 "mean_hit_rate_diff": float(diff.mean()),
                 "ci95": [lo, hi],
                 "pvalue": pvalue,
-                "structurally_uninformative": out["baselines"][best_name]["structurally_uninformative"],
+                "structurally_uninformative": out["baselines"][best_name][
+                    "structurally_uninformative"
+                ],
             }
     return out
 
@@ -136,8 +154,15 @@ def _spread_significance(spread_returns: pd.Series) -> dict:
     if len(vals) < 5:
         return {"n_obs": len(vals), "insufficient_data": True}
     lo, hi = research.block_bootstrap_ci(vals, n_boot=N_BOOT, seed=0)
-    pvalue = research.block_bootstrap_pvalue(vals, null_value=0.0, n_boot=N_BOOT, seed=0)
-    return {"n_obs": len(vals), "mean": float(vals.mean()), "ci95": [lo, hi], "pvalue": pvalue}
+    pvalue = research.block_bootstrap_pvalue(
+        vals, null_value=0.0, n_boot=N_BOOT, seed=0
+    )
+    return {
+        "n_obs": len(vals),
+        "mean": float(vals.mean()),
+        "ci95": [lo, hi],
+        "pvalue": pvalue,
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -146,8 +171,12 @@ def _spread_significance(spread_returns: pd.Series) -> dict:
 def _macro_yield_curve_labels() -> pd.Series:
     panel = pl.read_parquet(PANEL_PATH)
     frame = (
-        panel.filter((pl.col("sector") == "Macro") & (pl.col("dimension") == "yield_curve"))
-        .sort("date").select("date", "label").to_pandas()
+        panel.filter(
+            (pl.col("sector") == "Macro") & (pl.col("dimension") == "yield_curve")
+        )
+        .sort("date")
+        .select("date", "label")
+        .to_pandas()
     )
     frame["date"] = pd.to_datetime(frame["date"])
     s = frame.set_index("date")["label"].astype("string").rename(None)
@@ -173,11 +202,20 @@ def score_yield_curve(prereg_alpha: float) -> dict:
     # A1: sign of forward 126d change in DFF -- policy easing/tightening
     dff = lib.truncate(load_fred_frame(("DFF",))["DFF"]).reindex(labels.index).ffill()
     fwd_dff = dff.shift(-126) - dff
-    target = pd.Series(np.where(fwd_dff > 0, "tighten", "ease"), index=labels.index, dtype="string")
+    target = pd.Series(
+        np.where(fwd_dff > 0, "tighten", "ease"), index=labels.index, dtype="string"
+    )
     target = target.where(fwd_dff.notna() & (fwd_dff != 0))
-    pred = labels.map({"steep": "tighten", "inverted": "ease"}).astype("string").where(directional)
+    pred = (
+        labels.map({"steep": "tighten", "inverted": "ease"})
+        .astype("string")
+        .where(directional)
+    )
     target = target.where(pred.notna())
-    bin_baselines = {n: s.map({"steep": "tighten", "inverted": "ease"}).astype("string") for n, s in baselines.items()}
+    bin_baselines = {
+        n: s.map({"steep": "tighten", "inverted": "ease"}).astype("string")
+        for n, s in baselines.items()
+    }
     out["A1_dff_fwd126"] = _score_against_target(pred, bin_baselines, target)
 
     # A2: forward 126d max drawdown of ES=F, binarized at its own expanding
@@ -193,25 +231,51 @@ def score_yield_curve(prereg_alpha: float) -> dict:
         dd.iloc[i] = float(np.min(window / running_max - 1.0))
     dd = dd.reindex(labels.index)
     threshold = _expanding_median_binarize(dd)
-    target = pd.Series(np.where(dd <= threshold, "high_stress", "low_stress"), index=labels.index, dtype="string")
+    target = pd.Series(
+        np.where(dd <= threshold, "high_stress", "low_stress"),
+        index=labels.index,
+        dtype="string",
+    )
     target = target.where(dd.notna() & threshold.notna())
-    pred = labels.map({"inverted": "high_stress", "steep": "low_stress"}).astype("string").where(directional)
+    pred = (
+        labels.map({"inverted": "high_stress", "steep": "low_stress"})
+        .astype("string")
+        .where(directional)
+    )
     target = target.where(pred.notna())
-    bin_baselines = {n: s.map({"inverted": "high_stress", "steep": "low_stress"}).astype("string") for n, s in baselines.items()}
+    bin_baselines = {
+        n: s.map({"inverted": "high_stress", "steep": "low_stress"}).astype("string")
+        for n, s in baselines.items()
+    }
     out["A2_es_drawdown_fwd126"] = _score_against_target(pred, bin_baselines, target)
 
     # A3: sign of forward 63d change in BAMLH0A0HYM2 -- reported, flagged
     # underpowered (2023-07-17 start; ~18mo after truncation).
-    hy = lib.truncate(load_fred_frame(("BAMLH0A0HYM2",))["BAMLH0A0HYM2"]).reindex(labels.index).ffill()
+    hy = (
+        lib.truncate(load_fred_frame(("BAMLH0A0HYM2",))["BAMLH0A0HYM2"])
+        .reindex(labels.index)
+        .ffill()
+    )
     fwd_hy = hy.shift(-63) - hy
-    target = pd.Series(np.where(fwd_hy > 0, "widen", "tighten"), index=labels.index, dtype="string")
+    target = pd.Series(
+        np.where(fwd_hy > 0, "widen", "tighten"), index=labels.index, dtype="string"
+    )
     target = target.where(fwd_hy.notna() & (fwd_hy != 0))
-    pred = labels.map({"inverted": "widen", "steep": "tighten"}).astype("string").where(directional)
+    pred = (
+        labels.map({"inverted": "widen", "steep": "tighten"})
+        .astype("string")
+        .where(directional)
+    )
     target = target.where(pred.notna())
-    bin_baselines = {n: s.map({"inverted": "widen", "steep": "tighten"}).astype("string") for n, s in baselines.items()}
+    bin_baselines = {
+        n: s.map({"inverted": "widen", "steep": "tighten"}).astype("string")
+        for n, s in baselines.items()
+    }
     result = _score_against_target(pred, bin_baselines, target)
     result["underpowered"] = True
-    result["underpowered_reason"] = "BAMLH0A0HYM2 starts 2023-07-17; ~18mo of data before truncation"
+    result["underpowered_reason"] = (
+        "BAMLH0A0HYM2 starts 2023-07-17; ~18mo of data before truncation"
+    )
     out["A3_hy_oas_fwd63"] = result
     return out
 
@@ -220,7 +284,7 @@ def score_yield_curve(prereg_alpha: float) -> dict:
 # term_structure / carry: per curve-symbol engine results (fresh compute,
 # not a re-score of 014's own trials -- sec4.1's registry-resolution step)
 # --------------------------------------------------------------------------- #
-def _symbol_result(symbol: str) -> tuple[pd.Series, pd.DataFrame]:
+def _symbol_result(symbol: str) -> tuple[pd.Series, RegimeResult]:
     bars = lib.truncate(load_bars(symbol))
     curve = load_curve(symbol)
     assert curve is not None
@@ -232,8 +296,10 @@ def _symbol_result(symbol: str) -> tuple[pd.Series, pd.DataFrame]:
 
 def _price_only_target(close: pd.Series, horizon: int) -> pd.Series:
     with np.errstate(invalid="ignore", divide="ignore"):
-        fwd = np.log(close.shift(-horizon) / close)
-    return pd.Series(np.where(fwd > 0, "up", "down"), index=close.index, dtype="string").where(fwd.notna() & (fwd != 0))
+        fwd = pd.Series(np.log(close.shift(-horizon) / close), index=close.index)
+    return pd.Series(
+        np.where(fwd > 0, "up", "down"), index=close.index, dtype="string"
+    ).where(fwd.notna() & (fwd != 0))
 
 
 def score_term_structure_and_carry() -> dict:
@@ -252,7 +318,9 @@ def score_term_structure_and_carry() -> dict:
                 close, result = per_symbol_results[symbol]
                 labels = result.labels[dimension].astype("string")
                 directional = labels.isin(
-                    ["backwardation", "contango"] if dimension == "term_structure" else ["positive", "negative"]
+                    ["backwardation", "contango"]
+                    if dimension == "term_structure"
+                    else ["positive", "negative"]
                 )
                 pred_map = (
                     {"backwardation": "up", "contango": "down"}
@@ -263,8 +331,12 @@ def score_term_structure_and_carry() -> dict:
                 target = _price_only_target(close, horizon)
                 target = target.where(pred.reindex(target.index).notna())
                 baselines = _baselines(labels)
-                bin_baselines = {n: s.map(pred_map).astype("string") for n, s in baselines.items()}
-                per_symbol_scored[symbol] = _score_against_target(pred, bin_baselines, target)
+                bin_baselines = {
+                    n: s.map(pred_map).astype("string") for n, s in baselines.items()
+                }
+                per_symbol_scored[symbol] = _score_against_target(
+                    pred, bin_baselines, target
+                )
             out[f"A4_{dimension}_price_only_h{horizon}"] = per_symbol_scored
 
     # carry_roll_yield_only: same A4 targets, weight=1.0 on ann_roll_yield
@@ -277,8 +349,11 @@ def score_term_structure_and_carry() -> dict:
             dim_config = next(d for d in result.config.dimensions if d.key == "carry")
             scaled = scaled_indicator_frame(result, "carry")
             cfg = ForecastConfig(
-                dimension="carry", horizon=1, weights={"carry.ann_roll_yield": 1.0},
-                use_hysteresis=True, smoothing_span=dim_config.smoothing_span,
+                dimension="carry",
+                horizon=1,
+                weights={"carry.ann_roll_yield": 1.0},
+                use_hysteresis=True,
+                smoothing_span=dim_config.smoothing_span,
             )
             variant = forecast(scaled, dim_config, cfg)
             labels = variant.labels.astype("string")
@@ -288,19 +363,30 @@ def score_term_structure_and_carry() -> dict:
             target = _price_only_target(close, horizon)
             target = target.where(pred.reindex(target.index).notna())
             baselines = _baselines(labels)
-            bin_baselines = {n: s.map(pred_map).astype("string") for n, s in baselines.items()}
-            per_symbol_scored[symbol] = _score_against_target(pred, bin_baselines, target)
+            bin_baselines = {
+                n: s.map(pred_map).astype("string") for n, s in baselines.items()
+            }
+            per_symbol_scored[symbol] = _score_against_target(
+                pred, bin_baselines, target
+            )
         out[f"A4_carry_roll_yield_only_price_only_h{horizon}"] = per_symbol_scored
 
     # A5: cross-sectional rank spread + rank IC (all 5 curve symbols'
     # term_structure and carry scores), 21d and 63d.
     for dimension in ("term_structure", "carry"):
-        scores_by_symbol = {sym: per_symbol_results[sym][1].scores[dimension] for sym in CURVE_SYMBOLS}
+        scores_by_symbol = {
+            sym: per_symbol_results[sym][1].scores[dimension] for sym in CURVE_SYMBOLS
+        }
         closes_by_symbol = {sym: per_symbol_results[sym][0] for sym in CURVE_SYMBOLS}
         score_frame = pd.DataFrame(scores_by_symbol)
         for horizon in (21, 63):
             fwd_frame = pd.DataFrame(
-                {sym: np.log(closes_by_symbol[sym].shift(-horizon) / closes_by_symbol[sym]) for sym in CURVE_SYMBOLS}
+                {
+                    sym: np.log(
+                        closes_by_symbol[sym].shift(-horizon) / closes_by_symbol[sym]
+                    )
+                    for sym in CURVE_SYMBOLS
+                }
             )
             aligned_scores = score_frame.reindex(fwd_frame.index)
             # Non-overlapping sampling first (sec4.2/A5 doesn't need every
@@ -316,7 +402,7 @@ def score_term_structure_and_carry() -> dict:
                 if len(row_scores) < 4:
                     spread.append(np.nan)
                     continue
-                row_fwd = sampled_fwd.loc[date, row_scores.index].dropna()
+                row_fwd = sampled_fwd.loc[date][row_scores.index].dropna()  # type: ignore[call-overload]
                 common = row_scores.index.intersection(row_fwd.index)
                 if len(common) < 4:
                     spread.append(np.nan)
@@ -340,7 +426,9 @@ def score_term_structure_and_carry() -> dict:
                 ignore_index=True,
             ).dropna()
             stacked_pl = pl.from_pandas(stacked)
-            ic_stats = research.panel_ic(stacked_pl, "score", "fwd", nw_lag=horizon, datetime_col="datetime")
+            ic_stats = research.panel_ic(
+                stacked_pl, "score", "fwd", nw_lag=horizon, datetime_col="datetime"
+            )
             out[f"A5_{dimension}_cross_sectional_h{horizon}"] = {
                 "spread_top2_minus_bottom2": _spread_significance(spread_series),
                 "rank_ic": ic_stats,
@@ -352,15 +440,28 @@ def score_term_structure_and_carry() -> dict:
     # same "representative sector price" convention 014 used).
     panel = pl.read_parquet(PANEL_PATH)
     frame = (
-        panel.filter((pl.col("sector") == "oil products") & (pl.col("dimension") == "term_structure"))
-        .sort("date").select("date", "label").to_pandas()
+        panel.filter(
+            (pl.col("sector") == "oil products")
+            & (pl.col("dimension") == "term_structure")
+        )
+        .sort("date")
+        .select("date", "label")
+        .to_pandas()
     )
     frame["date"] = pd.to_datetime(frame["date"])
-    ts_labels = lib.truncate(frame.set_index("date")["label"].astype("string").rename(None))
+    ts_labels = lib.truncate(
+        frame.set_index("date")["label"].astype("string").rename(None)
+    )
     cot = net_positioning(load_cot_raw())
-    cot_series = lib.truncate(cot["noncomm_net_pct_oi"]).reindex(ts_labels.index).ffill()
+    cot_series = (
+        lib.truncate(cot["noncomm_net_pct_oi"]).reindex(ts_labels.index).ffill()
+    )
     fwd_cot = cot_series.shift(-21) - cot_series
-    target = pd.Series(np.where(fwd_cot > 0, "increase", "decrease"), index=ts_labels.index, dtype="string")
+    target = pd.Series(
+        np.where(fwd_cot > 0, "increase", "decrease"),
+        index=ts_labels.index,
+        dtype="string",
+    )
     target = target.where(fwd_cot.notna() & (fwd_cot != 0))
     directional = ts_labels.isin(["backwardation", "contango"])
     pred_map = {"backwardation": "increase", "contango": "decrease"}
@@ -384,14 +485,20 @@ def main() -> None:
     print("Scoring term_structure / carry / carry_roll_yield_only (A4, A5, A6)...")
     ts_carry = score_term_structure_and_carry()
 
-    results = {"alpha_bonferroni": alpha, "yield_curve": yc, "term_structure_and_carry": ts_carry}
+    results = {
+        "alpha_bonferroni": alpha,
+        "yield_curve": yc,
+        "term_structure_and_carry": ts_carry,
+    }
     with open(f"{TMP}/phase_2_15_results.json", "w") as f:
         json.dump(results, f, indent=2, default=str)
 
     for name, res in yc.items():
         vs = res.get("vs_best_baseline")
-        print(f"  {name}: n={res.get('n_obs')} engine_ba={res.get('engine', {}).get('balanced_accuracy')} "
-              f"vs_best={vs}")
+        print(
+            f"  {name}: n={res.get('n_obs')} engine_ba={res.get('engine', {}).get('balanced_accuracy')} "
+            f"vs_best={vs}"
+        )
     print("Wrote phase_2_15_results.json")
 
 

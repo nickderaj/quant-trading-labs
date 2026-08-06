@@ -59,7 +59,9 @@ def ig_oas(inputs: RegimeInputs, column: str = "BAMLC0A0CM") -> pd.Series:
 
 
 @register("macro.fed_funds_delta", {"macro"}, column="DFF", periods=126)
-def fed_funds_delta(inputs: RegimeInputs, column: str = "DFF", periods: int = 126) -> pd.Series:
+def fed_funds_delta(
+    inputs: RegimeInputs, column: str = "DFF", periods: int = 126
+) -> pd.Series:
     return _frame_column(inputs, "macro", column).diff(periods)
 
 

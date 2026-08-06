@@ -38,7 +38,9 @@ def no_lookahead_check(
         )
         candidate = engine.detect(shortened)
         try:
-            assert_frame_equal(full.scores.iloc[:-truncation], candidate.scores, atol=atol)
+            assert_frame_equal(
+                full.scores.iloc[:-truncation], candidate.scores, atol=atol
+            )
             assert_frame_equal(full.labels.iloc[:-truncation], candidate.labels)
         except AssertionError:
             return False

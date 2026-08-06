@@ -38,8 +38,15 @@ def _paired_diff_significance(hits_a, hits_b) -> dict:
         return {"n_obs": len(common), "insufficient_data": True}
     diff = (hits_a.loc[common] - hits_b.loc[common]).to_numpy()
     lo, hi = research.block_bootstrap_ci(diff, n_boot=N_BOOT, seed=0)
-    pvalue = research.block_bootstrap_pvalue(diff, null_value=0.0, n_boot=N_BOOT, seed=0)
-    return {"n_obs": len(common), "mean_diff": float(diff.mean()), "ci95": [lo, hi], "pvalue": pvalue}
+    pvalue = research.block_bootstrap_pvalue(
+        diff, null_value=0.0, n_boot=N_BOOT, seed=0
+    )
+    return {
+        "n_obs": len(common),
+        "mean_diff": float(diff.mean()),
+        "ci95": [lo, hi],
+        "pvalue": pvalue,
+    }
 
 
 def main() -> None:
@@ -98,21 +105,28 @@ def main() -> None:
             best_model = None
             best_ba = -np.inf
             for m in ("M1", "M2", "M3"):
-                if m in out["balanced_accuracy"] and out["balanced_accuracy"][m] > best_ba:
+                if (
+                    m in out["balanced_accuracy"]
+                    and out["balanced_accuracy"][m] > best_ba
+                ):
                     best_ba, best_model = out["balanced_accuracy"][m], m
             if best_model is not None and "M0d" in hits:
                 cb = _paired_diff_significance(hits[best_model], hits["M0d"])
                 cb["best_model"] = best_model
-                cb["point_estimate_balanced_accuracy_gain"] = (
-                    out["balanced_accuracy"][best_model] - out["balanced_accuracy"].get("M0d", float("nan"))
-                )
+                cb["point_estimate_balanced_accuracy_gain"] = out["balanced_accuracy"][
+                    best_model
+                ] - out["balanced_accuracy"].get("M0d", float("nan"))
                 cb["sc_excluded"] = _sc_excluded(best_model, "M0d")
                 comparisons["CB_best_vs_M0d"] = cb
 
             results["combos"][key] = {
-                "panel": panel, "horizon": horizon, "feature_set": feature_set,
-                "n_folds": out["n_folds"], "n_rows": out["n_rows"],
-                "balanced_accuracy": out["balanced_accuracy"], "n_obs": out["n_obs"],
+                "panel": panel,
+                "horizon": horizon,
+                "feature_set": feature_set,
+                "n_folds": out["n_folds"],
+                "n_rows": out["n_rows"],
+                "balanced_accuracy": out["balanced_accuracy"],
+                "n_obs": out["n_obs"],
                 "abstention_rate": out["abstention_rate"],
                 "underpowered": underpowered,
                 "comparisons": comparisons,

@@ -16,7 +16,9 @@ def load(name: str) -> dict:
         return json.load(f)
 
 
-def _significant_positive(entry: dict | None, alpha: float, min_effect: float = 0.0) -> bool:
+def _significant_positive(
+    entry: dict | None, alpha: float, min_effect: float = 0.0
+) -> bool:
     """True if `entry` (a _score_against_target / _paired_diff_significance
     style dict) clears Bonferroni-corrected significance, is directionally
     positive (engine/challenger beats baseline), isn't flagged structurally
@@ -38,7 +40,9 @@ def _significant_positive(entry: dict | None, alpha: float, min_effect: float = 
 def evaluate_id_gate(phase0: dict) -> dict:
     pairs = phase0["track_a"]["disjointness_table"]["pairs"]
     scored_pairs = [p for p in pairs if not p["disqualified"]]
-    all_disjoint = all(not (set(p["dimension_inputs"]) & set(p["target_inputs"])) for p in scored_pairs)
+    all_disjoint = all(
+        not (set(p["dimension_inputs"]) & set(p["target_inputs"])) for p in scored_pairs
+    )
     return {
         "fires": all_disjoint,
         "n_pairs_checked": len(pairs),
@@ -65,11 +69,19 @@ def evaluate_ia_gate(phase2: dict, alpha: float) -> dict:
     yc = phase2["yield_curve"]
     trials = {
         "A1_dff_fwd126": yc.get("A1_dff_fwd126", {}).get("vs_best_baseline"),
-        "A2_es_drawdown_fwd126": yc.get("A2_es_drawdown_fwd126", {}).get("vs_best_baseline"),
+        "A2_es_drawdown_fwd126": yc.get("A2_es_drawdown_fwd126", {}).get(
+            "vs_best_baseline"
+        ),
         # A3 excluded per pre-registration (underpowered).
     }
-    fired_on = [name for name, entry in trials.items() if _significant_positive(entry, alpha)]
-    return {"fires": len(fired_on) > 0, "fired_on": fired_on, "trials_considered": list(trials)}
+    fired_on = [
+        name for name, entry in trials.items() if _significant_positive(entry, alpha)
+    ]
+    return {
+        "fires": len(fired_on) > 0,
+        "fired_on": fired_on,
+        "trials_considered": list(trials),
+    }
 
 
 def evaluate_dimension_gate(phase2: dict, dimension_key: str, alpha: float) -> dict:
@@ -82,7 +94,9 @@ def evaluate_dimension_gate(phase2: dict, dimension_key: str, alpha: float) -> d
         for symbol, entry in block.items():
             if _significant_positive(entry.get("vs_best_baseline"), alpha):
                 fired_on.append(f"A4_{dimension_key}_h{horizon}_{symbol}")
-        spread = ts.get(f"A5_{dimension_key}_cross_sectional_h{horizon}", {}).get("spread_top2_minus_bottom2")
+        spread = ts.get(f"A5_{dimension_key}_cross_sectional_h{horizon}", {}).get(
+            "spread_top2_minus_bottom2"
+        )
         if _significant_positive(spread, alpha):
             fired_on.append(f"A5_{dimension_key}_spread_h{horizon}")
     if dimension_key == "term_structure":
@@ -104,7 +118,9 @@ def evaluate_ic_roll_yield_only(phase2: dict, alpha: float) -> dict:
     return {"fires": len(fired_on) > 0, "fired_on": fired_on}
 
 
-def evaluate_track_b_gate(phase3: dict, comparison_key: str, alpha: float, min_effect: float = 0.0) -> dict:
+def evaluate_track_b_gate(
+    phase3: dict, comparison_key: str, alpha: float, min_effect: float = 0.0
+) -> dict:
     fired_on = []
     for combo_key, combo in phase3["combos"].items():
         if combo.get("underpowered"):
@@ -120,7 +136,11 @@ def evaluate_track_b_gate(phase3: dict, comparison_key: str, alpha: float, min_e
 def evaluate_pw_gate(phase0: dict) -> dict:
     budget = phase0["track_c"]["power_budget"]
     adequate = [k for k, v in budget.items() if not v["underpowered"]]
-    return {"fires": len(adequate) > 0, "adequate_arms": adequate, "all_arms": list(budget)}
+    return {
+        "fires": len(adequate) > 0,
+        "adequate_arms": adequate,
+        "all_arms": list(budget),
+    }
 
 
 def main() -> None:
@@ -161,8 +181,15 @@ def main() -> None:
         "ic_fires": gates["IC"]["fires"],
     }
     if not hard_gates_pass:
-        outcome["authorization"] = "SC or ID failed unscoped: nothing else is valid. Fix and re-run."
-    elif not gates["CW"]["fires"] and not gates["CC"]["fires"] and not gates["CB"]["fires"] and gates["PW"]["fires"]:
+        outcome["authorization"] = (
+            "SC or ID failed unscoped: nothing else is valid. Fix and re-run."
+        )
+    elif (
+        not gates["CW"]["fires"]
+        and not gates["CC"]["fires"]
+        and not gates["CB"]["fires"]
+        and gates["PW"]["fires"]
+    ):
         outcome["authorization"] = (
             "Close the directional-trend line of enquiry. Record the MDE bound. Future notebooks "
             "may use trend labels as descriptive context but may not condition a directional "
@@ -180,7 +207,9 @@ def main() -> None:
             "until a dev gate fires."
         )
     else:
-        outcome["authorization"] = "Mixed result -- see the gate table and results write-up for detail."
+        outcome["authorization"] = (
+            "Mixed result -- see the gate table and results write-up for detail."
+        )
 
     if gates["IA"]["fires"] or gates["IT"]["fires"] or gates["IC"]["fires"]:
         outcome["track_a_verdict"] = (

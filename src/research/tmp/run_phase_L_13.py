@@ -14,6 +14,7 @@ Writes phase_L_13_results.json.
 """
 
 import json
+from typing import Any
 
 THRESHOLD = 1.5
 
@@ -30,28 +31,47 @@ def headline_net_sharpe(design: str, data: dict) -> float | None:
         return data.get("trials", {}).get("base", {}).get("net", {}).get("sharpe")
     if design == "B":
         best = data.get("best_architecture")
-        return data.get("results", {}).get(best, {}).get("median_sharpe") if best else None
+        return (
+            data.get("results", {}).get(best, {}).get("median_sharpe") if best else None
+        )
     if design == "C":
         return data.get("trials", {}).get("adaptive", {}).get("net", {}).get("sharpe")
     if design == "D":
-        return data.get("books", {}).get("dollar_neutral", {}).get("net", {}).get("sharpe")
+        return (
+            data.get("books", {}).get("dollar_neutral", {}).get("net", {}).get("sharpe")
+        )
     return None
 
 
 def audit_design(design: str, data: dict, sharpe: float) -> dict:
-    audit = {"design": design, "headline_net_sharpe": sharpe, "triggered": True, "legs": {}}
+    audit: dict[str, Any] = {
+        "design": design,
+        "headline_net_sharpe": sharpe,
+        "triggered": True,
+        "legs": {},
+    }
 
     if design == "A":
-        audit["legs"]["stop_fill_sensitivity"] = data.get("stop_fill_sensitivity_optimistic")
+        audit["legs"]["stop_fill_sensitivity"] = data.get(
+            "stop_fill_sensitivity_optimistic"
+        )
         audit["legs"]["arithmetic_red_flag"] = data.get("arithmetic_red_flag_check")
-        audit["legs"]["offset_vacuity"] = data.get("trials", {}).get("base", {}).get("by_offset")
-        audit["legs"]["benchmark_neutrality"] = data.get("benchmark_neutrality_vs_spot_GCF")
+        audit["legs"]["offset_vacuity"] = (
+            data.get("trials", {}).get("base", {}).get("by_offset")
+        )
+        audit["legs"]["benchmark_neutrality"] = data.get(
+            "benchmark_neutrality_vs_spot_GCF"
+        )
     elif design == "B":
         audit["legs"]["seed_spread"] = {
-            k: v.get("seed_sharpes") for k, v in data.get("results", {}).items() if isinstance(v, dict) and "seed_sharpes" in v
+            k: v.get("seed_sharpes")
+            for k, v in data.get("results", {}).items()
+            if isinstance(v, dict) and "seed_sharpes" in v
         }
         audit["legs"]["breakeven_cost"] = {
-            k: v.get("breakeven_cost_bps") for k, v in data.get("results", {}).items() if isinstance(v, dict)
+            k: v.get("breakeven_cost_bps")
+            for k, v in data.get("results", {}).items()
+            if isinstance(v, dict)
         }
     elif design == "C":
         audit["legs"]["survivorship_with_without_delisted"] = {
@@ -83,7 +103,10 @@ def main():
             continue
         sharpe = headline_net_sharpe(design, data)
         if sharpe is None:
-            results[design] = {"status": "no headline sharpe found", "raw_keys": list(data.keys())}
+            results[design] = {
+                "status": "no headline sharpe found",
+                "raw_keys": list(data.keys()),
+            }
             continue
         if sharpe >= THRESHOLD:
             results[design] = audit_design(design, data, sharpe)

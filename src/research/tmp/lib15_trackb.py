@@ -38,11 +38,20 @@ logging.getLogger("regime.engine").setLevel(logging.ERROR)
 
 PANEL_PATH = "src/research/data/market/research/regime_panel.parquet"
 F1_INDICATORS = [
-    "trend.price_vs_ma", "trend.ma_slope", "trend.nday_log_return", "trend.adx", "trend.efficiency_ratio",
+    "trend.price_vs_ma",
+    "trend.ma_slope",
+    "trend.nday_log_return",
+    "trend.adx",
+    "trend.efficiency_ratio",
 ]
 VOL_INDICATORS = ["vol.atr_percentile", "vol.realized_vol_percentile", "vol.vol_of_vol"]
 MR_INDICATORS = ["mr.autocorr", "mr.variance_ratio", "mr.half_life"]
-TS_INDICATORS = ["ts.curve_slope", "ts.calendar_spread_z", "ts.ann_roll_yield", "ts.excess_spread"]
+TS_INDICATORS = [
+    "ts.curve_slope",
+    "ts.calendar_spread_z",
+    "ts.ann_roll_yield",
+    "ts.excess_spread",
+]
 CARRY_INDICATORS = ["carry.ann_roll_yield", "carry.vol_scaled"]
 
 M3_PARAMS: dict[str, object] = {
@@ -65,7 +74,9 @@ class SymbolData:
     basket: str | None
     close: pd.Series  # target-construction close (yfinance where available)
     result: RegimeInputs
-    features: pd.DataFrame  # F1 + volatility + mean_reversion + [term_structure + carry]
+    features: (
+        pd.DataFrame
+    )  # F1 + volatility + mean_reversion + [term_structure + carry]
 
 
 def _basket_for(symbol_or_product: str, panel: str) -> str | None:
@@ -103,13 +114,19 @@ def build_symbol_data(symbol_or_product: str, panel: str) -> SymbolData:
 def _build_symbol_data_uncached(symbol_or_product: str, panel: str) -> SymbolData:
     if panel == "Panel-L":
         ohlcv = lib.truncate(lib.load_bars(symbol_or_product))
-        curve_symbol = symbol_or_product if symbol_or_product in ("CL=F", "NG=F", "GC=F", "SI=F", "HG=F") else None
+        curve_symbol = (
+            symbol_or_product
+            if symbol_or_product in ("CL=F", "NG=F", "GC=F", "SI=F", "HG=F")
+            else None
+        )
         curve = None
         if curve_symbol is not None:
             from regime.loaders import load_curve
 
             raw_curve = load_curve(curve_symbol)
-            assert raw_curve is not None  # curve_symbol is pinned to a known CURVE_SYMBOLS key
+            assert (
+                raw_curve is not None
+            )  # curve_symbol is pinned to a known CURVE_SYMBOLS key
             curve = lib.truncate(raw_curve)
         close = ohlcv["close"]
     else:  # Panel-D
@@ -123,7 +140,10 @@ def _build_symbol_data_uncached(symbol_or_product: str, panel: str) -> SymbolDat
     basket = _basket_for(symbol_or_product, panel)
     features = _engine_features(ohlcv, curve)
     return SymbolData(
-        symbol=symbol_or_product, basket=basket, close=close, result=RegimeInputs(ohlcv=ohlcv, curve=curve),
+        symbol=symbol_or_product,
+        basket=basket,
+        close=close,
+        result=RegimeInputs(ohlcv=ohlcv, curve=curve),
         features=features,
     )
 
@@ -165,7 +185,9 @@ def build_target(close: pd.Series, horizon: int) -> pd.Series:
 # Panel assembly: pool all symbols into one long frame with cross-sectional
 # features computed *within date* (safe) and calendar features.
 # --------------------------------------------------------------------------- #
-def build_pooled_panel(panel_name: str, horizon: int, feature_set: str) -> tuple[pd.DataFrame, list[str]]:
+def build_pooled_panel(
+    panel_name: str, horizon: int, feature_set: str
+) -> tuple[pd.DataFrame, list[str]]:
     """Returns (long_frame, feature_columns). long_frame is indexed by
     (date, symbol) with columns: fwd_return, y (+-1), f0_label, basket, and
     every feature column for `feature_set` ("F1", "F2", or "F3")."""
@@ -191,7 +213,9 @@ def build_pooled_panel(panel_name: str, horizon: int, feature_set: str) -> tuple
         # M0b/M0c: causal, available at t.
         with np.errstate(invalid="ignore", divide="ignore"):
             realized_1d = cast(pd.Series, np.sign(data.close.diff(1)))
-            trailing_60d = cast(pd.Series, np.sign(np.log(data.close / data.close.shift(60))))
+            trailing_60d = cast(
+                pd.Series, np.sign(np.log(data.close / data.close.shift(60)))
+            )
             frame["realized_1d_sign"] = realized_1d.reindex(frame.index)
             frame["trailing_60d_return_sign"] = trailing_60d.reindex(frame.index)
         rows.append(frame)
@@ -202,14 +226,18 @@ def build_pooled_panel(panel_name: str, horizon: int, feature_set: str) -> tuple
 
     feature_cols = list(F1_INDICATORS)
     if feature_set in ("F2", "F3"):
-        feature_cols += VOL_INDICATORS + MR_INDICATORS + TS_INDICATORS + CARRY_INDICATORS
+        feature_cols += (
+            VOL_INDICATORS + MR_INDICATORS + TS_INDICATORS + CARRY_INDICATORS
+        )
 
         # Cross-sectional ranks (within date -- safe) on each F1 feature,
         # within basket and within the full panel.
         by_date = panel.reset_index()
         for col in F1_INDICATORS:
             by_date[f"rank_panel.{col}"] = by_date.groupby("date")[col].rank(pct=True)
-            by_date[f"rank_basket.{col}"] = by_date.groupby(["date", "basket"])[col].rank(pct=True)
+            by_date[f"rank_basket.{col}"] = by_date.groupby(["date", "basket"])[
+                col
+            ].rank(pct=True)
             feature_cols += [f"rank_panel.{col}", f"rank_basket.{col}"]
 
         # Calendar: day-of-week, month, cyclical.
@@ -233,15 +261,35 @@ def build_pooled_panel(panel_name: str, horizon: int, feature_set: str) -> tuple
             curve["f3.spread_23"] = curve["close_f2"] - curve["close_f3"]
             curve["symbol"] = sym
             curve_rows.append(
-                curve[["symbol", "f3.spread_12", "f3.spread_23", "dte_f1", "dte_f2", "dte_f3"]]
-                .rename(columns={"dte_f1": "f3.dte_f1", "dte_f2": "f3.dte_f2", "dte_f3": "f3.dte_f3"})
+                curve[
+                    [
+                        "symbol",
+                        "f3.spread_12",
+                        "f3.spread_23",
+                        "dte_f1",
+                        "dte_f2",
+                        "dte_f3",
+                    ]
+                ].rename(
+                    columns={
+                        "dte_f1": "f3.dte_f1",
+                        "dte_f2": "f3.dte_f2",
+                        "dte_f3": "f3.dte_f3",
+                    }
+                )
             )
         if curve_rows:
             curve_panel = pd.concat(curve_rows)
             curve_panel.index.name = "date"
             curve_panel = curve_panel.reset_index().set_index(["date", "symbol"])
             panel = panel.join(curve_panel, how="left")
-            feature_cols += ["f3.spread_12", "f3.spread_23", "f3.dte_f1", "f3.dte_f2", "f3.dte_f3"]
+            feature_cols += [
+                "f3.spread_12",
+                "f3.spread_23",
+                "f3.dte_f1",
+                "f3.dte_f2",
+                "f3.dte_f3",
+            ]
 
     return panel, feature_cols
 
@@ -293,24 +341,42 @@ def fit_predict_all_models(
 
     if "M1" in _MODELS_TO_FIT:
         f1_cols = [c for c in usable_cols if c.startswith("trend.")]
-        pipe = Pipeline([
-            ("scale", StandardScaler()),
-            ("lr", LogisticRegressionCV(
-                Cs=[0.001, 0.01, 0.1, 1.0, 10.0], cv=TimeSeriesSplit(n_splits=3),
-                penalty="l2", max_iter=2000, scoring="balanced_accuracy", random_state=0,
-            )),
-        ])
+        pipe = Pipeline(
+            [
+                ("scale", StandardScaler()),
+                (
+                    "lr",
+                    LogisticRegressionCV(
+                        Cs=[0.001, 0.01, 0.1, 1.0, 10.0],
+                        cv=TimeSeriesSplit(n_splits=3),
+                        penalty="l2",
+                        max_iter=2000,
+                        scoring="balanced_accuracy",
+                        random_state=0,
+                    ),
+                ),
+            ]
+        )
         pipe.fit(X_train[f1_cols], y_train)
         preds["M1"] = pd.Series(pipe.predict(X_test[f1_cols]), index=test.index)
 
     if "M2" in _MODELS_TO_FIT:
-        pipe = Pipeline([
-            ("scale", StandardScaler()),
-            ("lr", LogisticRegressionCV(
-                Cs=[0.001, 0.01, 0.1, 1.0, 10.0], cv=TimeSeriesSplit(n_splits=3),
-                penalty="l2", max_iter=2000, scoring="balanced_accuracy", random_state=0,
-            )),
-        ])
+        pipe = Pipeline(
+            [
+                ("scale", StandardScaler()),
+                (
+                    "lr",
+                    LogisticRegressionCV(
+                        Cs=[0.001, 0.01, 0.1, 1.0, 10.0],
+                        cv=TimeSeriesSplit(n_splits=3),
+                        penalty="l2",
+                        max_iter=2000,
+                        scoring="balanced_accuracy",
+                        random_state=0,
+                    ),
+                ),
+            ]
+        )
         pipe.fit(X_train, y_train)
         preds["M2"] = pd.Series(pipe.predict(X_test), index=test.index)
 
@@ -328,7 +394,9 @@ _MODELS_TO_FIT = {"M1", "M2", "M3"}
 # --------------------------------------------------------------------------- #
 # Purged/embargoed pooled walk-forward
 # --------------------------------------------------------------------------- #
-def pooled_folds(panel: pd.DataFrame, horizon: int) -> list[tuple[np.ndarray, np.ndarray]]:
+def pooled_folds(
+    panel: pd.DataFrame, horizon: int
+) -> list[tuple[np.ndarray, np.ndarray]]:
     """Fold boundaries are calendar dates shared across all symbols (sec5.5):
     build folds on the unique date index, then expand to every row sharing
     that date."""
@@ -346,7 +414,9 @@ def pooled_folds(panel: pd.DataFrame, horizon: int) -> list[tuple[np.ndarray, np
     return folds
 
 
-def block_shuffle_target(panel: pd.DataFrame, block_size: int, seed: int) -> pd.DataFrame:
+def block_shuffle_target(
+    panel: pd.DataFrame, block_size: int, seed: int
+) -> pd.DataFrame:
     """Block-shuffle `y`/`fwd_return` per symbol, in contiguous blocks of
     `block_size` days, preserving each symbol's own autocorrelation
     structure while destroying feature-target alignment (sec5.6).
@@ -368,7 +438,10 @@ def block_shuffle_target(panel: pd.DataFrame, block_size: int, seed: int) -> pd.
         n_blocks = int(np.ceil(n / block_size))
         block_order = rng.permutation(n_blocks)
         perm = np.concatenate(
-            [np.arange(b * block_size, min((b + 1) * block_size, n)) for b in block_order]
+            [
+                np.arange(b * block_size, min((b + 1) * block_size, n))
+                for b in block_order
+            ]
         )
         perm = perm[perm < n]
         for col in ("y", "fwd_return"):
@@ -377,7 +450,10 @@ def block_shuffle_target(panel: pd.DataFrame, block_size: int, seed: int) -> pd.
 
 
 def run_pipeline(
-    panel_name: str, horizon: int, feature_set: str, shuffle_seed: int | None = None,
+    panel_name: str,
+    horizon: int,
+    feature_set: str,
+    shuffle_seed: int | None = None,
     block_size: int = 63,
 ) -> dict:
     """Runs the entire Track B pipeline for one (panel, horizon, feature_set):
@@ -423,23 +499,37 @@ def run_pipeline(
     for m in model_ids:
         if not pred_records[m]:
             continue
-        combined = pd.concat(pred_records[m], ignore_index=True).dropna(subset=["pred", "true"])
+        combined = pd.concat(pred_records[m], ignore_index=True).dropna(
+            subset=["pred", "true"]
+        )
         if combined.empty:
             continue
         combined = combined.sort_values("date")
         n_obs[m] = len(combined)
-        balanced_acc[m] = float(balanced_accuracy_score(combined["true"], combined["pred"]))
+        balanced_acc[m] = float(
+            balanced_accuracy_score(combined["true"], combined["pred"])
+        )
         hit = (combined["pred"] == combined["true"]).astype(float)
         daily_hit_rate[m] = hit.groupby(combined["date"]).mean()
-        predictions[m] = combined  # date-sorted (true, pred) pairs, for a paired block bootstrap
+        predictions[m] = (
+            combined  # date-sorted (true, pred) pairs, for a paired block bootstrap
+        )
 
     return {
-        "panel": panel_name, "horizon": horizon, "feature_set": feature_set,
-        "shuffle_seed": shuffle_seed, "n_folds": n_folds_used,
-        "n_rows": len(panel_arr), "feature_cols": feature_cols,
-        "daily_hit_rate": daily_hit_rate, "balanced_accuracy": balanced_acc, "n_obs": n_obs,
+        "panel": panel_name,
+        "horizon": horizon,
+        "feature_set": feature_set,
+        "shuffle_seed": shuffle_seed,
+        "n_folds": n_folds_used,
+        "n_rows": len(panel_arr),
+        "feature_cols": feature_cols,
+        "daily_hit_rate": daily_hit_rate,
+        "balanced_accuracy": balanced_acc,
+        "n_obs": n_obs,
         "predictions": predictions,
-        "abstention_rate": float(np.mean(abstention_rates)) if abstention_rates else None,
+        "abstention_rate": float(np.mean(abstention_rates))
+        if abstention_rates
+        else None,
     }
 
 

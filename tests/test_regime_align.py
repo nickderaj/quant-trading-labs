@@ -22,7 +22,9 @@ def test_cot_publication_lag_prevents_lookahead() -> None:
 
 def test_alignment_staleness_and_per_column_lags() -> None:
     target = pd.date_range("2024-01-02", "2024-01-12", freq="B")
-    source = pd.DataFrame({"daily": [1.0], "weekly": [2.0]}, index=pd.DatetimeIndex(["2024-01-02"]))
+    source = pd.DataFrame(
+        {"daily": [1.0], "weekly": [2.0]}, index=pd.DatetimeIndex(["2024-01-02"])
+    )
 
     aligned = align_frame_to_daily(target, source, {"daily": 0, "weekly": 3}, 3)
 

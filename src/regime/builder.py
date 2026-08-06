@@ -81,7 +81,11 @@ def _latest(scores: pd.DataFrame, labels: pd.DataFrame) -> dict[str, tuple[str, 
     result: dict[str, tuple[str, float]] = {}
     for dimension in scores:
         score = scores[dimension].dropna()
-        label = labels[dimension].dropna() if dimension in labels else pd.Series(dtype="string")
+        label = (
+            labels[dimension].dropna()
+            if dimension in labels
+            else pd.Series(dtype="string")
+        )
         if not score.empty and not label.empty:
             result[str(dimension)] = (str(label.iloc[-1]), float(score.iloc[-1]))
     return result
@@ -127,7 +131,13 @@ def _basket_sector(
     aggregate = aggregate_scores(per_symbol, min_coverage=0.5)
     labels = basket_labels(aggregate, engine.config)
     return SectorRegime(
-        definition.name, "basket", _latest(aggregate, labels), labels, aggregate, used, skipped
+        definition.name,
+        "basket",
+        _latest(aggregate, labels),
+        labels,
+        aggregate,
+        used,
+        skipped,
     )
 
 
@@ -176,7 +186,11 @@ def build_regime_report(
         try:
             sectors.append(
                 _basket_sector(
-                    as_of, definition, cfg.min_bars_per_symbol, results, include_oil_products_cot
+                    as_of,
+                    definition,
+                    cfg.min_bars_per_symbol,
+                    results,
+                    include_oil_products_cot,
                 )
             )
         except Exception as exc:  # noqa: BLE001 - one bad sector shouldn't stop the whole report

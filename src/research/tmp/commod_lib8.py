@@ -728,12 +728,36 @@ CONTRACT_SPECS = {
     # (NEXT_PROMPT.md sec4.B). Real CME contract specs (tick size / tick
     # value in USD), not fitted or invented; commission_per_contract carries
     # forward the same $2.50 convention used for every other product above.
-    "6A": {"tick": 0.0001, "tick_value": 10.0, "commission_per_contract": 2.50},  # AUD/USD
-    "6B": {"tick": 0.0001, "tick_value": 6.25, "commission_per_contract": 2.50},  # GBP/USD
-    "6C": {"tick": 0.0001, "tick_value": 10.0, "commission_per_contract": 2.50},  # CAD/USD
-    "6E": {"tick": 0.00005, "tick_value": 6.25, "commission_per_contract": 2.50},  # EUR/USD
-    "6J": {"tick": 0.0000005, "tick_value": 6.25, "commission_per_contract": 2.50},  # JPY/USD
-    "6S": {"tick": 0.0001, "tick_value": 12.50, "commission_per_contract": 2.50},  # CHF/USD
+    "6A": {
+        "tick": 0.0001,
+        "tick_value": 10.0,
+        "commission_per_contract": 2.50,
+    },  # AUD/USD
+    "6B": {
+        "tick": 0.0001,
+        "tick_value": 6.25,
+        "commission_per_contract": 2.50,
+    },  # GBP/USD
+    "6C": {
+        "tick": 0.0001,
+        "tick_value": 10.0,
+        "commission_per_contract": 2.50,
+    },  # CAD/USD
+    "6E": {
+        "tick": 0.00005,
+        "tick_value": 6.25,
+        "commission_per_contract": 2.50,
+    },  # EUR/USD
+    "6J": {
+        "tick": 0.0000005,
+        "tick_value": 6.25,
+        "commission_per_contract": 2.50,
+    },  # JPY/USD
+    "6S": {
+        "tick": 0.0001,
+        "tick_value": 12.50,
+        "commission_per_contract": 2.50,
+    },  # CHF/USD
 }
 
 # Thin products get a wider slippage multiplier than the 1-tick baseline.

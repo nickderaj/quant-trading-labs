@@ -41,7 +41,8 @@ def regime_durations(labels: pd.Series) -> pd.DataFrame:
     spells = valid.groupby(spell_id).agg(label="first", bars="size")
     grouped = spells.groupby("label")["bars"]
     return cast(
-        pd.DataFrame, grouped.agg(n_spells="count", mean="mean", median="median", max="max")
+        pd.DataFrame,
+        grouped.agg(n_spells="count", mean="mean", median="median", max="max"),
     )
 
 
@@ -59,7 +60,9 @@ def expected_remaining_duration(matrix: pd.DataFrame) -> pd.Series:
     return 1.0 / (1.0 - diagonal)
 
 
-def predict_next(current_label: str, matrix: pd.DataFrame, horizon: int = 1) -> pd.Series:
+def predict_next(
+    current_label: str, matrix: pd.DataFrame, horizon: int = 1
+) -> pd.Series:
     """Return the baseline probability distribution after ``horizon`` transitions."""
     if horizon < 1:
         raise ValueError("horizon must be positive")
