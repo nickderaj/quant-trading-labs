@@ -1,5 +1,41 @@
 # Notebook 014 — Port the Daily Market-Regime Engine, and Score Its Accuracy: Results Summary
 
+## What
+
+This notebook ports the production daily market-regime engine (the one behind the live 7am cron
+report) module-for-module into this repo, then scores the historical accuracy of its regime labels
+across 11 sectors and six dimensions (trend, volatility, risk, credit, yield_curve, term_structure,
+carry) against two independent ground-truth sources.
+
+## Why
+
+The engine already ships labels every morning in production, but its accuracy had never been
+independently measured against this repo's own data and testing discipline. Unlike every prior
+notebook, a gate *firing* here was the hoped-for outcome, since the goal was to determine whether a
+future notebook could safely condition a trading strategy on these labels, or whether the labels —
+despite being structurally sound — fail to demonstrably beat naive baselines.
+
+## How
+
+The port was verified bit-identical to the live source engine on synthetic fixtures and via matching
+config hashes, then run over the full historical panel for every symbol. A hard lookahead check ran
+across all 27 symbols at four truncations. Accuracy was scored two ways: balanced accuracy against a
+frozen 8-episode table of known historical crisis periods (with persistence/Markov/class-prior
+baselines) and against forward-realized mechanical labels over each sector's full history, both at a
+Bonferroni-corrected significance threshold across 39 trials, plus a median label-lag check at named
+crisis onsets.
+
+## Results
+
+Three of six gates fire: the port is faithful (bit-identical replication, NL/RC) and structurally
+sound (no degenerate labels, RS). But the three accuracy-focused gates do not fire: no dimension beats
+its naive baseline at Bonferroni-corrected significance (RA, RM both null across all 39 trials), and
+median crisis-detection lag is 27 trading days, slower than the pre-registered 21-day bar (RL fails).
+The two highest raw-accuracy dimensions (yield_curve, term_structure/carry) turn out to be close to
+tautological, built from and checked against overlapping input series. The verdict: no dimension in
+this port is validated strongly enough for a future notebook to condition a strategy on without
+further, genuinely independent work.
+
 Six pre-registered gates (`phase_0_14_preregistration.json`, committed before Phase 1 ever built or
 plotted the historical panel, and not edited since). **NL, RS, and RC fire. RA, RM, and RL do not.**
 The production regime engine (`../ultron/apps/trading-labs`'s 7am cron report, ported here verbatim

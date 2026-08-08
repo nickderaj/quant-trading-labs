@@ -1,5 +1,21 @@
 # Distributional Models for Volatility and Regime - Results Summary
 
+## What
+
+This notebook shifts away from predicting the direction of the next return (which notebooks 1-3 exhausted without finding an edge) and instead characterizes BTC's return distribution directly, then runs two forecasting contests: can distributional/statistical models forecast volatility (the second moment) better than trivial baselines, and can they identify persistent, informative market regimes. It covers descriptive stylized facts (fat tails, clustering, aggregational Gaussianity), a 7-rung volatility forecasting ladder (trailing std, EWMA, HAR-RV, range estimators, RV-distribution fits, GARCH, activity regression), and regime models (threshold, Gaussian mixture, HMM), with a trading application gated to run only if either contest produces a certified winner.
+
+## Why
+
+Notebooks 1-3 all asked distributional/statistical tools to predict the first moment (next return) and all found nothing. Rather than keep trying variations on direction prediction, this notebook asks two questions those notebooks never asked: is volatility itself forecastable beyond naive baselines, and do statistically-defined regimes carry useful information (about risk, if not return)? These are framed as rigorous forecasting contests with proper scoring rules and significance tests, not as backtests, so a "win" here means something statistically real, not just a good-looking Sharpe.
+
+## How
+
+Used BTC across all 4 bar intervals (1h/4h/12h/1d), transferring frozen findings to ETH/SOL/DOGE/BNB/XRP where noted. Phase 1 characterized stylized facts (fat tails via normal/Student-t/skew-t fits, aggregational Gaussianity, volatility clustering via waiting-time gamma fits, overdispersed trade activity, bounded observables, intrabar range vs. Brownian prediction, run-length memorylessness). Phase 3 ran a 7-rung volatility forecasting ladder scored by QLIKE and all-pairs Diebold-Mariano significance tests, plus a density-scoring comparison (log score, Kupiec/Christoffersen VaR coverage) for GARCH-t's own Student-t innovation distribution. Phase 4 fit and compared regime models (threshold, GMM, HMM-Gaussian/t) for state persistence and their ability to predict next-bar volatility and direction. Phase 5 (the trading application) was pre-declared to run only if Phase 3 or 4 produced a statistically certified winner.
+
+## Results
+
+Phase 1 confirmed extreme, well-documented crypto stylized facts: normal distributions underestimate 5-sigma-day frequency by 2,400x-7,100x, fitted Student-t degrees of freedom sit near 2 (the edge of finite variance), and volatility clustering, overdispersed activity, and short-horizon mean-reversion are all statistically confirmed. In Phase 3, no single rung won the point-forecast (QLIKE) ladder outright at any interval - HAR-RV, range estimators, and GARCH-normal formed a statistically indistinguishable top cluster - but a narrower, real result emerged: GARCH-t's own Student-t innovation distribution gave a better log-score density forecast than any normal-density alternative at all 4 intervals (after fixing a lookahead bug in how its degrees-of-freedom parameter was scored), though its 5% VaR coverage was only well-calibrated at 12h/1d, not 1h/4h. In Phase 4, no regime model was formally certified as beating the naive threshold baseline (no significance test was built for that comparison), but every model at every interval robustly predicted next-bar volatility while never reliably predicting direction - a clean "regimes predict risk, not return" finding that replicated across all 5 transfer symbols. Since neither contest produced a certified winner, Phase 5 (the trading application) correctly did not run. Seven implementation bugs were found and fixed along the way, most notably an unlagged HAR feature that caused same-bar lookahead leakage.
+
 Notebooks 1-3 all asked distributions to predict the first moment (next return) and all
 three found nothing. This notebook resets to single-asset, deliberately basic, and asks
 the two questions those notebooks never asked: can distributional modelling forecast

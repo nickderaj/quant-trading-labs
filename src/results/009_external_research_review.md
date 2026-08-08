@@ -1,5 +1,21 @@
 # What Are Other People Actually Doing? An External Research Review — Results Summary
 
+## What
+
+This notebook steps back from running new backtests and instead surveys external peer-reviewed and regulatory literature to diagnose why eight straight notebooks of this research programme have found no tradeable alpha net of costs. It evaluates five competing explanations — the strategies tested were too naive, the cost model was too pessimistic, the statistical bar was too strict, the markets tested are simply efficient at reachable horizons, or the programme has been looking in the wrong places entirely — and produces a shortlist of concretely testable follow-up candidates for future notebooks.
+
+## Why
+
+After eight notebooks (six on crypto, two on commodities) consistently failing to find a tradeable edge, the programme needed to determine whether these nulls reflect genuine market efficiency, a flawed internal methodology (too strict a bar, too pessimistic a cost model, too naive a strategy set), or simply a lack of the right kind of signal or the infrastructure to trade it — rather than continuing to generate more null backtests without first checking whether the search itself was well-aimed.
+
+## How
+
+The notebook gathered and tiered 36 external sources by evidentiary quality (Tier 1 peer-reviewed/regulatory down to Tier 3 blog/marketing content), scored each of the five hypotheses against this evidence, produced a five-candidate shortlist of testable follow-up strategies with pre-registered gates, and ran one cheap, non-gated empirical first-look probe — an AR(1)-in-differences mean-reversion test on the repo's own pre-built commodity spread series — to check whether one candidate mechanism (structural spread mean-reversion) is even present in this repo's own data before committing to a full backtest.
+
+## Results
+
+All four pre-declared gates fired. The survey discriminated rather than hedging: markets are genuinely efficient at the instruments and horizons this repo can reach, and the cost model was found to be, if anything, too generous rather than too harsh. Real structural return sources do exist in the literature (e.g., the Treasury cash-futures basis trade, market-making, volatility risk premium) but are mostly inaccessible without infrastructure (repo financing, order-book data, options data) this repo lacks. The statistical bar itself was judged largely defensible, though the notebook recommends adding a second, clearly-labeled "institutionally fundable absolute performance" reporting flag going forward. The one actionable finding: 5 of 6 tested commodity spreads showed significant mean reversion and 4 of 6 a significant predictive signal, making structural spread mean-reversion the leading candidate for a fully gated backtest in the next notebook.
+
 **The headline: markets efficiency and infrastructure gaps, not an overly strict bar,
 are the best-supported explanations for eight straight nulls — and this notebook's own
 survey discriminates rather than hedging.** All four pre-declared gates fire. Of the five

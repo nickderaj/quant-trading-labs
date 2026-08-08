@@ -1,5 +1,21 @@
 # Notebook 11d — Momentum/Breakout Transfer: Results Summary
 
+## What
+
+This notebook tests two pre-registered gates for a breakout-trading rule transferred from the external programme's qualitative sketch (prior-run, base-consolidation, breakout-entry, ATR-stop, MA-trail-exit, BTC-regime-gate): Gate MB on a 30-symbol crypto perpetuals universe (including delisted-in-effect names LUNAUSDT and FTTUSDT) and Gate MB-E on a 69-ticker commodity-equity/ETF universe.
+
+## Why
+
+The external programme never built or published a complete breakout system of its own — only a single cost-study result (breakout gross mean R positive, momentum gross mean R negative) and a qualitative description. Since there was no specific external parameter set to adopt as a prior (unlike Gate BF in 11b), this notebook needed to fix its own single trading-rule specification and test whether it can be supported by data this repo actually holds, rather than reproducing an external result that doesn't exist in quantitative form.
+
+## How
+
+A single breakout rule is declared once (25% trailing prior run, 10-bar tightening-range base, breakout above prior day's base high, 2x-ATR stop, 20-day-SMA trail exit, fixed-fractional sizing, fail-closed regime gate) and swept only along the two pre-registered axes (cost multiplier for Gate MB: 1x/2x/3x; offset for both gates) to avoid inflating the pre-registered n_trials (12 for MB, 4 for MB-E). Crypto costs reuse this repo's established convention; equity costs reuse the same convention as an explicit, disclosed assumption since this repo has no established equity cost model. Both gates are evaluated with every-offset Sharpe checks, block-bootstrap noise-floor CIs, and DSR against the pre-registered trial counts, on the development window only.
+
+## Results
+
+Both gates return fired=False. Gate MB shows positive Sharpe at every offset (+0.17 to +0.31) — the first leg clears — but the noise floor is far too wide (95% CI [−52.7%, +100.1%] on fixed-notional return) and DSR is only 0.055 against the 12-trial bar; the crypto history (3.5 years, 42 trades) simply cannot support a confident verdict either way, though a genuine but small cost-stress effect (−1.48pp per cost-multiplier step) is not the reason for the null. Gate MB-E fails outright and unambiguously: net Sharpe is negative at every offset (−0.022 to −0.027), and the universe's structural survivorship bias means it was never eligible for a fundable verdict regardless. The direction of the gap (crypto marginally promising, equities clearly negative) is consistent with the rule's fixed thresholds being implicitly calibrated to crypto's volatility regime rather than equities'.
+
 Two pre-registered gates (`phase_6_11a_results.json`, committed before this notebook ran and not
 edited since). **Both return a fired=False verdict.** Gate MB (30 crypto perpetuals, including
 the two delisted-in-effect names, `LUNAUSDT` and `FTTUSDT`) clears its every-offset positive-Sharpe

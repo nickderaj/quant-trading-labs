@@ -1,5 +1,21 @@
 # Notebook 11c — Entry-Time Loss Classifier: Results Summary
 
+## What
+
+This notebook builds and tests Gate LC: a walk-forward logistic-regression classifier trained on 15 entry-time features (entry z-score, carry ratio, realized-vol percentile, ADF t-stat, half-life stats, roll-window proximity, leg correlation, variance-ratio/Hurst statistics, pre-move ATR, etc.) to predict which trades in the spread-trading control book will exit via stop-loss ("stop-exit") rather than cleanly, and then tests whether suppressing the top-decile predicted-loss entries improves the trading book.
+
+## Why
+
+This was an idea the external programme proposed (v4 sec 14.3) but never built. NEXT_PROMPT.md's own stated prior, informed by 11a's trade-shape atlas — which found that entry extremity (|z|) does not discriminate winners from losers, and that the catastrophic tail comes almost entirely from stop-exits — was that entry-time features likely would not predict which trades stop out, since the true separator may be the post-entry price response rather than anything knowable at entry. This notebook exists to test that prior properly rather than assume it.
+
+## How
+
+Gate LC requires walk-forward out-of-sample AUC > 0.60 on the stop-exit label AND a suppression book (vetoing the top-decile predicted-loss entries) that beats the unsuppressed book on the three-way risk gate at every offset. The notebook first reproduces 11a's 57-trade control book, computes all 15 features from data strictly available at or before each trade's entry bar, and builds new walk-forward classification infrastructure (reusing `research.py`'s fold-splitting logic and adding a from-scratch AUC primitive, since this repo's existing tooling was regression-only). Logistic regression with strong L2 regularization is used given the small-sample (n≪p) regime. Four origin offsets are evaluated, each with its own anchored walk-forward grid, and bootstrap CIs are computed on the stitched out-of-sample AUC.
+
+## Results
+
+Gate LC does not fire. The AUC leg technically clears the >0.60 bar at all four offsets (0.667–0.757), but a bootstrap check reveals the point estimates are not reliably distinguishable from chance (95% CI includes 0.5 at every offset), a fragility caveat disclosed rather than smoothed over. The suppression leg fails outright: only 3 of 4 offsets show the suppressed book beating the unsuppressed one, and this programme's every-offset convention requires all four. The overall verdict is a clean null, consistent with the pre-registered prior that entry-time features cannot predict the catastrophic tail — supporting the case for keeping the stop-loss rule rather than trying to avoid the trades that trigger it.
+
 Gate LC (`phase_6_11a_results.json`'s pre-registration, committed before this notebook ran
 and not edited since — cross-checked verbatim in Phase 2, not re-typed by hand):
 **"a classifier trained walk-forward achieves out-of-sample AUC > 0.60 on the stop-exit

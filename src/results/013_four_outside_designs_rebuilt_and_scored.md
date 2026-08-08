@@ -1,5 +1,38 @@
 # Notebook 013 — Four Outside Designs, Rebuilt and Scored on Our Own Data: Results Summary
 
+## What
+
+This notebook rebuilds four independently-specified, externally-reported trading mechanisms end to
+end on this programme's own data and costs: a gold trend/execution book (Design A), cross-asset
+sequence models trained on a Sharpe objective (Design B), an adaptive 6h crypto trend book (Design C),
+and a crypto cross-sectional graph-attention model (Design D).
+
+## Why
+
+Notebook 009 flagged that the programme's twenty-two-plus prior null gates were all on its own
+in-house constructions, leaving open the rebuttal that the strategies simply weren't built well
+enough. Testing outside, published designs — rebuilt faithfully to each paper's own specification,
+including the specific mechanism each paper attributes its edge to — removes that rebuttal and gives
+a materially stronger form of null if these also fail.
+
+## How
+
+Six pre-registered gates scored each design on its own terms (execution quality for A, training
+objective for B, adaptation for C, cross-sectional structure for D), plus a shared look-ahead audit
+(Phase L) and structural checks like beta and drawdown-plausibility. Design C was rebuilt twice: a v1
+guess at unpublished parameters, then a corrected v2 once the source papers were obtained and read,
+fixing quality thresholds, universe size, and selection mechanism, and adding funding costs.
+
+## Results
+
+All six gates return `fires=False`. The best net Sharpe achieved across all four designs is +0.33
+(Design A), well below this programme's own +1.053 record and far short of the designs' reported
+2.4–3.1 range. Design B's neural sequence models lose to a simple linear baseline. Design D's
+cross-sectional IC is statistically significant but inverted in sign relative to its claim. Design C's
+corrected v2 rebuild behaves exactly as its authors describe in every ablation yet still shows no net
+edge, making it a stronger, not weaker, refutation. None of the four outside designs reproduces on
+this data.
+
 Six pre-registered gates (`phase_0_13_preregistration.json`, committed before any backtest ran and
 not edited since). **All six return `fires=False`.** Four independently-specified, externally-
 reported trading mechanisms — a gold trend/execution book, cross-asset sequence models trained on

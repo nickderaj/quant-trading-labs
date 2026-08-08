@@ -1,5 +1,21 @@
 # Does the Tail Result Generalize? - Results Summary
 
+## What
+
+This notebook tests whether notebook 5's three headline claims — GARCH-t's density win, GARCH-EVT's tail-coverage calibration, and the near-universal understatement of expected shortfall by thin-tailed models — survive contact with more symbols, more intervals, and a wider search over candidate distribution families. It also extends the "distribution zoo" itself, adding four new innovation-density families (GED, NIG, Johnson SU, Hansen skew-t), modeling the VaR violation process directly rather than only testing binary coverage, building a properly normalized spliced EVT density, and running a gated trading application on the frozen holdout.
+
+## Why
+
+Notebook 5's three claims were all derived from a single asset (BTC), and the strongest claim — GARCH-t's log-score win — was only cross-sectionally checked at one interval (1d), precisely where the win did not fire on BTC itself. Given this whole research programme's repeated pattern of results that look spectacular on BTC alone and fail to transfer, this notebook exists to determine which of notebook 5's claims are real, generalizable facts about crypto markets versus artifacts of testing one asset too narrowly.
+
+## How
+
+Using the frozen 6-symbol panel at 1h/4h/12h/1d, the notebook reran notebook 5's identical density contest across all transfer symbols (Phase 1), ran the Acerbi-Székely expected-shortfall test across a full 1,440-cell grid of models/intervals/symbols/quantile levels (Phase 2), fit four new innovation families and re-ran the contest (Phase 3), modeled violation counts and durations with dedicated statistical tests instead of only binary coverage tests (Phase 4), built a structurally normalized (rather than iteratively rescaled) spliced GPD-tails-plus-KDE-body EVT density (Phase 5), and — since a gate fired — ran a gated overlay application on the frozen holdout period (Phase 6).
+
+## Results
+
+GARCH-t's win transfers cleanly only at 1h (5/6 symbols significant), not at 4h/12h/1d. The expected-shortfall understatement finding holds up best of the three, but only as a 1%-level, downside-specific claim — it degrades materially toward the 5% level and the body of the distribution. EVT's spectacular BTC-only tail dominance does not replicate cross-sectionally, and EVT models do not show a uniformly cleaner violation process than other models even where they pass standard coverage tests. Two new findings emerged: NIG, Johnson SU, and Hansen skew-t all beat GARCH-t cross-sectionally at 4h/12h, and VaR violations show real, statistically detectable clustering in a bare majority (53%) of tested cells. The gated overlay application (GARCH-NIG vs. buy-and-hold on BTC's holdout year) improved raw return and drawdown modestly and produced a dramatically better-calibrated tail-risk signal, but did not improve net Sharpe after costs — consistent with this programme's recurring finding of no validated tradeable edge.
+
 Notebook 5 changed this research programme's question from "who forecasts variance
 best" (notebook 4: nobody, everything ties on QLIKE) to "who has the best-calibrated
 conditional tail" - and something won: **GARCH-t beat every other model on log score,

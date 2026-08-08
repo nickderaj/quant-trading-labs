@@ -1,5 +1,40 @@
 # Notebook 012 — Volume-Confirmed Breakout, One Rule, Whole Basket: Results Summary
 
+## What
+
+This notebook tests whether gating a symmetric long/short bull-flag breakout rule on breakout-bar
+volume (volume ≥ `vol_k` × trailing median volume) improves on the same rule left ungated, run as
+one pooled backtest across an 88-instrument, three-asset-class basket spanning crypto perpetuals,
+commodity-sector equities/ETFs, and Databento futures.
+
+## Why
+
+The breakout detector itself was carried over, generalized to be symmetric, from notebook 11d; the
+volume-confirmation question — does breakout volume actually confirm the move — was flagged in
+NEXT_PROMPT.md as a genuinely untested question in this repo. With more than a dozen prior gates
+across earlier notebooks returning nulls, this notebook also deliberately pursued a larger, better-
+powered sample (pooling ~85+ instruments) while holding the trial count to an honest 12, so that any
+null could not be dismissed as merely underpowered.
+
+## How
+
+A single frozen, scale-free rule (ATR-multiple thresholds, not %-of-price) was calibrated once per
+instrument from a disjoint, held-out first-three-years calibration window, then applied unmodified
+across all three asset classes. A new OHLCV continuous-series builder was added for futures (extending
+`commod_lib8.build_continuous_series`, which previously dropped open/high/low/volume), with volume
+left un-back-adjusted and roll-straddling volume windows disqualified from firing. The pre-registered
+Gate VB checked net Sharpe at four origin offsets and three cost multipliers, a paired block bootstrap
+of gated-minus-ungated returns, and the Deflated Sharpe Ratio at `n_trials=12`.
+
+## Results
+
+Gate VB does not fire. Net Sharpe is positive at every offset (~+0.115 at 1× cost, 406 gated trades),
+but the volume filter's point estimate moves the *wrong* direction versus the ungated control (+27.4%
+vs +45.6% pooled return), and the gated-minus-ungated bootstrap CI (−18.2pp, [−148.9pp, +87.0pp])
+includes zero. The Deflated Sharpe probability is 0.064, far below the 0.95 bar, and max drawdown
+(−42.6%) breaches the fundable-flag bound. Cost stress remains real and correctly signed. The honest
+conclusion is a clean, well-powered null: volume confirmation does not earn its keep on this rule.
+
 One pre-registered gate (`phase_1_12_preregistration.json`, committed before this notebook's
 pooled backtest ran and not edited since). **Gate VB returns a `fires=False` verdict.** Net Sharpe
 is positive at every declared origin offset and the cost-stress leg is real and correctly signed —

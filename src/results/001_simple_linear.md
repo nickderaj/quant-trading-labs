@@ -1,5 +1,21 @@
 # Simple Linear Models - Results Summary
 
+## What
+
+Two notebooks fit the simplest possible model - a straight line - to predict BTC's next-bar return and trade on the sign of the prediction: notebook 1 with mean-reversion features, notebook 2 with trend-following features swept across hundreds of configs. This is the starting point of the research programme, meant to establish baseline machinery (fee accounting, no-trade logic) before anything more sophisticated is attempted.
+
+## Why
+
+The goal was to get a first read on whether a trivially simple linear signal could produce a profitable BTC strategy, and in the process shake out basic bugs in the backtest/fee logic before they contaminate later, more complex work. Getting fee and trading mechanics right first matters because a broken cost model can flip a losing strategy into an apparently winning one (or vice versa), making everything downstream untrustworthy.
+
+## How
+
+Built linear models (single-lag and multi-feature) on BTC at several bar intervals, predicting next return and trading sign(prediction), with a single train/test split on one symbol and about one year of data. Along the way, three bugs were found and fixed: fees charged on every bar instead of only on position changes, a sign error in the fee log-return formula (`log(fee)` instead of `log(1-fee)`), and no ability for the model to sit out a trade even when its predicted edge was smaller than the round-trip cost (fixed with a no-trade zone).
+
+## Results
+
+After fixing the three bugs, headline numbers flipped from big losses to big gains: the mean-reversion notebook's "always short" model netted +34% after fees (though weight inspection showed it was essentially a constant short bet, not a real signal, since BTC fell during the test window), and the trend-following notebook's best-swept config (picked from 756 combinations) netted +59.10% after correct fees. Both results were judged untrustworthy: one is a disguised constant directional bet, the other is the best pick out of hundreds of overfit combinations on a single train/test split, one symbol, one year - neither validated out of sample, cross-asset, or against a buy-and-hold baseline. The notebook concludes with a punch list (walk-forward testing, multiple splits, baseline comparisons, deflated Sharpe, weight inspection) that directly motivates notebook 2.
+
 Both notebooks fit a straight line to predict BTC next return, trade on the sign. Found 3 bugs in fee/trading logic. Fixed them, reran everything. Numbers changed a lot. Still don't trust these as real strategies.
 
 ## The 3 bugs (now fixed in research.py)

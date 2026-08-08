@@ -1,5 +1,21 @@
 # Commodity Tails, Density Selection, and a Cross-Asset Risk Engine - Results Summary
 
+## What
+
+This notebook tests whether the crypto risk-modeling findings from notebooks 4-6 (fat tails, thin-tailed models understating expected shortfall, a well-calibrated conditional risk engine) generalize to a structurally different asset class — 16 commodity futures plus an equity-index control — and whether two of the most literature-favored commodity trading strategies (carry and time-series momentum) can find a tradeable edge net of realistic costs. It also tests two more speculative, genuinely uncertain hypotheses: whether commodity tail asymmetry flips sign relative to equities as inventory theory predicts, and whether term-structure state (backwardation/contango) carries risk information beyond an unconditional model.
+
+## Why
+
+Every prior finding in this programme came from crypto, a market with unusual structure (24/7 trading, funding-rate mechanics, no physical delivery). Commodities offer a genuinely different test: real storage costs, physical delivery, producer hedging demand, and — unlike crypto — a literature that predicts carry and momentum should actually work here. Confirming or refuting the risk findings and the "no tradeable edge" pattern in this different market determines whether the programme's conclusions are facts about crypto specifically or about financial markets more broadly.
+
+## How
+
+After extensive data-hygiene work to build a reliable continuous futures price series (roll-adjustment, contamination filtering, liquidity screening — four significant bugs caught and fixed before any statistic was trusted), the notebook ran a tail atlas and density-selection contest across seven distribution families (Phases 1-2), a 13-model conditional GARCH/GJR risk battery replicating notebooks 4-6's tests (Phase 3), term-structure/seasonal/macro conditioning of VaR coverage (Phase 4), carry and momentum backtests with a futures-specific cost model and bootstrap significance testing (Phase 5), an intraday descriptive appendix (Phase 6), a cross-asset conditional risk engine with copula-based portfolio simulation (Phase 7), and a final holdout evaluation (Phase 8).
+
+## Results
+
+The core risk findings replicated cleanly: commodities are fat-tailed (16/16 products), thin-tailed models understate their own expected shortfall (15/16 products), and a well-calibrated conditional risk engine was built and held up on holdout (14/16 pass). GARCH-GED, not GARCH-t, was the dominant density family, a genuine departure from the crypto result. Tail-asymmetry sign-flipping and term-structure conditioning of VaR both came back as real, informative nulls. Both carry and momentum failed to clear the bootstrap-CI bar for tradeable edge (carry came close, with strong absolute Sharpe but a CI including zero), extending the programme's honest-null streak to eight notebooks — this time in a market where the literature's own prior favored finding something.
+
 **The headline: the crypto risk findings are not crypto findings. They are facts about
 financial returns.** Fat tails (Gate CT), thin-tailed models understating their own
 expected shortfall (Gate CE), and a well-calibrated conditional risk engine (Gate RE)

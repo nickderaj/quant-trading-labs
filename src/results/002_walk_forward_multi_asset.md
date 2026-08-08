@@ -1,5 +1,21 @@
 # Walk-Forward Multi-Asset - Results Summary
 
+## What
+
+This notebook takes the linear return-prediction approach from notebook 1 and subjects it to rigorous validation: walk-forward testing over 5 years instead of one split, an origin-shift robustness check, a timeframe sweep, a large "try different things" grid search, weight inspection for degenerate constant bets, honest buy-and-hold benchmarking, deflated Sharpe correction for multiple testing, bootstrap confidence intervals, and a frozen-config test across 6 symbols.
+
+## Why
+
+Notebook 1 found apparently profitable results from a single train/test split on one symbol/year, but explicitly flagged that these numbers weren't trustworthy without walk-forward validation, baseline comparisons, and protection against overfitting via many-config search. This notebook exists to apply exactly those checks and see whether any of notebook 1's apparent edge survives.
+
+## How
+
+Switched from tick-aggregated Binance data to pre-aggregated klines for tractability across 5 years and 6 symbols, then ran: an origin-shift check (same config, fold grid shifted by 0/7/14/21 days), a 28-combo timeframe/window sweep, a 54-combo "try different things" grid (features x loss x threshold x model), a weight/bias degenerate-bet check on every fold, a properly annualized buy-and-hold comparison per symbol, deflated Sharpe probability across all 122 configs searched, bootstrap CIs on excess return, and application of the frozen winning config unchanged across ETH/DOGE/SOL/XRP/BNB. A later inference correction re-ran the deflated Sharpe and bootstrap CI using real return moments (skew/kurtosis) and block bootstrapping instead of normal/i.i.d. assumptions.
+
+## Results
+
+No validated edge was found. The origin-shift check alone showed Sharpe flipping sign twice from moving the fold grid by three weeks (-1.29 to +0.07 to +0.0001 to -0.62). The best grid-search config (momentum features, huber loss, tanh model) had Sharpe 0.76, but deflated Sharpe probability of a true edge given 122 trials searched was only 0.69%, and its bootstrap CI on excess return over buy-and-hold included zero. It beat buy-and-hold in only 9 of 17 out-of-sample folds (a coin flip), and its own OOS monthly return was less than a third of BTC buy-and-hold's average monthly rate. Applied unchanged across 6 symbols, it beat buy-and-hold on some and lost on others with no consistent pattern. The later inference correction (real skew/kurtosis, block bootstrap) left all conclusions unchanged. Bottom line: no tradeable edge, but reusable walk-forward/deflated-Sharpe/baseline machinery for future notebooks.
+
 Notebook 1 fit a straight line on one train/test split of one symbol, one year of data. This notebook walk-forward validates over 5 years, shifts the fold grid to check it isn't an artifact, benchmarks against buy-and-hold properly, inspects every fitted model's weights for the "it's just a constant bet" failure, and runs the same frozen config across 6 symbols.
 
 ## Data source switch

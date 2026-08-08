@@ -1,5 +1,21 @@
 # Notebook 10b — Spread Strategies: Results Summary
 
+## What
+
+This notebook backtests five distinct spread-trading gates built on commodity spreads: Gate SP (unconditional mean-reversion on inter-commodity and calendar spreads), Gate SPR and SPR-BW (regime-gating the same spreads using term-structure state, including a brent_wti-specific robustness check), Gate VS (vol-scaled carry sizing), and Gate BM (blended multi-lookback momentum). It also resolves a data-provenance question (Gate FA) about whether the repo's cached crypto series is spot or perpetuals.
+
+## Why
+
+Prior notebooks (9 and earlier) produced cheap first-look signals suggesting spread mean-reversion might survive transaction costs, and the operator held a prior that regime-gating (trading spreads differently depending on term-structure backwardation/contango state) should improve on the unconditional book. This notebook exists to test those priors rigorously — with full cost modeling and deflated-Sharpe multiple-testing correction — rather than accept the cheap first look at face value, continuing this programme's practice of only counting a strategy as validated once it clears bootstrap and DSR bars honestly.
+
+## How
+
+Each gate is backtested with `commod_lib8`'s futures cost model (one round-turn cost per leg) across four origin offsets, using block-bootstrap confidence intervals and deflated Sharpe probability (DSR) with honestly-counted cumulative configuration counts (n_trials) as the firing criteria. Gate SP uses a 60-day rolling z-score mean-reversion rule; Gate SPR/SPR-BW zero the position outside a "definite" regime state under three regime definitions; Gate VS replaces equal-weighting with inverse-20-day-realized-vol sizing on the carry book; Gate BM equal-weights four momentum lookbacks. A separate §3 "fundable flag" additionally requires Sharpe, DSR, and a literal drawdown bound all to pass. The 2025-01-01 to 2026-07-28 holdout is untouched throughout.
+
+## Results
+
+All five gates return fired=False — no gate clears both the tradeable-alpha bar and the §3 fundable flag. Gate SP shows a real, cost-surviving positive Sharpe (0.42–0.51) on both taxonomy groups but fails DSR. Gate SPR is directionally consistent with the regime prior at every offset but the margin is too small for CI or DSR. Gate SPR-BW finds brent_wti's own regime effect is sensitive to which leg's curve defines the regime — absent under the primary definition, present under the secondary — reported as a genuine open question rather than forced to a verdict. Gate VS delivers the strongest absolute performance (net Sharpe 1.16–1.23, DSR 0.9997) but still doesn't close the excess-vs-basket gap and fails the fundable flag on drawdown alone (~99.6% of peak equity). Gate BM is an unambiguous null (Sharpe negative at every offset). The FA-data question resolves to FALSE: all cached crypto data is perpetuals, not spot, so no proxy is built.
+
 **The headline: five gates, five nulls, and the two most informative near-misses in this
 programme's history.** Gate SP (unconditional spread mean-reversion) shows a real,
 positive, cost-surviving Sharpe on both taxonomy groups but falls well short of the

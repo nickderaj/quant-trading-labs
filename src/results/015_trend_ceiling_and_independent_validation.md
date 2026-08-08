@@ -1,5 +1,40 @@
 # Notebook 015 — Is Directional Trend Predictable At All, and Are 014's Two "Good" Dimensions Real? Results Summary
 
+## What
+
+This notebook runs two linked investigations: Track A independently re-validates 014's two
+highest-accuracy regime dimensions (`yield_curve`, `term_structure`/`carry`) against six new targets
+whose raw inputs are provably disjoint from the dimensions' own construction, and Track B runs a
+ceiling test on directional trend predictability using an escalating ladder of models (linear,
+feature-expanded linear, gradient-boosted) across multiple panels and horizons.
+
+## Why
+
+014 left `yield_curve` and `term_structure`/`carry` as ambiguous "high accuracy, but possibly
+tautological" findings, since their mechanical accuracy checks were built from overlapping input
+series. This notebook was designed to resolve that ambiguity with genuinely independent targets, and
+simultaneously to convert this programme's twenty-two-plus prior nulls on trend-following into a
+single, power-quantified structural statement rather than another marginal Sharpe result.
+
+## How
+
+Nine pre-registered gates covered three concerns: structural validity (a shuffle-control null test
+across the whole Track B pipeline, a formal input-disjointness proof, and a power budget via Kish
+effective-N), Track A accuracy (balanced accuracy of each dimension against disjoint mechanical
+targets and baselines), and Track B ceiling tests (whether learned weights, expanded features, or
+model capacity beat an incumbent baseline by a pre-registered effect size, Bonferroni-corrected across
+40 trials). No strategy was built, no Sharpe computed, and no holdout spent.
+
+## Results
+
+The three structural gates fire (shuffle control passes with a disclosed, dated-amendment scope; the
+disjointness proof holds for 8/10 pairs; power is adequate everywhere). Every accuracy and ceiling
+gate is null: none of `yield_curve`, `term_structure`, or `carry` beats its baseline on independent
+targets, and no model — including a gradient-boosted one — clears both the Bonferroni threshold and
+the required effect size for trend prediction. The directional-trend line of inquiry is closed with a
+quantified bound (no edge larger than roughly 17–20 balanced-accuracy points detectable at the 63-day
+horizon), and 014's two ambiguous dimensions are downgraded to a settled "no."
+
 Nine pre-registered gates (`phase_0_15_preregistration.json`, committed before any Track A target was
 scored or any Track B model was fit, and not edited since except for one dated amendment described
 below). **SC, ID, and PW fire. IA, IT, IC, CW, CC, and CB do not.** Per this programme's normal

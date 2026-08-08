@@ -1,5 +1,21 @@
 # Tail Risk and Conditional Non-Normality - Results Summary
 
+## What
+
+This notebook picks up where notebook 4's volatility point-forecast ladder ended in a tie, and instead asks which model gives the best-calibrated conditional tail: it adds new models (GJR-GARCH for leverage, conditional EVT/GPD via the McNeil-Frey two-stage method), runs a density-scoring contest (log score with Diebold-Mariano significance testing), a full tail-calibration battery (Kupiec, Christoffersen, Acerbi-Székely expected-shortfall backtests across 6 quantile levels), and a gated trading application that only runs if the tail-calibration evidence is strong and stable enough.
+
+## Why
+
+Notebook 4's 7-rung QLIKE ladder found no clear volatility point-forecast winner - every reasonable estimator landed in one statistically indistinguishable cluster - but it did surface one narrower, real result along the way: GARCH-t's Student-t innovation distribution scored better than a normal density. Since BTC's tails are extreme (fitted Student-t degrees of freedom of 2-3 at every interval), the natural next question isn't "who forecasts variance best" (exhausted) but "which model's conditional tail is best-calibrated," evaluated with the same statistical rigor as the variance ladder.
+
+## How
+
+First corrected two bugs found in notebook 4's already-committed code (a lookahead leak in the degrees-of-freedom used to score GARCH-t's density, and an inconsistent CRPS integration grid across distribution families) and re-ran the affected results. Then added GJR-GARCH (asymmetric/leverage) and conditional EVT (GPD fit to GARCH-standardized residuals) to an 8-model density contest scored by log score with all-pairs Diebold-Mariano tests (Benjamini-Hochberg corrected, bootstrap p-values primary). Ran a full tail-calibration battery (Kupiec, Christoffersen independence and conditional coverage, at 6 quantile levels, across all 10 models including EVT variants) and an Acerbi-Székely expected-shortfall backtest. Also ran a Hill-estimator tail-index check independent of the GARCH machinery, and tested whether working in log-RV space improves distributional fit. Transferred key checks to ETH/SOL/DOGE/BNB/XRP at 1d. A trading application (Phase 6) was gated to require both a certified density or calibration winner and cross-sectional stability at the same interval.
+
+## Results
+
+This produced the cleanest results in the research programme so far. The density contest (Gate A) found GARCH-t as a statistically certified winner - beating every other model significantly - at 3 of 4 BTC intervals (1h/4h/12h), though not at 1d, and this null replicated perfectly across all 6 transfer symbols at 1d (0 of 6 fired). The tail-calibration battery (Gate B) found GARCH-EVT clearing all 36 coverage tests at 12h, and the Acerbi-Székely ES backtest delivered the headline finding: every non-fat-tailed model significantly underestimated 1%-tail losses at every interval with zero exceptions, while fat-tailed/EVT models were far better calibrated. GJR-GARCH's leverage effect was real in a meaningful minority of individual refits but did not survive as a net improvement once rolled forward, and its prevalence varied enormously by asset (6x range across symbols). Because Gate A's interval-specific wins (1h/4h/12h) and Gate B's cross-sectional stability (mostly at 1d) never jointly held at the same interval across all symbols, Gate D's requirements for the trading application were not met, so Phase 6 correctly did not run. Two more bugs were found and fixed (a sign error in the Acerbi-Székely calibration formula, and small-sample noise investigated in the GPD shape parameter). Bottom line: real, statistically certified new knowledge about crypto's conditional tail behavior, but still no tradeable application that clears the bar.
+
 **The evaluation criterion changes here, deliberately.** Notebook 4 ran a 7-rung
 volatility *point*-forecast contest (QLIKE) and found no clear winner at any interval -
 HAR-RV, the range estimators, and GARCH-normal all sit in one statistically

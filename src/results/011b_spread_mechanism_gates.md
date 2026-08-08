@@ -1,5 +1,21 @@
 # Notebook 11b — Spread Mechanism Gates: Results Summary
 
+## What
+
+This notebook tests seven pre-registered gates (from 11a's Phase 6 pre-registration) evaluating whether an external programme's discrete-trade spread-trading mechanisms — structured entry/exit rules with ATR stops (Gate TS/TS-S), sign-flipping mild-backwardation trades (Gate BF/BF-X), a stationarity screen (Gate SCR), a vol-adaptive stop (Gate VA), and a reentry-parameter sweep (Gate RE) — improve on this repo's own simpler continuous spread-trading benchmark from notebook 10b.
+
+## Why
+
+11a flagged Gate TS and Gate BF as the programme's strongest candidates so far: Gate TS was "the first proposition with a specific, mechanically-identified reason to expect a positive result," and Gate BF had "independent out-of-sample support from a separate codebase." Testing these mechanisms properly, against a fairly paired control and this repo's own stricter cost model, was necessary to determine whether the external programme's apparent edge comes from a genuinely portable trading mechanism or merely from parameterization/universe choices fitted to their own data.
+
+## How
+
+All seven gates are backtested on this repo's own spread series and cost model (`commod_lib8.round_turn_cost_per_contract`), using paired block-bootstrap confidence intervals against internal controls (structured vs. 10b's continuous benchmark, sign-flipped vs. unconditional, screen-inclusive vs. screen-exclusive, vol-adaptive vs. static stop, reentry-swept vs. baseline) and DSR against pre-registered, cross-checked trial counts (65 total across the seven gates). A separate section reconciles Gate VS's drawdown convention from 10b, and another diagnoses why two cross-repo-conflict spreads are barely tradeable under the pre-declared risk caps.
+
+## Results
+
+All seven gates return fired=False. Gate TS is a reversal of the expected direction: the discrete/stopped mechanism is significantly negative (Sharpe −0.165 to −0.209) while the continuous benchmark is positive (+0.552 to +0.555) on the same spreads and costs — a large, bootstrapped, one-sided gap. Gate TS-S shows removing the stop helps but still underperforms the continuous book. Gate BF makes the book monotonically worse the more the sign-flip is applied, the opposite of the external repo's own supportive finding. Gate SCR finds the ADF screen is essentially inert (near-identical books with or without it). Gate VA and Gate RE both move in the hypothesized direction but fall short of statistical significance (VA's CI straddles zero; RE's best cell has an unreachable DSR of 0.0138 at n=36). The overall conclusion: the external repo's apparent advantage appears to be universe/parameter fitting rather than a portable mechanism, and this repo's own plain, continuous, un-stopped position remains the best-performing book across all eleven-plus notebooks so far.
+
 Seven pre-registered gates (`phase_6_11a_results.json`, committed before this notebook ran and
 not edited since), all costed backtests on this repo's own spread series and its own, stricter
 cost model (`commod_lib8.round_turn_cost_per_contract`). **All seven return a fired=False

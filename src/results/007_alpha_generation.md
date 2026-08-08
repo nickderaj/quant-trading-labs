@@ -1,5 +1,21 @@
 # Alpha Generation, Conditioned on What We Now Know About Risk - Results Summary
 
+## What
+
+This notebook tests whether transaction cost — rather than the absence of any real signal — is what has prevented every prior alpha attempt in this research programme from producing a tradeable crypto strategy. It attacks the cost problem directly on a known gross-profitable signal (turnover reduction via hysteresis bands, quantization, and rebalance throttling), then layers the programme's own risk machinery on top as a timing overlay, and separately tests two structurally different signal families (funding-rate carry and tail-shape factors) to see whether a genuinely different kind of signal fares better than price-based ones.
+
+## Why
+
+Notebook 3 argued the underlying cross-sectional signal was real pre-cost but eroded by transaction costs, and notebook 6's own risk overlay found a better-calibrated risk signal that still lost to buy-and-hold once turnover was charged. If the cost hypothesis is correct, the cheapest and most direct fix — trading the same profitable signal less often — should work. Testing this directly, rather than continuing to try new signals, was judged the highest-value next step, since it can either validate the cost story or force a more skeptical reading of the whole programme's null results.
+
+## How
+
+Using notebook 3's frozen 30-symbol panel and a new library (`alpha_lib7.py`) for turnover-reduction and risk-gating mechanics, the notebook ran four phases: Phase A held a fixed, once-generated signal (cfg2_12h) constant and tested hysteresis bands, weight quantization, and rebalance throttling to cut turnover; Phase B gated the best turnover-reduced book on notebook 6's own GARCH-NIG conditional VaR forecasts; Phase C tested funding-rate carry as a standalone cross-sectional signal; and Phase D tested GARCH-Hansen-skew-t tail-shape parameters (skew, tail thickness, expected shortfall) as cross-sectional factors, with IC computed before any portfolio was built. A final phase would have spent the frozen holdout period, but only if any gate fired.
+
+## Results
+
+All four pre-declared gates (TC, RG, CY, TF) came back null, each for a different reason. Rebalance throttling cut turnover 71%/year and pushed net Sharpe to consistently positive levels, but the bootstrap confidence interval on excess return never excluded zero. Risk-gating the throttled book on predicted tail risk mostly hurt rather than helped net Sharpe. Funding-rate carry was net Sharpe-negative in all 24 base configurations, and — surprisingly — churned more than the price-based signal despite being a slow-moving payment. A tail-premium factor that appeared to clear the bar was found to be driven almost entirely by one thinly-traded symbol (FTTUSDT) and flipped to clearly negative once excluded. Because no gate fired, the holdout was never touched. The notebook concludes the cost hypothesis does not survive its own most direct test, extending the programme's run to six consecutive honest nulls on tradeable crypto alpha, while leaving the risk-modeling findings from notebooks 4-6 fully intact.
+
 **The hypothesis this notebook tests: transaction cost, not signal absence, is what has
 blocked every alpha attempt in this research programme so far.** Notebook 3 said it
 outright ("the signal is real pre-cost, costs erase it"); notebook 6 said it again in

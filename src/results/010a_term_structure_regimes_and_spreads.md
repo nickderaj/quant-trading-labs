@@ -1,5 +1,21 @@
 # Notebook 10a — Term-Structure Regimes and the Spread Taxonomy: Results Summary
 
+## What
+
+This notebook builds the descriptive groundwork for a future gated backtest of the commodity spread mean-reversion candidate identified in notebook 9: a term-structure regime atlas across all 16 products, a taxonomy classifying all 30 pre-built spread series as inter-commodity or calendar spreads, a cointegration precondition check on those spreads, an initial look at whether spreads mean-revert harder in specific term-structure regimes, and a check of CFTC positioning data against the regime label. It deliberately produces no Sharpe ratios, cost model, or gate verdicts — its actual deliverable is pre-registering notebook 10b's complete gate table, regime definitions, and trading rule before any backtest is run.
+
+## Why
+
+Notebook 9's cheap first-look probe found a promising mean-reversion signal in 5 of 6 commodity spreads but skipped a cointegration precondition and left two spreads (gold_silver, platinum_palladium) with disagreeing test results unresolved. Before committing to a full, costed backtest in notebook 10b, the programme needed to properly classify the spread universe, apply the missing cointegration check, and lock in regime definitions and trading rules in advance — preventing the kind of after-the-fact rule selection that would undermine the eventual gate's credibility.
+
+## How
+
+Using term-structure state machinery already built in notebook 8 (`commod_lib8.term_structure_state`) plus new machinery (`spread_lib10.py`) for ADF cointegration testing, three regime definitions (raw sign, deadband, persistence), and regime-conditional statistics, the notebook computed a term-structure regime atlas for all 16 products (Phase 1), classified and cointegration-tested all 30 spreads (Phase 2), tested whether inter-commodity spreads mean-revert differently by regime (Phase 3), cross-checked CFTC positioning data for crude oil against the regime label (Phase 4), and wrote a formal pre-registration of notebook 10b's gates, regime definitions, and trading rule (Phase 5).
+
+## Results
+
+23 of 30 spreads passed the cointegration test at 5% significance, resolving notebook 9's disagreement: gold_silver and platinum_palladium both failed cointegration outright and are excluded from the future backtest universe. The deadband regime definition was promoted to primary (over raw sign, which restricts almost no trading days and barely tests the intended hypothesis) for structural reasons decided before any backtest result was seen. Backwardation frequency varied enormously by sector and even within it, supporting a per-spread rather than repo-wide regime rule. Brent-WTI showed a genuinely two-sided result depending on which leg's curve defines the regime — weak-to-reversed under one leg alone, strongly regime-dependent (9.5-day half-life in backwardation) when both legs agree — left as an open, pre-registered question for notebook 10b. CFTC positioning data for crude oil corroborated the regime label directionally, though with modest effect size.
+
 **This notebook is descriptive only — no Sharpe ratios, no cost model, no gate verdicts
 (NEXT_PROMPT.md sec 1 rule 1).** Its purpose is to build the term-structure regime atlas,
 classify all 30 pre-built spread series, apply the cointegration precondition notebook 9's

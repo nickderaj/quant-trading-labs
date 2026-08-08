@@ -1,5 +1,21 @@
 # Notebook 11a — Methodology Transfer and Reproduction: Results Summary
 
+## What
+
+This notebook absorbs a second, independent codebase's commodity-spread-trading research (an external repo, `~/Documents/ultron/apps/trading-labs`) into this repo: porting its evaluation machinery, reproducing its half-life measurements and control-book backtest on this repo's own data and statistics, rebuilding and calibrating its stationarity screen, replicating its trade-shape analysis, and pre-registering the full gate table, DSR trial counts, and inclusion decisions for notebooks 11b, 11c, and 11d before any of those notebooks' backtests exist.
+
+## Why
+
+The external programme's research is a potential source of validated strategy ideas and parameter priors, but it had recently undergone a major data-correction (a contract-substitution bug that corrupted 12.6 years of its spread series and changed three of six of its own verdicts). Before trusting any of its numbers or transferring its methodology, this repo needed to independently verify the corrected findings, check whether its reported control-book performance reproduces on this repo's own data and stricter cost model, and lock in pre-registered gate criteria so that 11b/11c/11d's later backtests cannot be influenced by their own results (avoiding data-snooping/multiple-testing bias).
+
+## How
+
+Phase 0/1 re-derive and independently reproduce the external repo's half-life measurements using this repo's own Databento-derived data and a from-spec reimplementation of its AR(1) primitive. Phase 3 rebuilds both the external repo's old and new stationarity screens and calibrates them against synthetic random walks. Phase 4 reruns the external repo's pre-declared trading rule (z-score thresholds, ATR stops, fixed-fractional sizing, regime gates) on this repo's own five live spreads under two cost models. Phase 5 replicates the external repo's trade-shape/pattern analysis on the reproduced book. Phase 6 pre-registers ten gates (TS, TS-S, BF, BF-X, SCR, VA, RE, LC, MB, MB-E) with fixed DSR trial counts (85 total) for the downstream notebooks.
+
+## Results
+
+The half-life corroboration is genuine and independent: all five measured half-lives land inside the external repo's corrected ranges and nowhere near its corrupted ones, closing that programme's top open item. However, the control-book Sharpe cannot be validated — this repo's reproduction is materially worse (Sharpe −0.16 vs. their reported 0.889) under both cost models, a divergence reported honestly with several candidate (non-isolated) explanations, meaning all downstream 11b comparisons must be internal, not validations of the external repo's absolute numbers. The new, stricter screen passes only 8 of 30 spreads (vs. 23 for the old, badly-miscalibrated screen) and even rejects the external repo's own flagship spread, brent_calendar, on its variance-ratio leg. The trade-shape analysis corroborates strongly despite the magnitude divergence: entry extremity does not discriminate winners from losers, and the catastrophic tail comes almost entirely from stop-exits — the empirical basis motivating 11c's entry-time loss classifier.
+
 **This notebook is descriptive and infrastructural only — no gate verdicts, no Sharpe-based
 strategy conclusions (NEXT_PROMPT.md sec 1 rule 1, unchanged from the 10a/10b split).** Its
 purpose is to absorb a second, independent codebase's spread-trading research

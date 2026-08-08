@@ -1,5 +1,21 @@
 # Cross-Sectional Crypto IC Pipeline - Results Summary
 
+## What
+
+This notebook builds and runs a full cross-sectional pipeline for crypto: a real transaction-cost model, a 30-symbol universe panel (deliberately including coins that later died or were delisted), a feature library (order flow, seasonality, realized vol, momentum/mean-reversion, funding rate), an information-coefficient (IC) screening harness, a dollar-neutral long/short portfolio construction layer, and backtests of the handful of configs that survive IC screening - followed by a single, unretuned holdout run.
+
+## Why
+
+Notebook 2 found no validated edge on single-asset trend/mean-reversion models, and it turned out every number reported there was gross of transaction costs. This notebook fixes both problems at once: it charges real costs everywhere and switches from "search many single-asset configs, backtest whichever wins" (a method notebook 2 showed is prone to overfitting) to "screen a large cross-sectional panel on rank correlation, then backtest only the few things that survive," aiming for more statistical power (30 symbols vs. 1) and honesty about cost.
+
+## How
+
+Added a turnover-based cost model (`add_trading_costs`) and confirmed 1h bars are cost-unviable, dropping them from the run. Built a 30-symbol survivorship-bias-aware universe panel, a causal feature library (order flow, seasonality, realized vol, momentum, funding rate), and an IC screening harness (`cross_sectional_ic`, `panel_ic`, `ic_stability`) with Newey-West/HAC standard errors for autocorrelated IC series. Screened 81 feature/interval configs, of which 34 survived a |t|>3 and sign-consistency filter. Built dollar-neutral portfolio construction (vol-targeted position sizing, top/bottom ranking, gross/turnover caps) and backtested the 3 pre-declared surviving configs (4h/12h/1d) across origin offsets, with deflated Sharpe (accounting for all 95 configs tried), bootstrap CIs, degenerate-bet checks, and baseline comparisons (buy-and-hold basket, random ranking). Finally ran the single best config once, unchanged, on a holdout period through mid-2026.
+
+## Results
+
+No validated edge. The IC-screened mean-reversion/realized-vol signal was gross-profitable at every interval (Sharpe 0.43-1.32), but transaction costs erased it at 4h and 1d; only the 12h config was net-positive at its headline offset (+0.42), and it flipped to -2.45 just one week later on the fold grid, had a bootstrap CI on excess return that included zero, and a deflated Sharpe probability of just 3.4% given 95 trials searched. A later inference-correction rerun of the same exact config with a fresh random seed produced a negative Sharpe (-1.22), meaning the one "positive" headline result didn't even reproduce. The holdout run (spent once) came back Sharpe -0.47 net of costs, though gross was positive (+0.74), continuing the "signal is real pre-cost, costs erase it" pattern seen throughout. Bottom line: real methodological improvements (cross-sectional breadth, honest costs) but no tradeable edge found.
+
 Notebook 2 found no validated edge on single-asset trend/mean-reversion models, and never
 charged transaction costs while doing it (`add_tx_fees*` was called zero times in that
 notebook - every number in `002_walk_forward_multi_asset.md` is gross). This notebook fixes
