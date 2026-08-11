@@ -1,0 +1,314 @@
+{
+  "development": {
+    "flagged": [
+      "PA"
+    ],
+    "clustering": [
+      "PA"
+    ],
+    "per_product": {
+      "CL": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.6502443079477449,
+            "independence_p": 0.21785182951732285
+          },
+          "0.025": {
+            "kupiec_p": 0.11385709142681495,
+            "independence_p": 0.12627056611830273
+          }
+        }
+      },
+      "BZ": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.961269420469795,
+            "independence_p": 0.1587165440650966
+          },
+          "0.025": {
+            "kupiec_p": 0.22981161662295335,
+            "independence_p": 0.268467705299824
+          }
+        }
+      },
+      "NG": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.3185968037237216,
+            "independence_p": 0.6398054893288975
+          },
+          "0.025": {
+            "kupiec_p": 0.24774521052824575,
+            "independence_p": 0.07323680749580988
+          }
+        }
+      },
+      "HO": {
+        "status": "breach",
+        "failure_mode": "clustering",
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.4573638255598539,
+            "independence_p": 0.6159927141498341
+          },
+          "0.025": {
+            "kupiec_p": 0.5643906279858564,
+            "independence_p": 0.010877499305702643
+          }
+        }
+      },
+      "RB": {
+        "status": "breach",
+        "failure_mode": "clustering",
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.8019431129757113,
+            "independence_p": 0.1503538371831263
+          },
+          "0.025": {
+            "kupiec_p": 0.06282519407280153,
+            "independence_p": 0.011489345784413827
+          }
+        }
+      },
+      "GC": {
+        "status": "breach",
+        "failure_mode": "clustering",
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.4748000506255029,
+            "independence_p": 0.2084048371500352
+          },
+          "0.025": {
+            "kupiec_p": 0.325557256359005,
+            "independence_p": 0.008761421914629247
+          }
+        }
+      },
+      "SI": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.338909486437183,
+            "independence_p": 0.23551849411134906
+          },
+          "0.025": {
+            "kupiec_p": 0.325557256359005,
+            "independence_p": 0.7921982189856566
+          }
+        }
+      },
+      "PL": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.46516669687891254,
+            "independence_p": 0.6422288434115193
+          },
+          "0.025": {
+            "kupiec_p": 0.6839342403780944,
+            "independence_p": 0.1826675713648647
+          }
+        }
+      },
+      "PA": {
+        "status": "breach",
+        "failure_mode": "clustering",
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.7061434094882835,
+            "independence_p": 0.012281940216556462
+          },
+          "0.025": {
+            "kupiec_p": 0.3212773067273107,
+            "independence_p": 0.18798412155632488
+          }
+        }
+      },
+      "ZC": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.5866067282722939,
+            "independence_p": 0.6339843166309026
+          },
+          "0.025": {
+            "kupiec_p": 0.07251021977036143,
+            "independence_p": 0.30246349825403546
+          }
+        }
+      },
+      "ZW": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.7831259934871203,
+            "independence_p": 0.6080044232438835
+          },
+          "0.025": {
+            "kupiec_p": 0.25946450344990557,
+            "independence_p": 0.2533171297657381
+          }
+        }
+      },
+      "KE": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.531460446166697,
+            "independence_p": 0.6998523149280174
+          },
+          "0.025": {
+            "kupiec_p": 0.3028787360238336,
+            "independence_p": 0.15285975321879208
+          }
+        }
+      },
+      "ZS": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.5779450276394693,
+            "independence_p": 0.6345517316824045
+          },
+          "0.025": {
+            "kupiec_p": 0.8376142537459658,
+            "independence_p": 0.9935043618743551
+          }
+        }
+      },
+      "ZL": {
+        "status": "breach",
+        "failure_mode": "coverage",
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.2221180057068602,
+            "independence_p": 0.462806005627004
+          },
+          "0.025": {
+            "kupiec_p": 0.024724422010909488,
+            "independence_p": 0.13865635151172048
+          }
+        }
+      },
+      "ZM": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.8075274535904111,
+            "independence_p": 0.5574763379872513
+          },
+          "0.025": {
+            "kupiec_p": 0.8214410448528231,
+            "independence_p": 0.9907770371587433
+          }
+        }
+      },
+      "ES": {
+        "status": "ok",
+        "failure_mode": null,
+        "levels": {
+          "0.01": {
+            "kupiec_p": 0.3297975958457947,
+            "independence_p": 0.7727011415131454
+          },
+          "0.025": {
+            "kupiec_p": 0.19343675280416878,
+            "independence_p": 0.1720727880374059
+          }
+        }
+      }
+    }
+  },
+  "holdout": {
+    "flagged": [
+      "RB",
+      "SI"
+    ],
+    "per_product": {
+      "CL": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "BZ": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "NG": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "HO": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "RB": {
+        "status": "breach",
+        "failure_mode": "clustering"
+      },
+      "GC": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "SI": {
+        "status": "breach",
+        "failure_mode": "clustering"
+      },
+      "PL": {
+        "status": "breach",
+        "failure_mode": "clustering"
+      },
+      "PA": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "ZC": {
+        "status": "breach",
+        "failure_mode": "coverage"
+      },
+      "ZW": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "KE": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "ZS": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "ZL": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "ZM": {
+        "status": "ok",
+        "failure_mode": null
+      },
+      "ES": {
+        "status": "ok",
+        "failure_mode": null
+      }
+    }
+  },
+  "gate_MB": {
+    "pa_flagged_clustering_in_development": true,
+    "no_false_positives_in_development": true,
+    "rb_si_flagged_in_holdout": true,
+    "fires": true
+  }
+}
