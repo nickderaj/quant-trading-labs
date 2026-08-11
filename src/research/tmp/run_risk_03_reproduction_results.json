@@ -1,0 +1,23 @@
+{
+  "gate_PR": {
+    "n_mismatches": 0,
+    "mismatches": [],
+    "gate_RE_fires": true,
+    "gate_RE_pass_count": 15,
+    "pass": true
+  },
+  "gate_PH": {
+    "checks": {
+      "RE_holdout_pass_count": 14,
+      "CE_holdout_reject_1pct_count": 11
+    },
+    "mismatches": [],
+    "pass": true,
+    "note": "no holdout data read or recomputed -- stored JSON's own summary only"
+  },
+  "gate_DT": {
+    "pass": true,
+    "bit_identical": true
+  },
+  "all_pass": true
+}
