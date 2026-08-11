@@ -1,0 +1,134 @@
+{
+  "policies": {
+    "P1": {
+      "family_map": {
+        "BZ": "ged",
+        "CL": "ged",
+        "ES": "ged",
+        "GC": "ged",
+        "HO": "ged",
+        "KE": "nig",
+        "NG": "johnsonsu",
+        "PA": "ged",
+        "PL": "ged",
+        "RB": "ged",
+        "SI": "ged",
+        "ZC": "hansen_skewt",
+        "ZL": "hansen_skewt",
+        "ZM": "nig",
+        "ZS": "ged",
+        "ZW": "hansen_skewt"
+      },
+      "n_products_passing_1pct_coverage": 15,
+      "n_products_total": 16,
+      "per_product_pass": {
+        "BZ": true,
+        "CL": true,
+        "ES": true,
+        "GC": true,
+        "HO": true,
+        "KE": true,
+        "NG": true,
+        "PA": false,
+        "PL": true,
+        "RB": true,
+        "SI": true,
+        "ZC": true,
+        "ZL": true,
+        "ZM": true,
+        "ZS": true,
+        "ZW": true
+      }
+    },
+    "P2": {
+      "family_map": {
+        "BZ": "ged",
+        "CL": "ged",
+        "ES": "ged",
+        "GC": "ged",
+        "HO": "ged",
+        "KE": "ged",
+        "NG": "ged",
+        "PA": "ged",
+        "PL": "ged",
+        "RB": "ged",
+        "SI": "ged",
+        "ZC": "ged",
+        "ZL": "ged",
+        "ZM": "ged",
+        "ZS": "ged",
+        "ZW": "ged"
+      },
+      "n_products_passing_1pct_coverage": 14,
+      "n_products_total": 16,
+      "per_product_pass": {
+        "BZ": true,
+        "CL": true,
+        "ES": true,
+        "GC": true,
+        "HO": true,
+        "KE": false,
+        "NG": true,
+        "PA": false,
+        "PL": true,
+        "RB": true,
+        "SI": true,
+        "ZC": true,
+        "ZL": true,
+        "ZM": true,
+        "ZS": true,
+        "ZW": true
+      }
+    },
+    "P3": {
+      "family_map": {
+        "BZ": "ged",
+        "CL": "ged",
+        "ES": "ged",
+        "GC": "ged",
+        "HO": "ged",
+        "KE": "ged",
+        "NG": "ged",
+        "PA": "ged",
+        "PL": "ged",
+        "RB": "ged",
+        "SI": "ged",
+        "ZC": "ged",
+        "ZL": "ged",
+        "ZM": "ged",
+        "ZS": "ged",
+        "ZW": "ged"
+      },
+      "n_products_passing_1pct_coverage": 14,
+      "n_products_total": 16,
+      "per_product_pass": {
+        "BZ": true,
+        "CL": true,
+        "ES": true,
+        "GC": true,
+        "HO": true,
+        "KE": false,
+        "NG": true,
+        "PA": false,
+        "PL": true,
+        "RB": true,
+        "SI": true,
+        "ZC": true,
+        "ZL": true,
+        "ZM": true,
+        "ZS": true,
+        "ZW": true
+      }
+    }
+  },
+  "pass_counts": {
+    "P1": 15,
+    "P2": 14,
+    "P3": 14
+  },
+  "tied_policies": [
+    "P1"
+  ],
+  "winner": "P1",
+  "shipping_rule": "highest Gate RE pass count; tie -> P2 (pre-committed in risk_engine_preregistration.json before this ran)"
+}

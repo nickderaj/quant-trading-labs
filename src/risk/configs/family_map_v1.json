@@ -1,0 +1,249 @@
+{
+  "config_hash": "afcb05285834544b2d0e6e261c8edca8207fd2c8f37dac86165f9fc2837c39b0",
+  "created": "2026-08-11",
+  "policy": "P1",
+  "products": {
+    "BZ": {
+      "best_model": "garch_ged",
+      "best_wins_significantly_bh": false,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.685751745274374,
+      "n_obs": 4300,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 2.675420553835012,
+      "runner_up_model": "garch_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "CL": {
+      "best_model": "garch_ged",
+      "best_wins_significantly_bh": false,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.6494286104662867,
+      "n_obs": 4521,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 2.637403314922368,
+      "runner_up_model": "garch_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "ES": {
+      "best_model": "gjr_ged",
+      "best_wins_significantly_bh": false,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2018-01-01"
+      },
+      "log_score": 3.372728084018003,
+      "n_obs": 2179,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 3.368554302509759,
+      "runner_up_model": "gjr_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "GC": {
+      "best_model": "garch_ged",
+      "best_wins_significantly_bh": true,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 3.422081097313797,
+      "n_obs": 3797,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 3.4073497952092553,
+      "runner_up_model": "garch_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "HO": {
+      "best_model": "garch_ged",
+      "best_wins_significantly_bh": false,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.760718811072008,
+      "n_obs": 4521,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 2.747192785120379,
+      "runner_up_model": "garch_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "KE": {
+      "best_model": "garch_nig",
+      "best_wins_significantly_bh": false,
+      "family": "nig",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2013-12-16"
+      },
+      "log_score": 2.59005429882869,
+      "n_obs": 2752,
+      "runner_up_family": "johnsonsu",
+      "runner_up_log_score": 2.5899669996492602,
+      "runner_up_model": "garch_johnsonsu",
+      "selected_by": "008 Phase 3"
+    },
+    "NG": {
+      "best_model": "garch_johnsonsu",
+      "best_wins_significantly_bh": false,
+      "family": "johnsonsu",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.2902474954590093,
+      "n_obs": 4520,
+      "runner_up_family": "ged",
+      "runner_up_log_score": 2.2902176715269706,
+      "runner_up_model": "garch_ged",
+      "selected_by": "008 Phase 3"
+    },
+    "PA": {
+      "best_model": "garch_ged",
+      "best_wins_significantly_bh": false,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.67688778530583,
+      "n_obs": 3879,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 2.6744547353131325,
+      "runner_up_model": "garch_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "PL": {
+      "best_model": "garch_ged",
+      "best_wins_significantly_bh": false,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.952084667446526,
+      "n_obs": 3960,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 2.945448228628848,
+      "runner_up_model": "garch_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "RB": {
+      "best_model": "garch_ged",
+      "best_wins_significantly_bh": false,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.6561249125750868,
+      "n_obs": 4519,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 2.6424523301440748,
+      "runner_up_model": "garch_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "SI": {
+      "best_model": "garch_ged",
+      "best_wins_significantly_bh": true,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.87617917269796,
+      "n_obs": 3791,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 2.8615823818957487,
+      "runner_up_model": "garch_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "ZC": {
+      "best_model": "garch_hansen_skewt",
+      "best_wins_significantly_bh": false,
+      "family": "hansen_skewt",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.9001955984818792,
+      "n_obs": 3773,
+      "runner_up_family": "johnsonsu",
+      "runner_up_log_score": 2.899832102571276,
+      "runner_up_model": "garch_johnsonsu",
+      "selected_by": "008 Phase 3"
+    },
+    "ZL": {
+      "best_model": "garch_hansen_skewt",
+      "best_wins_significantly_bh": false,
+      "family": "hansen_skewt",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.8656071614961776,
+      "n_obs": 3770,
+      "runner_up_family": "t",
+      "runner_up_log_score": 2.8655634369435536,
+      "runner_up_model": "garch_t",
+      "selected_by": "008 Phase 3"
+    },
+    "ZM": {
+      "best_model": "garch_nig",
+      "best_wins_significantly_bh": false,
+      "family": "nig",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.8598193272027266,
+      "n_obs": 3766,
+      "runner_up_family": "johnsonsu",
+      "runner_up_log_score": 2.859669993111949,
+      "runner_up_model": "garch_johnsonsu",
+      "selected_by": "008 Phase 3"
+    },
+    "ZS": {
+      "best_model": "garch_ged",
+      "best_wins_significantly_bh": false,
+      "family": "ged",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 3.05520348425656,
+      "n_obs": 3776,
+      "runner_up_family": "nig",
+      "runner_up_log_score": 3.054246477896579,
+      "runner_up_model": "garch_nig",
+      "selected_by": "008 Phase 3"
+    },
+    "ZW": {
+      "best_model": "garch_hansen_skewt",
+      "best_wins_significantly_bh": false,
+      "family": "hansen_skewt",
+      "fitting_window": {
+        "end": "2024-12-31",
+        "start": "2010-06-06"
+      },
+      "log_score": 2.643544910745696,
+      "n_obs": 3769,
+      "runner_up_family": "johnsonsu",
+      "runner_up_log_score": 2.6431279048386993,
+      "runner_up_model": "garch_johnsonsu",
+      "selected_by": "008 Phase 3"
+    }
+  },
+  "source_notebook": "008 Phase 3 (Phase 2 fallback for products absent from Phase 3's per-product ranking)",
+  "version": "v1"
+}
