@@ -1,0 +1,105 @@
+{
+  "_meta": {
+    "purpose": "NEXT_PROMPT.md sec 10: pre-registered gates, family-policy comparison, and calibration-monitor thresholds for the risk engine productionisation project. Committed before Phase 2's family-policy comparison runs and before the monitor touches real data (sec 6.3, sec 12: thresholds tuned after seeing alerts is the failure mode this file exists to prevent).",
+    "date": "2026-08-11",
+    "n_trials": 3,
+    "n_trials_note": "The only search in this project is Phase 2's three pre-specified family policies (P1/P2/P3). Everything else is a reproduction or calibration check, not a search."
+  },
+  "gates": {
+    "PR": {
+      "phase": 3,
+      "claim": "Port reproduction: promoted src/risk/ reproduces 008 Phase 7 exactly",
+      "threshold": "every compared field matches phase_7_results.json at rtol=1e-12; gate_RE.fires == true, pass count 15/16",
+      "hard_gate": true
+    },
+    "PH": {
+      "phase": 3,
+      "claim": "Holdout reproduction: stored Phase 8 numbers match their own recorded claims (no holdout recomputation)",
+      "threshold": "RE_holdout_pass_count == 14, CE_holdout_reject_1pct_count == 11, per-product blocks match phase_8_holdout_results.json",
+      "hard_gate": true
+    },
+    "DC": {
+      "phase": 1,
+      "claim": "Data contract bites: assert_risk_inputs rejects each of the four 008 Phase 0 bugs on a synthetic frame containing it",
+      "threshold": "4/4 rejected with the correct named error; 0 false rejections on the clean 16-product frame",
+      "hard_gate": true
+    },
+    "FS": {
+      "phase": 2,
+      "claim": "Family selection is justified or simplified: the winning policy of P1/P2/P3 is shipped",
+      "threshold": "pre-committed: ship whichever policy has the highest Gate RE pass count; tie -> ship the simplest (P2)",
+      "hard_gate": false
+    },
+    "MB": {
+      "phase": 3,
+      "claim": "Monitor rediscovers known failures: flags PA (clustering) in development and RB/SI on holdout, with no false positives among products that passed",
+      "threshold": "exact product-set match in both periods",
+      "hard_gate": false
+    },
+    "DT": {
+      "phase": "0/3",
+      "claim": "Determinism: portfolio_risk and every Monte Carlo path are seed-reproducible",
+      "threshold": "two runs, same seed, bit-identical output",
+      "hard_gate": true
+    },
+    "NL": {
+      "phase": 5,
+      "claim": "No lookahead: regime.evaluation.no_lookahead_check passes over the ewma_vol -> var_conditional path",
+      "threshold": "16/16 products pass at truncations (1, 5, 21, 63)",
+      "hard_gate": true
+    },
+    "IR": {
+      "phase": 4,
+      "claim": "Ingestion is idempotent: refresh twice with unchanged vendor data produces byte-identical output",
+      "threshold": "exact byte equality on every product output",
+      "hard_gate": false
+    },
+    "CI": {
+      "phase": "all",
+      "claim": "ruff, ruff format, mypy, pytest all clean",
+      "threshold": "per CLAUDE.md",
+      "hard_gate": false
+    }
+  },
+  "family_policy_comparison": {
+    "policies": {
+      "P1": "the shipped per-product map (10 ged, 3 hansen_skewt, 2 nig, 1 johnsonsu) -- phase_7_results.json family_map",
+      "P2": "ged everywhere (16/16 products)",
+      "P3": "ged everywhere except products with a BH-significant Phase 3 winner (GC, SI, per 008 Gate CD), which keep their own family"
+    },
+    "measurement": "refit the Phase 7 walk-forward OOS coverage battery (oos_coverage_test) under each policy, once, and report Gate RE's 1%-coverage pass count under each",
+    "shipping_rule": "ship whichever policy has the highest Gate RE pass count; a tie is broken in favour of the simplest policy (P2)",
+    "committed_before_numbers_known": true
+  },
+  "calibration_monitor": {
+    "tests_per_product_per_window": [
+      "kupiec (1%, 2.5%)",
+      "christoffersen_independence (1%, 2.5%)",
+      "christoffersen_conditional_coverage (1%, 2.5%)",
+      "acerbi_szekely (1%, both tails)"
+    ],
+    "p_value_threshold": 0.05,
+    "multiplicity_correction": "Benjamini-Hochberg across the 16 products within each monitoring run, applied separately per test per level -- matching 008's own procedure (Gate CD, Gate CE)",
+    "persistence_rule": {
+      "k_consecutive_breaching_windows": 2,
+      "rationale": "16 products x 2 levels x 4 tests run repeatedly will produce false alarms at any fixed alpha; a single breaching window is not paged, only k=2 consecutive ones. This is a pre-registered choice, not tuned against sec 6.4's rediscovery test."
+    },
+    "violation_rate_thresholds": {
+      "warn_ratio_observed_over_expected": 1.5,
+      "breach_ratio_observed_over_expected": 2.0,
+      "note": "applied at the 1% level; e.g. breach if the observed 1% VaR violation rate exceeds 2%"
+    },
+    "max_cluster_length_thresholds": {
+      "warn": 4,
+      "breach": 6,
+      "note": "008's stale-bar-adjacent worst case was a Christoffersen-detected clustering failure (PA, development), not a specific cluster-length number -- these thresholds are new and pre-registered here, not derived from PA's own cluster length, to avoid gate MB's rediscovery test being tuned against its own answer"
+    },
+    "failure_mode_rules": {
+      "coverage": "kupiec breaches, independence does not",
+      "clustering": "kupiec does not breach, independence breaches",
+      "shape": "coverage and independence do not breach, but acerbi_szekely breaches (Z significantly positive)",
+      "both": "kupiec and independence both breach -- escalate"
+    },
+    "status_rule": "ok if nothing breaches for < k consecutive windows; warn if a single window breaches or a metric crosses its warn threshold; breach if k consecutive windows breach the same test"
+  }
+}

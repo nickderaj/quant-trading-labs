@@ -1,0 +1,93 @@
+{
+  "bug_rejections": {
+    "bug1_contamination": {
+      "rejected": true,
+      "error": "6 row(s) sit inside a 20-observation window with realized_vol <= 1e-12 -- the frozen-bar rule that corrupted notebook 003 twice (a stale, non-trading data block), not a single quiet day"
+    },
+    "bug2_stale_quote": {
+      "rejected": true,
+      "error": "found a run of 5 consecutive identical close_f1 prices -- the observed ceiling from 008's stale-bar audit is 3; anything longer is new and unexamined"
+    },
+    "bug3_near_dead_months": {
+      "rejected": true,
+      "error": "only 59 finite log_return observations, below the minimum of 100"
+    },
+    "bug4_backadj_crosses_zero": {
+      "rejected": true,
+      "error": "1 row(s) have |log_return| > 0.5 -- either a real, nameable event or a splice artifact; a human must review before this enters a VaR fit"
+    }
+  },
+  "clean_frame_check": {
+    "CL": {
+      "accepted": true,
+      "error": null
+    },
+    "BZ": {
+      "accepted": true,
+      "error": null
+    },
+    "NG": {
+      "accepted": true,
+      "error": null
+    },
+    "HO": {
+      "accepted": true,
+      "error": null
+    },
+    "RB": {
+      "accepted": true,
+      "error": null
+    },
+    "GC": {
+      "accepted": true,
+      "error": null
+    },
+    "SI": {
+      "accepted": true,
+      "error": null
+    },
+    "PL": {
+      "accepted": true,
+      "error": null
+    },
+    "PA": {
+      "accepted": true,
+      "error": null
+    },
+    "ZC": {
+      "accepted": true,
+      "error": null
+    },
+    "ZW": {
+      "accepted": true,
+      "error": null
+    },
+    "KE": {
+      "accepted": true,
+      "error": null
+    },
+    "ZS": {
+      "accepted": true,
+      "error": null
+    },
+    "ZL": {
+      "accepted": true,
+      "error": null
+    },
+    "ZM": {
+      "accepted": true,
+      "error": null
+    },
+    "ES": {
+      "accepted": true,
+      "error": null
+    }
+  },
+  "gate_DC": {
+    "n_bugs_rejected": 4,
+    "n_bugs_total": 4,
+    "n_false_rejections": 0,
+    "n_clean_products": 16,
+    "fires": true
+  }
+}

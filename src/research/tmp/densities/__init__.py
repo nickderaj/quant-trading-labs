@@ -1,31 +1,19 @@
-"""Registry of notebook-6's Phase 3 innovation-density families.
-
-Each module (ged.py, nig.py, johnsonsu.py, hansen_skewt.py) exposes the fixed
-interface declared in NEXT_RUN_PROMPT.md's Phase 3 section:
-
-    NAME: str
-    N_SHAPE: int
-    def fit(z: np.ndarray) -> tuple[float, ...] | None
-    def logpdf(z: np.ndarray, shape: tuple[float, ...]) -> np.ndarray
-    def ppf(q: float | np.ndarray, shape: tuple[float, ...]) -> np.ndarray
-    def es(q: float, shape: tuple[float, ...]) -> float
-
-All are standardized to unit variance (mean 0, var 1) before use, so they can
-be composed with a rolling GARCH/GJR variance forecast exactly the way
-dist_lib's own Student-t scaling (`sqrt(nu/(nu-2))`) is - see
-`_garch_negloglik` for the discipline being matched.
-
-Each was implemented independently (one subagent per family, per
-NEXT_RUN_PROMPT.md section 1's fan-out instruction) and is imported here into
-one registry dict so dist_lib6.py / the Phase 3 driver can iterate over the
-family set without hardcoding four import statements at every call site.
+"""Shim: promoted to `src/risk/densities/` (NEXT_PROMPT.md sec 3.4) as
+durable, tested, production code. Re-exported here, unchanged, because nine
+scratch scripts still import from this path (`run_phase_2_density_selection.py`,
+`run_phase3_zoo.py`, `run_phase6_application.py`, `run_phase_b_risk_gated.py`,
+`run_phase_d_tail_factor.py`, `run_phase_3_conditional_battery.py`,
+`build_notebook8.py`, `dist_lib6.py`, and `commod_lib8.py` via `risk.model`).
+See `docs/10-risk-engine.md`.
 """
 
-from . import ged, hansen_skewt, johnsonsu, nig
+import sys
+from pathlib import Path
 
-REGISTRY = {
-    ged.NAME: ged,
-    nig.NAME: nig,
-    johnsonsu.NAME: johnsonsu,
-    hansen_skewt.NAME: hansen_skewt,
-}
+_SRC = Path(__file__).resolve().parents[3]
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+from risk.densities import REGISTRY, ged, hansen_skewt, johnsonsu, nig
+
+__all__ = ["REGISTRY", "ged", "hansen_skewt", "johnsonsu", "nig"]
