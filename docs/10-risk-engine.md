@@ -232,6 +232,9 @@ implementation detail.
 | entry point | question it answers |
 |---|---|
 | `fit(product, returns_frame) -> RiskModel` | give me a fitted model for this product, from contract-checked inputs |
+
+`fit()` calls two guards on `returns_frame` before delegating to `fit_risk_model`: `hygiene.assert_risk_inputs` (the data-quality contract, §"The data contract" above) and `hygiene.assert_not_holdout` (`src/risk/hygiene.py`, `HoldoutLeakError`) — the latter refuses any frame whose `date` column extends past `TRUNCATION` (2024-12-31, the same boundary 015's `lib15.TRUNCATION` uses), so the futures holdout cannot be re-spent through a live fitting call even though `refresh()`/`snapshot()` are explicitly permitted to see current dates (§7.4 above — that is why the check lives only in `fit()`, not in `assert_risk_inputs` itself, which `risk.ingest.refresh` also calls). The reproduction gates (PR/PH) never call `risk.fit()` at all — they read stored JSON or call the low-level, ndarray-only `fit_risk_model` directly — so they need no explicit exemption from this guard.
+
 | `var(model, alpha, sigma_t, horizon) -> float` | what is the α-VaR today, at today's volatility |
 | `es(model, alpha, sigma_t, horizon) -> float` | what is the α-ES today |
 | `portfolio(models, weights, dependence, ...) -> PortfolioRisk` | what is the book's VaR/ES under a given dependence assumption |

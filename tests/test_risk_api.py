@@ -51,6 +51,21 @@ class TestFit:
         with pytest.raises(UnseenProductError):
             risk.fit("NOT_A_REAL_PRODUCT", _clean_returns_frame())
 
+    def test_fit_refuses_a_frame_that_leaks_into_the_spent_holdout(self):
+        # NEXT_PROMPT.md sec 2 ground rule 1 / sec 12: the futures holdout
+        # (>= 2025-01-01) was already spent once by 008 Phase 8 and the
+        # fitting path must refuse to touch it again, even though the same
+        # frame shape is fine for assert_risk_inputs alone (sec 7.4 permits
+        # ingest/serve to see current dates).
+        n = 500
+        dates = [date(2025, 1, 1) - timedelta(days=n - 1 - i) for i in range(n)]
+        rng = np.random.default_rng(SEED)
+        ret = rng.standard_t(6, n) * 0.02
+        curve = pl.DataFrame({"date": dates, "log_return": ret})
+        setattr(curve, hygiene.PROVENANCE_ATTR, hygiene.PROVENANCE_VALUE)
+        with pytest.raises(hygiene.HoldoutLeakError, match="holdout"):
+            risk.fit("CL", curve)
+
 
 class TestVarEsSize:
     def _model(self):

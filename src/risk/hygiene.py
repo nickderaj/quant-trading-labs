@@ -15,6 +15,8 @@ boundary. See NEXT_PROMPT.md sec 4.
 
 from __future__ import annotations
 
+from datetime import date
+
 import numpy as np
 import polars as pl
 
@@ -25,9 +27,33 @@ MIN_RISK_OBSERVATIONS = 100
 MAX_OBSERVED_STALE_RUN = 3
 REALIZED_VOL_WINDOW = 20
 
+# NEXT_PROMPT.md sec 2 ground rule 1 / sec 12: the futures holdout
+# (2025-01-01 -> 2026-07-28) was spent once by 008 and must not be spent
+# again by any *fitting* path here. TRUNCATION mirrors 015's own
+# `lib15.TRUNCATION` (2024-12-31 inclusive, "both holdouts start after
+# this") -- the same boundary, reused rather than re-derived, per sec 8.3's
+# "015's shuffle-control discipline -- not the code, the practice." It is
+# deliberately *not* imported from `src/research/tmp/lib15.py`: `src/risk/`
+# is a durable module and must not depend on notebook scratch code, and
+# lib15's helpers are pandas/DatetimeIndex-shaped while this frame is a
+# polars `date` column.
+TRUNCATION = date(2024, 12, 31)
+
 
 class RiskInputError(ValueError):
     """Raised by ``assert_risk_inputs`` when a frame fails the data contract."""
+
+
+class HoldoutLeakError(ValueError):
+    """Raised by ``assert_not_holdout`` when a *fitting* path is handed data
+    that extends past the spent futures holdout boundary (``TRUNCATION``).
+
+    This is deliberately a separate check from ``assert_risk_inputs``:
+    ``risk.ingest.refresh`` and the dashboard (sec 7.4) are explicitly
+    permitted to see current dates because they fit nothing and gate no
+    threshold, so they call ``assert_risk_inputs`` alone. Only the fitting
+    boundary (``risk.fit``) also calls this function.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -513,6 +539,40 @@ def build_risk_inputs(
     curve = curve.with_columns(pl.col("log_return_ratioadj").alias("log_return"))
     setattr(curve, PROVENANCE_ATTR, PROVENANCE_VALUE)
     return curve
+
+
+def assert_not_holdout(frame: pl.DataFrame, date_col: str = "date") -> None:
+    """Fail loudly if `frame` (headed for a *fit*, not a display) extends
+    past `TRUNCATION`. NEXT_PROMPT.md sec 12: "Any fitting path that touches
+    dates >= 2025-01-01 for futures must fail loudly" -- this is that guard,
+    called from `risk.fit()` (the fitting boundary) and nowhere else. It is
+    intentionally not folded into `assert_risk_inputs`, since that function
+    is also called from `risk.ingest.refresh` on the serving path, which is
+    explicitly permitted current dates (sec 7.4).
+
+    A frame without `date_col` is not rejected here -- date-less frames
+    (e.g. `fit_risk_model`'s own bare-ndarray callers, or a test fixture)
+    carry no holdout information for this check to act on; the reproduction
+    gates (PR/PH) never call this function at all, since they read stored
+    JSON or call the low-level, ndarray-only `fit_risk_model` directly.
+    """
+    if date_col not in frame.columns:
+        return
+    max_date = frame[date_col].max()
+    if max_date is None:
+        return
+    if not isinstance(max_date, date):
+        raise RiskInputError(
+            f"frame's {date_col!r} column is not date-typed (got {type(max_date)!r})"
+        )
+    if max_date > TRUNCATION:
+        raise HoldoutLeakError(
+            f"frame's {date_col!r} column extends to {max_date}, past the spent "
+            f"futures holdout boundary {TRUNCATION} -- refusing to fit on it. "
+            "The futures holdout (2025-01-01 -> 2026-07-28) was already spent "
+            "once by notebook 008 Phase 8 and must not be spent again "
+            "(NEXT_PROMPT.md sec 2 ground rule 1, sec 12)."
+        )
 
 
 def assert_risk_inputs(frame: pl.DataFrame) -> None:

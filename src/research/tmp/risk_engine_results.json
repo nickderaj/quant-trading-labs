@@ -26,11 +26,31 @@
     "PH": {
       "checks": {
         "RE_holdout_pass_count": 14,
-        "CE_holdout_reject_1pct_count": 11
+        "CE_holdout_reject_1pct_count": 11,
+        "RE_holdout_pass_count_recomputed_from_per_product": 14,
+        "CE_holdout_reject_1pct_count_recomputed_from_per_product": 11
+      },
+      "per_product_re_holdout_pass": {
+        "CL": true,
+        "BZ": true,
+        "NG": true,
+        "HO": true,
+        "RB": false,
+        "GC": true,
+        "SI": false,
+        "PL": true,
+        "PA": true,
+        "ZC": true,
+        "ZW": true,
+        "KE": true,
+        "ZS": true,
+        "ZL": true,
+        "ZM": true,
+        "ES": true
       },
       "mismatches": [],
       "pass": true,
-      "note": "no holdout data read or recomputed -- stored JSON's own summary only"
+      "note": "no holdout data read or recomputed -- everything derived from the stored JSON, including a recount over its own per_product block"
     },
     "DT": {
       "pass": true,

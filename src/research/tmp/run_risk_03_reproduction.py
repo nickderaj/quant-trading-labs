@@ -176,26 +176,111 @@ def gate_pr(mod) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
 
 
 def gate_ph() -> dict[str, Any]:
+    """Per sec 6.1: 'the same field-by-field comparison ... and every
+    per-product RE_holdout block' -- not only the two summary scalars.
+
+    No holdout data is read or recomputed: everything here is derived from
+    the stored `phase_8_holdout_results.json`'s own `per_product` block, the
+    same file the summary scalars come from. This catches a summary that has
+    drifted from the per-product detail it's supposed to aggregate (e.g. a
+    hand-edited or partially-regenerated stored file), and pins down the
+    specific per-product reshuffling NEXT_PROMPT.md sec 1 commits to: PA
+    passes on holdout, RB and SI fail.
+    """
     with open(PHASE8_JSON) as f:
         stored = json.load(f)
     summary = stored["summary"]
+    per_product = stored["per_product"]
+
+    mismatches: list[str] = []
+
+    recomputed_re_pass = sum(1 for r in per_product.values() if r["RE_holdout"]["pass"])
+    recomputed_ce_reject = sum(
+        1
+        for r in per_product.values()
+        if r.get("CE_holdout", {}).get("0.01", {}).get("p") is not None
+        and r["CE_holdout"]["0.01"]["p"] < 0.05
+    )
+
     checks = {
         "RE_holdout_pass_count": (summary.get("RE_holdout_pass_count"), 14),
         "CE_holdout_reject_1pct_count": (
             summary.get("CE_holdout_reject_1pct_count"),
             11,
         ),
+        "RE_holdout_pass_count_recomputed_from_per_product": (
+            recomputed_re_pass,
+            14,
+        ),
+        "CE_holdout_reject_1pct_count_recomputed_from_per_product": (
+            recomputed_ce_reject,
+            11,
+        ),
     }
-    mismatches = [
-        f"{k}: stored={got} expected={want}"
-        for k, (got, want) in checks.items()
-        if got != want
-    ]
+    for k, (got, want) in checks.items():
+        if got != want:
+            mismatches.append(f"{k}: stored={got} expected={want}")
+
+    if summary.get("RE_holdout_pass_count") != recomputed_re_pass:
+        mismatches.append(
+            "summary.RE_holdout_pass_count "
+            f"({summary.get('RE_holdout_pass_count')}) does not match a fresh "
+            f"count over stored per_product RE_holdout.pass ({recomputed_re_pass})"
+        )
+    if summary.get("CE_holdout_reject_1pct_count") != recomputed_ce_reject:
+        mismatches.append(
+            "summary.CE_holdout_reject_1pct_count "
+            f"({summary.get('CE_holdout_reject_1pct_count')}) does not match a "
+            "fresh count over stored per_product CE_holdout['0.01'].p<0.05 "
+            f"({recomputed_ce_reject})"
+        )
+
+    # NEXT_PROMPT.md sec 1: "On holdout, RB and SI fail while passing in
+    # development, and PA passes" -- the specific reshuffling that makes
+    # the per-product block worth checking at all, not just the aggregate.
+    expected_re_pass = {"PA": True, "RB": False, "SI": False}
+    for product, want_pass in expected_re_pass.items():
+        if product not in per_product:
+            mismatches.append(
+                f"per_product.{product}: missing from stored holdout JSON"
+            )
+            continue
+        got_pass = per_product[product]["RE_holdout"]["pass"]
+        if got_pass != want_pass:
+            mismatches.append(
+                f"per_product.{product}.RE_holdout.pass: stored={got_pass} "
+                f"expected={want_pass}"
+            )
+
+    required_fields = {
+        "n",
+        "observed_rate",
+        "kupiec_p",
+        "christoffersen_independence_p",
+        "pass",
+    }
+    for product, block in per_product.items():
+        re = block.get("RE_holdout")
+        if re is None:
+            mismatches.append(f"per_product.{product}.RE_holdout: missing")
+            continue
+        missing_fields = required_fields - set(re)
+        if missing_fields:
+            mismatches.append(
+                f"per_product.{product}.RE_holdout: missing fields {sorted(missing_fields)}"
+            )
+
     return {
         "checks": {k: v[0] for k, v in checks.items()},
+        "per_product_re_holdout_pass": {
+            p: per_product[p]["RE_holdout"]["pass"] for p in per_product
+        },
         "mismatches": mismatches,
         "pass": len(mismatches) == 0,
-        "note": "no holdout data read or recomputed -- stored JSON's own summary only",
+        "note": (
+            "no holdout data read or recomputed -- everything derived from the "
+            "stored JSON, including a recount over its own per_product block"
+        ),
     }
 
 

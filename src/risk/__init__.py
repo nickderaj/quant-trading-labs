@@ -44,7 +44,7 @@ import polars as pl
 
 from risk.calibration import CalibrationMonitor, CalibrationStatus
 from risk.families import load_family_map
-from risk.hygiene import assert_risk_inputs
+from risk.hygiene import assert_not_holdout, assert_risk_inputs
 from risk.ingest import IngestReport
 from risk.ingest import refresh as _refresh
 from risk.model import RiskModel, StressResult, ewma_vol, fit_risk_model
@@ -79,8 +79,13 @@ def fit(product: str, returns_frame: pl.DataFrame) -> RiskModel:
     build_risk_inputs." The family is read from the frozen `family_map_v1`
     (never guessed); a product outside its validated envelope raises
     (`risk.families.UnseenProductError`) rather than silently defaulting to
-    a family.
+    a family. Also refuses (`risk.hygiene.HoldoutLeakError`) a frame whose
+    dates extend past the spent futures holdout boundary (sec 2 ground rule
+    1, sec 12) -- the fitting path must never re-spend it, even though the
+    ingestion/dashboard path is explicitly allowed to see current dates
+    (sec 7.4).
     """
+    assert_not_holdout(returns_frame)
     assert_risk_inputs(returns_frame)
     family_map = load_family_map("v1")
     family = family_map.family_for(product)

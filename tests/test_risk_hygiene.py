@@ -11,7 +11,7 @@ underlying functions were promoted to `src/risk/hygiene.py`.
 from __future__ import annotations
 
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -490,3 +490,48 @@ class TestAssertRiskInputs:
         setattr(curve, H.PROVENANCE_ATTR, H.PROVENANCE_VALUE)
         with pytest.raises(H.RiskInputError, match="frozen"):
             H.assert_risk_inputs(curve)
+
+
+# --------------------------------------------------------------------------
+# The holdout-truncation guard on the fitting path (NEXT_PROMPT.md sec 2
+# ground rule 1, sec 12) -- separate from assert_risk_inputs because
+# risk.ingest.refresh calls assert_risk_inputs on current-dated data and
+# must not be rejected by it (sec 7.4).
+# --------------------------------------------------------------------------
+
+
+_WELL_PAST_HOLDOUT = date(2026, 8, 12)  # fixed, not datetime.date.today() (DTZ011)
+
+
+class TestAssertNotHoldout:
+    def _frame_ending(self, end: date) -> pl.DataFrame:
+        n = 200
+        dates = [end - timedelta(days=n - 1 - i) for i in range(n)]
+        return pl.DataFrame({"date": dates, "x": list(range(n))})
+
+    def test_accepts_a_frame_that_ends_before_truncation(self):
+        frame = self._frame_ending(H.TRUNCATION)
+        H.assert_not_holdout(frame)  # must not raise
+
+    def test_rejects_a_frame_that_extends_one_day_past_truncation(self):
+        frame = self._frame_ending(H.TRUNCATION + timedelta(days=1))
+        with pytest.raises(H.HoldoutLeakError, match="holdout"):
+            H.assert_not_holdout(frame)
+
+    def test_rejects_a_frame_that_extends_well_past_the_holdout(self):
+        frame = self._frame_ending(_WELL_PAST_HOLDOUT)
+        with pytest.raises(H.HoldoutLeakError):
+            H.assert_not_holdout(frame)
+
+    def test_ignores_a_frame_with_no_date_column(self):
+        frame = pl.DataFrame({"x": [1, 2, 3]})
+        H.assert_not_holdout(frame)  # must not raise -- nothing to check
+
+    def test_ignores_a_frame_with_a_differently_named_date_column(self):
+        frame = self._frame_ending(_WELL_PAST_HOLDOUT).rename({"date": "as_of"})
+        H.assert_not_holdout(frame)  # must not raise under the default date_col
+
+    def test_custom_date_col(self):
+        frame = self._frame_ending(_WELL_PAST_HOLDOUT).rename({"date": "as_of"})
+        with pytest.raises(H.HoldoutLeakError):
+            H.assert_not_holdout(frame, date_col="as_of")
