@@ -1,5 +1,6 @@
-"""Regenerates the deployable risk-engine dashboard at `dashboard/index.html`
-(repo root) from the current `src/risk/data/` ingest output.
+"""Regenerates the deployable risk-engine dashboard at `index.html` (repo
+root, so Vercel can deploy the whole repo with zero-config static hosting --
+see `vercel.json`) from the current `src/risk/data/` ingest output.
 
 Not a gate script -- this is the operator convenience for keeping the
 publicly-deployed dashboard (README link, Vercel) in sync with a fresh
@@ -20,7 +21,7 @@ sys.path.insert(0, "src")
 
 from risk import serve
 
-OUT_PATH = Path(__file__).resolve().parents[3] / "dashboard" / "index.html"
+OUT_PATH = Path(__file__).resolve().parents[3] / "index.html"
 
 
 def main() -> None:

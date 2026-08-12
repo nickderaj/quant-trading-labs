@@ -11,8 +11,8 @@ monitor, refresh pipeline, static dashboard). No alpha, no positions, no Sharpe.
 [![Risk engine operator dashboard](docs/img/risk-dashboard.png)](https://TODO-deployed-url.vercel.app)
 
 Static HTML/CSS/vanilla JS, no server — regenerate with
-`uv run python src/research/tmp/render_risk_dashboard.py` (writes `dashboard/index.html` from the
-current `src/risk/data/` ingest; run `risk.ingest.refresh()` first if that's stale).
+`uv run python src/research/tmp/render_risk_dashboard.py` (writes `index.html` at the repo root
+from the current `src/risk/data/` ingest; run `risk.ingest.refresh()` first if that's stale).
 
 ## Results
 
