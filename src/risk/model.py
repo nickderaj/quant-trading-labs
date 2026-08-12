@@ -30,6 +30,8 @@ does.
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import numpy as np
 from scipy import stats as st
 
@@ -38,12 +40,22 @@ from risk import densities
 
 __all__ = [
     "RiskModel",
+    "StressResult",
     "ewma_vol",
     "fit_risk_model",
     "numerical_cdf_grid",
     "numerical_pit",
     "numerical_ppf",
 ]
+
+
+class StressResult(TypedDict):
+    """`RiskModel.stress`'s return shape (NEXT_PROMPT.md sec 3.5's TypedDict
+    convention, applied here the same way it was to `PortfolioRisk`)."""
+
+    cum_return: float | None
+    worst_day: float | None
+    n_days: int
 
 
 def numerical_cdf_grid(
@@ -214,7 +226,7 @@ class RiskModel:
         z = (x - self.mean) / self.std
         return numerical_pit(lambda zz: mod.logpdf(zz, self.params), z)
 
-    def stress(self, scenario_returns: np.ndarray) -> dict:
+    def stress(self, scenario_returns: np.ndarray) -> StressResult:
         """Replay a named historical event's realized return path against
         this model: cumulative P&L and the worst single-day loss, both on the
         return scale (a $1 notional). `scenario_returns` is a log-return

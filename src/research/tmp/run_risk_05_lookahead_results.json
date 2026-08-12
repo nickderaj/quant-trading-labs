@@ -1,0 +1,153 @@
+{
+  "per_product": {
+    "BZ": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "CL": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "ES": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "GC": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "HO": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "KE": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "NG": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "PA": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "PL": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "RB": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "SI": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "ZC": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "ZL": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "ZM": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "ZS": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    },
+    "ZW": {
+      "pass": true,
+      "truncations": [
+        1,
+        5,
+        21,
+        63
+      ]
+    }
+  },
+  "gate_NL": {
+    "n_pass": 16,
+    "n_total": 16,
+    "fires": true
+  }
+}
