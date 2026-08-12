@@ -9,8 +9,8 @@
      Palette: fixed hex steps (validated categorical / status palette),
      wired as CSS custom properties so light/dark swap in one place.
      Light default, dark override on prefers-color-scheme. No manual theme
-     toggle exists (this is a static file:// document), so OS preference is
-     the only signal.
+     toggle exists (this is a static file, deployed as-is), so OS
+     preference is the only signal.
      --------------------------------------------------------------------- */
   :root {
     color-scheme: light;
@@ -32,12 +32,21 @@
     --critical: #d03b3b;
     --nodata: #898781;
 
-    --series-pos: #2a78d6;
+    /* Accent: deep cobalt-indigo, deliberately not the generic SaaS blue,
+       and kept clear of the status hues above (validated against
+       --series-neg for CVD separation, both --pairs modes pass). */
+    --series-pos: #3552d1;
     --series-neg: #e34948;
-    --series-band: #eda100;
+    --series-band: #c98500;
     --series-violation: #d03b3b;
 
-    --focus-ring: #2a78d6;
+    --focus-ring: #3552d1;
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, Menlo, monospace;
+
+    --radius-panel: 10px;
+    --radius-card: 8px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -54,18 +63,18 @@
       --border: rgba(255, 255, 255, 0.10);
       --border-strong: rgba(255, 255, 255, 0.20);
 
-      --good: #0ca30c;
+      --good: #16b516;
       --warning: #d19a2a;
       --serious: #e0774f;
       --critical: #e66767;
       --nodata: #7d7b75;
 
-      --series-pos: #3987e5;
+      --series-pos: #7d93f5;
       --series-neg: #e66767;
-      --series-band: #c98500;
+      --series-band: #d19a2a;
       --series-violation: #e66767;
 
-      --focus-ring: #3987e5;
+      --focus-ring: #7d93f5;
     }
   }
 
@@ -75,11 +84,12 @@
     padding: 0;
     background: var(--page);
     color: var(--text-primary);
-    /* Instrument-panel aesthetic: monospace throughout, including prose. */
-    font-family: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono",
-      Consolas, Menlo, monospace;
-    font-size: 13px;
-    line-height: 1.5;
+    /* Prose reads in a humanist sans; figures, tickers and code stay in
+       monospace (applied per-element below) — a deliberate instrument-panel
+       pairing, not one face doing both jobs. */
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    line-height: 1.55;
     /* Hard constraint: no horizontal page scroll. */
     overflow-x: hidden;
     max-width: 100vw;
@@ -92,49 +102,64 @@
   .app {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 16px 20px 48px;
+    padding: 18px 20px 48px;
   }
 
   /* ---------- topbar ---------- */
   .topbar {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
     gap: 8px 20px;
     padding-bottom: 14px;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
     border-bottom: 1px solid var(--border-strong);
   }
+  .topbar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 44px;
+    height: 2px;
+    background: var(--series-pos);
+  }
   .brand {
+    font-family: var(--font-mono);
     font-weight: 700;
     letter-spacing: 0.08em;
     font-size: 16px;
   }
   .brand-sub {
+    font-family: var(--font-sans);
     color: var(--text-muted);
     margin-left: 10px;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
+    font-size: 13px;
   }
   .topbar-meta {
+    font-family: var(--font-mono);
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: 11.5px;
     display: flex;
     gap: 18px;
     flex-wrap: wrap;
   }
-  .topbar-meta b { color: var(--text-primary); font-weight: 600; }
+  .topbar-meta b { color: var(--text-primary); font-weight: 700; }
 
   /* ---------- panels ---------- */
   .panel {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-panel);
     padding: 16px 18px;
     margin-bottom: 16px;
   }
   .panel-title {
     margin: 0 0 12px;
+    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
@@ -146,20 +171,20 @@
     flex-wrap: wrap;
   }
   .panel-hint {
+    font-family: var(--font-sans);
     text-transform: none;
     letter-spacing: normal;
     font-weight: 400;
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 12px;
   }
 
   /* ---------- envelope panel ---------- */
-  .envelope-panel { border-left: 3px solid var(--series-pos); }
   .envelope-claim {
     font-size: 13px;
     color: var(--text-primary);
     margin: 0 0 10px;
-    max-width: 90ch;
+    max-width: 88ch;
   }
   .envelope-chips {
     display: flex;
@@ -168,152 +193,236 @@
   }
   .chip {
     display: inline-block;
+    font-family: var(--font-mono);
     padding: 2px 8px;
     border-radius: 4px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     font-size: 11px;
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: 700;
   }
+
+  /* ---------- glossary ---------- */
+  .glossary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0 28px;
+  }
+  .glossary-grid details {
+    border-bottom: 1px solid var(--border);
+    padding: 9px 0;
+  }
+  .glossary-grid details:last-child { border-bottom: none; }
+  .glossary-grid summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12.5px;
+    color: var(--text-primary);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .glossary-grid summary::-webkit-details-marker { display: none; }
+  .glossary-grid summary .chev {
+    font-family: var(--font-mono);
+    color: var(--series-pos);
+    display: inline-block;
+    transition: transform 0.12s ease;
+    flex: none;
+  }
+  .glossary-grid details[open] summary .chev { transform: rotate(90deg); }
+  .glossary-grid p {
+    margin: 6px 0 0;
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    line-height: 1.55;
+    max-width: 62ch;
+  }
+  .glossary-grid ul {
+    margin: 6px 0 0;
+    padding-left: 17px;
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    line-height: 1.6;
+    max-width: 62ch;
+  }
+  .glossary-grid li { margin-bottom: 3px; }
+  .glossary-grid code {
+    font-family: var(--font-mono);
+    background: var(--surface-2);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 11.5px;
+  }
+
+  /* ---------- status pill (used in the strip and the detail header) ---------- */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    padding: 3px 10px 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .pill .pill-icon { font-size: 10px; line-height: 1; }
+  .pill-ok      { background: color-mix(in srgb, var(--good) 16%, var(--surface));     color: var(--good); }
+  .pill-warn    { background: color-mix(in srgb, var(--warning) 18%, var(--surface));  color: var(--warning); }
+  .pill-breach  { background: color-mix(in srgb, var(--critical) 16%, var(--surface)); color: var(--critical); }
+  .pill-nodata  { background: var(--surface-3); color: var(--text-muted); }
+  .pill-fm {
+    background: none;
+    padding-left: 0;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  a.pill-fm-link { color: var(--text-muted); text-decoration: underline dotted; text-underline-offset: 2px; }
+  a.pill-fm-link:hover { color: var(--series-pos); }
 
   /* ---------- calibration strip ---------- */
   .strip-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(206px, 1fr));
     gap: 8px;
   }
-  .strip-btn {
+  .strip-card {
     display: flex;
-    align-items: flex-start;
-    gap: 8px;
+    flex-direction: column;
+    gap: 7px;
     text-align: left;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--nodata);
-    border-radius: 6px;
-    padding: 8px 10px;
+    border-radius: var(--radius-card);
+    padding: 10px 12px 11px;
     cursor: pointer;
     color: var(--text-primary);
-    transition: background-color 0.1s ease, border-color 0.1s ease;
+    transition: background-color 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
   }
-  .strip-btn:hover { background: var(--surface-3); }
-  .strip-btn:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 1px;
-  }
-  .strip-btn.is-active {
+  .strip-card:hover { background: var(--surface-3); border-color: var(--border-strong); }
+  .strip-card:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+  .strip-card.is-active {
+    border-color: var(--series-pos);
+    box-shadow: 0 0 0 1px var(--series-pos);
     background: var(--surface-3);
-    border-color: var(--border-strong);
-    box-shadow: inset 0 0 0 1px var(--border-strong);
   }
-  .strip-btn.st-ok { border-left-color: var(--good); }
-  .strip-btn.st-warn { border-left-color: var(--warning); }
-  .strip-btn.st-breach { border-left-color: var(--critical); }
-  .strip-btn.st-nodata,
-  .strip-btn.st-fitfailed { border-left-color: var(--nodata); opacity: 0.72; }
-
-  .strip-icon {
-    font-size: 13px;
-    width: 1.1em;
-    text-align: center;
-    flex: none;
-    margin-top: 2px;
+  .strip-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
-  .st-ok .strip-icon { color: var(--good); }
-  .st-warn .strip-icon { color: var(--warning); }
-  .st-breach .strip-icon { color: var(--critical); }
-  .st-nodata .strip-icon,
-  .st-fitfailed .strip-icon { color: var(--nodata); }
-
-  .strip-text { min-width: 0; }
   .strip-ticker {
+    font-family: var(--font-mono);
     font-weight: 700;
-    font-size: 13px;
-    display: block;
+    font-size: 13.5px;
+    letter-spacing: 0.02em;
+  }
+  .strip-name {
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--text-secondary);
+    min-height: 2.6em;
   }
   .strip-sub {
+    font-family: var(--font-mono);
     font-size: 10px;
-    line-height: 1.35;
     color: var(--text-muted);
-    display: block;
-    white-space: normal;
-    overflow-wrap: break-word;
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
 
-  /* ---------- status badge (used in detail panel) ---------- */
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    font-weight: 700;
-    font-size: 13px;
+  /* small horizontal meter: observed violation rate vs. expected, filled in
+     the product's overall status color — this is the visual answer to
+     "what does a breach actually look like." */
+  .meter-track {
+    position: relative;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--surface-3);
   }
-  .status-badge .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex: none;
+  .meter-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 3px;
+    min-width: 2px;
   }
-  .status-badge.st-ok { border-left: 4px solid var(--good); }
-  .status-badge.st-ok .dot { background: var(--good); }
-  .status-badge.st-warn { border-left: 4px solid var(--warning); }
-  .status-badge.st-warn .dot { background: var(--warning); }
-  .status-badge.st-breach { border-left: 4px solid var(--critical); }
-  .status-badge.st-breach .dot { background: var(--critical); }
-  .status-badge.st-nodata,
-  .status-badge.st-fitfailed { border-left: 4px solid var(--nodata); }
-  .status-badge.st-nodata .dot,
-  .status-badge.st-fitfailed .dot { background: var(--nodata); }
-  .status-badge .fm {
-    font-weight: 400;
+  .meter-expected {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    background: var(--text-primary);
+    opacity: 0.35;
+  }
+  .meter-caption {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
     color: var(--text-muted);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    margin-top: 4px;
+    letter-spacing: 0.01em;
   }
+  .meter-fill.st-ok { background: var(--good); }
+  .meter-fill.st-warn { background: var(--warning); }
+  .meter-fill.st-breach { background: var(--critical); }
+  .meter-fill.st-nodata,
+  .meter-fill.st-fitfailed { background: var(--nodata); }
 
   /* ---------- product detail ---------- */
   .detail-head {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 6px;
+    gap: 12px;
+    margin-bottom: 4px;
   }
+  .detail-ticker-group { display: flex; align-items: baseline; gap: 9px; }
   .detail-ticker {
+    font-family: var(--font-mono);
     font-size: 22px;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
+  }
+  .detail-name {
+    font-size: 15px;
+    color: var(--text-secondary);
   }
   .detail-family {
+    font-family: var(--font-mono);
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
+  .detail-explainer {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    max-width: 78ch;
+    margin: 8px 0 4px;
+  }
   .detail-meta-row {
+    font-family: var(--font-mono);
     display: flex;
     flex-wrap: wrap;
     gap: 4px 22px;
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: 11.5px;
     margin: 10px 0 16px;
   }
-  .detail-meta-row b { color: var(--text-primary); font-weight: 600; }
-  .stale-flag { color: var(--warning); font-weight: 700; }
+  .detail-meta-row b { color: var(--text-primary); font-weight: 700; }
+  .stale-flag { color: var(--warning); font-weight: 700; font-family: var(--font-sans); }
 
   .empty-note {
     color: var(--text-secondary);
     background: var(--surface-2);
     border: 1px dashed var(--border-strong);
-    border-radius: 6px;
+    border-radius: var(--radius-card);
     padding: 14px 16px;
     font-size: 12.5px;
   }
@@ -323,13 +432,14 @@
     overflow-x: auto;
     max-width: 100%;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-card);
   }
   table {
     border-collapse: collapse;
     width: 100%;
     min-width: 480px;
-    font-size: 12.5px;
+    font-family: var(--font-mono);
+    font-size: 12px;
   }
   table.compact { min-width: 0; }
   th, td {
@@ -349,6 +459,7 @@
     border-bottom: 1px solid var(--border-strong);
     position: sticky;
     top: 0;
+    cursor: help;
   }
   tbody tr:not(:last-child) td { border-bottom: 1px solid var(--gridline); }
   tbody tr:hover td { background: var(--surface-2); }
@@ -356,34 +467,39 @@
   td.neg { color: var(--series-neg); }
   td.pos { color: var(--series-pos); }
   td.dim { color: var(--text-muted); }
+  td.ticker-cell { cursor: help; }
 
   .stat-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
     gap: 10px;
     margin: 12px 0;
   }
   .stat-tile {
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-card);
     padding: 10px 12px;
   }
   .stat-label {
+    font-family: var(--font-mono);
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
     margin-bottom: 4px;
+    cursor: help;
   }
   .stat-value {
+    font-family: var(--font-mono);
     font-size: 18px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
-  .stat-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .stat-sub { font-size: 11px; color: var(--text-secondary); margin-top: 5px; line-height: 1.4; }
 
-  h3.sub-head {
+  h3.sub-head, h4.sub-head {
+    font-family: var(--font-mono);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -391,7 +507,13 @@
     margin: 20px 0 8px;
     font-weight: 700;
   }
-  h3.sub-head:first-child { margin-top: 0; }
+  h3.sub-head:first-child, h4.sub-head:first-child { margin-top: 0; }
+  p.lede {
+    font-size: 12px;
+    color: var(--text-secondary);
+    max-width: 82ch;
+    margin: -4px 0 10px;
+  }
 
   /* ---------- chart ---------- */
   .chart-wrap { position: relative; }
@@ -413,8 +535,9 @@
     pointer-events: none;
     background: var(--surface-3);
     border: 1px solid var(--border-strong);
-    border-radius: 6px;
+    border-radius: var(--radius-card);
     padding: 6px 9px;
+    font-family: var(--font-mono);
     font-size: 11px;
     line-height: 1.45;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
@@ -440,11 +563,12 @@
   .book-card {
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-card);
     padding: 12px 14px;
   }
   .book-card h4 {
     margin: 0 0 8px;
+    font-family: var(--font-mono);
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -454,14 +578,14 @@
     align-items: baseline;
   }
   .book-card h4 .n-sims { font-weight: 400; color: var(--text-muted); font-size: 10px; text-transform: none; }
-  .book-card dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: 4px 10px; }
+  .book-card dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: 4px 10px; font-family: var(--font-mono); }
   .book-card dt { color: var(--text-muted); font-size: 11px; }
-  .book-card dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .book-card dd { margin: 0; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
   .dep-note {
-    font-size: 11px;
+    font-size: 11.5px;
     color: var(--text-secondary);
     margin: 10px 0 14px;
-    max-width: 90ch;
+    max-width: 88ch;
   }
 
   .ltd-controls {
@@ -470,9 +594,10 @@
     margin: 4px 0 10px;
   }
   .toggle-btn {
+    font-family: var(--font-mono);
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 5px;
+    border-radius: 6px;
     padding: 4px 10px;
     font-size: 11px;
     color: var(--text-secondary);
@@ -495,7 +620,7 @@
   .scenario-card {
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-card);
     padding: 12px 14px;
   }
   .scenario-card h4 {
@@ -504,6 +629,7 @@
     font-weight: 700;
   }
   .scenario-pnl {
+    font-family: var(--font-mono);
     font-size: 15px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -512,9 +638,9 @@
 
   .footer {
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 11.5px;
     padding-top: 8px;
-    max-width: 90ch;
+    max-width: 88ch;
   }
   .footer p { margin: 4px 0; }
 
@@ -523,7 +649,7 @@
     max-width: 640px;
     padding: 20px;
     border: 1px solid var(--critical);
-    border-radius: 8px;
+    border-radius: var(--radius-panel);
     color: var(--critical);
     font-weight: 700;
   }
@@ -532,7 +658,7 @@
     font-size: 12px;
     padding: 10px;
     border: 1px dashed var(--critical);
-    border-radius: 6px;
+    border-radius: var(--radius-card);
   }
 
   @media (max-width: 560px) {
@@ -553,9 +679,84 @@
 
   <section class="panel envelope-panel" id="envelope-panel"></section>
 
+  <section class="panel glossary-panel">
+    <h3 class="panel-title">Key terms
+      <span class="panel-hint">everything on this page uses only the definitions below — click any term</span>
+    </h3>
+    <div class="glossary-grid">
+      <details id="gloss-var">
+        <summary><span class="chev">›</span>Value at Risk (VaR)</summary>
+        <p>An estimate of how much a position could lose over a given period, at a given confidence level.
+          "1% VaR of 3%" means: on a typical day, there is roughly a 1% chance the position loses more than 3%.
+          It is a loss <em>threshold</em>, not a worst case — by construction, it is meant to be crossed
+          occasionally.</p>
+      </details>
+      <details id="gloss-es">
+        <summary><span class="chev">›</span>Expected Shortfall (ES)</summary>
+        <p>The average loss on the days that fall past VaR's threshold. If 1% VaR is 3%, 1% ES is the average
+          size of the loss on the worst 1% of days — always a bigger number than VaR, and a better sense of how
+          bad the bad days actually get.</p>
+      </details>
+      <details id="gloss-violation">
+        <summary><span class="chev">›</span>Violation (breach of a single day)</summary>
+        <p>A day where the real loss was bigger than that day's VaR estimate. Some violations are normal and
+          expected — a 1% VaR should be crossed on roughly 1 day in 100. What the monitor checks is whether
+          they happen at the right rate, and whether they cluster together in time instead of spreading out.</p>
+      </details>
+      <details id="gloss-breachrate">
+        <summary><span class="chev">›</span>Breach rate</summary>
+        <p>The share of days in a product's trailing history where a violation actually happened, compared
+          against the expected rate (1% or 2.5%). Close to expected is healthy. Well above expected, or one
+          long streak of violations in a row, is not — see "calibration status" below.</p>
+      </details>
+      <details id="gloss-status">
+        <summary><span class="chev">›</span>Calibration status: OK / WARN / BREACH</summary>
+        <p>The monitor's overall verdict for a product, from a battery of statistical tests run on its trailing
+          history. <b>OK</b>: the tests pass. <b>WARN</b>: violations are running somewhat hot or clustered,
+          worth watching. <b>BREACH</b>: the tests fail outright — the VaR/ES figures above may be
+          understating real risk until this is investigated.</p>
+      </details>
+      <details id="gloss-failuremode">
+        <summary><span class="chev">›</span>Failure mode</summary>
+        <p>When a product breaches or warns, this says which specific test failed, because different failures
+          call for different fixes:</p>
+        <ul>
+          <li id="gloss-coverage"><code>coverage</code> — violations are simply too frequent overall; the
+            volatility estimate is probably too low.</li>
+          <li id="gloss-clustering"><code>clustering</code> — the overall frequency is fine, but violations
+            bunch together in time; the model is reacting too slowly to changing conditions.</li>
+          <li id="gloss-shape"><code>shape</code> — violations happen at a normal rate, but the worst losses
+            are bigger than the model's tail shape predicts.</li>
+          <li id="gloss-both"><code>coverage + clustering</code> — both problems at once, the most serious
+            case.</li>
+        </ul>
+      </details>
+      <details id="gloss-sigma">
+        <summary><span class="chev">›</span>σ<sub>t</sub> (today's volatility)</summary>
+        <p>A causal, day-by-day estimate of how volatile a product is right now, computed only from past
+          returns (an exponentially-weighted moving average, so today's number never uses today's return).
+          This is what scales the VaR/ES figures up or down from day to day.</p>
+      </details>
+      <details id="gloss-dependence">
+        <summary><span class="chev">›</span>Dependence mode</summary>
+        <p>Three different assumptions about how products move together in the tails, used to simulate the
+          book's combined risk. The Gaussian copula assumes products become independent in extreme moves,
+          which understates real joint risk — it is shown for comparison, not because it is recommended.
+          Empirical and Student-t (t-copula) both let products crash together, which is closer to what
+          actually happens.</p>
+      </details>
+      <details id="gloss-horizon">
+        <summary><span class="chev">›</span>Horizon (1D / 5D / 10D)</summary>
+        <p>VaR/ES scaled from the 1-day figure using the square root of the number of days. This assumes
+          returns are independent from day to day — a simplifying assumption, not a model separately fit to
+          5- or 10-day moves.</p>
+      </details>
+    </div>
+  </section>
+
   <section class="panel strip-panel">
     <h3 class="panel-title">Calibration strip
-      <span class="panel-hint">click a product to inspect — status reflects the monitor's own trailing-history check, not today's return</span>
+      <span class="panel-hint">is each product's model still tracking reality? click a card for detail</span>
     </h3>
     <div class="strip-grid" id="calibration-strip"></div>
   </section>
@@ -596,13 +797,13 @@
 
   /* =======================================================================
      1. Formatting helpers.
-     NOTE ON FORMATTING: project convention (NEXT_PROMPT.md sec 7.3) is to
-     format numbers once, in Python, not in JS. This page is the one
-     exception, forced by the static-HTML/no-build-step architecture: the
-     snapshot JSON carries raw floats (e.g. var_es values in return-fraction
-     units like 0.0512) and there is no server-side templating step here to
-     do the formatting before this file is written out, so formatting has to
-     happen client-side. Kept small and centralized in this one block.
+     NOTE ON FORMATTING: project convention is to format numbers once, in
+     Python, not in JS. This page is the one exception, forced by the
+     static-HTML/no-build-step architecture: the snapshot JSON carries raw
+     floats (e.g. var_es values in return-fraction units like 0.0512) and
+     there is no server-side templating step here to do the formatting
+     before this file is written out, so formatting has to happen
+     client-side. Kept small and centralized in this one block.
      ======================================================================= */
   function isNum(x) {
     return typeof x === "number" && isFinite(x);
@@ -663,6 +864,33 @@
     }
   }
 
+  /* Real product names. Presentation-only metadata: kept here rather than
+     in the snapshot schema so the Python side's gate-tested JSON contract
+     (NEXT_PROMPT.md sec 7.2) doesn't grow a field nothing computational
+     depends on. Covers exactly family_map_v1's 16-product envelope; an
+     unrecognized ticker falls back to itself, never a guess. */
+  var PRODUCT_NAMES = {
+    BZ: "Brent Crude Oil",
+    CL: "WTI Crude Oil",
+    ES: "E-mini S&P 500",
+    GC: "Gold",
+    HO: "Heating Oil",
+    KE: "KC Hard Red Winter Wheat",
+    NG: "Natural Gas",
+    PA: "Palladium",
+    PL: "Platinum",
+    RB: "RBOB Gasoline",
+    SI: "Silver",
+    ZC: "Corn",
+    ZL: "Soybean Oil",
+    ZM: "Soybean Meal",
+    ZS: "Soybeans",
+    ZW: "Chicago SRW Wheat",
+  };
+  function nameFor(ticker) {
+    return PRODUCT_NAMES[ticker] || ticker;
+  }
+
   var LEVEL_LABELS = { "0.01": "1%", "0.025": "2.5%" };
   var MONITOR_LABELS = { ok: "OK", warn: "WARN", breach: "BREACH" };
   var FAILURE_MODE_LABELS = {
@@ -670,6 +898,23 @@
     clustering: "clustering",
     shape: "shape",
     both: "coverage + clustering",
+  };
+  var FAILURE_MODE_ANCHOR = {
+    coverage: "gloss-coverage",
+    clustering: "gloss-clustering",
+    shape: "gloss-shape",
+    both: "gloss-both",
+  };
+  var MONITOR_EXPLANATIONS = {
+    ok: "Violations are happening about as often as expected, and not clustering. The model's risk estimate is tracking reality well right now.",
+    warn: "Violations are running somewhat hot or clustered relative to what the model expects. Worth watching, not yet a hard failure.",
+    breach: "The calibration tests fail outright — the VaR/ES figures above may be understating real risk until this is investigated.",
+  };
+  var FAILURE_MODE_EXPLANATIONS = {
+    coverage: "Losses are breaching the VaR estimate more often than expected, roughly evenly over time. This usually means the volatility estimate is too low.",
+    clustering: "Breaches are happening about as often as expected overall, but bunching together in time rather than spreading out. This usually means the volatility estimate is reacting too slowly to changing conditions.",
+    shape: "Breaches are at a normal rate, but the worst losses are bigger than the model's tail shape predicts. The assumed distribution has likely drifted away from how fat the real tail has become.",
+    both: "Both the frequency and the timing of breaches look wrong — the most serious case, and worth investigating first.",
   };
 
   var envelope = snapshot.validated_envelope || { products: [], claim: "" };
@@ -698,7 +943,10 @@
   renderSafely("envelope-panel", function (container) {
     var chips = productList
       .map(function (p) {
-        return '<span class="chip">' + escapeHtml(p) + "</span>";
+        return (
+          '<span class="chip" title="' + escapeHtml(nameFor(p)) + '">' +
+          escapeHtml(p) + "</span>"
+        );
       })
       .join("");
     container.innerHTML =
@@ -710,7 +958,9 @@
   /* =======================================================================
      4. Calibration strip — also serves as the product selector. Every
      product in the validated envelope is shown, including no_data /
-     fit_failed ones (never silently omitted).
+     fit_failed ones (never silently omitted). Status is carried by a pill
+     (icon + text + tinted fill) and a small observed-vs-expected meter,
+     never by a colored card edge.
      ======================================================================= */
   var selectedProduct = null;
   (function pickDefault() {
@@ -740,25 +990,65 @@
   function statusIconFor(cls) {
     return (
       {
-        "st-ok": "●", // ●
-        "st-warn": "▲", // ▲
-        "st-breach": "✕", // ✕
-        "st-nodata": "–", // –
+        "st-ok": "●",
+        "st-warn": "▲",
+        "st-breach": "✕",
+        "st-nodata": "–",
         "st-fitfailed": "✕",
       }[cls] || "–"
     );
   }
-  function statusSubLabel(p) {
-    if (!p) return "no data";
-    if (p.status === "no_data") return "no data";
-    if (p.status === "fit_failed") return "fit failed";
+  function statusTextFor(p) {
+    if (!p) return "NO DATA";
+    if (p.status === "no_data") return "NO DATA";
+    if (p.status === "fit_failed") return "FIT FAILED";
     if (p.status === "ok") {
       var m = p.monitor || {};
-      var label = MONITOR_LABELS[m.status] || m.status || "?";
-      if (m.failure_mode) label += " · " + FAILURE_MODE_LABELS[m.failure_mode];
-      return label;
+      return MONITOR_LABELS[m.status] || (m.status || "?").toUpperCase();
     }
     return "?";
+  }
+  function pillHtml(p, opts) {
+    opts = opts || {};
+    var cls = statusClassFor(p);
+    var text = statusTextFor(p);
+    var html =
+      '<span class="pill ' + cls + '"><span class="pill-icon">' +
+      statusIconFor(cls) + "</span>" + escapeHtml(text) + "</span>";
+    if (opts.withFailureMode && p && p.status === "ok") {
+      var fm = (p.monitor || {}).failure_mode;
+      if (fm) {
+        var label = FAILURE_MODE_LABELS[fm] || fm;
+        var anchor = FAILURE_MODE_ANCHOR[fm];
+        html += anchor
+          ? ' <a class="pill-fm-link" href="#' + anchor + '">' + escapeHtml(label) + "</a>"
+          : ' <span class="pill pill-fm">' + escapeHtml(label) + "</span>";
+      }
+    }
+    return html;
+  }
+
+  function meterHtml(p) {
+    if (!p || p.status !== "ok") return "";
+    var tv = (p.trailing_violations || {})["0.01"];
+    if (!tv || !isNum(tv.observed_rate) || !isNum(tv.expected_rate) || !tv.expected_rate) {
+      return "";
+    }
+    var cls = statusClassFor(p);
+    var ratio = tv.observed_rate / tv.expected_rate;
+    var widthPct = Math.max(2, Math.min(1, ratio / 3) * 100);
+    var expectedPct = Math.min(96, (1 / 3) * 100);
+    return (
+      '<div class="meter" title="1% violation rate: observed ' + pct(tv.observed_rate) +
+      " vs. expected " + pct(tv.expected_rate) + '">' +
+      '<div class="meter-track">' +
+      '<div class="meter-fill ' + cls + '" style="width:' + widthPct.toFixed(1) + '%"></div>' +
+      '<div class="meter-expected" style="left:' + expectedPct.toFixed(1) + '%"></div>' +
+      "</div>" +
+      '<div class="meter-caption">' + pct(tv.observed_rate) + " observed · " +
+      pct(tv.expected_rate) + " expected</div>" +
+      "</div>"
+    );
   }
 
   function renderStrip() {
@@ -767,14 +1057,24 @@
       productList.forEach(function (ticker) {
         var p = products[ticker];
         var cls = statusClassFor(p);
+        var sub =
+          p && p.status === "ok"
+            ? (p.monitor && p.monitor.failure_mode
+                ? FAILURE_MODE_LABELS[p.monitor.failure_mode] || p.monitor.failure_mode
+                : "no known failure")
+            : p && p.status === "fit_failed"
+            ? "fit failed"
+            : "no data";
         var btn = el(
           "button",
-          { class: "strip-btn " + cls, type: "button", "data-ticker": ticker },
-          '<span class="strip-icon">' + statusIconFor(cls) + "</span>" +
-            '<span class="strip-text">' +
+          { class: "strip-card", type: "button", "data-ticker": ticker },
+          '<div class="strip-card-top">' +
             '<span class="strip-ticker">' + escapeHtml(ticker) + "</span>" +
-            '<span class="strip-sub">' + escapeHtml(statusSubLabel(p)) + "</span>" +
-            "</span>"
+            pillHtml(p) +
+            "</div>" +
+            '<div class="strip-name">' + escapeHtml(nameFor(ticker)) + "</div>" +
+            meterHtml(p) +
+            '<div class="strip-sub">' + escapeHtml(sub) + "</div>"
         );
         if (ticker === selectedProduct) btn.classList.add("is-active");
         btn.addEventListener("click", function () {
@@ -788,8 +1088,8 @@
   }
 
   /* =======================================================================
-     5. Product detail: headline VaR/ES, monitor badge, trailing
-     calibration, and the return/VaR-band chart.
+     5. Product detail: headline VaR/ES, monitor pill + plain-language
+     explanation, trailing calibration, and the return/VaR-band chart.
      ======================================================================= */
   function renderDetail() {
     renderSafely("product-detail", function (container) {
@@ -805,7 +1105,8 @@
       if (p.status === "no_data") {
         container.innerHTML =
           '<div class="detail-head">' +
-          '<span class="detail-ticker">' + escapeHtml(p.product) + "</span>" +
+          '<div class="detail-ticker-group"><span class="detail-ticker">' + escapeHtml(p.product) +
+          '</span><span class="detail-name">' + escapeHtml(nameFor(p.product)) + "</span></div>" +
           '<span class="detail-family">' + escapeHtml(p.family || "") + "</span>" +
           "</div>" +
           '<div class="empty-note">No ingested data is available for this product. It is part of the ' +
@@ -817,7 +1118,8 @@
       if (p.status === "fit_failed") {
         container.innerHTML =
           '<div class="detail-head">' +
-          '<span class="detail-ticker">' + escapeHtml(p.product) + "</span>" +
+          '<div class="detail-ticker-group"><span class="detail-ticker">' + escapeHtml(p.product) +
+          '</span><span class="detail-name">' + escapeHtml(nameFor(p.product)) + "</span></div>" +
           '<span class="detail-family">' + escapeHtml(p.family || "") + "</span>" +
           "</div>" +
           '<div class="empty-note">Model fit failed for this product on the last refresh. Last observation: ' +
@@ -826,24 +1128,31 @@
       }
 
       // status === "ok"
-      var cls = statusClassFor(p);
       var m = p.monitor || {};
       var fw = p.fit_window || {};
       var isStale = isSnapshotStale(p.last_observation, snapshot.as_of);
+      var explainer =
+        MONITOR_EXPLANATIONS[m.status] ||
+        "Calibration status unavailable for this product.";
+      if (m.status !== "ok" && m.failure_mode && FAILURE_MODE_EXPLANATIONS[m.failure_mode]) {
+        explainer = FAILURE_MODE_EXPLANATIONS[m.failure_mode];
+      }
 
       var html = "";
       html += '<div class="detail-head">';
-      html += '<span class="detail-ticker">' + escapeHtml(p.product) + "</span>";
+      html += '<div class="detail-ticker-group"><span class="detail-ticker">' + escapeHtml(p.product) +
+        '</span><span class="detail-name">' + escapeHtml(nameFor(p.product)) + "</span></div>";
       html += '<span class="detail-family">' + escapeHtml(p.family || "") + " family</span>";
-      html += renderStatusBadge(cls, m);
+      html += pillHtml(p, { withFailureMode: true });
       html += "</div>";
+      html += '<p class="detail-explainer">' + escapeHtml(explainer) + "</p>";
 
       html += '<div class="detail-meta-row">';
       html += "<span>last observation <b>" + escapeHtml(orDash(p.last_observation)) + "</b>" +
         (isStale ? ' <span class="stale-flag">(stale vs. as-of)</span>' : "") + "</span>";
       html += "<span>fit window <b>" + escapeHtml(orDash(fw.start)) + " → " +
         escapeHtml(orDash(fw.end)) + "</b> (" + intFmt(fw.n_obs) + " obs)</span>";
-      html += "<span>current σ<sub>t</sub> (EWMA, daily) <b>" + pct(p.sigma_t) + "</b></span>";
+      html += '<span title="A causal EWMA estimate of current daily volatility — see “σₜ” in Key terms above.">current σ<sub>t</sub> (EWMA, daily) <b>' + pct(p.sigma_t) + "</b></span>";
       html += "</div>";
 
       html += '<h3 class="sub-head">Conditional VaR / ES — current σ<sub>t</sub>, by horizon</h3>';
@@ -855,6 +1164,8 @@
       html += '<h3 class="sub-head">Recent return series — last ' +
         ((p.recent_series && p.recent_series.dates) || []).length +
         " sessions, with 1% VaR band</h3>";
+      html += '<p class="lede">Each bar is one day’s return. The amber line is that day’s 1% VaR ' +
+        "threshold; a red ring marks a violation, a day the loss went past it.</p>";
 
       container.innerHTML = html;
 
@@ -872,20 +1183,6 @@
     var diffDays =
       (new Date(asOfDate) - new Date(lastObs)) / (1000 * 60 * 60 * 24);
     return diffDays > 5; // more than a trading week behind
-  }
-
-  function renderStatusBadge(cls, monitor) {
-    var label = MONITOR_LABELS[monitor.status] || monitor.status || "UNKNOWN";
-    var fm = monitor.failure_mode
-      ? FAILURE_MODE_LABELS[monitor.failure_mode] || monitor.failure_mode
-      : null;
-    return (
-      '<span class="status-badge ' + cls + '">' +
-      '<span class="dot"></span>' +
-      "<span>" + escapeHtml(label) + "</span>" +
-      (fm ? '<span class="fm">' + escapeHtml(fm) + "</span>" : "") +
-      "</span>"
-    );
   }
 
   function renderVarEsTable(varEs) {
@@ -906,11 +1203,16 @@
       .join("");
     return (
       '<div class="table-scroll"><table class="compact"><thead><tr>' +
-      "<th>Horizon</th><th>VaR 1%</th><th>ES 1%</th><th>VaR 2.5%</th><th>ES 2.5%</th>" +
+      '<th>Horizon</th>' +
+      '<th title="Loss threshold expected to be crossed on ~1% of days. See Key terms.">VaR 1%</th>' +
+      '<th title="Average loss on the worst 1% of days. See Key terms.">ES 1%</th>' +
+      '<th title="Loss threshold expected to be crossed on ~2.5% of days, shown for context.">VaR 2.5%</th>' +
+      '<th title="Average loss on the worst 2.5% of days, shown for context.">ES 2.5%</th>' +
       "</tr></thead><tbody>" + rows + "</tbody></table></div>" +
       '<p class="stat-sub">Figures are magnitude of potential loss, as a fraction of position notional, ' +
-      "conditional on today’s fitted volatility σ<sub>t</sub>. 1% column is the headline; 2.5% shown " +
-      "alongside for context.</p>"
+      "conditional on today’s fitted volatility σ<sub>t</sub>. The 1% column is the headline; 2.5% is shown " +
+      "alongside for context. Horizons beyond 1 day are a square-root-of-time scaling, not a separately " +
+      "fitted distribution (see “horizon” in Key terms).</p>"
     );
   }
 
@@ -923,10 +1225,20 @@
         if (!v) return "";
         var observed = pct(v.observed_rate);
         var expected = pct(v.expected_rate);
+        var ratio = isNum(v.observed_rate) && isNum(v.expected_rate) && v.expected_rate
+          ? v.observed_rate / v.expected_rate
+          : null;
+        var meterCls = ratio == null ? "st-nodata" : ratio >= 2 ? "st-breach" : ratio >= 1.5 ? "st-warn" : "st-ok";
+        var widthPct = ratio == null ? 0 : Math.max(2, Math.min(1, ratio / 3) * 100);
         return (
           '<div class="stat-tile">' +
-          '<div class="stat-label">' + LEVEL_LABELS[lvl] + " breach rate</div>" +
+          '<div class="stat-label" title="Share of trailing days a real loss exceeded this level’s VaR estimate.">' +
+          LEVEL_LABELS[lvl] + " breach rate</div>" +
           '<div class="stat-value">' + observed + "</div>" +
+          '<div class="meter-track" style="margin-top:6px">' +
+          '<div class="meter-fill ' + meterCls + '" style="width:' + widthPct.toFixed(1) + '%"></div>' +
+          '<div class="meter-expected" style="left:' + (100 / 3).toFixed(1) + '%"></div>' +
+          "</div>" +
           '<div class="stat-sub">expected ' + expected + " · n=" + intFmt(v.n) +
           " · longest run " + intFmt(v.max_cluster_length) + " day(s)</div>" +
           "</div>"
@@ -939,7 +1251,7 @@
 
   /* =======================================================================
      6. Chart: inline SVG built from recent_series, no charting library.
-     Bars = daily return (diverging blue/red by sign), amber line = the
+     Bars = daily return (diverging accent/red by sign), amber line = the
      (loss-direction, negative) 1% VaR band, red ring markers = violations
      (return breached the band). Hover shows a crosshair tooltip.
      ======================================================================= */
@@ -1138,10 +1450,13 @@
         '<p class="dep-note">All three simulated dependence structures are shown side by side deliberately: ' +
         "the Gaussian copula has zero asymptotic tail dependence and understates joint tail risk relative to " +
         "the empirical and Student-t (t-copula) modes, which is the point of the comparison, not something to " +
-        "collapse into one headline number.</p>";
+        "collapse into one headline number. See “dependence mode” in Key terms above.</p>";
       html += renderPortfolioCards(book.portfolio_risk);
 
       html += '<h4 class="sub-head">Pairwise lower-tail dependence</h4>';
+      html += '<p class="lede">How often two products crash together in their worst moments, from 0 (never ' +
+        "together) to 1 (always together). Higher means less diversification benefit than the headline " +
+        "correlation would suggest.</p>";
       html += renderLtdControls(book.portfolio_risk);
       html += '<div id="ltd-table-host"></div>';
 
@@ -1181,7 +1496,10 @@
     }
     var rows = Object.keys(weights)
       .map(function (k) {
-        return "<tr><td>" + escapeHtml(k) + "</td><td>" + pct(weights[k]) + "</td></tr>";
+        return (
+          '<tr><td class="ticker-cell" title="' + escapeHtml(nameFor(k)) + '">' + escapeHtml(k) +
+          "</td><td>" + pct(weights[k]) + "</td></tr>"
+        );
       })
       .join("");
     return (
@@ -1253,7 +1571,9 @@
       return undefined;
     }
 
-    var thead = "<tr><th></th>" + order.map(function (t) { return "<th>" + escapeHtml(t) + "</th>"; }).join("") + "</tr>";
+    var thead = "<tr><th></th>" + order.map(function (t) {
+      return '<th title="' + escapeHtml(nameFor(t)) + '">' + escapeHtml(t) + "</th>";
+    }).join("") + "</tr>";
     var rows = order
       .map(function (rowT) {
         var cells = order
@@ -1264,7 +1584,10 @@
             return '<td class="ltd-cell">' + num(v, 2) + "</td>";
           })
           .join("");
-        return "<tr><td>" + escapeHtml(rowT) + "</td>" + cells + "</tr>";
+        return (
+          '<tr><td class="ticker-cell" title="' + escapeHtml(nameFor(rowT)) + '">' +
+          escapeHtml(rowT) + "</td>" + cells + "</tr>"
+        );
       })
       .join("");
 
@@ -1293,7 +1616,8 @@
           .map(function (prod) {
             var c = contribs[prod];
             return (
-              "<tr><td>" + escapeHtml(prod) + "</td>" +
+              '<tr><td class="ticker-cell" title="' + escapeHtml(nameFor(prod)) + '">' +
+              escapeHtml(prod) + "</td>" +
               '<td class="' + (c.cum_return < 0 ? "neg" : "pos") + '">' + pctSigned(c.cum_return) + "</td>" +
               "<td>" + pct(c.weight) + "</td>" +
               '<td class="emph ' + (c.contribution < 0 ? "neg" : "pos") + '">' + pctSigned(c.contribution) + "</td></tr>"
