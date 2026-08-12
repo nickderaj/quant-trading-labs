@@ -237,15 +237,24 @@ def _conditional_quantile_series(
     model: RiskModel, sigma_t: np.ndarray, alpha: float
 ) -> np.ndarray:
     """Signed conditional quantile at level `alpha`, for every finite
-    `sigma_t`; NaN elsewhere. Uses the same scale-conditioning
-    `RiskModel.var_conditional` does internally, but returns the *signed*
-    quantile (negative for a lower-tail loss) rather than a positive VaR
-    magnitude, which is what `acerbi_szekely_z`'s signed-input convention
-    (docstring above) needs."""
+    `sigma_t`; NaN elsewhere. Mathematically identical to calling
+    `RiskModel._lower_q_at_scale(alpha, s)` for every `s`, but hoists the
+    unconditional `_lower_q(alpha)` call (a `RiskModel.mean`/`.std`-free
+    function of `alpha` alone -- for standardized families it can involve a
+    `scipy.integrate.quad` numerical integration per call, see
+    `densities.ged.es`) out of the per-point loop rather than recomputing it
+    once per `sigma_t`, which is the difference between this taking
+    milliseconds and taking tens of seconds over a multi-thousand-point
+    OOS series. Returns the *signed* quantile (negative for a lower-tail
+    loss) rather than a positive VaR magnitude, which is what
+    `acerbi_szekely_z`'s signed-input convention (docstring above) needs."""
     out = np.full(len(sigma_t), np.nan)
     finite = np.isfinite(sigma_t)
-    for i in np.where(finite)[0]:
-        out[i] = model._lower_q_at_scale(alpha, sigma_t[i])
+    base = model._lower_q(alpha)
+    if model.std > 0:
+        out[finite] = model.mean + (base - model.mean) * (sigma_t[finite] / model.std)
+    else:
+        out[finite] = base
     return out
 
 
@@ -288,8 +297,16 @@ def _conditional_es_series(
     out = np.full(len(sigma_t), np.nan)
     finite = np.isfinite(sigma_t)
     if tail == "lower":
-        for i in np.where(finite)[0]:
-            out[i] = model._lower_es_at_scale(alpha, sigma_t[i])
+        # see _conditional_quantile_series: hoist the expensive
+        # (per-alpha, sigma_t-independent) unconditional ES call out of the
+        # per-point loop instead of recomputing it once per sigma_t.
+        base = model._lower_es(alpha)
+        if model.std > 0:
+            out[finite] = model.mean + (base - model.mean) * (
+                sigma_t[finite] / model.std
+            )
+        else:
+            out[finite] = base
     else:
         es_z = _upper_tail_es_z(model, 1 - alpha)
         out[finite] = model.mean + es_z * sigma_t[finite]
@@ -315,12 +332,19 @@ def _conditional_acerbi_simulate_fn(
     sigma_used = sigma_t[finite]
     n = len(sigma_used)
     quantile_level = q if tail == "lower" else 1 - q
-    var_signed = np.array(
-        [model._lower_q_at_scale(quantile_level, s) for s in sigma_used]
+    # hoisted, not per-point (see _conditional_quantile_series)
+    var_base = model._lower_q(quantile_level)
+    var_signed = (
+        model.mean + (var_base - model.mean) * (sigma_used / model.std)
+        if model.std > 0
+        else np.full_like(sigma_used, var_base)
     )
     if tail == "lower":
-        es_signed = np.array(
-            [model._lower_es_at_scale(quantile_level, s) for s in sigma_used]
+        es_base = model._lower_es(quantile_level)
+        es_signed = (
+            model.mean + (es_base - model.mean) * (sigma_used / model.std)
+            if model.std > 0
+            else np.full_like(sigma_used, es_base)
         )
     else:
         es_z = _upper_tail_es_z(model, q)
