@@ -162,6 +162,7 @@ instead — this list has no teaching order, it's a lookup table.
 - [Refit cadence](02-estimation-and-fitting.md#refit-cadence)
 - [Regime-conditional backtesting and its multiple-testing cost](08-research-methodology.md#regime-conditional-backtesting-and-its-multiple-testing-cost)
 - [The replication crisis in factor investing](08-research-methodology.md#the-replication-crisis-in-factor-investing)
+- [Risk engine (productionised)](10-risk-engine.md#what-it-is)
 - [Rolling / trailing window](02-estimation-and-fitting.md#rolling-trailing-window)
 - [The Samuelson effect](09-market-data-and-microstructure.md#the-samuelson-effect)
 - [Seasonal/liquid months vs. nominally listed months](09-market-data-and-microstructure.md#seasonalliquid-months-vs-nominally-listed-months)

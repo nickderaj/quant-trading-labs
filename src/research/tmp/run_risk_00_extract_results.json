@@ -1,0 +1,100 @@
+{
+  "shim_identity": {
+    "n_checked": 21,
+    "n_identical": 21,
+    "all_identical": true,
+    "per_name": {
+      "commod_lib8.RiskModel": {
+        "target": "risk.model.RiskModel",
+        "identical": true
+      },
+      "commod_lib8.ewma_vol": {
+        "target": "risk.model.ewma_vol",
+        "identical": true
+      },
+      "commod_lib8.fit_risk_model": {
+        "target": "risk.model.fit_risk_model",
+        "identical": true
+      },
+      "commod_lib8.portfolio_risk": {
+        "target": "risk.portfolio.portfolio_risk",
+        "identical": true
+      },
+      "commod_lib8.empirical_lower_tail_dependence": {
+        "target": "risk.portfolio.empirical_lower_tail_dependence",
+        "identical": true
+      },
+      "commod_lib8.to_pseudo_uniform": {
+        "target": "risk.portfolio.to_pseudo_uniform",
+        "identical": true
+      },
+      "commod_lib8.kupiec_by_state": {
+        "target": "risk.calibration.kupiec_by_state",
+        "identical": true
+      },
+      "commod_lib8.flag_contaminated_rows": {
+        "target": "risk.hygiene.flag_contaminated_rows",
+        "identical": true
+      },
+      "commod_lib8.apply_hygiene_filter": {
+        "target": "risk.hygiene.apply_hygiene_filter",
+        "identical": true
+      },
+      "commod_lib8.liquidity_screen": {
+        "target": "risk.hygiene.liquidity_screen",
+        "identical": true
+      },
+      "commod_lib8.build_roll_schedule": {
+        "target": "risk.hygiene.build_roll_schedule",
+        "identical": true
+      },
+      "commod_lib8.liquid_contract_months": {
+        "target": "risk.hygiene.liquid_contract_months",
+        "identical": true
+      },
+      "commod_lib8.build_continuous_series": {
+        "target": "risk.hygiene.build_continuous_series",
+        "identical": true
+      },
+      "commod_lib8.build_continuous_series_ohlcv": {
+        "target": "risk.hygiene.build_continuous_series_ohlcv",
+        "identical": true
+      },
+      "dist_lib5.acerbi_szekely_z": {
+        "target": "risk.calibration.acerbi_szekely_z",
+        "identical": true
+      },
+      "dist_lib5.acerbi_szekely_bootstrap_pvalue": {
+        "target": "risk.calibration.acerbi_szekely_bootstrap_pvalue",
+        "identical": true
+      },
+      "densities.REGISTRY": {
+        "target": "risk.densities.REGISTRY",
+        "identical": true
+      },
+      "densities.ged": {
+        "target": "risk.densities.ged",
+        "identical": true
+      },
+      "densities.nig": {
+        "target": "risk.densities.nig",
+        "identical": true
+      },
+      "densities.johnsonsu": {
+        "target": "risk.densities.johnsonsu",
+        "identical": true
+      },
+      "densities.hansen_skewt": {
+        "target": "risk.densities.hansen_skewt",
+        "identical": true
+      }
+    }
+  },
+  "no_reverse_dependency": {
+    "returncode": 0,
+    "clean_import": true,
+    "stdout": "[]",
+    "stderr": ""
+  },
+  "fires": true
+}

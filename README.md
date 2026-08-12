@@ -1,5 +1,11 @@
 # quant-trading-labs
 
+`src/risk/` is the productionised commodity/equity-index futures risk engine — VaR, ES, and
+portfolio tail risk for 16 daily futures, ported from notebook 008's certified, holdout-validated
+findings into durable, tested, monitorable software (data contract, family map, calibration
+monitor, refresh pipeline, static dashboard). No alpha, no positions, no Sharpe. See
+[docs/10-risk-engine.md](docs/10-risk-engine.md) for the full operator document.
+
 ## Results
 
 - [001 — Simple Linear](src/results/001_simple_linear.md) — Tested whether a simple linear model trading BTC's return sign was profitable, after fixing three fee/backtest bugs; results untrustworthy (overfitting/constant bets).

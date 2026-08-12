@@ -1,0 +1,61 @@
+{
+  "gates": {
+    "DC": {
+      "n_bugs_rejected": 4,
+      "n_bugs_total": 4,
+      "n_false_rejections": 0,
+      "n_clean_products": 16,
+      "fires": true
+    },
+    "FS": {
+      "pass_counts": {
+        "P1": 15,
+        "P2": 14,
+        "P3": 14
+      },
+      "winner": "P1",
+      "shipping_rule": "highest Gate RE pass count; tie -> P2 (pre-committed in risk_engine_preregistration.json before this ran)"
+    },
+    "PR": {
+      "n_mismatches": 0,
+      "mismatches": [],
+      "gate_RE_fires": true,
+      "gate_RE_pass_count": 15,
+      "pass": true
+    },
+    "PH": {
+      "checks": {
+        "RE_holdout_pass_count": 14,
+        "CE_holdout_reject_1pct_count": 11
+      },
+      "mismatches": [],
+      "pass": true,
+      "note": "no holdout data read or recomputed -- stored JSON's own summary only"
+    },
+    "DT": {
+      "pass": true,
+      "bit_identical": true
+    },
+    "MB": {
+      "pa_flagged_clustering_in_development": true,
+      "no_false_positives_in_development": true,
+      "rb_si_flagged_in_holdout": true,
+      "fires": true
+    },
+    "NL": {
+      "n_pass": 16,
+      "n_total": 16,
+      "fires": true
+    }
+  },
+  "all_hard_gates_fire": true,
+  "no_discovery_gates": true,
+  "note": "None of these is a discovery gate -- there is no outcome of this project that authorises a trade (NEXT_PROMPT.md sec 10). PR, PH, DC, DT and NL are hard gates: they determine whether anything else here means anything. FS and MB are reported either way, pre-committed before their numbers were known.",
+  "source_files": {
+    "DC": "src/research/tmp/run_risk_01_data_contract_results.json",
+    "FS": "src/research/tmp/run_risk_02_family_policy_results.json",
+    "PR_PH_DT": "src/research/tmp/run_risk_03_reproduction_results.json",
+    "MB": "src/research/tmp/run_risk_04_monitor_results.json",
+    "NL": "src/research/tmp/run_risk_05_lookahead_results.json"
+  }
+}
