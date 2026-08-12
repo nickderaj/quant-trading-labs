@@ -6,6 +6,14 @@ findings into durable, tested, monitorable software (data contract, family map, 
 monitor, refresh pipeline, static dashboard). No alpha, no positions, no Sharpe. See
 [docs/10-risk-engine.md](docs/10-risk-engine.md) for the full operator document.
 
+**[Live dashboard →](https://TODO-deployed-url.vercel.app)**
+
+[![Risk engine operator dashboard](docs/img/risk-dashboard.png)](https://TODO-deployed-url.vercel.app)
+
+Static HTML/CSS/vanilla JS, no server — regenerate with
+`uv run python src/research/tmp/render_risk_dashboard.py` (writes `dashboard/index.html` from the
+current `src/risk/data/` ingest; run `risk.ingest.refresh()` first if that's stale).
+
 ## Results
 
 - [001 — Simple Linear](src/results/001_simple_linear.md) — Tested whether a simple linear model trading BTC's return sign was profitable, after fixing three fee/backtest bugs; results untrustworthy (overfitting/constant bets).
