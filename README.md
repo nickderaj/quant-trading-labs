@@ -1,16 +1,31 @@
 # quant-trading-labs
 
-`src/risk/` is the productionised commodity/equity-index futures risk engine — VaR, ES, and
-portfolio tail risk for 16 daily futures, ported from notebook 008's certified, holdout-validated
-findings into durable, tested, monitorable software (data contract, family map, calibration
-monitor, refresh pipeline, static dashboard). No alpha, no positions, no Sharpe. See
-[docs/10-risk-engine.md](docs/10-risk-engine.md) for the full operator document.
+This repository is a collection of quantitative trading research: a sequence of notebooks
+testing ideas against real market data, with pre-registered gates, walk-forward or holdout
+validation, and honest reporting of what didn't work. Most of it didn't.
 
-**[Live dashboard →](https://TODO-deployed-url.vercel.app)**
+The exception is tail-risk calibration. Notebook 005 found that GARCH-t and EVT models
+correctly calibrate BTC's conditional tail risk. Notebook 006 confirmed the finding held
+across more crypto symbols and intervals. Notebook 008 then found the same calibration held
+for commodity and equity-index futures, and the result reproduced on a separate holdout
+period. That's the one finding in this programme solid enough to build on, so I turned it into
+production software.
 
-[![Risk engine operator dashboard](docs/img/risk-dashboard.png)](https://TODO-deployed-url.vercel.app)
+`src/risk/` is that build: a risk engine covering 16 daily commodity and equity-index futures.
+For each product it fits a calibrated return distribution, computes Value-at-Risk and Expected
+Shortfall at multiple horizons, and continuously monitors whether that calibration is still
+holding as new data comes in. It ships with a data-cleaning contract, a versioned model
+selection per product, a calibration monitor, a refresh pipeline, and the dashboard below.
 
-Static HTML/CSS/vanilla JS, no server — regenerate with
+**[Live dashboard →](https://quant-trading-labs.vercel.app/)**
+
+[![Risk engine operator dashboard](docs/img/risk-dashboard.png)](https://quant-trading-labs.vercel.app/)
+
+Read [docs/10-risk-engine.md](docs/10-risk-engine.md) for the full write-up: how the data is
+cleaned, how the model per product was chosen, how the monitor works, and what the engine has
+and hasn't been validated for.
+
+The dashboard is static HTML, CSS, and vanilla JavaScript, with no server. Regenerate it with
 `uv run python src/research/tmp/render_risk_dashboard.py` (writes `index.html` at the repo root
 from the current `src/risk/data/` ingest; run `risk.ingest.refresh()` first if that's stale).
 
