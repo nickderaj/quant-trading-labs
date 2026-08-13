@@ -54,9 +54,9 @@ CRYPTO_ENVELOPE_CLAIM = (
     "only, run through the same VaR/ES and calibration-monitor machinery as "
     "the validated futures engine above. This is explicitly NOT the "
     "validated envelope: each symbol's density family is an OOS log-score "
-    "pick (the same contest Phase 3 ran for the futures), but no "
+    "pick, the same selection method used for the futures, but no "
     "walk-forward VaR-coverage gate has ever been run for this panel at "
-    "daily frequency -- notebooks 004/005 only cleared that battery for BTC "
+    "daily frequency -- prior research only cleared that battery for BTC "
     "at 12h, and for SOL/DOGE/BNB (weakly XRP) at 1d; never for BTC or ETH "
     "at 1d. Treat the calibration status below as a live diagnostic, not a "
     "certified result (see family_map_crypto_v1.json's own validation_note)."
@@ -397,8 +397,8 @@ def build_snapshot(
             "products": sorted(family_map.products.keys()),
             "claim": (
                 "Conditional VaR/ES coverage validated on these 16 daily "
-                "commodity/equity-index futures only (008 Phase 7/8). Not "
-                "validated on any other product, asset class, or frequency."
+                "commodity/equity-index futures only. Not validated on any "
+                "other product, asset class, or frequency."
             ),
         },
         "products": products_out,
