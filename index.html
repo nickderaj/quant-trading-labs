@@ -418,6 +418,7 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    cursor: help;
   }
   .detail-explainer {
     font-size: 12.5px;
@@ -597,8 +598,9 @@
     align-items: baseline;
   }
   .book-card h4 .n-sims { font-weight: 400; color: var(--text-muted); font-size: 10px; text-transform: none; }
+  .book-card h4 > span:first-child { cursor: help; }
   .book-card dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: 4px 10px; font-family: var(--font-mono); }
-  .book-card dt { color: var(--text-muted); font-size: 11px; }
+  .book-card dt { color: var(--text-muted); font-size: 11px; cursor: help; }
   .book-card dd { margin: 0; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
   .dep-note {
     font-size: 11.5px;
@@ -770,6 +772,14 @@
           returns are independent from day to day — a simplifying assumption, not a model separately fit to
           5- or 10-day moves.</p>
       </details>
+      <details id="gloss-family">
+        <summary><span class="chev">›</span>Distribution family (GED, Student-t, skew-t, …)</summary>
+        <p>The mathematical shape fit to a product's day-to-day returns, chosen per product from a small zoo of
+          candidates because plain bell curves (normal) tend to understate how often big moves happen.
+          <b>Student-t</b> and <b>GED</b> allow fatter tails than normal; <b>Hansen skew-t</b>, <b>Johnson SU</b>
+          and <b>NIG</b> also allow the tails to be different sizes on the downside vs. upside. This is what the
+          badge next to each ticker (e.g. "GED family") refers to — hover it for that product's specific shape.</p>
+      </details>
     </div>
   </section>
 
@@ -928,6 +938,9 @@
   function nameFor(ticker) {
     return PRODUCT_NAMES[ticker] || CRYPTO_NAMES[ticker] || ticker;
   }
+  function familyTitle(fam) {
+    return FAMILY_EXPLANATIONS[fam] || "The distribution shape fit to this product's returns.";
+  }
 
   var LEVEL_LABELS = { "0.01": "1%", "0.025": "2.5%" };
   var MONITOR_LABELS = { ok: "OK", warn: "WARN", breach: "BREACH" };
@@ -953,6 +966,28 @@
     clustering: "Breaches are happening about as often as expected overall, but bunching together in time rather than spreading out. This usually means the volatility estimate is reacting too slowly to changing conditions.",
     shape: "Breaches are at a normal rate, but the worst losses are bigger than the model's tail shape predicts. The assumed distribution has likely drifted away from how fat the real tail has become.",
     both: "Both the frequency and the timing of breaches look wrong — the most serious case, and worth investigating first.",
+  };
+  /* Per-product innovation distribution ("family" in the snapshot). Plain-
+     language gloss for the badge shown next to each ticker; covers every
+     family this repo's density zoo can produce, not just the ones present
+     in the current snapshot. */
+  var FAMILY_EXPLANATIONS = {
+    normal: "The standard bell-curve (Gaussian) shape. Assumes extreme moves are about as rare as a plain bell curve predicts.",
+    t: "Student-t: a bell-curve shape with fatter tails than normal, so big moves are expected to happen more often.",
+    skewt: "A Student-t shape that can lean — the downside and upside tails are allowed to be different sizes, not symmetric.",
+    ged: "Generalized Error Distribution: a flexible bell-curve shape that can be sharper-peaked or flatter than normal, while every moment stays finite (unlike Student-t).",
+    hansen_skewt: "Hansen's skewed Student-t: fat tails like Student-t, plus skew, so gains and losses can have different-sized tails.",
+    johnsonsu: "Johnson SU: a flexible four-parameter shape built to allow both skew and heavier-than-normal tails.",
+    nig: "Normal-Inverse Gaussian: a shape built by mixing normal distributions with varying volatility, allowing skew and heavy tails.",
+    empirical: "Uses the actual historical distribution of returns directly, rather than fitting a mathematical curve to it.",
+  };
+  /* Book-level dependence / copula modes — same three keys used throughout
+     section 7 (portfolio cards, LTD toggle). Mirrors the "Dependence mode"
+     glossary entry in prose form, condensed for a hover tooltip. */
+  var DEPENDENCE_MODE_EXPLANATIONS = {
+    empirical: "Simulates the book from the actual historical joint pattern of returns — lets products crash together the way they really have.",
+    gaussian: "Gaussian copula: assumes products become independent in extreme moves. Understates real joint tail risk — shown for comparison, not as the recommended number.",
+    t: "Student-t copula: like empirical, lets products crash together in the tails, using a fitted degrees-of-freedom parameter instead of raw history.",
   };
 
   var envelope = snapshot.validated_envelope || { products: [], claim: "" };
@@ -1193,7 +1228,10 @@
           '<div class="detail-head">' +
           '<div class="detail-ticker-group"><span class="detail-ticker">' + escapeHtml(p.product) +
           '</span><span class="detail-name">' + escapeHtml(nameFor(p.product)) + "</span></div>" +
-          '<span class="detail-family">' + escapeHtml(p.family || "") + "</span>" +
+          (p.family
+            ? '<span class="detail-family" title="' + escapeHtml(familyTitle(p.family)) + '">' +
+              escapeHtml(p.family) + "</span>"
+            : "") +
           "</div>" +
           '<div class="empty-note">No ingested data is available for this product. It is part of the ' +
           "validated envelope but has no curve in the current data directory — check " +
@@ -1206,7 +1244,10 @@
           '<div class="detail-head">' +
           '<div class="detail-ticker-group"><span class="detail-ticker">' + escapeHtml(p.product) +
           '</span><span class="detail-name">' + escapeHtml(nameFor(p.product)) + "</span></div>" +
-          '<span class="detail-family">' + escapeHtml(p.family || "") + "</span>" +
+          (p.family
+            ? '<span class="detail-family" title="' + escapeHtml(familyTitle(p.family)) + '">' +
+              escapeHtml(p.family) + "</span>"
+            : "") +
           "</div>" +
           '<div class="empty-note">Model fit failed for this product on the last refresh. Last observation: ' +
           "<b>" + escapeHtml(orDash(p.last_observation)) + "</b>. No VaR/ES or calibration is available.</div>";
@@ -1228,7 +1269,10 @@
       html += '<div class="detail-head">';
       html += '<div class="detail-ticker-group"><span class="detail-ticker">' + escapeHtml(p.product) +
         '</span><span class="detail-name">' + escapeHtml(nameFor(p.product)) + "</span></div>";
-      html += '<span class="detail-family">' + escapeHtml(p.family || "") + " family</span>";
+      html += p.family
+        ? '<span class="detail-family" title="' + escapeHtml(familyTitle(p.family)) + '">' +
+          escapeHtml(p.family) + " family</span>"
+        : "";
       html += pillHtml(p, { withFailureMode: true });
       html += "</div>";
       html += '<p class="detail-explainer">' + escapeHtml(explainer) + "</p>";
@@ -1289,7 +1333,7 @@
       .join("");
     return (
       '<div class="table-scroll"><table class="compact"><thead><tr>' +
-      '<th>Horizon</th>' +
+      '<th title="Number of trading days the loss estimate is scaled to. See “horizon” in Key terms.">Horizon</th>' +
       '<th title="Loss threshold expected to be crossed on ~1% of days. See Key terms.">VaR 1%</th>' +
       '<th title="Average loss on the worst 1% of days. See Key terms.">ES 1%</th>' +
       '<th title="Loss threshold expected to be crossed on ~2.5% of days, shown for context.">VaR 2.5%</th>' +
@@ -1589,7 +1633,10 @@
       })
       .join("");
     return (
-      '<div class="table-scroll"><table class="compact"><thead><tr><th>Product</th><th>Weight</th></tr></thead>' +
+      '<div class="table-scroll"><table class="compact"><thead><tr>' +
+      '<th title="Ticker of the product in the book. Hover a ticker below for its full name.">Product</th>' +
+      '<th title="Share of book notional allocated to this product.">Weight</th>' +
+      "</tr></thead>" +
       "<tbody>" + rows + "</tbody></table></div>"
     );
   }
@@ -1601,13 +1648,14 @@
         var d = pr[mode];
         if (!d) return "";
         return (
-          '<div class="book-card"><h4>' + escapeHtml(mode) +
+          '<div class="book-card"><h4><span title="' +
+          escapeHtml(DEPENDENCE_MODE_EXPLANATIONS[mode] || "") + '">' + escapeHtml(mode) + "</span>" +
           '<span class="n-sims">n=' + intFmt(d.n_sims) + " sims</span></h4>" +
           "<dl>" +
-          "<dt>VaR 1%</dt><dd>" + pct(d.var_01) + "</dd>" +
-          "<dt>VaR 5%</dt><dd>" + pct(d.var_05) + "</dd>" +
-          "<dt>ES 1%</dt><dd>" + pct(d.es_01) + "</dd>" +
-          "<dt>ES 5%</dt><dd>" + pct(d.es_05) + "</dd>" +
+          '<dt title="Loss threshold expected to be crossed on ~1% of days. See Key terms.">VaR 1%</dt><dd>' + pct(d.var_01) + "</dd>" +
+          '<dt title="Loss threshold expected to be crossed on ~5% of days, shown for context.">VaR 5%</dt><dd>' + pct(d.var_05) + "</dd>" +
+          '<dt title="Average loss on the worst 1% of days. See Key terms.">ES 1%</dt><dd>' + pct(d.es_01) + "</dd>" +
+          '<dt title="Average loss on the worst 5% of days, shown for context.">ES 5%</dt><dd>' + pct(d.es_05) + "</dd>" +
           "</dl></div>"
         );
       })
@@ -1624,7 +1672,8 @@
       .map(function (m) {
         return (
           '<button type="button" class="toggle-btn' + (m === ltdMode ? " is-active" : "") +
-          '" data-mode="' + m + '">' + escapeHtml(m) + "</button>"
+          '" data-mode="' + m + '" title="' + escapeHtml(DEPENDENCE_MODE_EXPLANATIONS[m] || "") +
+          '">' + escapeHtml(m) + "</button>"
         );
       })
       .join("");
@@ -1714,7 +1763,10 @@
           '<div class="scenario-card"><h4>' + escapeHtml(name) + "</h4>" +
           '<div class="scenario-pnl ' + pnlClass + '">portfolio P&amp;L: ' + pctSigned(pnl) + "</div>" +
           '<div class="table-scroll"><table class="compact"><thead><tr>' +
-          "<th>Product</th><th>Cum. return</th><th>Weight</th><th>Contribution</th>" +
+          '<th title="Ticker of the product in the book.">Product</th>' +
+          '<th title="Total return for this product over the replayed historical event window.">Cum. return</th>' +
+          '<th title="Share of book notional allocated to this product.">Weight</th>' +
+          '<th title="This product’s share of the scenario’s total portfolio P&amp;L (weight × cumulative return).">Contribution</th>' +
           "</tr></thead><tbody>" + rows + "</tbody></table></div></div>"
         );
       })
