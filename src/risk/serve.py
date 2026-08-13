@@ -27,7 +27,7 @@ import numpy as np
 import polars as pl
 
 from risk import ingest
-from risk.calibration import CalibrationMonitor
+from risk.calibration import CalibrationMonitor, MonitorStateStore, apply_persistence
 from risk.families import load_family_map
 from risk.model import RiskModel, ewma_vol, fit_risk_model
 from risk.portfolio import portfolio_risk
@@ -102,8 +102,14 @@ def _product_snapshot(
     product: str,
     family: str,
     curve: pl.DataFrame,
-    monitor: CalibrationMonitor,
-) -> tuple[dict[str, Any], RiskModel | None, np.ndarray]:
+) -> tuple[dict[str, Any], RiskModel | None, np.ndarray, np.ndarray]:
+    """Fits the model and computes everything that does *not* depend on
+    other products (VaR/ES, recent series). Calibration status is
+    deliberately not computed here: it must be BH-corrected across all 16
+    products at once (`CalibrationMonitor.evaluate_batch`) and persistence-
+    gated across runs (`calibration.apply_persistence`), both of which need
+    every product's inputs together -- see `build_snapshot`, which fills in
+    `monitor`/`trailing_violations` after this returns."""
     ret = curve["log_return"].to_numpy()
     dates = curve["date"].to_numpy()
     finite = np.isfinite(ret)
@@ -121,6 +127,7 @@ def _product_snapshot(
             },
             None,
             ret_clean,
+            np.array([]),
         )
 
     sigma_path = ewma_vol(ret_clean)
@@ -135,31 +142,6 @@ def _product_snapshot(
         } | {
             f"es_h{h}": model.es_conditional(level, sigma_t=sigma_t, horizon=h)
             for h in HORIZONS
-        }
-
-    # rolling calibration status from the model's own conditional VaR path
-    # over its full fitted history (sigma_t is causal throughout).
-    # compute_acerbi=False: the Acerbi-Szekely bootstrap (n_boot simulated
-    # paths, each root-finding a standardized family's numerical ppf over
-    # the full history) costs seconds per product and is exactly what
-    # run_risk_04_monitor.py already validated offline (gate MB) -- the
-    # live snapshot needs to regenerate in around a second, not minutes, so
-    # it reports coverage/clustering status only; a full battery re-run
-    # (including shape) is the offline job's job, not this one's.
-    calib = monitor.evaluate(
-        product, model, ret_clean, sigma_path, levels=LEVELS, compute_acerbi=False
-    )
-
-    trailing_violations = {}
-    for level in LEVELS:
-        lr = calib.levels.get(level)
-        if lr is None:
-            continue
-        trailing_violations[str(level)] = {
-            "n": lr.n,
-            "observed_rate": lr.observed_rate,
-            "expected_rate": lr.expected_rate,
-            "max_cluster_length": lr.max_cluster_length,
         }
 
     n_recent = min(RECENT_SERIES_DAYS, len(ret_clean))
@@ -185,15 +167,54 @@ def _product_snapshot(
         "last_observation": str(dates_clean[-1]) if len(dates_clean) else None,
         "sigma_t": sigma_t,
         "var_es": var_es,
-        "trailing_violations": trailing_violations,
-        "monitor": {"status": calib.status, "failure_mode": calib.failure_mode},
         "recent_series": {
             "dates": [str(d) for d in recent_dates],
             "returns": [float(r) for r in recent_returns],
             "var_band_01": [float(v) if np.isfinite(v) else None for v in var_band_01],
         },
     }
-    return snapshot, model, ret_clean
+    return snapshot, model, ret_clean, sigma_path
+
+
+def _attach_monitor_status(
+    products_out: dict[str, Any],
+    product_inputs: dict[str, tuple[RiskModel, np.ndarray, np.ndarray]],
+    monitor: CalibrationMonitor,
+    data_dir: Path,
+) -> None:
+    """BH-corrects calibration status across every fitted product in this
+    run (`evaluate_batch`), then persistence-gates it against the streak
+    counts carried over from the previous run at `data_dir /
+    "_monitor_state.json"` (`apply_persistence`) -- both pre-registered in
+    `risk_engine_preregistration.json`'s `calibration_monitor` block.
+    compute_acerbi=False for the same reason as before: the Acerbi-Szekely
+    bootstrap costs seconds per product and is the offline job's job (gate
+    MB), not this one's, which needs to regenerate in about a second.
+    Mutates `products_out` in place."""
+    if not product_inputs:
+        return
+    raw_statuses = monitor.evaluate_batch(
+        product_inputs, levels=LEVELS, compute_acerbi=False
+    )
+    state_store = MonitorStateStore(data_dir / "_monitor_state.json")
+    k = int(monitor.thresholds["persistence_rule"]["k_consecutive_breaching_windows"])
+    final_statuses, new_state = apply_persistence(raw_statuses, state_store.load(), k)
+    state_store.save(new_state)
+
+    for product, status in final_statuses.items():
+        trailing_violations = {}
+        for level, lr in status.levels.items():
+            trailing_violations[str(level)] = {
+                "n": lr.n,
+                "observed_rate": lr.observed_rate,
+                "expected_rate": lr.expected_rate,
+                "max_cluster_length": lr.max_cluster_length,
+            }
+        products_out[product]["trailing_violations"] = trailing_violations
+        products_out[product]["monitor"] = {
+            "status": status.status,
+            "failure_mode": status.failure_mode,
+        }
 
 
 def _stress_scenarios(
@@ -247,6 +268,7 @@ def build_snapshot(
     products_out: dict[str, Any] = {}
     models: dict[str, RiskModel] = {}
     returns_by_product: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    product_inputs: dict[str, tuple[RiskModel, np.ndarray, np.ndarray]] = {}
 
     for product in sorted(family_map.products.keys()):
         curve = _load_product_curve(data_dir, product)
@@ -258,7 +280,7 @@ def build_snapshot(
             }
             continue
         family = family_map.family_for(product)
-        snap, model, ret_clean = _product_snapshot(product, family, curve, monitor)
+        snap, model, ret_clean, sigma_path = _product_snapshot(product, family, curve)
         products_out[product] = snap
         if model is not None:
             models[product] = model
@@ -266,6 +288,9 @@ def build_snapshot(
                 np.isfinite(curve["log_return"].to_numpy())
             ]
             returns_by_product[product] = (ret_clean, dates_clean)
+            product_inputs[product] = (model, ret_clean, sigma_path)
+
+    _attach_monitor_status(products_out, product_inputs, monitor, data_dir)
 
     book: dict[str, Any] = {"n_products": len(models)}
     if len(models) >= 2:

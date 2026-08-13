@@ -17,9 +17,13 @@ sys.path.insert(0, str(_ROOT / "src"))
 
 from risk.calibration import (
     CalibrationMonitor,
+    CalibrationStatus,
+    LevelResult,
+    MonitorStateStore,
     _benjamini_hochberg_significant,
     _standardized_ppf,
     _upper_tail_es_z,
+    apply_persistence,
     kupiec_by_state,
 )
 from risk.model import RiskModel, ewma_vol, fit_risk_model
@@ -161,6 +165,135 @@ class TestCalibrationMonitorEvaluate:
         assert status.acerbi is not None
         assert np.isfinite(status.acerbi.z_lower)
         assert np.isfinite(status.acerbi.z_upper)
+
+
+def _coverage_breach_status(
+    observed_rate: float = 0.05, n: int = 2000
+) -> CalibrationStatus:
+    """A single-level `CalibrationStatus` with a raw coverage breach this
+    window (as `evaluate_from_hits` would produce for a hot-running
+    product), for feeding into `apply_persistence` without needing a fresh
+    hit series (and its sampling noise) per test."""
+    lr = LevelResult(
+        level=0.01,
+        n=n,
+        observed_rate=observed_rate,
+        expected_rate=0.01,
+        kupiec_p=0.001,
+        independence_p=0.8,
+        cc_p=0.01,
+        max_cluster_length=2,
+        coverage_breach=True,
+        clustering_breach=False,
+    )
+    return CalibrationStatus(
+        product="TEST",
+        levels={0.01: lr},
+        acerbi=None,
+        status="breach",
+        failure_mode="coverage",
+    )
+
+
+def _ok_status() -> CalibrationStatus:
+    lr = LevelResult(
+        level=0.01,
+        n=2000,
+        observed_rate=0.01,
+        expected_rate=0.01,
+        kupiec_p=0.9,
+        independence_p=0.9,
+        cc_p=0.9,
+        max_cluster_length=1,
+        coverage_breach=False,
+        clustering_breach=False,
+    )
+    return CalibrationStatus(
+        product="TEST", levels={0.01: lr}, acerbi=None, status="ok", failure_mode=None
+    )
+
+
+def _ratio_warn_status() -> CalibrationStatus:
+    """`_verdict` can flag "warn" from the violation-rate/cluster-length
+    ratio thresholds alone, with neither test itself breaching -- this is
+    the case `apply_persistence` must pass through unchanged (persistence_
+    rule: "warn ... or a metric crosses its warn threshold")."""
+    lr = LevelResult(
+        level=0.01,
+        n=2000,
+        observed_rate=0.017,
+        expected_rate=0.01,
+        kupiec_p=0.2,
+        independence_p=0.8,
+        cc_p=0.3,
+        max_cluster_length=2,
+        coverage_breach=False,
+        clustering_breach=False,
+    )
+    return CalibrationStatus(
+        product="TEST", levels={0.01: lr}, acerbi=None, status="warn", failure_mode=None
+    )
+
+
+class TestApplyPersistence:
+    """Pre-registered persistence rule (risk_engine_preregistration.json
+    calibration_monitor.persistence_rule): a single breaching window pages
+    only "warn"; it takes k=2 consecutive breaching windows of the same
+    test to escalate to "breach"."""
+
+    def test_first_breaching_window_is_warn_not_breach(self):
+        gated, new_state = apply_persistence(
+            {"TEST": _coverage_breach_status()}, prior_state={}, k=2
+        )
+        assert gated["TEST"].status == "warn"
+        assert gated["TEST"].failure_mode == "coverage"
+        assert new_state["TEST|0.01|coverage"] == 1
+
+    def test_second_consecutive_breaching_window_escalates_to_breach(self):
+        prior_state = {"TEST|0.01|coverage": 1}
+        gated, new_state = apply_persistence(
+            {"TEST": _coverage_breach_status()}, prior_state=prior_state, k=2
+        )
+        assert gated["TEST"].status == "breach"
+        assert gated["TEST"].failure_mode == "coverage"
+        assert new_state["TEST|0.01|coverage"] == 2
+
+    def test_streak_resets_once_the_window_stops_breaching(self):
+        prior_state = {"TEST|0.01|coverage": 1}
+        gated, new_state = apply_persistence(
+            {"TEST": _ok_status()}, prior_state=prior_state, k=2
+        )
+        assert gated["TEST"].status == "ok"
+        assert new_state["TEST|0.01|coverage"] == 0
+
+    def test_ratio_based_warn_passes_through_without_a_test_breach(self):
+        gated, _ = apply_persistence(
+            {"TEST": _ratio_warn_status()}, prior_state={}, k=2
+        )
+        assert gated["TEST"].status == "warn"
+        assert gated["TEST"].failure_mode is None
+
+    def test_streaks_are_tracked_independently_per_product(self):
+        statuses = {"AAA": _coverage_breach_status(), "BBB": _ok_status()}
+        gated, new_state = apply_persistence(statuses, prior_state={}, k=2)
+        assert gated["AAA"].status == "warn"
+        assert gated["BBB"].status == "ok"
+        assert new_state["AAA|0.01|coverage"] == 1
+        assert (
+            "BBB|0.01|coverage" not in new_state or new_state["BBB|0.01|coverage"] == 0
+        )
+
+
+class TestMonitorStateStore:
+    def test_load_missing_file_returns_empty_dict(self, tmp_path):
+        store = MonitorStateStore(tmp_path / "_monitor_state.json")
+        assert store.load() == {}
+
+    def test_save_then_load_round_trips(self, tmp_path):
+        store = MonitorStateStore(tmp_path / "nested" / "_monitor_state.json")
+        state = {"CL|0.01|coverage": 2, "GC|0.025|clustering": 0}
+        store.save(state)
+        assert MonitorStateStore(store.path).load() == state
 
 
 class TestGateMBRegression:

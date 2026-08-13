@@ -104,6 +104,79 @@ class TestBuildSnapshot:
         assert len(snap["validated_envelope"]["products"]) == 16
         assert "claim" in snap["validated_envelope"]
 
+    def test_a_single_breaching_window_never_shows_as_breach(self, tmp_path):
+        """Persistence rule (risk_engine_preregistration.json): a product
+        can't reach "breach" on the very first monitoring run against a
+        fresh data_dir -- it takes k=2 consecutive breaching runs. Regardless
+        of what the raw, uncorrected battery says about this synthetic
+        (iid-normal, well-specified) data, the first-ever run must not
+        report "breach" for anything."""
+        fm = load_family_map("v1")
+        for product, entry in fm.products.items():
+            _write_synthetic_product(tmp_path, product, entry["family"])
+        snap = build_snapshot(data_dir=tmp_path)
+        statuses = {
+            p: v["monitor"]["status"]
+            for p, v in snap["products"].items()
+            if v["status"] == "ok"
+        }
+        assert "breach" not in statuses.values()
+
+    def test_two_consecutive_runs_with_the_same_raw_breach_escalate(
+        self, tmp_path, monkeypatch
+    ):
+        """Wiring test for `build_snapshot` -> `_attach_monitor_status` ->
+        `apply_persistence`, independent of whether any particular synthetic
+        seed happens to breach: force `CalibrationMonitor.evaluate_batch` to
+        report a raw CL coverage breach every call, and check that streak
+        state actually survives across two separate `build_snapshot` calls
+        against the same `data_dir` (a fresh `data_dir`/`tmp_path` per test
+        must not carry over another test's history, but *this* directory's
+        own state must persist run to run)."""
+        import risk.calibration as calibration_mod
+        from risk.calibration import CalibrationStatus, LevelResult
+
+        fm = load_family_map("v1")
+        for product, entry in fm.products.items():
+            _write_synthetic_product(tmp_path, product, entry["family"])
+
+        real_evaluate_batch = calibration_mod.CalibrationMonitor.evaluate_batch
+
+        def _forced_evaluate_batch(self, product_inputs, **kwargs):
+            raw = real_evaluate_batch(self, product_inputs, **kwargs)
+            lr = LevelResult(
+                level=0.01,
+                n=raw["CL"].levels[0.01].n,
+                observed_rate=0.05,
+                expected_rate=0.01,
+                kupiec_p=0.001,
+                independence_p=0.8,
+                cc_p=0.01,
+                max_cluster_length=2,
+                coverage_breach=True,
+                clustering_breach=False,
+            )
+            raw["CL"] = CalibrationStatus(
+                product="CL",
+                levels={0.01: lr},
+                acerbi=None,
+                status="breach",
+                failure_mode="coverage",
+            )
+            return raw
+
+        monkeypatch.setattr(
+            calibration_mod.CalibrationMonitor, "evaluate_batch", _forced_evaluate_batch
+        )
+
+        snap1 = build_snapshot(data_dir=tmp_path)
+        assert snap1["products"]["CL"]["monitor"]["status"] == "warn"
+        assert snap1["products"]["CL"]["monitor"]["failure_mode"] == "coverage"
+
+        snap2 = build_snapshot(data_dir=tmp_path)
+        assert snap2["products"]["CL"]["monitor"]["status"] == "breach"
+        assert snap2["products"]["CL"]["monitor"]["failure_mode"] == "coverage"
+
 
 class TestRenderDashboard:
     def test_placeholder_is_replaced_with_real_json(self, tmp_path):

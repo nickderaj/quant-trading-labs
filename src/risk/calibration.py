@@ -29,8 +29,10 @@ from risk.model import RiskModel
 __all__ = [
     "CalibrationMonitor",
     "CalibrationStatus",
+    "MonitorStateStore",
     "acerbi_szekely_bootstrap_pvalue",
     "acerbi_szekely_z",
+    "apply_persistence",
     "kupiec_by_state",
 ]
 
@@ -714,3 +716,122 @@ def _benjamini_hochberg_significant(
             k_star = rank
     significant_keys = {k for k, _p in finite[:k_star]}
     return {k: (k in significant_keys) for k in pvalues}
+
+
+# ---------------------------------------------------------------------------
+# Persistence rule (risk_engine_preregistration.json calibration_monitor.
+# persistence_rule): "16 products x 2 levels x 4 tests run repeatedly will
+# produce false alarms at any fixed alpha; a single breaching window is not
+# paged, only k=2 consecutive ones." `evaluate_batch`/`evaluate_batch_from_hits`
+# apply the pre-registered BH correction *within* one monitoring run; this
+# layer applies the persistence rule *across* runs, by carrying a small
+# on-disk streak count forward from the previous run. Kept as a free
+# function + a plain JSON-file store, not a `CalibrationMonitor` method,
+# because it is the one part of this module that does file I/O and callers
+# without a durable `data_dir` (e.g. a one-off `evaluate()`) should never be
+# forced to pay for it.
+# ---------------------------------------------------------------------------
+
+
+class MonitorStateStore:
+    """Loads/saves the per-(product, level, test) consecutive-breach streak
+    counts that `apply_persistence` needs, as a flat JSON object at `path`.
+    One store per `data_dir` (see `risk.serve.build_snapshot`), so streaks
+    are isolated per data directory -- tests that pass a fresh `tmp_path`
+    never see another run's history."""
+
+    def __init__(self, path: Path):
+        self.path = path
+
+    def load(self) -> dict[str, int]:
+        try:
+            return dict(json.loads(self.path.read_text()))
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
+
+    def save(self, state: dict[str, int]) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(state, indent=2, sort_keys=True))
+
+
+def apply_persistence(
+    statuses: dict[str, CalibrationStatus],
+    prior_state: dict[str, int],
+    k: int,
+) -> tuple[dict[str, CalibrationStatus], dict[str, int]]:
+    """Gate each product's single-window, BH-corrected `CalibrationStatus`
+    (typically `evaluate_batch`'s output) through the pre-registered
+    persistence rule, using `prior_state` (as returned by a previous call,
+    or `MonitorStateStore.load()`) as the streak counts carried in from the
+    last monitoring run.
+
+    Per `risk_engine_preregistration.json`'s `status_rule`: a test that
+    breaches this window but has not yet breached `k` consecutive windows
+    in a row escalates only to "warn", not "breach" -- it takes `k`
+    consecutive breaching windows of the *same* test (coverage,
+    clustering, or shape) to page. `warn` is also preserved when the
+    underlying `_verdict` already flagged it via the violation-rate/
+    cluster-length ratio thresholds, even if no test itself breached this
+    window.
+
+    Returns `(gated_statuses, new_state)`; the caller is responsible for
+    persisting `new_state` (e.g. via `MonitorStateStore.save`) so the next
+    run's streaks continue from here.
+    """
+    new_state: dict[str, int] = {}
+    out: dict[str, CalibrationStatus] = {}
+    for product, status in statuses.items():
+        streaks: dict[tuple[float, str], int] = {}
+        for level, lr in status.levels.items():
+            for test, breached_now in (
+                ("coverage", lr.coverage_breach),
+                ("clustering", lr.clustering_breach),
+            ):
+                key = f"{product}|{level}|{test}"
+                streak = (prior_state.get(key, 0) + 1) if breached_now else 0
+                new_state[key] = streak
+                streaks[(level, test)] = streak
+
+        shape_streak = 0
+        if status.acerbi is not None:
+            key = f"{product}|shape"
+            shape_streak = (
+                (prior_state.get(key, 0) + 1) if status.acerbi.shape_breach else 0
+            )
+            new_state[key] = shape_streak
+
+        any_coverage_persist = any(
+            streaks[(level, "coverage")] >= k for level in status.levels
+        )
+        any_clustering_persist = any(
+            streaks[(level, "clustering")] >= k for level in status.levels
+        )
+        any_shape_persist = status.acerbi is not None and shape_streak >= k
+
+        any_coverage_now = any(lr.coverage_breach for lr in status.levels.values())
+        any_clustering_now = any(lr.clustering_breach for lr in status.levels.values())
+        any_shape_now = bool(status.acerbi and status.acerbi.shape_breach)
+
+        if any_coverage_persist and any_clustering_persist:
+            final_status, failure_mode = "breach", "both"
+        elif any_coverage_persist:
+            final_status, failure_mode = "breach", "coverage"
+        elif any_clustering_persist:
+            final_status, failure_mode = "breach", "clustering"
+        elif any_shape_persist:
+            final_status, failure_mode = "breach", "shape"
+        elif any_coverage_now and any_clustering_now:
+            final_status, failure_mode = "warn", "both"
+        elif any_coverage_now:
+            final_status, failure_mode = "warn", "coverage"
+        elif any_clustering_now:
+            final_status, failure_mode = "warn", "clustering"
+        elif any_shape_now:
+            final_status, failure_mode = "warn", "shape"
+        elif status.status == "warn":
+            final_status, failure_mode = "warn", None
+        else:
+            final_status, failure_mode = "ok", None
+
+        out[product] = replace(status, status=final_status, failure_mode=failure_mode)
+    return out, new_state
