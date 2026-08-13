@@ -42,6 +42,26 @@ PRODUCTS = [
     "ZC", "ZW", "KE", "ZS", "ZL", "ZM", "ES",
 ]  # fmt: skip
 
+# Crypto panel (research/tmp/build_family_map_crypto_v1.py,
+# research/tmp/ingest_crypto_risk_data.py): the frozen 6-symbol panel from
+# notebooks 004-006's crypto research, run through this same risk-engine
+# pipeline for monitoring purposes. Deliberately kept out of `PRODUCTS`,
+# `family_map_v1`, `products`/`book` above -- see `_build_crypto_products`'s
+# docstring for why this is not the validated envelope.
+CRYPTO_FAMILY_MAP_VERSION = "crypto_v1"
+CRYPTO_ENVELOPE_CLAIM = (
+    "These 6 crypto perpetuals are shown for research/monitoring purposes "
+    "only, run through the same VaR/ES and calibration-monitor machinery as "
+    "the validated futures engine above. This is explicitly NOT the "
+    "validated envelope: each symbol's density family is an OOS log-score "
+    "pick (the same contest Phase 3 ran for the futures), but no "
+    "walk-forward VaR-coverage gate has ever been run for this panel at "
+    "daily frequency -- notebooks 004/005 only cleared that battery for BTC "
+    "at 12h, and for SOL/DOGE/BNB (weakly XRP) at 1d; never for BTC or ETH "
+    "at 1d. Treat the calibration status below as a live diagnostic, not a "
+    "certified result (see family_map_crypto_v1.json's own validation_note)."
+)
+
 # Mirrors commod_lib8.NAMED_EVENTS (NEXT_PROMPT.md sec 1 Phase 1) -- risk/
 # does not import from research/tmp/ (sec 12), so this reference-data table
 # (not logic) is duplicated here, not imported.
@@ -253,15 +273,69 @@ def _stress_scenarios(
     return out
 
 
+def _build_crypto_products(
+    data_dir: Path,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """The crypto counterpart of `build_snapshot`'s main futures loop: same
+    per-symbol fit/VaR-ES/monitor pipeline, but against
+    `family_map_crypto_v1` (an OOS-log-score pick, not a gate-validated
+    family map) and a separate `data_dir`
+    (`research/tmp/ingest_crypto_risk_data.py`'s output, not
+    `risk.ingest.refresh()`'s). Returns `(products, envelope)`, both kept
+    entirely out of the main `products`/`book`/`validated_envelope` so that
+    the validated envelope's own invariant (`products.keys() ==
+    validated_envelope.products`) is never diluted by an unvalidated panel.
+    If `family_map_crypto_v1.json` isn't present, returns empty results
+    rather than failing the whole snapshot -- this section is additive.
+    """
+    try:
+        family_map = load_family_map(CRYPTO_FAMILY_MAP_VERSION)
+    except (FileNotFoundError, ValueError):
+        return {}, {"products": [], "claim": ""}
+
+    monitor = CalibrationMonitor()
+    products_out: dict[str, Any] = {}
+    product_inputs: dict[str, tuple[RiskModel, np.ndarray, np.ndarray]] = {}
+
+    for product in sorted(family_map.products.keys()):
+        curve = _load_product_curve(data_dir, product)
+        if curve is None:
+            products_out[product] = {
+                "product": product,
+                "status": "no_data",
+                "family": family_map.family_for(product),
+            }
+            continue
+        family = family_map.family_for(product)
+        snap, model, ret_clean, sigma_path = _product_snapshot(product, family, curve)
+        products_out[product] = snap
+        if model is not None:
+            product_inputs[product] = (model, ret_clean, sigma_path)
+
+    _attach_monitor_status(products_out, product_inputs, monitor, data_dir)
+
+    envelope = {
+        "products": sorted(family_map.products.keys()),
+        "claim": CRYPTO_ENVELOPE_CLAIM,
+    }
+    return products_out, envelope
+
+
 def build_snapshot(
-    as_of: str | None = None, data_dir: Path | None = None
+    as_of: str | None = None,
+    data_dir: Path | None = None,
+    crypto_data_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Build the single JSON document the dashboard reads. `as_of` is a
     display label only (sec 7.4 -- no fitting/selection/threshold decision
     reads it); `data_dir` defaults to `risk.ingest.OUT_DIR`
     (`src/risk/data/`), assumed already populated by `risk.ingest.refresh()`.
+    `crypto_data_dir` defaults to `data_dir / "crypto"` (so passing a fresh
+    `data_dir` in a test isolates the crypto panel too, rather than reading
+    real production crypto data by accident).
     """
     data_dir = data_dir or ingest.OUT_DIR
+    crypto_data_dir = crypto_data_dir or (data_dir / "crypto")
     family_map = load_family_map("v1")
     monitor = CalibrationMonitor()
 
@@ -314,6 +388,8 @@ def build_snapshot(
             models, weights, returns_by_product
         )
 
+    crypto_products_out, crypto_envelope = _build_crypto_products(crypto_data_dir)
+
     return {
         "as_of": as_of,
         "family_map_version": family_map.version,
@@ -327,6 +403,8 @@ def build_snapshot(
         },
         "products": products_out,
         "book": book,
+        "crypto_envelope": crypto_envelope,
+        "crypto_products": crypto_products_out,
     }
 
 

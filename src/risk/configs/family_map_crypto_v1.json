@@ -1,0 +1,65 @@
+{
+  "config_hash": "740b7e6547fb0d1bfc5e5f01584481fe5051f18b4028e5fe6d1e479b35c4776c",
+  "created": "2026-08-13",
+  "gate_validated": false,
+  "policy": "log_score_pick_ungated",
+  "products": {
+    "BNBUSDT": {
+      "best_model": "garch_nig",
+      "best_zoo_family_agrees": true,
+      "family": "nig",
+      "log_score": 2.158351624808065,
+      "n_obs": 1462,
+      "selected_by": "phase3_zoo (OOS log-score contest, 1d interval)",
+      "significantly_beats_garch_t": false
+    },
+    "BTCUSDT": {
+      "best_model": "garch_ged",
+      "best_zoo_family_agrees": true,
+      "family": "ged",
+      "log_score": 2.2467252370726905,
+      "n_obs": 1462,
+      "selected_by": "phase3_zoo (OOS log-score contest, 1d interval)",
+      "significantly_beats_garch_t": true
+    },
+    "DOGEUSDT": {
+      "best_model": "garch_nig",
+      "best_zoo_family_agrees": true,
+      "family": "nig",
+      "log_score": 1.7353764338869604,
+      "n_obs": 1462,
+      "selected_by": "phase3_zoo (OOS log-score contest, 1d interval)",
+      "significantly_beats_garch_t": false
+    },
+    "ETHUSDT": {
+      "best_model": "garch_nig",
+      "best_zoo_family_agrees": true,
+      "family": "nig",
+      "log_score": 1.9808882437648616,
+      "n_obs": 1462,
+      "selected_by": "phase3_zoo (OOS log-score contest, 1d interval)",
+      "significantly_beats_garch_t": true
+    },
+    "SOLUSDT": {
+      "best_model": "garch_t",
+      "best_zoo_family_agrees": false,
+      "family": "t",
+      "log_score": 1.6001140416750181,
+      "n_obs": 1457,
+      "selected_by": "phase3_zoo (OOS log-score contest, 1d interval)",
+      "significantly_beats_garch_t": null
+    },
+    "XRPUSDT": {
+      "best_model": "garch_hansen_skewt",
+      "best_zoo_family_agrees": true,
+      "family": "hansen_skewt",
+      "log_score": 1.9220735396160016,
+      "n_obs": 1457,
+      "selected_by": "phase3_zoo (OOS log-score contest, 1d interval)",
+      "significantly_beats_garch_t": false
+    }
+  },
+  "source_notebook": "phase3_zoo (crypto density contest, notebooks 004-006 lineage)",
+  "validation_note": "Density family chosen by OOS log-score only (same procedure as family_map_v1's Phase 3 step). No walk-forward VaR-coverage gate (family_map_v1's Phase 7 equivalent) has been run for this panel at daily frequency -- treat the live calibration monitor's output for these symbols as a first read, not a certified result.",
+  "version": "crypto_v1"
+}

@@ -203,6 +203,25 @@
     font-weight: 700;
   }
 
+  /* the crypto panel is explicitly not the validated envelope -- a dashed
+     amber border (not a color-only cue: the panel-title badge below carries
+     the same "unvalidated" text) keeps that visible without implying a
+     warning/error state via the critical/breach hues. */
+  .panel.unvalidated {
+    border: 1px dashed var(--warning);
+  }
+  .unvalidated-badge {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--warning);
+    border: 1px solid var(--warning);
+    border-radius: 4px;
+    padding: 1px 6px;
+  }
+
   /* ---------- glossary ---------- */
   .glossary-grid {
     display: grid;
@@ -761,6 +780,15 @@
     <div class="strip-grid" id="calibration-strip"></div>
   </section>
 
+  <section class="panel envelope-panel unvalidated" id="crypto-envelope-panel"></section>
+
+  <section class="panel strip-panel" id="crypto-strip-panel">
+    <h3 class="panel-title">Crypto calibration strip
+      <span class="panel-hint">same engine, unvalidated panel (see note above) — click a card for detail</span>
+    </h3>
+    <div class="strip-grid" id="crypto-calibration-strip"></div>
+  </section>
+
   <section class="panel detail-panel" id="product-detail"></section>
 
   <section class="panel book-panel" id="book-panel"></section>
@@ -887,8 +915,18 @@
     ZS: "Soybeans",
     ZW: "Chicago SRW Wheat",
   };
+  /* Crypto panel names (research/tmp/build_family_map_crypto_v1.py's
+     6-symbol panel) -- separate map, same fallback-to-ticker rule. */
+  var CRYPTO_NAMES = {
+    BTCUSDT: "Bitcoin",
+    ETHUSDT: "Ethereum",
+    SOLUSDT: "Solana",
+    DOGEUSDT: "Dogecoin",
+    BNBUSDT: "BNB",
+    XRPUSDT: "XRP",
+  };
   function nameFor(ticker) {
-    return PRODUCT_NAMES[ticker] || ticker;
+    return PRODUCT_NAMES[ticker] || CRYPTO_NAMES[ticker] || ticker;
   }
 
   var LEVEL_LABELS = { "0.01": "1%", "0.025": "2.5%" };
@@ -918,11 +956,29 @@
   };
 
   var envelope = snapshot.validated_envelope || { products: [], claim: "" };
-  var products = snapshot.products || {};
+  var cryptoEnvelope = snapshot.crypto_envelope || { products: [], claim: "" };
+  var products = {};
+  (function mergeProducts() {
+    var futures = snapshot.products || {};
+    var crypto = snapshot.crypto_products || {};
+    Object.keys(futures).forEach(function (k) {
+      products[k] = futures[k];
+    });
+    Object.keys(crypto).forEach(function (k) {
+      products[k] = crypto[k];
+    });
+  })();
   var productList = (envelope.products && envelope.products.length
     ? envelope.products
-    : Object.keys(products)
+    : Object.keys(snapshot.products || {})
   ).slice();
+  var cryptoProductList = (cryptoEnvelope.products || []).slice();
+  if (!cryptoProductList.length) {
+    ["crypto-envelope-panel", "crypto-strip-panel"].forEach(function (id) {
+      var el2 = document.getElementById(id);
+      if (el2) el2.style.display = "none";
+    });
+  }
 
   /* =======================================================================
      2. Topbar
@@ -930,30 +986,54 @@
   renderSafely("topbar-meta", function (container) {
     var asOf = orDash(snapshot.as_of);
     var famVer = orDash(snapshot.family_map_version);
+    var cryptoNote = cryptoProductList.length
+      ? '<span>+' + cryptoProductList.length + " crypto (unvalidated)</span>"
+      : "";
     container.innerHTML =
       '<span>as of <b>' + escapeHtml(String(asOf)) + "</b></span>" +
       '<span>family map <b>' + escapeHtml(String(famVer)) + "</b></span>" +
-      '<span>' + productList.length + " products tracked</span>";
+      '<span>' + productList.length + " products tracked</span>" +
+      cryptoNote;
   });
 
   /* =======================================================================
-     3. Validated envelope panel — a compliance/scope statement, must be
-     shown somewhere the user will actually read it. Not a footer.
+     3. Envelope panels — a compliance/scope statement, must be shown
+     somewhere the user will actually read it, not a footer. Shared renderer
+     for both the validated (futures) and unvalidated (crypto) envelope
+     panels, distinguished by `opts.badge`.
      ======================================================================= */
-  renderSafely("envelope-panel", function (container) {
-    var chips = productList
-      .map(function (p) {
-        return (
-          '<span class="chip" title="' + escapeHtml(nameFor(p)) + '">' +
-          escapeHtml(p) + "</span>"
-        );
-      })
-      .join("");
-    container.innerHTML =
-      '<h3 class="panel-title">Validated envelope</h3>' +
-      '<p class="envelope-claim">' + escapeHtml(envelope.claim || "") + "</p>" +
-      '<div class="envelope-chips">' + chips + "</div>";
-  });
+  function renderEnvelopePanel(containerId, title, env, list, opts) {
+    opts = opts || {};
+    renderSafely(containerId, function (container) {
+      if (!list.length) {
+        container.innerHTML = "";
+        return;
+      }
+      var chips = list
+        .map(function (p) {
+          return (
+            '<span class="chip" title="' + escapeHtml(nameFor(p)) + '">' +
+            escapeHtml(p) + "</span>"
+          );
+        })
+        .join("");
+      var badge = opts.badge
+        ? ' <span class="unvalidated-badge">' + escapeHtml(opts.badge) + "</span>"
+        : "";
+      container.innerHTML =
+        '<h3 class="panel-title">' + escapeHtml(title) + badge + "</h3>" +
+        '<p class="envelope-claim">' + escapeHtml(env.claim || "") + "</p>" +
+        '<div class="envelope-chips">' + chips + "</div>";
+    });
+  }
+  renderEnvelopePanel("envelope-panel", "Validated envelope", envelope, productList);
+  renderEnvelopePanel(
+    "crypto-envelope-panel",
+    "Crypto panel",
+    cryptoEnvelope,
+    cryptoProductList,
+    { badge: "not validated" }
+  );
 
   /* =======================================================================
      4. Calibration strip — also serves as the product selector. Every
@@ -1051,10 +1131,10 @@
     );
   }
 
-  function renderStrip() {
-    renderSafely("calibration-strip", function (container) {
+  function renderOneStrip(containerId, list) {
+    renderSafely(containerId, function (container) {
       container.innerHTML = "";
-      productList.forEach(function (ticker) {
+      list.forEach(function (ticker) {
         var p = products[ticker];
         var cls = statusClassFor(p);
         var sub =
@@ -1085,6 +1165,12 @@
         container.appendChild(btn);
       });
     });
+  }
+  function renderStrip() {
+    renderOneStrip("calibration-strip", productList);
+    if (cryptoProductList.length) {
+      renderOneStrip("crypto-calibration-strip", cryptoProductList);
+    }
   }
 
   /* =======================================================================

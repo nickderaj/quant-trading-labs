@@ -19,7 +19,7 @@ _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT / "src"))
 
 from risk.families import load_family_map
-from risk.serve import build_snapshot, render_dashboard
+from risk.serve import CRYPTO_FAMILY_MAP_VERSION, build_snapshot, render_dashboard
 
 SEED = 0
 
@@ -178,6 +178,73 @@ class TestBuildSnapshot:
         assert snap2["products"]["CL"]["monitor"]["failure_mode"] == "coverage"
 
 
+class TestCryptoSection:
+    """The crypto panel (`family_map_crypto_v1`) is additive and must never
+    dilute the validated futures envelope's own invariants."""
+
+    def test_crypto_never_leaks_into_the_validated_products_dict(self, tmp_path):
+        fm = load_family_map("v1")
+        for product, entry in fm.products.items():
+            _write_synthetic_product(tmp_path, product, entry["family"])
+        # also drop synthetic crypto data in tmp_path/crypto -- it must still
+        # never show up under snap["products"] or snap["validated_envelope"]
+        crypto_fm = load_family_map(CRYPTO_FAMILY_MAP_VERSION)
+        crypto_dir = tmp_path / "crypto"
+        crypto_dir.mkdir()
+        for symbol, entry in crypto_fm.products.items():
+            _write_synthetic_product(crypto_dir, symbol, entry["family"])
+
+        snap = build_snapshot(data_dir=tmp_path)
+        assert set(snap["products"].keys()) == set(fm.products.keys())
+        assert set(snap["validated_envelope"]["products"]) == set(fm.products.keys())
+        assert set(snap["crypto_products"].keys()) == set(crypto_fm.products.keys())
+
+    def test_crypto_products_report_no_data_without_ingested_files(self, tmp_path):
+        # only futures data present; nothing under tmp_path/crypto
+        fm = load_family_map("v1")
+        _write_synthetic_product(tmp_path, "CL", fm.products["CL"]["family"])
+        snap = build_snapshot(data_dir=tmp_path)
+        crypto_fm = load_family_map(CRYPTO_FAMILY_MAP_VERSION)
+        assert set(snap["crypto_envelope"]["products"]) == set(
+            crypto_fm.products.keys()
+        )
+        for symbol in crypto_fm.products:
+            assert snap["crypto_products"][symbol]["status"] == "no_data"
+            assert snap["crypto_products"][symbol]["family"] == crypto_fm.family_for(
+                symbol
+            )
+
+    def test_crypto_envelope_claim_says_it_is_not_validated(self, tmp_path):
+        snap = build_snapshot(data_dir=tmp_path)
+        claim = snap["crypto_envelope"]["claim"]
+        assert "NOT the validated envelope" in claim
+
+    def test_a_crypto_product_with_data_gets_fitted_and_monitored(self, tmp_path):
+        crypto_fm = load_family_map(CRYPTO_FAMILY_MAP_VERSION)
+        crypto_dir = tmp_path / "crypto"
+        crypto_dir.mkdir()
+        _write_synthetic_product(crypto_dir, "BTCUSDT", crypto_fm.family_for("BTCUSDT"))
+        snap = build_snapshot(data_dir=tmp_path)
+        btc = snap["crypto_products"]["BTCUSDT"]
+        assert btc["status"] == "ok"
+        assert "0.01" in btc["var_es"]
+        assert btc["monitor"]["status"] in ("ok", "warn", "breach")
+        # untouched sibling symbols with no data still report honestly
+        assert snap["crypto_products"]["ETHUSDT"]["status"] == "no_data"
+
+    def test_crypto_data_dir_can_be_overridden_independently(self, tmp_path):
+        futures_dir = tmp_path / "futures"
+        futures_dir.mkdir()
+        crypto_dir = tmp_path / "somewhere_else"
+        crypto_dir.mkdir()
+        fm = load_family_map("v1")
+        _write_synthetic_product(futures_dir, "CL", fm.products["CL"]["family"])
+        crypto_fm = load_family_map(CRYPTO_FAMILY_MAP_VERSION)
+        _write_synthetic_product(crypto_dir, "ETHUSDT", crypto_fm.family_for("ETHUSDT"))
+        snap = build_snapshot(data_dir=futures_dir, crypto_data_dir=crypto_dir)
+        assert snap["crypto_products"]["ETHUSDT"]["status"] == "ok"
+
+
 class TestRenderDashboard:
     def test_placeholder_is_replaced_with_real_json(self, tmp_path):
         fm = load_family_map("v1")
@@ -208,6 +275,9 @@ class TestRenderDashboard:
         parsed = json.loads(m.group(1))
         assert set(parsed["products"].keys()) == set(snap["products"].keys())
         assert parsed["book"]["n_products"] == snap["book"]["n_products"]
+        assert set(parsed["crypto_products"].keys()) == set(
+            snap["crypto_products"].keys()
+        )
 
     def test_self_contained_no_external_references(self):
         html = render_dashboard(snapshot={"as_of": None, "products": {}, "book": {}})
