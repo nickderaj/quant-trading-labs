@@ -1,0 +1,147 @@
+{
+  "notebook": "018_funding_basis_trade",
+  "gate_candidate": "FA (009 Phase 3 shortlist, 'not confirmed' pending spot data verification)",
+  "written": "2026-08-16",
+  "committed_before_phase_1_completes": true,
+  "editable_after_commit": false,
+
+  "trade": {
+    "description": "Long spot / short USDS-M perpetual, same symbol, delta-neutral by construction. Return = funding received - basis mark-to-market - costs (NEXT_PROMPT.md sec 3.2). Binance convention: positive funding pays shorts, so this is the long-basis direction only; reverse carry (negative funding) is out of scope, sec 3.5.",
+    "headline_capital_convention": "fully-collateralised, unlevered return on deployed capital (denominator = 2 units of capital per unit of paired notional: 1 spot + 1 perp margin at 100%). Levered 3x/5x variants are a Phase 5 sensitivity row only, reported with the sec 6.3 liquidation analysis attached or not at all.",
+    "primary_basis_series": "futures/um premiumIndexKlines (venue-authoritative)",
+    "cross_check_basis_series": "(perp_close - spot_close) / spot_close",
+    "interval": "8h (native on both spot and futures/um klines; funding settles every 8h; no resampling)"
+  },
+
+  "constants": {
+    "SPOT_TAKER_BP": 10.0,
+    "PERP_TAKER_BP": 5.0,
+    "SLIPPAGE_BP_PER_LEG": 1.0,
+    "ROUND_TURN_BP": 34.0,
+    "ROUND_TURN_BP_derivation": "2 * (SPOT_TAKER_BP + SLIPPAGE_BP + PERP_TAKER_BP + SLIPPAGE_BP) = 2 * (10+1+5+1) = 34.0 bp per full open+close cycle",
+    "CARRY_EWMA_HALF_LIFE_PERIODS_N": 21,
+    "CARRY_EWMA_HALF_LIFE_NOTE": "21 is a HALF-LIFE (7 days at 8h bars), passed to polars ewm_mean(half_life=21, adjust=False). Not a span, not a window length.",
+    "TARGET_HOLD_PERIODS_H": 45,
+    "TARGET_HOLD_NOTE": "45 periods = 15 days = ~1.3x the ~34-period (~11.3 day) break-even hold derived in sec 3.4. Declared, not swept.",
+    "THETA_IN": 0.0000755555555555556,
+    "THETA_IN_derivation": "K/H = 34 bp / 45 periods = 0.755555... bp per 8h = 7.55555...e-5 as a fraction. Entry threshold on the causal carry EWMA.",
+    "THETA_OUT": 0.0000377777777777778,
+    "THETA_OUT_derivation": "THETA_IN / 2 (hysteresis band, sec 5.3). A position exits only when carry falls below half the level that would have opened it.",
+    "MAX_POSITIONS_N_MAX": 10,
+    "LIQUIDITY_FLOOR_USD_PER_DAY": 5000000,
+    "LIQUIDITY_FLOOR_NOTE": "Trailing 30-day median dollar volume, required on BOTH legs independently (spot AND perp). Declared before any return is computed (NEXT_PROMPT.md sec 4.3); not tuned. Sensitivity at $1M and $25M reported in Phase 5, counted into n_trials, never as an alternative headline.",
+    "DEVELOPMENT_WINDOW": ["2021-07-01", "2025-06-30"],
+    "HOLDOUT_WINDOW": ["2025-07-01", "unspent as of this pre-registration"],
+    "ORIGIN_OFFSETS_8H_PERIODS": [0, 1, 2, 3]
+  },
+
+  "universe_construction": {
+    "seed": "src/research/tmp/design_c_v2_universe.json (013's 128-symbol list)",
+    "screens_in_order": [
+      "1. spot leg must exist on Binance (symbols failing this are dropped and counted -- 'N of 128 symbols have no spot leg' is itself a capacity finding)",
+      "2. trailing 30-day median dollar volume >= $5,000,000/day on each leg independently (the pre-declared liquidity floor above)",
+      "3. no survivorship filtering -- LUNA, FTT, and every delisted name stay in the panel for as long as data exists; delisting is a forced exit at the last available price (sec 6.4)"
+    ],
+    "reporting_requirement": "cap the universe at whatever survives screens 1-2 and state the count; do not backfill toward a round number"
+  },
+
+  "book_construction": {
+    "weighting": "equal weight across all currently-qualifying symbols, capped at MAX_POSITIONS_N_MAX=10 simultaneous positions (top 10 by carry if more than 10 qualify)",
+    "unallocated_capital": "cash earning zero -- no T-bill/stablecoin yield credited",
+    "rebalance_cadence": "every 8h funding boundary",
+    "fill_convention": "next bar's open, never the decision bar's close",
+    "three_books_reported_side_by_side": [
+      "timed -- the pre-registered design above (the headline)",
+      "always-on -- hold the paired position in every screened symbol at all times, never timing entry (isolates whether timing adds anything over just being in the trade)",
+      "cash -- 0% (the honest zero baseline)"
+    ]
+  },
+
+  "gates": [
+    {
+      "id": "FA-1",
+      "name": "mechanism",
+      "claim": "Positive funding carry exists net of basis drift, before costs.",
+      "fires_if": "Pooled mean paired gross return > 0 with Newey-West |t| > 3 on the development panel.",
+      "phase_computed": 3
+    },
+    {
+      "id": "FA-2",
+      "name": "tradeable",
+      "claim": "The timed book is a tradeable, cost-surviving strategy.",
+      "fires_if": "Net Sharpe > 0.5 at EVERY origin offset in [0,1,2,3] AND block-bootstrap 95% CI on net excess return over cash excludes zero AND DSR > 0.95 at the honest n_trials.",
+      "phase_computed": 4,
+      "known_caveat": "DSR (research.deflated_sharpe_prob) is documented in NEXT_PROMPT.md sec 11.4 as likely over-rejecting for a trial family of near-identical origin offsets. Used unmodified anyway (fixing it is deferred to notebook 017). If FA-2 fails ONLY on the DSR leg while every other leg passes, that must be recorded prominently and explicitly, and NOT acted on (no threshold relaxation, no estimator patch)."
+    },
+    {
+      "id": "FA-3",
+      "name": "timing adds value",
+      "claim": "Timing beats always being in the trade.",
+      "fires_if": "Paired block-bootstrap 95% CI on (timed - always-on) net return excludes zero, in favour of timed.",
+      "phase_computed": 4
+    },
+    {
+      "id": "FA-4",
+      "name": "genuinely neutral",
+      "claim": "The book is not a disguised long.",
+      "fires_if": "|beta| to the equal-weight crypto basket < 0.10 AND |beta| to BTC < 0.10, both on net returns.",
+      "phase_computed": 4,
+      "note": "Validity check: if FA-4 fails, FA-2 does not count regardless of its Sharpe."
+    },
+    {
+      "id": "FUND",
+      "name": "institutionally fundable absolute performance (009 flag)",
+      "claim": "Institutionally fundable absolute performance.",
+      "fires_if": "Net Sharpe > 0.5 at every offset AND DSR > 0.95 AND a stated, bounded max drawdown.",
+      "phase_computed": 4,
+      "note": "Reported ALONGSIDE FA-2, never instead of it, per 009's own recommendation."
+    }
+  ],
+
+  "holdout_access_rule": "requires FA-2 AND FA-3 both firing on development. FA-1 alone is a mechanism finding, not a strategy. If they do not both fire, Phase 6 is skipped entirely, the holdout directory (src/research/cache/basis18/holdout/) is never read by any Phase 4/5/6 loader other than run_phase_6_18_holdout.py, and this is stated explicitly in the write-up.",
+
+  "n_trials": {
+    "baseline": 18,
+    "baseline_derivation": "3 books (timed/always-on/cash) x 4 origin offsets = 12, plus 6 Phase 5 ablations (no-hysteresis, perp-leg-only, excluding LUNA/FTT, cost sensitivity at 4 levels counted as configurations, levered 3x/5x, by-year decomposition) = 18",
+    "rule": "revised upward only, never downward, if any additional configuration is run for any reason (013's precedent: 18 -> 25, disclosed)"
+  },
+
+  "scope_discipline": [
+    "do not rebuild AdaptiveTrend or anything in the trend/momentum/adaptive-parameter family (013 Design C is already a stronger null than a fresh rebuild could produce)",
+    "do not reopen the directional question (015 closed it within a stated MDE bound)",
+    "do not test reverse carry (sec 3.5 -- an infrastructure/capacity finding, not a strategy to build)",
+    "do not risk-gate returns with src/risk/ (sec 6.4 -- tested twice by 007 Gate RG and hurt twice)",
+    "do not fix the Deflated Sharpe estimator (sec 11.4 -- that is notebook 017)",
+    "do not modify src/risk/ or src/regime/ (import only)",
+    "do not touch the holdout unless FA-2 and FA-3 both fire (sec 9.3 makes this a filesystem fact via a dedicated, greppable-in-one-command runner)",
+    "do not sweep K, H, theta_in, theta_out, or N to improve the headline (sec 5.2 -- they are derived once, above, and frozen)",
+    "do not drop LUNA/FTT/delisted names from the panel (report with and without, per 013's template)",
+    "one notebook -- no 019 work, no dashboard changes, no productionisation inside this run"
+  ],
+
+  "objection_2_1": {
+    "question": "Doesn't 007 Phase C already show funding carry is null?",
+    "answer": "No -- 007 Phase C tested a structurally different trade: a cross-sectional, dollar-neutral book in perpetuals ONLY (long low-funding names, short high-funding names), which is a bet that funding predicts price DIRECTION. It was net Sharpe-negative in all 24 configurations, with realized turnover ~674-681/yr (about 40% higher than the price-based signal it was compared to) because a rank-based book churns whenever cross-sectional funding rates cluster. Gate FA is a per-symbol, spot+perp, delta-neutral position that collects the funding PAYMENT itself; there is no cross-section to rank against and therefore no rank-churn failure mode to inherit. What DOES transfer from 007 is its own prescribed fix (sec 357-359): a no-trade band tuned to carry's own update frequency. Sec 5.3's per-symbol absolute-threshold hysteresis (qualifies()) is that fix, built without calling alpha_lib7.hysteresis_weights (which is cross-sectional/rank-based and would reintroduce 007's own failure mode)."
+  },
+  "objection_2_2": {
+    "question": "Isn't this just crypto beta with extra steps?",
+    "answer": "If it is, Gate FA-4 catches it and the notebook fails on validity grounds regardless of Sharpe. A basis book with |beta| to the equal-weight crypto basket or to BTC >= 0.10 (on net returns) is not the delta-neutral trade this notebook claims to test, and the most likely cause of a beta leak is an implementation bug (funding sign inverted, basis mark-to-market dropped, same-bar fills -- sec 11.2), not alpha. This check is load-bearing, not decorative -- 013 Design D used the identical beta check to confirm its own -1.52 book was genuinely losing on a cross-sectional bet rather than eating basket beta."
+  },
+
+  "expected_headline_range": {
+    "statement": "Do not expect Sharpe 6.45 (E1's headline). The sec 3.4 cost arithmetic implies a realistic development-window expectation of roughly 4-6% annual return on deployed capital at 2-4% volatility, net Sharpe approximately 1.0-2.0 and plausibly under 1.0. If the backtest prints Sharpe > 4, treat it as a bug first (sec 11.2: funding sign inversion, dropped basis mark-to-market, same-bar fills, or a forward-filled delisted spot leg) and investigate before reporting.",
+    "e2_prediction": "E1/E2 (Borri, Liu, Tsyvinski & Wu, arXiv:2510.14435) report the carry Sharpe fell to 4.06 by 2024 and turned NEGATIVE in 2025 -- squarely inside this repo's 2025-07-01+ holdout window. A holdout failure here is an informative, pre-predicted result, not a disappointment, and Phase 3's by-year pooled-funding check is a direct, cheap replication of this specific Tier-1 claim on this repo's own data."
+  },
+
+  "risk_engine_usage": {
+    "permitted": [
+      "risk.ewma_vol for causal volatility of the basis series (machinery reuse, no commodity-specific calibration claim)",
+      "risk.model.fit_risk_model + risk.densities to characterise the basis-shock tail descriptively, for sizing a margin buffer on the short perp leg -- cited to notebook 006 (Distribution Zoo, crypto), NEVER to 008 (Gate RE/CE/CT, commodity futures, does not transfer)"
+    ],
+    "forbidden": [
+      "using any risk/ output to time entry, exit, or position size for return-seeking reasons -- sizing a margin buffer is a solvency question; standing down on predicted risk is a return-timing question, tested twice (007 Gate RG, 013) and lost twice"
+    ]
+  },
+
+  "cost_accounting_note": "research.add_portfolio_costs applies one cost_frac = taker_fee + slippage per unit of turnover, but this trade has two legs with different fees (10bp spot vs 5bp perp). basis_lib18 does explicit two-leg cost accounting (not a single blended rate) and uses add_portfolio_costs only as a cross-check; this is stated in the results per the 012 flat-convention-reapplied-to-instruments-it-was-never-built-for precedent."
+}
