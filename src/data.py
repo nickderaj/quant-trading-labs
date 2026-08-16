@@ -142,28 +142,45 @@ def download_and_unzip_klines(
     month: str,
     download_dir: str = "tmp",
     cache_dir: str = "cache",
+    market: str = "futures/um",
 ) -> pl.DataFrame | None:
     """
-    Download and unzip one month of Binance USDS-M futures klines (OHLCV bars).
+    Download and unzip one month of Binance monthly klines (OHLCV bars).
 
     Unlike download_and_unzip (raw trades), Binance has already aggregated
     these into bars, so there is no group_by_dynamic step: one row in, one
     row out. A missing month (symbol not yet listed) returns None rather
     than raising, so a caller can skip pre-listing months for newer symbols.
+
+    market selects which data.binance.vision tree to read from -- the
+    default "futures/um" is USDS-M futures (this function's original,
+    only behaviour); pass "spot" for the spot market. Both trees publish
+    the identical 12-column monthly kline CSV shape, so no other parsing
+    logic needs to change. The cache filename only encodes market when it
+    isn't the default, so every existing futures/um cache file on disk
+    still hits on an unchanged call.
     """
     cache_path_dir = Path(cache_dir)
     cache_path_dir.mkdir(parents=True, exist_ok=True)
-    cache_path = cache_path_dir / f"{symbol}-klines-{interval}-{month}.parquet"
+    market_tag = "" if market == "futures/um" else f"-{market.replace('/', '_')}"
+    cache_path = (
+        cache_path_dir / f"{symbol}-klines{market_tag}-{interval}-{month}.parquet"
+    )
 
     if cache_path.exists():
         return pl.read_parquet(cache_path)
 
     url = (
-        f"https://data.binance.vision/data/futures/um/monthly/klines/"
+        f"https://data.binance.vision/data/{market}/monthly/klines/"
         f"{symbol}/{interval}/{symbol}-{interval}-{month}.zip"
     )
 
-    download_path_dir = Path(download_dir)
+    # Every market's zip contains an identically-named internal CSV member
+    # ("{symbol}-{interval}-{month}.csv", no market tag) -- extracting a
+    # concurrent spot and futures/um fetch of the same symbol/interval/month
+    # into the same directory would race on that shared name, so each
+    # market extracts into its own subdirectory instead.
+    download_path_dir = Path(download_dir) / (market_tag[1:] or "futures_um")
     download_path_dir.mkdir(parents=True, exist_ok=True)
     zip_path = download_path_dir / f"{symbol}-{interval}-{month}.zip"
     csv_path = download_path_dir / f"{symbol}-{interval}-{month}.csv"
