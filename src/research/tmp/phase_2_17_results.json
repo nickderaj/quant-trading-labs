@@ -1,0 +1,286 @@
+{
+  "notebook": "017_deflated_sharpe_correction",
+  "phase": 2,
+  "params": {
+    "n_trials": 18,
+    "n_obs": 3840,
+    "n_reps": 20000,
+    "smoke": false
+  },
+  "rho_axis": [
+    0.0,
+    0.25,
+    0.5,
+    0.75,
+    0.9,
+    0.99
+  ],
+  "pilot_reference": {
+    "0.00": {
+      "V0": 0.005,
+      "V1": 0.0025
+    },
+    "0.50": {
+      "V0": 0.0025,
+      "V1": 0.0125
+    },
+    "0.90": {
+      "V0": 0.0,
+      "V1": 0.0475
+    },
+    "0.99": {
+      "V0": 0.0,
+      "V1": 0.06
+    }
+  },
+  "cells": [
+    {
+      "n_trials": 18,
+      "n_obs": 3840,
+      "rho": 0.0,
+      "moments": [
+        0.0,
+        3.0
+      ],
+      "moments_label": "gaussian",
+      "n_reps": 20000,
+      "seed": 863701058,
+      "true_sharpe": 0.0,
+      "rate": {
+        "v0": 0.00375,
+        "v1": 0.00035,
+        "v2": 0.0037,
+        "v1b_c0.25": 0.00035,
+        "v1b_c0.5": 0.00035
+      },
+      "mc_se": {
+        "v0": 0.0004322000404905117,
+        "v1": 0.0001322644132032498,
+        "v2": 0.00042931981086364977,
+        "v1b_c0.25": 0.0001322644132032498,
+        "v1b_c0.5": 0.0001322644132032498
+      },
+      "achieved_moments": {
+        "mean_sample_skew_of_winner": 0.00017104305265619414,
+        "mean_sample_kurtosis_of_winner": 2.999429671199995,
+        "mean_estimated_pairwise_corr": -7.224281681322615e-07
+      }
+    },
+    {
+      "n_trials": 18,
+      "n_obs": 3840,
+      "rho": 0.25,
+      "moments": [
+        0.0,
+        3.0
+      ],
+      "moments_label": "gaussian",
+      "n_reps": 20000,
+      "seed": 2313259230,
+      "true_sharpe": 0.0,
+      "rate": {
+        "v0": 0.004,
+        "v1": 0.0047,
+        "v2": 0.06935,
+        "v1b_c0.25": 0.0047,
+        "v1b_c0.5": 0.00465
+      },
+      "mc_se": {
+        "v0": 0.0004463182720884279,
+        "v1": 0.00048362743925463953,
+        "v2": 0.0017963932963023436,
+        "v1b_c0.25": 0.00048362743925463953,
+        "v1b_c0.5": 0.0004810601573608024
+      },
+      "achieved_moments": {
+        "mean_sample_skew_of_winner": -6.988087011372458e-05,
+        "mean_sample_kurtosis_of_winner": 2.999523928062751,
+        "mean_estimated_pairwise_corr": 0.2499852807441167
+      }
+    },
+    {
+      "n_trials": 18,
+      "n_obs": 3840,
+      "rho": 0.5,
+      "moments": [
+        0.0,
+        3.0
+      ],
+      "moments_label": "gaussian",
+      "n_reps": 20000,
+      "seed": 1037289253,
+      "true_sharpe": 0.0,
+      "rate": {
+        "v0": 0.00385,
+        "v1": 0.01845,
+        "v2": 0.15175,
+        "v1b_c0.25": 0.01845,
+        "v1b_c0.5": 0.01835
+      },
+      "mc_se": {
+        "v0": 0.00043790281456049127,
+        "v1": 0.0009515670627969424,
+        "v2": 0.0025369463681757247,
+        "v1b_c0.25": 0.0009515670627969424,
+        "v1b_c0.5": 0.0009490331263975984
+      },
+      "achieved_moments": {
+        "mean_sample_skew_of_winner": -0.00030256172278022355,
+        "mean_sample_kurtosis_of_winner": 2.9989269058638426,
+        "mean_estimated_pairwise_corr": 0.49992098103692395
+      }
+    },
+    {
+      "n_trials": 18,
+      "n_obs": 3840,
+      "rho": 0.75,
+      "moments": [
+        0.0,
+        3.0
+      ],
+      "moments_label": "gaussian",
+      "n_reps": 20000,
+      "seed": 3693430179,
+      "true_sharpe": 0.0,
+      "rate": {
+        "v0": 0.002,
+        "v1": 0.0315,
+        "v2": 0.197,
+        "v1b_c0.25": 0.0315,
+        "v1b_c0.5": 0.02655
+      },
+      "mc_se": {
+        "v0": 0.0003159113799786263,
+        "v1": 0.0012350657877214476,
+        "v2": 0.0028123922201570674,
+        "v1b_c0.25": 0.0012350657877214476,
+        "v1b_c0.5": 0.001136773889126593
+      },
+      "achieved_moments": {
+        "mean_sample_skew_of_winner": 0.00046304797467576193,
+        "mean_sample_kurtosis_of_winner": 2.9974856400015852,
+        "mean_estimated_pairwise_corr": 0.7499506338214617
+      }
+    },
+    {
+      "n_trials": 18,
+      "n_obs": 3840,
+      "rho": 0.9,
+      "moments": [
+        0.0,
+        3.0
+      ],
+      "moments_label": "gaussian",
+      "n_reps": 20000,
+      "seed": 1255258055,
+      "true_sharpe": 0.0,
+      "rate": {
+        "v0": 0.001,
+        "v1": 0.04125,
+        "v2": 0.1328,
+        "v1b_c0.25": 0.0406,
+        "v1b_c0.5": 0.0184
+      },
+      "mc_se": {
+        "v0": 0.0002234949663862701,
+        "v1": 0.001406208332716031,
+        "v2": 0.0023996266376251118,
+        "v1b_c0.25": 0.0013955579529349542,
+        "v1b_c0.5": 0.0009503010049452753
+      },
+      "achieved_moments": {
+        "mean_sample_skew_of_winner": 2.708817158210186e-06,
+        "mean_sample_kurtosis_of_winner": 2.9976462711985135,
+        "mean_estimated_pairwise_corr": 0.899960250594096
+      }
+    },
+    {
+      "n_trials": 18,
+      "n_obs": 3840,
+      "rho": 0.99,
+      "moments": [
+        0.0,
+        3.0
+      ],
+      "moments_label": "gaussian",
+      "n_reps": 20000,
+      "seed": 2777828549,
+      "true_sharpe": 0.0,
+      "rate": {
+        "v0": 0.0002,
+        "v1": 0.0499,
+        "v2": 0.07025,
+        "v1b_c0.25": 0.02545,
+        "v1b_c0.5": 0.00765
+      },
+      "mc_se": {
+        "v0": 9.998999949994999e-05,
+        "v1": 0.0015396426533452493,
+        "v2": 0.0018071377576156168,
+        "v1b_c0.25": 0.0011136044517691189,
+        "v1b_c0.5": 0.0006160956703305095
+      },
+      "achieved_moments": {
+        "mean_sample_skew_of_winner": 0.00043126450901904593,
+        "mean_sample_kurtosis_of_winner": 2.9985242843775364,
+        "mean_estimated_pairwise_corr": 0.989994374559366
+      }
+    }
+  ],
+  "gate_DS1": {
+    "clause_1_high_rho_fpr_le_0.005": {
+      "cells_checked": [
+        0.9,
+        0.99
+      ],
+      "fires": true,
+      "values": {
+        "0.9": 0.001,
+        "0.99": 0.0002
+      }
+    },
+    "clause_2_fpr_non_increasing_in_rho": {
+      "baseline_rho0_fpr": 0.00375,
+      "detail": [
+        {
+          "rho": 0.25,
+          "fpr": 0.004,
+          "baseline_fpr": 0.00375,
+          "2_mc_se_margin": 0.0017570366251578793,
+          "exceeds_baseline_beyond_margin": false
+        },
+        {
+          "rho": 0.5,
+          "fpr": 0.00385,
+          "baseline_fpr": 0.00375,
+          "2_mc_se_margin": 0.001740205710102006,
+          "exceeds_baseline_beyond_margin": false
+        },
+        {
+          "rho": 0.75,
+          "fpr": 0.002,
+          "baseline_fpr": 0.00375,
+          "2_mc_se_margin": 0.001496222840938276,
+          "exceeds_baseline_beyond_margin": false
+        },
+        {
+          "rho": 0.9,
+          "fpr": 0.001,
+          "baseline_fpr": 0.00375,
+          "2_mc_se_margin": 0.0013113900137535636,
+          "exceeds_baseline_beyond_margin": false
+        },
+        {
+          "rho": 0.99,
+          "fpr": 0.0002,
+          "baseline_fpr": 0.00375,
+          "2_mc_se_margin": 0.0010643800799809233,
+          "exceeds_baseline_beyond_margin": false
+        }
+      ],
+      "fires": true
+    },
+    "fires": true
+  },
+  "elapsed_seconds": 891.1512286663055
+}
