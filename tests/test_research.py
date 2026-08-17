@@ -186,3 +186,22 @@ def test_deflated_sharpe_negative_skew_excess_kurtosis_lowers_probability():
     )
 
     assert fat_tailed_prob < normal_prob
+
+
+def test_deflated_sharpe_prob_gate_ac_pin():
+    """Notebook 017 sec 8 item 4: the load-bearing 0.997 backward-compat
+    assertion moves out of src/research/tmp/run_phase_0_repro.py (a research
+    runner nobody executes in CI) and into a real regression test. Inputs
+    are notebook 8's gate AC (src/research/tmp/run_phase_5_alpha.py's
+    gate_verdict): sharpe_net=0.9042246451305482 annualized at sqrt(252),
+    n_trials=len(ORIGIN_OFFSETS)=4, n_obs=no_bars=4507, default skew/kurtosis.
+    """
+    import numpy as np
+
+    annualized_rate = float(np.sqrt(252))
+    sharpe_net = 0.9042246451305482
+    dsr = research.deflated_sharpe_prob(
+        sharpe_net / annualized_rate, n_trials=4, n_obs=4507
+    )
+    assert abs(dsr - 0.997) < 0.002
+    assert dsr == 0.9971831492023995
