@@ -94,6 +94,29 @@ def check_availability() -> dict[str, int | str]:
     return results
 
 
+RETRY_ATTEMPTS = 3
+RETRY_BACKOFF_SECONDS = 5.0
+
+
+def _with_retries(fn: object, *args: object, **kwargs: object) -> object:
+    """A transient DNS/network blip mid-fetch (observed live: a whole batch
+    of symbols failed at once with a NameResolutionError, then recovered
+    seconds later) must not be recorded as a permanent "no_spot"/"no_perp" --
+    that would misreport real data as absent. Retries the whole per-symbol
+    fetch (cheap: already-cached months are skipped instantly) with a short
+    backoff before giving up.
+    """
+    last_exc: Exception | None = None
+    for attempt in range(RETRY_ATTEMPTS):
+        try:
+            return fn(*args, **kwargs)  # type: ignore[operator]
+        except Exception as e:  # noqa: BLE001
+            last_exc = e
+            if attempt < RETRY_ATTEMPTS - 1:
+                time.sleep(RETRY_BACKOFF_SECONDS * (attempt + 1))
+    raise last_exc  # type: ignore[misc]
+
+
 def fetch_symbol_window(
     symbol: str,
     start_date: datetime,
@@ -106,16 +129,26 @@ def fetch_symbol_window(
     a manifest status string.
     """
     try:
-        series = bl.fetch_symbol_series(
-            symbol, start_date, end_date, download_dir, cache_dir
+        series = _with_retries(
+            bl.fetch_symbol_series,
+            symbol,
+            start_date,
+            end_date,
+            download_dir,
+            cache_dir,
         )
     except Exception as e:  # noqa: BLE001 -- one bad symbol must not kill the batch
         return f"ERROR: {e}"
+    assert isinstance(series, dict)
 
     if start_date >= HOLDOUT_START:
         try:
-            data.download_funding_rate_range(
-                symbol, start_date, end_date, cache_dir=cache_dir
+            _with_retries(
+                data.download_funding_rate_range,
+                symbol,
+                start_date,
+                end_date,
+                cache_dir=cache_dir,
             )
         except Exception as e:  # noqa: BLE001
             return f"ERROR (funding): {e}"

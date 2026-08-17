@@ -1,0 +1,169 @@
+{
+  "baseline": {
+    "label": "timed_baseline",
+    "no_bars": 3840,
+    "total_log_return": 0.4339619388853338,
+    "compound_return": 0.5433601249918911,
+    "std": 0.0014055928468494202,
+    "sharpe": 2.6605286363988956,
+    "max_drawdown": -0.056779668193544436,
+    "sharpe_net": 0.5766182328943011,
+    "total_log_return_net": 0.09472216769920544,
+    "compound_return_net": 0.09935337681413037,
+    "max_drawdown_net": -0.08613521755565864,
+    "mean_turnover_per_bar": 0.0519489914021164,
+    "annualized_turnover": 56.88414558531746
+  },
+  "1_no_hysteresis": {
+    "label": "no_hysteresis",
+    "no_bars": 3840,
+    "total_log_return": 0.4400918948295294,
+    "compound_return": 0.5528499108327329,
+    "std": 0.0014942034464272276,
+    "sharpe": 2.538104339702223,
+    "max_drawdown": -0.056779668193544436,
+    "sharpe_net": -0.7262281671200278,
+    "total_log_return_net": -0.12868296558336678,
+    "compound_return_net": -0.12074732527814813,
+    "max_drawdown_net": -0.24968618144890398,
+    "mean_turnover_per_bar": 0.08708932705026455,
+    "annualized_turnover": 95.36281312003969
+  },
+  "2_perp_leg_only_no_spot_hedge": {
+    "label": "perp_only",
+    "no_bars": 3840,
+    "total_log_return": 1.6578433281712575,
+    "compound_return": 4.247980459263036,
+    "std": 0.026196797468911726,
+    "sharpe": 0.545344727378778,
+    "max_drawdown": -0.99602211429267,
+    "beta_to_crypto_basket": -0.897349084569138,
+    "beta_to_btc": -1.102903400229454,
+    "hedged_baseline_beta_to_crypto_basket": 0.0005042462348025479,
+    "hedged_baseline_beta_to_btc": 0.0016243230788592514,
+    "confirms_hedge_removes_beta": true
+  },
+  "3_excluding_luna_ftt": {
+    "label": "excluding_luna_ftt",
+    "no_bars": 3840,
+    "total_log_return": 0.433878591425842,
+    "compound_return": 0.5432314952069495,
+    "std": 0.0014057124362595974,
+    "sharpe": 2.659791352775878,
+    "max_drawdown": -0.056779668193544436,
+    "sharpe_net": 0.5615940246875138,
+    "total_log_return_net": 0.09225864690529045,
+    "compound_return_net": 0.09664843012470792,
+    "max_drawdown_net": -0.08613521755565864,
+    "mean_turnover_per_bar": 0.05231357473544973,
+    "annualized_turnover": 57.28336433531746,
+    "symbols_excluded": [
+      "LUNAUSDT",
+      "1000LUNAUSDT",
+      "FTTUSDT"
+    ],
+    "symbols_present_in_universe": [
+      "LUNAUSDT",
+      "FTTUSDT"
+    ]
+  },
+  "4_cost_sensitivity": {
+    "0.0": {
+      "label": "cost_0.0bp",
+      "no_bars": 3840,
+      "total_log_return": 0.4339619388853338,
+      "compound_return": 0.5433601249918911,
+      "std": 0.0014055928468494202,
+      "sharpe": 2.6605286363988956,
+      "max_drawdown": -0.056779668193544436
+    },
+    "17.0": {
+      "label": "cost_17.0bp",
+      "no_bars": 3840,
+      "total_log_return": 0.2643712524380704,
+      "compound_return": 0.3026117043146621,
+      "std": 0.001405893482606771,
+      "sharpe": 1.6204575031400679,
+      "max_drawdown": -0.06331571696090313
+    },
+    "34.0": {
+      "label": "cost_34.0bp",
+      "no_bars": 3840,
+      "total_log_return": 0.09472216769920544,
+      "compound_return": 0.09935337681413037,
+      "std": 0.001415595236729792,
+      "sharpe": 0.5766182328943011,
+      "max_drawdown": -0.08613521755565864
+    },
+    "51.0": {
+      "label": "cost_51.0bp",
+      "no_bars": 3840,
+      "total_log_return": -0.07498537733561228,
+      "compound_return": -0.07224294749062199,
+      "std": 0.0014345228686358613,
+      "sharpe": -0.4504482877971457,
+      "max_drawdown": -0.156262322444692
+    }
+  },
+  "4_cost_sensitivity_breakeven_round_turn_bp": 51.0,
+  "5_levered_variants": {
+    "3": {
+      "sharpe": 0.5179632293307878,
+      "total_log_return": 0.2603284064561247,
+      "max_drawdown": -0.2699543661431989
+    },
+    "5": {
+      "sharpe": 0.45497352434557653,
+      "total_log_return": 0.39138859377869895,
+      "max_drawdown": -0.47257285565246043
+    }
+  },
+  "5_liquidation_analysis": {
+    "citation": "notebook 006 (Distribution Zoo, crypto), NOT 008 (Gate RE/CE/CT is commodity futures and does not transfer -- NEXT_PROMPT sec 6.2)",
+    "series_used": "pooled cross-symbol perp 8h log returns (the short perp leg's own mark-to-market -- spot and perp margin are not cross-margined on a real exchange, so an adverse perp rally can trigger liquidation even though the paired position is economically delta-neutral)",
+    "n_obs": 461305,
+    "family": "hansen_skewt",
+    "es_1pct_per_period": 0.13929555127761578,
+    "required_margin_buffer_note": "1% expected shortfall of the perp leg's own 8h return, expressed as a fraction of perp notional -- a levered variant's margin buffer should be sized to survive several multiples of this before a liquidation call, not just the levered position's own VaR",
+    "leveraged_3x_es_1pct_of_deployed_capital": 0.41788665383284734,
+    "leveraged_5x_es_1pct_of_deployed_capital": 0.6964777563880789
+  },
+  "6_by_year_decomposition": {
+    "2021": {
+      "label": "year_2021",
+      "no_bars": 552,
+      "total_log_return": 0.06277912422623474,
+      "compound_return": 0.06479162658145365,
+      "std": 0.0004977415772633905,
+      "sharpe": 7.561001342117949,
+      "max_drawdown": -0.005365715986502394
+    },
+    "2022": {
+      "label": "year_2022",
+      "no_bars": 1095,
+      "total_log_return": -0.01469031949910603,
+      "compound_return": -0.014582943196059128,
+      "std": 0.0023132359140251068,
+      "sharpe": -0.19191293859324313,
+      "max_drawdown": -0.08070061835206414
+    },
+    "2023": {
+      "label": "year_2023",
+      "no_bars": 1095,
+      "total_log_return": 0.019968582178023143,
+      "compound_return": 0.02016928802617901,
+      "std": 0.0003513927450345947,
+      "sharpe": 1.7173047835636033,
+      "max_drawdown": -0.015040578683620128
+    },
+    "2024": {
+      "label": "year_2024",
+      "no_bars": 1098,
+      "total_log_return": 0.02666478079405359,
+      "compound_return": 0.02702346706162695,
+      "std": 0.0011930158701711705,
+      "sharpe": 0.6735913730058044,
+      "max_drawdown": -0.05544465682639195
+    }
+  }
+}
