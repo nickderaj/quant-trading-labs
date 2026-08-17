@@ -25,6 +25,7 @@ import zipfile
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import polars as pl
@@ -523,12 +524,22 @@ def add_trade_features(panel: pl.DataFrame) -> pl.DataFrame:
 # --------------------------------------------------------------------------
 
 
-def build_book_weights(panel: pl.DataFrame, timed: bool) -> pl.DataFrame:
+def build_book_weights(
+    panel: pl.DataFrame,
+    timed: bool,
+    theta_in: float = THETA_IN,
+    theta_out: float = THETA_OUT,
+) -> pl.DataFrame:
     """Sequential, causal book construction.
 
     timed=True: hysteresis-gated entry/exit (`qualifies`), capped at
     MAX_POSITIONS by carry rank when more symbols qualify than the cap
     (sec 5.4) -- the pre-registered "timed" book, the headline.
+    theta_in/theta_out default to the frozen module constants; Phase 5's
+    no-hysteresis ablation passes theta_out=theta_in explicitly (a
+    pre-registered robustness exhibit, not a sweep of the frozen design --
+    sec 12 forbids sweeping to improve the headline, not running the one
+    ablation sec 7.2 already names).
     timed=False ("always-on", sec 5.5): every currently-liquid symbol is
     held, uncapped, equal-weighted -- isolates whether timing (entry/exit
     gating + the N_max rank cap) adds anything over simply being in the
@@ -561,7 +572,7 @@ def build_book_weights(panel: pl.DataFrame, timed: bool) -> pl.DataFrame:
             carry_val = carry if carry is not None else float("-inf")
             if timed:
                 was_held = held.get(sym, False)
-                threshold = THETA_OUT if was_held else THETA_IN
+                threshold = theta_out if was_held else theta_in
                 qualify = liquid_bool and carry_val > threshold
             else:
                 qualify = liquid_bool
@@ -618,6 +629,39 @@ def book_trade_frame(
             cutoff = unique_times[origin_offset]
             trade_frame = trade_frame.filter(pl.col("datetime") >= cutoff)
     return trade_frame
+
+
+# --------------------------------------------------------------------------
+# Metrics
+# --------------------------------------------------------------------------
+
+
+def book_metrics(
+    costed_trade_frame: pl.DataFrame, annualized_rate: float, label: str = "book"
+) -> dict[str, Any]:
+    """Gross + net summary metrics for an `apply_two_leg_costs` output
+    frame, reusing `research._series_metrics` (the exact Sharpe/max-drawdown
+    definitions every other backtest in this repo uses) instead of
+    reimplementing them. Also reports annualized turnover in 007's own
+    units (round-trips/yr, via `research.portfolio_turnover`'s sum-of-
+    absolute-weight-changes convention) so this notebook's number is
+    directly comparable to 007's ~674-681/yr (sec 5.3).
+    """
+    metrics = research._series_metrics(
+        costed_trade_frame["trade_log_return"], annualized_rate, label
+    )
+    net_metrics = research._series_metrics(
+        costed_trade_frame["trade_log_return_net"], annualized_rate, f"{label}_net"
+    )
+    metrics["sharpe_net"] = net_metrics["sharpe"]
+    metrics["total_log_return_net"] = net_metrics["total_log_return"]
+    metrics["compound_return_net"] = net_metrics["compound_return"]
+    metrics["max_drawdown_net"] = net_metrics["max_drawdown"]
+    periods_per_year = annualized_rate**2
+    mean_turnover = research._as_float(costed_trade_frame["turnover"].mean())
+    metrics["mean_turnover_per_bar"] = mean_turnover
+    metrics["annualized_turnover"] = mean_turnover * periods_per_year
+    return metrics
 
 
 # --------------------------------------------------------------------------
