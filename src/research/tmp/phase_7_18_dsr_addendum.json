@@ -1,0 +1,114 @@
+{
+  "notebook": "017_deflated_sharpe_correction",
+  "phase": "6b",
+  "purpose": "Discharges the known_caveat 018 recorded pointing at this notebook ('fixing it is notebook 017'). Sidecar only -- phase_4_18_results.json and phase_5_18_results.json are not modified by this file or by anything that produced it.",
+  "referenced_018_artifacts": {
+    "phase_4_18_results.json": {
+      "source": "src/research/tmp/phase_4_18_results.json",
+      "n_trials_used": 18,
+      "dsr_deflated_sharpe_prob": 0.18590973717553716,
+      "dsr_best_sharpe_per_period": 0.01743215308672331,
+      "dsr_best_sharpe_annualized": 0.5768436162051704,
+      "dsr_n_obs": 3837,
+      "gate_FA2": {
+        "fires": false,
+        "fires_except_dsr_leg": false,
+        "bootstrap_ci_leg_fires": false
+      },
+      "gate_FA3": {
+        "fires": false
+      },
+      "gate_FUND": {
+        "fires": false,
+        "max_drawdowns_net_by_offset": {
+          "0": -0.08613521755565864,
+          "1": -0.08613521755565864,
+          "2": -0.08613521755565864,
+          "3": -0.08613521755565864
+        }
+      },
+      "holdout_access": {
+        "rule": "requires FA-2 AND FA-3",
+        "fa2_fires": false,
+        "fa3_fires": false,
+        "access_granted": false
+      },
+      "conclusion": "FA-2's bootstrap-CI leg fails independently of the DSR leg (fires_except_dsr_leg=False means even removing the DSR requirement entirely would not make FA-2 fire). FA-2 stays failed under ANY outcome of this notebook, per sec 0.1 item 1. Holdout access requires FA-2 AND FA-3; FA-3 also fails independently of any DSR leg (FA-3 has no DSR leg at all). No branch of this notebook's sec 14.2 decision tree can grant holdout access."
+    },
+    "phase_5_18_results.json": "6 ablations, unchanged -- not read for this addendum (018's row in Phase 5's rescore is not_rescorable for a reason unrelated to Phase 5's own ablation contents; see 'the_18_trial_family' below)."
+  },
+  "sec_14_2_branch_applicability": {
+    "branch_A_DS1_does_not_fire": {
+      "premise_holds": false,
+      "why": "DS-1 fired (Phase 2): V0's FPR at rho in {0.9, 0.99} is 0.0010/0.0002 (<=0.005) and non-increasing in rho from the rho=0 baseline of 0.00375, within 2 MC SE at every intermediate point. The deferred concern is confirmed, not dismissed -- pasting Branch A's text would misstate this."
+    },
+    "branch_B_repair_adopted_corrected_dsr_below_0.95": {
+      "premise_holds": false,
+      "why": "No repair was adopted in Phase 4 (see below), so there is no 'corrected DSR' for 018 to be below or above 0.95."
+    },
+    "branch_C_repair_adopted_corrected_dsr_at_least_0.95": {
+      "premise_holds": false,
+      "why": "Same as Branch B: no repair was adopted."
+    },
+    "conclusion": "None of the three sec 14.2 branch texts is pasted. A new characterization follows, holding every sec 14.3 rule that applies uniformly across all three frozen branches."
+  },
+  "phase_2_ds1_result": {
+    "fires": true,
+    "v0_fpr_at_high_rho": {
+      "0.9": 0.001,
+      "0.99": 0.0002
+    }
+  },
+  "phase_4_adoption_result": {
+    "adopted_variant": null,
+    "why_none_adopted": {
+      "v1": "passes DS-2 (calibration) cleanly; fails DS-3 (power): insufficient power gain over V0 at high correlation in 20 cells (below the required 10-percentage-point margin), AND a power loss versus V0 at rho=0 beyond the allowed 2-point margin in 20 cells.",
+      "v1b_c0.25": "same failure mode as v1.",
+      "v1b_c0.5": "fails DS-2b in addition (38 null cells with rho>=0.5 have FPR below the 0.010 usability floor -- too conservative) as well as DS-3.",
+      "v2": "fails DS-2a badly: 246 of 378 null cells exceed the 0.075 anti-conservatism ceiling. Passes DS-3."
+    }
+  },
+  "the_18_trial_family": {
+    "note": "sec 14.1's mandatory rule: 018's family is all 18 declared trials (12 offset-book values + 6 Phase 5 ablations), assembled from both JSONs, or the row is not_rescorable -- it does not fall back to a smaller family. Moot here because no variant was adopted (there is nothing to apply the family to), but recorded for completeness and for whichever future notebook picks this up: the 6 'ablation' slots in phase_5_18_results.json do not correspond to 6 stored scalar Sharpes -- they are 6 named categories containing 13 stored values of uneven cardinality (1, 1, 1, 4, 2, 4), several without a net-of-cost analog to the other 12 offset values. Assembling exactly 18 would require an unstated, ad hoc selection rule (e.g. 'use the 34bp cost level') -- exactly the kind of undisclosed family choice sec 2.2/13.6 exist to prevent. This is a record-keeping finding about 018, not a blocker for this addendum (see scratch/017/phase6b_018_family_notes.md for the full breakdown).",
+    "would_be_not_rescorable_even_if_a_variant_had_been_adopted": true
+  },
+  "018_own_row_in_phase_5_rescore": {
+    "note": "018's own stored DSR (phase_4_18_results.json -> dsr.deflated_sharpe_prob) IS one of the sec 5.5 inventory's 70 rows (exact-key sweep; see src/research/tmp/phase_5_17_rescore.json). Its rho->1 upper bound -- the maximum value ANY dispersion-based repair (V0, V1, V1b at either shrinkage setting) could ever produce for these exact stored inputs -- is 0.8317, computed from 018's own sample_skew=-11.516 and sample_kurtosis=816.85 (Phase 0's '018_measured' moment regime exists specifically to stress-test this case). That is BELOW the 0.95 bar. This is a stronger and more decisive statement than 'no variant was adopted': even in the counterfactual where Phase 4 HAD adopted V1 or a V1b setting, 018's corrected DSR could not have exceeded 0.83 -- FA-2's DSR leg and FUND's DSR leg were mathematically incapable of flipping for this specific book, independent of which repair (if any) this notebook settled on. Verified independently: dsr_lib17.psr_upper_bound(0.01743215308672331, 3837, -11.516325584172863, 816.8538707698766) == 0.8316743360550332.",
+    "upper_bound": 0.8316743360550332,
+    "source_row": {
+      "file": "src/research/tmp/phase_4_18_results.json",
+      "json_pointer": "/dsr/deflated_sharpe_prob",
+      "stored_value": 0.18590973717553716,
+      "stored_fires_at_0.95": false,
+      "rho_to_1_upper_bound": 0.8316743360550332,
+      "inputs": {
+        "sharpe_per_period": 0.01743215308672331,
+        "n_trials": 18,
+        "n_obs": 3837,
+        "skew": -11.516325584172863,
+        "kurtosis": 816.8538707698766,
+        "source": "src/research/tmp/run_phase_4_18_backtest.py / phase_4_18_results.json.dsr, all fields stored directly"
+      },
+      "corrected_value": null,
+      "not_rescorable": false,
+      "verdict_change": false,
+      "note": "upper bound 0.8317 < 0.95: this verdict provably cannot flip under any dispersion-based repair (sec 5.4 item 2); no further work needed on this row."
+    },
+    "would_have_been_provably_incapable_of_flipping_regardless_of_adoption": true
+  },
+  "what_this_means_for_018": {
+    "research_py_modified": false,
+    "018_dsr_value_unchanged": 0.18590973717553716,
+    "018_dsr_value_confirmation": "research.py is bit-for-bit unchanged from before this notebook (git diff empty), so any call with 018's exact stored inputs, including the original deflated_sharpe_prob call, returns exactly 0.18590973717553716, unchanged -- and per the upper-bound finding above, no repair this notebook could have adopted would have changed that fact either.",
+    "gate_FA2_fires": false,
+    "gate_FA2_can_flip_under_any_outcome_here": false,
+    "gate_FA3_fires": false,
+    "gate_FUND_fires": false,
+    "gate_FUND_dsr_leg_value_unchanged": true,
+    "holdout_access_granted": false,
+    "readme_018_row_changed": false,
+    "018_notebook_re_executed": false,
+    "018_results_md_prose_edited_above_the_addendum": false
+  },
+  "honest_characterization": "Two findings, and the second is the one that actually settles 018's case. First: 017 confirmed, by Monte Carlo at M=20000 across a 7x3x6x3 grid (756 cells), that research.deflated_sharpe_prob's deflation benchmark is scaled incorrectly for correlated trial families -- the sampling-SE-vs-cross-sectional-dispersion defect 018's own known_caveat flagged is real, not a false alarm. None of the four pre-registered candidate repairs (V1, V1b at two shrinkage settings, V2) is simultaneously well-calibrated and sufficiently powerful across the grid, so per the adoption rule fixed in Phase 0, none is adopted and research.py is untouched. On its own, that would leave 018's case genuinely open -- defect confirmed, no validated fix to apply it with. Second, and decisive: 018's own stored inputs (per-period Sharpe 0.01743, n_obs=3837, sample skew=-11.516, sample kurtosis=816.85 -- 018's own book is exactly the extreme, fat-tailed regime Phase 0's '018_measured' moment axis exists to probe) put a hard ceiling on what ANY dispersion-based repair could ever produce for this book: the rho->1 upper bound is 0.8317, below the 0.95 bar. That bound applies to V0, V1, and both V1b settings alike (Test 7, sec 7.3) regardless of which one -- if any -- had been adopted. So 018's DSR was never actually gated on Phase 4's adoption decision: even in the counterfactual where V1 had cleared both DS-2 and DS-3, 018's corrected DSR could not have exceeded 0.83. FA-2's DSR leg and FUND's DSR leg were mathematically incapable of flipping for this specific book, for a reason that has nothing to do with which repair (if any) 017 settled on: 018's own return series is fat-tailed enough that its plain, un-deflated probabilistic Sharpe (PSR, the rho->1 limit) already tops out at 0.83. The practical consequence is the same as if the concern had never reproduced -- 018's DSR is numerically unchanged, FA-2 and FUND stay failed, the holdout stays unspent -- but the reason is different and matters: the asterisk is not removed because the worry was unfounded (it was not, and the defect remains a confirmed, general, currently-unrepaired limitation of this repo's DSR estimator for correlated trial families, applicable to every other near-identical-offset gate in this programme); it is settled because 018's own data makes the DSR leg's outcome independent of the repair question entirely. A future notebook attempting a fifth repair variant, or accepting a narrower calibrated regime (e.g. a repair validated only for the N and T ranges this grid covers well), would be a reasonable next step for the estimator generally -- proposed below in 017's own what-to-test-next -- but it would not reopen 018's case; 018's own numbers already close it."
+}

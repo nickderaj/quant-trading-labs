@@ -336,3 +336,45 @@ has a fired dev gate.
   shows the trade clears zero around 43-44bp and the current retail-tier round turn is 34bp — worth
   tracking against Binance's actual VIP tier schedule (Tier 3/4 sourcing caveats apply, per 009's own
   near-miss on this exact question) rather than re-deriving it per notebook.
+
+## Addendum — re-scored under notebook 017
+
+Notebook 017 set out to test the `known_caveat` this document recorded above: that
+`research.deflated_sharpe_prob` likely over-penalizes a near-identical-offset trial family like this
+one's, because it scales its deflation benchmark by the sampling standard error of a single Sharpe
+rather than the cross-sectional dispersion of the trials actually run. It confirmed that defect is
+real — by Monte Carlo, at M=20,000 across 756 grid cells spanning trial counts, sample lengths, return
+moments, and (the axis that matters) inter-trial correlation, the current estimator's false-positive
+rate collapses toward zero as correlation rises, exactly the over-rejection pattern this book's DSR
+result was suspected of.
+
+It did not, however, find a repair that could be adopted. Two candidate fixes (the source paper's own
+cross-sectional-std repair, and a shrunk version of it) pass 017's calibration checks cleanly but lose
+real detection power relative to the current estimator in the independent-trials case — a "no free
+lunch" clause built into 017's own pre-registration to catch exactly that trade-off. A third candidate
+is powerful enough but is badly miscalibrated, over-firing in roughly two-thirds of null test cases.
+Per 017's pre-registered adoption rule, none of the four candidates was adopted, and
+`research.deflated_sharpe_prob` was left completely unchanged.
+
+That would ordinarily leave this book's case open — defect confirmed, no validated fix to apply. It
+isn't left open, because of a second, independent finding: this book's own stored inputs (sample
+skew −11.5, sample kurtosis 816.9 — a genuinely extreme, fat-tailed regime, not a stylized example) cap
+what *any* dispersion-based repair could ever have produced for this exact result at 0.83, below the
+0.95 bar the DSR leg needs to clear. That ceiling holds for every candidate 017 evaluated, adopted or
+not. In other words, this book's DSR leg was never actually contingent on which repair — if any —
+017 settled on: even in the counterfactual where the source paper's own repair had cleared both of
+017's checks, this book's corrected DSR could not have exceeded 0.83.
+
+**The practical result is unchanged from what this document already reported: `deflated_sharpe_prob`
+returns exactly 0.18590973717553716 for this book, Gates FA-2, FA-3, and FUND all stand exactly as
+recorded above, and the holdout remains unspent** (access requires FA-2 AND FA-3; neither fires, and
+neither has a leg that could be affected by an estimator change to begin with — FA-2's failure is
+independently sealed by its bootstrap-CI leg, FA-3 carries no DSR leg at all). The asterisk this
+document has carried against the DSR figure is removed not because the underlying worry was
+unfounded — it wasn't — but because this book's own numbers settle the question independently of
+it: no correction to this estimator, however it eventually gets fixed, can move this result. Nothing
+above this section has been edited; `n_trials` stays 18; no backtest was re-run and this notebook's
+own `.ipynb` was not re-executed, only appended to.
+
+Full detail, gate-by-gate: `src/research/tmp/phase_7_18_dsr_addendum.json`. Notebook 017's own
+write-up and numbers: `src/results/017_deflated_sharpe_correction.md`.

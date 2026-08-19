@@ -55,6 +55,7 @@ import sys
 sys.path.insert(0, "..")
 sys.path.insert(0, "tmp")
 import dsr_lib17 as L
+
 import research
 
 TMP = "tmp"
@@ -193,7 +194,20 @@ cells.append(
     md("""\
 ## Phase 3 — Full calibration + power grid
 
-**TODO once `phase_3_17_calibration.json` lands.**
+7x3x6x3 = 378 null cells x {null, injected-edge} = 756 cells, M=20000. Two disclosed deviations from
+`distributions.frozen_dist`: the moderate-moments target (skew=-1.5, kurtosis=6.0) isn't reachable by
+`jf_skew_t` at that kurtosis (closest fit lands at skew=-1.21); the extreme-moments target (skew=-11.5,
+kurtosis=817, 018's own measured values) isn't reachable by `jf_skew_t` at all, so a method-of-moments
+two-point jump mixture is used instead, solved to hit the target exactly. Both documented in
+`dsr_lib17.py`'s module docstring.
+""")
+)
+
+cells.append(
+    code("""\
+cert = load("phase_3_17_calibration.json")
+print(f"n_cells: {cert['n_cells']} (expect 756)")
+print("estimator_source_sha256:", cert["estimator_source_sha256"])
 """)
 )
 
@@ -201,7 +215,30 @@ cells.append(
     md("""\
 ## Phase 4 — Adoption
 
-**TODO once `phase_4_17_adoption.json` lands.**
+DS-2 (calibration) and DS-3 (power) applied to every candidate variant.
+""")
+)
+
+cells.append(
+    code("""\
+adoption = load("phase_4_17_adoption.json")
+for v, e in adoption["evaluations"].items():
+    print(f"{v:12} DS-2a={e['DS2a']['fires']!s:6} DS-2b={e['DS2b']['fires']!s:6} "
+          f"DS-3={e['DS3']['fires']!s:6} passes_both={e['passes_both_DS2_and_DS3']}")
+print()
+print("adopted_variant:", adoption["adopted_variant"])
+print(adoption["verdict"])
+""")
+)
+
+cells.append(
+    md("""\
+**None of the four candidates is adopted.** V1 and both V1b settings pass calibration (DS-2) cleanly
+but fail power (DS-3) on its two-sided check: insufficient power gain over V0 at high correlation in
+20 cells, AND a power *loss* versus V0 at rho=0 beyond the allowed margin in another 20 cells — the
+"no free lunch" clause working as designed. V2 passes DS-3 but fails DS-2a badly (246/378 null cells
+exceed the anti-conservatism ceiling). Per the pre-registered adoption rule, `research.py` is left
+unmodified — confirmed by `git diff`, not merely asserted.
 """)
 )
 
@@ -209,7 +246,32 @@ cells.append(
     md("""\
 ## Phase 5 — Hash-gated re-score
 
-**TODO once `phase_5_17_rescore.json` lands.**
+The hash gate (sec 10) passed automatically: `research.py` was never touched in Phase 4, so its
+source hash still matches the certificate Phase 3 stamped.
+""")
+)
+
+cells.append(
+    code("""\
+rescore = load("phase_5_17_rescore.json")
+print("gate_DS4 fires:", rescore["gate_DS4"]["fires"])
+print(f"n_rows={rescore['n_rows']}  n_not_rescorable={rescore['n_not_rescorable']}  "
+      f"n_verdict_change={rescore['n_verdict_change']}")
+print()
+for r in rescore["rows"]:
+    if r.get("not_rescorable"):
+        print(f"  not_rescorable: {r['file'].split('/')[-1]} {r['json_pointer']}  "
+              f"stored={r['stored_value']:.4f}  reason={r['reason']}")
+""")
+)
+
+cells.append(
+    md("""\
+65 of 70 rows have a rho->1 upper bound below 0.95 and provably cannot flip under any dispersion-based
+repair, regardless of what Phase 4 decided. The remaining 5 (gate AC x3, notebook 10b's "calendar" and
+"gate_VS") have an upper bound >=0.95 and would need a corrected value from an adopted variant — since
+none was adopted, all 5 are `not_rescorable`, disclosed with an explicit reason rather than silently
+skipped. Zero verdict changes overall.
 """)
 )
 
@@ -217,8 +279,40 @@ cells.append(
     md("""\
 ## Phase 6b — The 018 amendment
 
-**TODO.** Selects one of the three frozen sec 14.2 branch texts based on 018's re-scored DSR (or
-`not_rescorable`).
+None of the three sec 14.2 branch texts frozen in Phase 0 literally applies: Branch A's premise
+("DS-1 does not fire") is false — it fired. Branches B and C's premise ("repair adopted") is also
+false — none was. A new, honest characterization is written instead
+(`phase_7_18_dsr_addendum.json`), holding every sec 14.3 rule the three frozen branches share.
+""")
+)
+
+cells.append(
+    code("""\
+addendum = load("phase_7_18_dsr_addendum.json")
+print(addendum["sec_14_2_branch_applicability"]["conclusion"])
+print()
+row = addendum["018_own_row_in_phase_5_rescore"]
+print("018's own rho->1 upper bound:", row["upper_bound"])
+print()
+m = addendum["what_this_means_for_018"]
+print("research.py modified:", m["research_py_modified"])
+print("018 DSR unchanged at:", m["018_dsr_value_unchanged"])
+print("FA-2 fires:", m["gate_FA2_fires"], " FA-3 fires:", m["gate_FA3_fires"],
+      " FUND fires:", m["gate_FUND_fires"], " holdout granted:", m["holdout_access_granted"])
+""")
+)
+
+cells.append(
+    md("""\
+**018's case is settled more decisively than "no variant adopted" alone would suggest.** 018's own
+stored inputs (sample skew -11.5, sample kurtosis 817 — 018's own book is exactly the extreme regime
+Phase 0's "018_measured" moment axis exists to probe) put a rho->1 upper bound of **0.83** on its DSR —
+below the 0.95 bar, and that bound holds for every dispersion-based variant this notebook evaluated,
+adopted or not (Test 7, sec 7.3). So 018's DSR leg was never actually contingent on Phase 4's adoption
+decision: even in the counterfactual where V1 had cleared both DS-2 and DS-3, 018's corrected DSR
+could not have exceeded 0.83. FA-2, FA-3, and FUND stand exactly as 018 recorded them; the holdout
+stays unspent. Full detail: `src/results/018_funding_basis_trade.md`'s appended Addendum section, and
+the appended markdown cell in `018_funding_basis_trade.ipynb` (018's notebook was not re-executed).
 """)
 )
 
