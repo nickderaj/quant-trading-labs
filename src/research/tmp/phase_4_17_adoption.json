@@ -1,0 +1,1223 @@
+{
+  "notebook": "017_deflated_sharpe_correction",
+  "phase": 4,
+  "n_cells_in_certificate": 756,
+  "adoption_order": [
+    "v1",
+    "v1b_c0.25",
+    "v1b_c0.5",
+    "v2"
+  ],
+  "evaluations": {
+    "v1": {
+      "variant": "v1",
+      "DS2a": {
+        "fires": true,
+        "n_violations": 0,
+        "violations": []
+      },
+      "DS2b": {
+        "fires": true,
+        "n_violations": 0,
+        "violations": []
+      },
+      "DS2": true,
+      "DS3": {
+        "fires": false,
+        "high_rho_violations": [
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.06555
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.08075
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.07375
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.042249999999999996
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.05375
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.04755
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.07065
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "diff": 0.08105
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "diff": 0.0723
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.0617
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.07540000000000001
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.06745
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.0403
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.04825
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.045
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.07245
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "diff": 0.0857
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "diff": 0.07845
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.06915
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.08185
+          }
+        ],
+        "rho0_violations": [
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.056999999999999995
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.09580000000000001
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.06445
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.0341
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.0667
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.04165
+          },
+          {
+            "n_trials": 36,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.03295
+          },
+          {
+            "n_trials": 36,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.021150000000000002
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.03705
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.05235
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.0397
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 300,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.02305
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.1513
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.2031
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.16040000000000001
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.02885
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.021150000000000002
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.0867
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.14005
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.09435
+          }
+        ]
+      },
+      "passes_both_DS2_and_DS3": false
+    },
+    "v1b_c0.25": {
+      "variant": "v1b_c0.25",
+      "DS2a": {
+        "fires": true,
+        "n_violations": 0,
+        "violations": []
+      },
+      "DS2b": {
+        "fires": true,
+        "n_violations": 0,
+        "violations": []
+      },
+      "DS2": true,
+      "DS3": {
+        "fires": false,
+        "high_rho_violations": [
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.06545000000000001
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.0807
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.07365
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.0421
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.0531
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.04695
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.05595
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "diff": 0.06675
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "diff": 0.0555
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.0617
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.07540000000000001
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.06745
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.08285
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "diff": 0.0856
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.0403
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.04825
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.045
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.03385
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "diff": 0.043699999999999996
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "diff": 0.039
+          }
+        ],
+        "rho0_violations": [
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.056999999999999995
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.09580000000000001
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.06445
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.0341
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.0667
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.04165
+          },
+          {
+            "n_trials": 36,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.03295
+          },
+          {
+            "n_trials": 36,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.021150000000000002
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.03705
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.05235
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.0397
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 300,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.02305
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.1513
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.2031
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.16040000000000001
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.02885
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.021150000000000002
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.0867
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.14005
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.09435
+          }
+        ]
+      },
+      "passes_both_DS2_and_DS3": false
+    },
+    "v1b_c0.5": {
+      "variant": "v1b_c0.5",
+      "DS2a": {
+        "fires": true,
+        "n_violations": 0,
+        "violations": []
+      },
+      "DS2b": {
+        "fires": false,
+        "n_violations": 38,
+        "violations": [
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.0097
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.00955
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "fpr": 0.00965
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.00405
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "fpr": 0.004
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "fpr": 0.00415
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.00365
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "fpr": 0.0037
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "fpr": 0.0036
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 3840,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.00365
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 3840,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "fpr": 0.0053
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 3840,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "fpr": 0.00325
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.00865
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "fpr": 0.0097
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "fpr": 0.0072
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.0074
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "fpr": 0.00875
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "fpr": 0.0082
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.0077
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "fpr": 0.00795
+          }
+        ]
+      },
+      "DS2": false,
+      "DS3": {
+        "fires": false,
+        "high_rho_violations": [
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.0507
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.0645
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.055549999999999995
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.05055
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "diff": 0.06955
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "diff": 0.055799999999999995
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.02525
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.0303
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.02585
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.02105
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "diff": 0.02435
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "diff": 0.0207
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.0233
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.03355
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "diff": 0.0239
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.01925
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "diff": 0.033299999999999996
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "gaussian",
+            "diff": 0.0222
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "diff": 0.01455
+          },
+          {
+            "n_trials": 122,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "diff": 0.016200000000000003
+          }
+        ],
+        "rho0_violations": [
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.056999999999999995
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.09580000000000001
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.06445
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.0341
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.0667
+          },
+          {
+            "n_trials": 18,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.04165
+          },
+          {
+            "n_trials": 36,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.03295
+          },
+          {
+            "n_trials": 36,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.021150000000000002
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.03715
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.0524
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.03985
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 300,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.02315
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.1515
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.20325
+          },
+          {
+            "n_trials": 4,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.16055
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.02885
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 1000,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.021150000000000002
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "moderate_nongaussian",
+            "diff": -0.0867
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "018_measured",
+            "diff": -0.14005
+          },
+          {
+            "n_trials": 8,
+            "n_obs": 3840,
+            "rho": 0.0,
+            "moments_label": "gaussian",
+            "diff": -0.09435
+          }
+        ]
+      },
+      "passes_both_DS2_and_DS3": false
+    },
+    "v2": {
+      "variant": "v2",
+      "DS2a": {
+        "fires": false,
+        "n_violations": 246,
+        "violations": [
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.5,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.11785
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.5,
+            "moments_label": "018_measured",
+            "fpr": 0.1225
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.5,
+            "moments_label": "gaussian",
+            "fpr": 0.12945
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.75,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.16985
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.75,
+            "moments_label": "018_measured",
+            "fpr": 0.1775
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.75,
+            "moments_label": "gaussian",
+            "fpr": 0.17505
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.12405
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "fpr": 0.1326
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "fpr": 0.12225
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 1000,
+            "rho": 0.99,
+            "moments_label": "018_measured",
+            "fpr": 0.07715
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.5,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.11845
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.5,
+            "moments_label": "018_measured",
+            "fpr": 0.1251
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.5,
+            "moments_label": "gaussian",
+            "fpr": 0.12605
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.75,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.17335
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.75,
+            "moments_label": "018_measured",
+            "fpr": 0.1778
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.75,
+            "moments_label": "gaussian",
+            "fpr": 0.1737
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.1238
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "018_measured",
+            "fpr": 0.1265
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 300,
+            "rho": 0.9,
+            "moments_label": "gaussian",
+            "fpr": 0.1207
+          },
+          {
+            "n_trials": 12,
+            "n_obs": 3840,
+            "rho": 0.5,
+            "moments_label": "moderate_nongaussian",
+            "fpr": 0.1159
+          }
+        ]
+      },
+      "DS2b": {
+        "fires": true,
+        "n_violations": 0,
+        "violations": []
+      },
+      "DS2": false,
+      "DS3": {
+        "fires": true,
+        "high_rho_violations": [],
+        "rho0_violations": []
+      },
+      "passes_both_DS2_and_DS3": false
+    }
+  },
+  "adopted_variant": null,
+  "verdict": "None of V1, V1b(0.25), V1b(0.5), V2 passes both DS-2 and DS-3. No variant adopted; research.py is left unmodified; the estimator is not repairable at this scope."
+}

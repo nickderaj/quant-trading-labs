@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import dsr_lib17 as L  # noqa: E402
+import dsr_lib17 as L
 
 OUT_PATH = "src/research/tmp/phase_2_17_results.json"
 PREREG_PATH = "src/research/tmp/phase_0_17_preregistration.json"
@@ -45,14 +45,18 @@ def main() -> None:
 
     n_reps = 500 if args.smoke else 20000
     predicted_seconds = sum(2.6e-8 * N_TRIALS * N_OBS * n_reps for _ in rho_axis)
-    print(f"Phase 2: {len(rho_axis)} cells, M={n_reps}, predicted ~{predicted_seconds:.1f}s")
+    print(
+        f"Phase 2: {len(rho_axis)} cells, M={n_reps}, predicted ~{predicted_seconds:.1f}s"
+    )
 
     t0 = time.time()
     cells = []
     for rho in rho_axis:
         key = (N_TRIALS, N_OBS, rho, L.GAUSSIAN_MOMENTS, n_reps, TRUE_SHARPE)
         seed = L.seed_for_cell(key)
-        result = L.mc_cell(N_TRIALS, N_OBS, rho, L.GAUSSIAN_MOMENTS, n_reps, seed, TRUE_SHARPE)
+        result = L.mc_cell(
+            N_TRIALS, N_OBS, rho, L.GAUSSIAN_MOMENTS, n_reps, seed, TRUE_SHARPE
+        )
         cells.append(result)
         print(
             f"  rho={rho:.2f}  V0 FPR={result['rate']['v0']:.4f}+-{result['mc_se']['v0']:.4f}"
@@ -94,7 +98,12 @@ def main() -> None:
     doc = {
         "notebook": "017_deflated_sharpe_correction",
         "phase": 2,
-        "params": {"n_trials": N_TRIALS, "n_obs": N_OBS, "n_reps": n_reps, "smoke": args.smoke},
+        "params": {
+            "n_trials": N_TRIALS,
+            "n_obs": N_OBS,
+            "n_reps": n_reps,
+            "smoke": args.smoke,
+        },
         "rho_axis": rho_axis,
         "pilot_reference": pilot["results_fpr_gt_0.95"],
         "cells": cells,
