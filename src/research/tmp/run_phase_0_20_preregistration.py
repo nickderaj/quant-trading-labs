@@ -1,0 +1,325 @@
+"""Notebook 020 Phase 0 (NEXT_PROMPT.md sec 5-9, sec 14).
+
+Freezes, before a single byte of new data is fetched: every constant (sec
+5.1-5.4), the twelve required tests (sec 5.7), the eight gates RC-1..RC-4 /
+XD-1..XD-4 and FUND (sec 6), the itemised 32-trial n_trials budget (sec 7),
+and the holdout policy (sec 9). This file is the pre-registration; it is
+committed once and not edited after Phase 2 runs.
+
+Usage: uv run python src/research/tmp/run_phase_0_20_preregistration.py
+"""
+
+from __future__ import annotations
+
+import json
+
+OUT_PATH = "src/research/tmp/phase_0_20_preregistration.json"
+
+# --------------------------------------------------------------------------
+# sec 5.1: inherited unchanged from 018
+# --------------------------------------------------------------------------
+SPOT_TAKER_BP = 10.0
+PERP_TAKER_BP = 5.0
+SLIPPAGE_BP = 1.0
+ROUND_TURN_BP = 34.0
+LIQUIDITY_FLOOR_USD = 5_000_000.0
+LIQUIDITY_WINDOW_BARS = 90
+MAX_POSITIONS = 10
+CARRY_EWMA_HALF_LIFE = 21
+TARGET_HOLD_PERIODS = 45
+THETA_IN = 7.5556e-05
+THETA_OUT = 3.7778e-05
+
+# sec 5.2: Mechanism A, diversification floor
+N_MIN = 3
+N_MIN_DERIVATION = (
+    "018's concentration diagnostic: median 10 symbols held, at the cap on "
+    "54% of bars, exactly one symbol on 5.4% of bars, with the five worst "
+    "single-bar net returns all drawn from those bars. 3 is the smallest "
+    "integer eliminating both the 1- and 2-symbol tails while leaving the "
+    "great majority of bars untouched. N_MIN in {2,5} is a reported "
+    "ablation (sec 8), never a selection mechanism: the headline stays at "
+    "N_MIN=3 whatever the sensitivity shows."
+)
+
+# sec 5.3: Mechanism A, slow carry (both scaled 2x from 018, ratio preserved)
+SLOW_CARRY_HALF_LIFE = 42
+TARGET_HOLD_SLOW = 90
+THETA_IN_SLOW = ROUND_TURN_BP / TARGET_HOLD_SLOW * 1e-4
+THETA_OUT_SLOW = THETA_IN_SLOW / 2
+
+# sec 5.4: Mechanism B constants
+BYBIT_TAKER_BP = 5.5
+ROUND_TURN_BP_XV = 2 * ((PERP_TAKER_BP + SLIPPAGE_BP) + (BYBIT_TAKER_BP + SLIPPAGE_BP))
+THETA_IN_XV = ROUND_TURN_BP_XV / TARGET_HOLD_PERIODS * 1e-4
+THETA_OUT_XV = THETA_IN_XV / 2
+THETA_IN_XV_SLOW = ROUND_TURN_BP_XV / TARGET_HOLD_SLOW * 1e-4
+THETA_OUT_XV_SLOW = THETA_IN_XV_SLOW / 2
+MAX_POSITIONS_XV = 10
+N_MIN_XV = 3
+
+CONSTANTS = {
+    "inherited_from_018": {
+        "SPOT_TAKER_BP": SPOT_TAKER_BP,
+        "PERP_TAKER_BP": PERP_TAKER_BP,
+        "SLIPPAGE_BP": SLIPPAGE_BP,
+        "ROUND_TURN_BP": ROUND_TURN_BP,
+        "LIQUIDITY_FLOOR_USD": LIQUIDITY_FLOOR_USD,
+        "LIQUIDITY_WINDOW_BARS": LIQUIDITY_WINDOW_BARS,
+        "MAX_POSITIONS": MAX_POSITIONS,
+        "CARRY_EWMA_HALF_LIFE": CARRY_EWMA_HALF_LIFE,
+        "TARGET_HOLD_PERIODS": TARGET_HOLD_PERIODS,
+        "THETA_IN": THETA_IN,
+        "THETA_OUT": THETA_OUT,
+        "DEV_START": "2021-07-01",
+        "DEV_END": "2025-06-30",
+        "INTERVAL": "8h",
+    },
+    "mechanism_a_new": {
+        "N_MIN": N_MIN,
+        "N_MIN_derivation": N_MIN_DERIVATION,
+        "SLOW_CARRY_HALF_LIFE": SLOW_CARRY_HALF_LIFE,
+        "TARGET_HOLD_SLOW": TARGET_HOLD_SLOW,
+        "THETA_IN_SLOW": THETA_IN_SLOW,
+        "THETA_OUT_SLOW": THETA_OUT_SLOW,
+        "slow_carry_note": (
+            "one pre-registered 2x scaling factor on both half-life and "
+            "target hold, preserving 018's own ratio -- not a two-dimensional "
+            "sweep. THETA_IN_SLOW == 018's THETA_OUT to the last digit "
+            "because 34/90 is exactly half of 34/45 -- an expected "
+            "coincidence, not a bug."
+        ),
+    },
+    "mechanism_b_new": {
+        "BYBIT_TAKER_BP": BYBIT_TAKER_BP,
+        "ROUND_TURN_BP_XV": ROUND_TURN_BP_XV,
+        "THETA_IN_XV": THETA_IN_XV,
+        "THETA_OUT_XV": THETA_OUT_XV,
+        "THETA_IN_XV_SLOW": THETA_IN_XV_SLOW,
+        "THETA_OUT_XV_SLOW": THETA_OUT_XV_SLOW,
+        "MAX_POSITIONS_XV": MAX_POSITIONS_XV,
+        "N_MIN_XV": N_MIN_XV,
+        "note": (
+            "cheaper than 018's 34bp round turn (25bp) because there is no "
+            "spot leg -- two perp legs hedge each other. A genuine "
+            "structural advantage of the mechanism, stated as such."
+        ),
+        "bybit_fee_contingency": (
+            "if Phase 1a finds Bybit's published taker fee is not 0.055%, "
+            "use the published number, recompute every derived theta here, "
+            "and record the change before Phase 4 runs."
+        ),
+    },
+}
+
+HYPOTHESES = {
+    "H_A": (
+        "A diversification floor removes the 1- and 2-symbol bars that "
+        "produce 018's extreme skew and kurtosis. Better moments raise the "
+        "DSR mechanically (it is a function of skew and kurtosis), and fewer "
+        "catastrophic single-bar losses tighten the bootstrap CI. Both of "
+        "FA-2's failing legs are therefore addressable by construction, not "
+        "by estimator repair."
+    ),
+    "H_B": (
+        "A funding spread between venues is a genuinely different, more "
+        "arbitrage-like return driver than a funding level, with lower "
+        "directional and basis exposure -- and therefore possibly a "
+        "better-behaved return distribution -- at the cost of a shorter "
+        "usable history and a smaller universe."
+    ),
+}
+
+GATES = {
+    "RC-1": {
+        "claim": "the carry mechanism survives the construction change",
+        "fires_iff": "pooled mean gross paired return of the refined book > 0 with Newey-West |t| > 3",
+    },
+    "RC-2": {
+        "claim": "restates FA-2 exactly, all three legs",
+        "fires_iff": (
+            "net Sharpe > 0.5 at every origin offset AND the 95% "
+            "block-bootstrap CI on mean net per-bar return excludes zero "
+            "AND deflated_sharpe_prob(...) > 0.95 at n_trials=32"
+        ),
+    },
+    "RC-3": {
+        "claim": "the refinement adds value (restates FA-3's shape)",
+        "fires_iff": (
+            "95% paired block-bootstrap CI on (refined - 018-baseline-"
+            "reproduction) per-bar net return excludes zero, and the point "
+            "estimate favours the refined book"
+        ),
+    },
+    "RC-4": {
+        "claim": "genuinely neutral, not a disguised long",
+        "fires_iff": "|beta| to the equal-weight crypto basket and to BTC both < 0.10, at every offset",
+    },
+    "XD-1": {
+        "claim": "a cross-venue funding spread exists net of cross-venue basis drift, before costs",
+        "fires_iff": "pooled mean gross cross-venue paired return > 0 with Newey-West |t| > 3",
+    },
+    "XD-2": {
+        "claim": "restates FA-2 exactly, all three legs, on the cross-venue book",
+        "fires_iff": "identical to RC-2's three legs, on the cross-venue book",
+    },
+    "XD-3": {
+        "claim": "the spread beats the level",
+        "fires_iff": (
+            "95% paired block-bootstrap CI on (cross-venue book - single-"
+            "venue 018-style book restricted to Mechanism B's own "
+            "intersected universe and window) per-bar net return excludes "
+            "zero, point estimate favouring cross-venue"
+        ),
+    },
+    "XD-4": {
+        "claim": "not a disguised directional bet",
+        "fires_iff": "|beta| to the crypto basket and to BTC both < 0.10",
+    },
+    "FUND": {
+        "claim": "institutionally fundable absolute performance, restated verbatim from 018",
+        "fires_iff": "net Sharpe > 0.5 AND DSR > 0.95, evaluated separately on each mechanism's headline book",
+    },
+}
+
+IMPLEMENTATION_NOTES = {
+    "dsr_call_shape": (
+        "copy run_phase_4_18_backtest.py lines 220-234 exactly: per-period "
+        "Sharpe (annualized / research.sharpe_to_annualized_rate('8h')), "
+        "n_obs=len(returns), skew=scipy.stats.skew(returns, "
+        "nan_policy='omit'), kurtosis=scipy.stats.kurtosis(returns, "
+        "fisher=False, nan_policy='omit') -- fisher=False, non-excess "
+        "kurtosis. An annualized Sharpe or excess kurtosis here is the "
+        "single easiest way to produce a plausible-looking wrong number."
+    ),
+    "bootstrap": (
+        "research.block_bootstrap_ci(values), block_length=None (auto), "
+        "n_boot=2000, default seed. Paired comparisons bootstrap the "
+        "per-bar difference series, not the two series separately."
+    ),
+    "beta": "bl18.ols_beta. Rename the basket column explicitly before joining -- do not repeat 018's join(suffix=...) bug.",
+    "gate_json": "every gate verdict is written to JSON as a boolean per leg, not just the conjunction.",
+}
+
+N_TRIALS_ITEMISATION = {
+    "mechanism_a_phase4": {
+        "count": 9,
+        "cells": [
+            "A0 018-baseline reproduction",
+            "A1 floor only (N_MIN=3)",
+            "A2 slow carry only (hl=42, theta_in=3.7778e-05)",
+            "A3 both (Mechanism A headline)",
+            "A_alwayson",
+            "A_cash",
+            "A3 at offset 1",
+            "A3 at offset 2",
+            "A3 at offset 3",
+        ],
+    },
+    "mechanism_a_phase5": {
+        "count": 7,
+        "cells": [
+            "A3 no-hysteresis (theta_out=theta_in)",
+            "A3 N_MIN=2",
+            "A3 N_MIN=5",
+            "A3 cost @ 0bp",
+            "A3 cost @ 17bp",
+            "A3 cost @ 51bp",
+            "A3 excluding LUNA/FTT",
+        ],
+        "note": "the by-year decomposition is a decomposition of A3, not a new configuration -- 0 trials",
+    },
+    "mechanism_b_phase4": {
+        "count": 8,
+        "cells": [
+            "B0 base (Mechanism B headline)",
+            "B1 slow",
+            "B_single single-venue comparator on B's intersected universe/window (needed for XD-3)",
+            "B_alwayson",
+            "B_cash",
+            "B0 at offset 1",
+            "B0 at offset 2",
+            "B0 at offset 3",
+        ],
+    },
+    "mechanism_b_phase5": {
+        "count": 6,
+        "cells": [
+            "B0 no-hysteresis",
+            "B0 one-venue-leg-only (neutrality control)",
+            "B0 cost @ 0bp",
+            "B0 cost @ 12.5bp",
+            "B0 cost @ 37.5bp",
+            "B0 excluding its top-2 contributing symbols",
+        ],
+    },
+    "holdout": {
+        "count": 2,
+        "note": "at most one gated pass, running at most both headline books",
+    },
+    "total": 32,
+    "revision_rule": "revised upward only, and used for every DSR computed anywhere in this notebook",
+    "offset_policy": (
+        "origin offsets are run for the headline variants only (A3, B0), "
+        "not for every configuration -- 018 established all four offsets "
+        "agree to 3+ decimals for this fixed-parameter, non-refit design"
+    ),
+}
+
+HOLDOUT_POLICY = {
+    "1": "the 2025-07-01+ crypto holdout is a repo-wide resource, not 018's property. 020 may spend it, under 020's own gates.",
+    "2": "Mechanism A unlocks it iff RC-2 AND RC-3 both fire. Mechanism B unlocks it iff XD-2 AND XD-3 both fire. No partial credit.",
+    "3": "018's own frozen book never gets holdout access from this notebook. If RC fires, it is the refined A3 book that runs -- not 018's construction.",
+    "4": "at most one holdout pass, ever. run_phase_6_20_holdout.py reads phase_4_20_results.json's holdout_access block and exits 1 without constructing any holdout path if neither mechanism qualifies. If both qualify, one non-iterative pass runs both A3 and B0.",
+    "5": "after a holdout run, the notebook closes. No dev-side re-runs, no parameter changes, no one more variant.",
+    "6": "mechanical fencing: run_phase_6_20_holdout.py is the only file that may name basis18/holdout or bybit20/holdout, or pass an end_date past research.HOLDOUT_START.",
+    "7": "if no gate fires, invoke run_phase_6_20_holdout.py once anyway to verify it refuses correctly, and record its exit code and (empty) output.",
+}
+
+FALLBACK_POLICY = {
+    "bybit_unreachable": "retry api.bytick.com, then OKX (funding-rate-history / history-candles, bar=8H), same loader shape.",
+    "both_fail_or_thin_universe": (
+        "if both fail, or fewer than 20 symbols have >=2 years of usable "
+        "Binance-intersect-venue overlap, Mechanism B is recorded as "
+        "'not runnable -- data blocker' (009's idiom) and the notebook "
+        "ships with Mechanism A complete plus a documented blocker."
+    ),
+    "no_substitution": "a missing Mechanism B is a clean, reportable outcome. An improvised replacement is an unregistered trial.",
+}
+
+SCOPE_DISCIPLINE = [
+    "src/research.py is frozen -- import only.",
+    "basis_lib18.py, dsr_lib17.py, and every *_17_*/*_18_*/*_19_* file is imported, never edited.",
+    "src/research/01{7,8,9}_*.ipynb and src/results/01{7,8,9}_*.md are frozen texts.",
+    "src/risk/ and src/regime/ are import-only, never used to time entries/exits/size.",
+    "src/data.py is preferably untouched; Bybit fetchers belong in basis_lib20.py.",
+    "no constant in this file is swept to improve a headline after Phase 0.",
+    "no configuration beyond the 32 declared here without revising n_trials upward and recomputing every DSR.",
+    "the holdout is read only through sec 9's single gated pass.",
+    "no subagents, no broad web search (sec 3 rule 8).",
+]
+
+
+def main() -> None:
+    doc = {
+        "notebook": "020_basis_refinement_and_cross_venue",
+        "committed_before_phase_2_runs": True,
+        "editable_after_commit": False,
+        "hypotheses": HYPOTHESES,
+        "constants": CONSTANTS,
+        "gates": GATES,
+        "implementation_notes": IMPLEMENTATION_NOTES,
+        "n_trials_itemisation": N_TRIALS_ITEMISATION,
+        "holdout_policy": HOLDOUT_POLICY,
+        "fallback_policy": FALLBACK_POLICY,
+        "scope_discipline": SCOPE_DISCIPLINE,
+    }
+    with open(OUT_PATH, "w") as f:
+        json.dump(doc, f, indent=2)
+    print(f"written {OUT_PATH}")
+    print(f"n_trials total: {N_TRIALS_ITEMISATION['total']}")
+    print(f"N_MIN={N_MIN}  THETA_IN_SLOW={THETA_IN_SLOW}  ROUND_TURN_BP_XV={ROUND_TURN_BP_XV}")
+
+
+if __name__ == "__main__":
+    main()
