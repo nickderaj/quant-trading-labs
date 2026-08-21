@@ -175,3 +175,94 @@ def test_psr_upper_bound_dominates_every_variant():
                 sharpe, n_trials, n_obs, skew, kurtosis, variant=variant, **kwargs
             )
             assert out["probability"] <= upper + 1e-9, (variant, kwargs, out, upper)
+
+
+# --------------------------------------------------------------------------
+# Notebook 019 sec 6: DS-5 (the correlation-thresholded switch reduces
+# correctly at its boundary). Three load-bearing tests -- each fails if the
+# v3 branch logic in dsr_variant is wrong.
+# --------------------------------------------------------------------------
+
+_V3_FIELDS = [
+    "probability",
+    "dispersion_used",
+    "sr_star",
+    "sr_se",
+    "n_trials_used_in_bracket",
+    "n_trial_sharpes_provided",
+    "family_mismatch",
+]
+
+
+def test_v3_reduces_to_v0_below_threshold():
+    """Test 1 (DS-5): mean_pairwise_corr just under tau -> v3's output is
+    bit-for-bit variant="v0"'s output on every shared field."""
+    sharpe, n_trials, n_obs, tau = 0.05, 12, 1000, 0.15
+    trial_sharpes = (
+        sharpe + np.random.default_rng(4).normal(0, 0.03, size=n_trials)
+    ).tolist()
+
+    v0 = L.dsr_variant(sharpe, n_trials, n_obs, variant="v0")
+    v3 = L.dsr_variant(
+        sharpe,
+        n_trials,
+        n_obs,
+        variant="v3",
+        tau=tau,
+        mean_pairwise_corr=tau - 1e-6,
+        trial_sharpes=trial_sharpes,
+    )
+    for field in _V3_FIELDS:
+        assert v3[field] == v0[field], (field, v3[field], v0[field])
+    assert v3["branch_used"] == "v0"
+    assert v3["variant"] == "v3"
+
+
+def test_v3_reduces_to_v1_above_threshold():
+    """Test 2 (DS-5): mean_pairwise_corr just over tau -> v3's output is
+    bit-for-bit variant="v1"'s output on every shared field."""
+    sharpe, n_trials, n_obs, tau = 0.05, 12, 1000, 0.15
+    trial_sharpes = (
+        sharpe + np.random.default_rng(5).normal(0, 0.03, size=n_trials)
+    ).tolist()
+
+    v1 = L.dsr_variant(
+        sharpe, n_trials, n_obs, variant="v1", trial_sharpes=trial_sharpes
+    )
+    v3 = L.dsr_variant(
+        sharpe,
+        n_trials,
+        n_obs,
+        variant="v3",
+        tau=tau,
+        mean_pairwise_corr=tau + 1e-6,
+        trial_sharpes=trial_sharpes,
+    )
+    for field in _V3_FIELDS:
+        assert v3[field] == v1[field], (field, v3[field], v1[field])
+    assert v3["branch_used"] == "v1"
+
+
+def test_v3_boundary_resolves_to_v0():
+    """Test 3 (DS-5): mean_pairwise_corr == tau exactly -> the V0 branch,
+    since tau is defined as a "confidently uncorrelated" cutoff -- NOT the
+    strict "<" the sec 1.1 pseudocode literally shows (sec 3.2 is the
+    authoritative spec)."""
+    sharpe, n_trials, n_obs, tau = 0.05, 12, 1000, 0.15
+    trial_sharpes = (
+        sharpe + np.random.default_rng(6).normal(0, 0.03, size=n_trials)
+    ).tolist()
+
+    v0 = L.dsr_variant(sharpe, n_trials, n_obs, variant="v0")
+    v3 = L.dsr_variant(
+        sharpe,
+        n_trials,
+        n_obs,
+        variant="v3",
+        tau=tau,
+        mean_pairwise_corr=tau,
+        trial_sharpes=trial_sharpes,
+    )
+    assert v3["branch_used"] == "v0"
+    for field in _V3_FIELDS:
+        assert v3[field] == v0[field], (field, v3[field], v0[field])

@@ -1,0 +1,577 @@
+{
+  "notebook": "019_dsr_correlation_switch",
+  "phase": 6,
+  "adopted": false,
+  "tau_used": null,
+  "scope_note": "Neither objective adopted -- no re-scoring performed.",
+  "n_rows": 70,
+  "n_not_rescorable": 70,
+  "n_rescored": 0,
+  "n_verdict_change": 0,
+  "rows": [
+    {
+      "file": "src/research/tmp/phase_0_10a_repro_results.json",
+      "json_pointer": "/gate_AC_repro/deflated_sharpe_prob",
+      "stored_value": 0.9971831492023995,
+      "stored_fires_at_0.95": true,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_0_10a_repro_results.json",
+      "json_pointer": "/gate_AM_repro/deflated_sharpe_prob",
+      "stored_value": 0.09807055437061196,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_0_11b_results.json",
+      "json_pointer": "/gate_TS/deflated_sharpe_prob",
+      "stored_value": 0.1293028348017588,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_0_repro9_results.json",
+      "json_pointer": "/gate_AC_repro/deflated_sharpe_prob",
+      "stored_value": 0.9971831492023995,
+      "stored_fires_at_0.95": true,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_1_10b_results.json",
+      "json_pointer": "/calendar/deflated_sharpe_prob",
+      "stored_value": 0.6797865123158808,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_1_10b_results.json",
+      "json_pointer": "/inter_commodity/deflated_sharpe_prob",
+      "stored_value": 0.5621883699343364,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_1_11d_results.json",
+      "json_pointer": "/deflated_sharpe_prob",
+      "stored_value": 0.05536891281843318,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_2_10b_results.json",
+      "json_pointer": "/gate_SPR_by_definition/deadband/deflated_sharpe_prob",
+      "stored_value": 0.4841145082930752,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_2_11d_results.json",
+      "json_pointer": "/deflated_sharpe_prob",
+      "stored_value": 0.14012782571913185,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_2_12_results.json",
+      "json_pointer": "/deflated_sharpe_prob",
+      "stored_value": 0.06437621329977364,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_3_10b_results.json",
+      "json_pointer": "/gate_BM/gate/deflated_sharpe_prob",
+      "stored_value": 0.02481187501569703,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_3_10b_results.json",
+      "json_pointer": "/gate_VS/gate/deflated_sharpe_prob",
+      "stored_value": 0.9997184978279431,
+      "stored_fires_at_0.95": true,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_3_11d_results.json",
+      "json_pointer": "/MB-E/deflated_sharpe_prob",
+      "stored_value": 0.14012782571913185,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_3_11d_results.json",
+      "json_pointer": "/MB/deflated_sharpe_prob",
+      "stored_value": 0.05536891281843318,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_3_12_results.json",
+      "json_pointer": "/deflated_sharpe_prob",
+      "stored_value": 0.06437621329977364,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_4_18_results.json",
+      "json_pointer": "/dsr/deflated_sharpe_prob",
+      "stored_value": 0.18590973717553716,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_5_results.json",
+      "json_pointer": "/strategy_A_carry/gate_AC/deflated_sharpe_prob",
+      "stored_value": 0.9971831492023995,
+      "stored_fires_at_0.95": true,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_5_results.json",
+      "json_pointer": "/strategy_B_momentum/by_lookback/mom_12m/gate/deflated_sharpe_prob",
+      "stored_value": 0.09084154357220342,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_5_results.json",
+      "json_pointer": "/strategy_B_momentum/by_lookback/mom_1m/gate/deflated_sharpe_prob",
+      "stored_value": 0.09807055437061196,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_5_results.json",
+      "json_pointer": "/strategy_B_momentum/by_lookback/mom_3m/gate/deflated_sharpe_prob",
+      "stored_value": 0.009092120223738703,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_5_results.json",
+      "json_pointer": "/strategy_B_momentum/by_lookback/mom_6m/gate/deflated_sharpe_prob",
+      "stored_value": 0.012328346954758672,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_5_results.json",
+      "json_pointer": "/strategy_B_momentum/gate_AM/deflated_sharpe_prob",
+      "stored_value": 0.09807055437061196,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/raw/0/base/deflated_sharpe_prob",
+      "stored_value": 8.752896910365372e-06,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/raw/0/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.00047337047287702516,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/raw/14/base/deflated_sharpe_prob",
+      "stored_value": 5.4376122783671653e-05,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/raw/14/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.03143217992590475,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/raw/21/base/deflated_sharpe_prob",
+      "stored_value": 8.299527619954494e-05,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/raw/21/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0006899164241826109,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/raw/7/base/deflated_sharpe_prob",
+      "stored_value": 3.0159960661765605e-05,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/raw/7/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.006884549412471312,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/zscored/0/base/deflated_sharpe_prob",
+      "stored_value": 1.0132144810636907e-08,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/zscored/0/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.00027498692837721724,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/zscored/14/base/deflated_sharpe_prob",
+      "stored_value": 7.520256097009353e-09,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/zscored/14/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0003781370171221514,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/zscored/21/base/deflated_sharpe_prob",
+      "stored_value": 2.610940523122119e-09,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/zscored/21/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 9.9365953200462e-05,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/zscored/7/base/deflated_sharpe_prob",
+      "stored_value": 1.099020312748912e-08,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/12h/by_pred/zscored/7/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0019409594170807156,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/raw/0/base/deflated_sharpe_prob",
+      "stored_value": 0.0001516786456959791,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/raw/0/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 9.934012194711699e-05,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/raw/14/base/deflated_sharpe_prob",
+      "stored_value": 0.0006342524958176744,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/raw/14/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0012150518509061574,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/raw/21/base/deflated_sharpe_prob",
+      "stored_value": 0.0007040112948412683,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/raw/21/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.016793134293296208,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/raw/7/base/deflated_sharpe_prob",
+      "stored_value": 0.00014868520489234982,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/raw/7/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0018267690006067401,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/zscored/0/base/deflated_sharpe_prob",
+      "stored_value": 1.0592294920009118e-06,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/zscored/0/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.002597951792371154,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/zscored/14/base/deflated_sharpe_prob",
+      "stored_value": 6.225409238793108e-07,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/zscored/14/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0005126163451375437,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/zscored/21/base/deflated_sharpe_prob",
+      "stored_value": 3.4032717645060083e-07,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/zscored/21/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.00953279405548882,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/zscored/7/base/deflated_sharpe_prob",
+      "stored_value": 1.4156496155439052e-06,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/1d/by_pred/zscored/7/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.00011776163955273103,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/raw/0/base/deflated_sharpe_prob",
+      "stored_value": 1.8753067475860484e-10,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/raw/0/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0008822098650091251,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/raw/14/base/deflated_sharpe_prob",
+      "stored_value": 4.537538953959269e-10,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/raw/14/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0024650636243292758,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/raw/21/base/deflated_sharpe_prob",
+      "stored_value": 3.3841087039791903e-10,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/raw/21/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0034823880384660675,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/raw/7/base/deflated_sharpe_prob",
+      "stored_value": 4.68113825623386e-10,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/raw/7/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0019750627789270766,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/zscored/0/base/deflated_sharpe_prob",
+      "stored_value": 1.0824660367748954e-15,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/zscored/0/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0003447921461938574,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/zscored/14/base/deflated_sharpe_prob",
+      "stored_value": 2.1830087539268405e-15,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/zscored/14/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0005875942031956286,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/zscored/21/base/deflated_sharpe_prob",
+      "stored_value": 7.3280576856534e-16,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/zscored/21/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0005072693958353477,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/zscored/7/base/deflated_sharpe_prob",
+      "stored_value": 1.5362336377898875e-14,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    },
+    {
+      "file": "src/research/tmp/phase_c_carry_results.json",
+      "json_pointer": "/intervals/4h/by_pred/zscored/7/throttled_k6/deflated_sharpe_prob",
+      "stored_value": 0.0007841285105147142,
+      "stored_fires_at_0.95": false,
+      "not_rescorable": true,
+      "reason": "no variant adopted in Phase 5"
+    }
+  ],
+  "note_018": "018 is not in this ledger separately -- its stored row IS one of the 70 (phase_4_18_results.json), and its 0.83 rho->1 ceiling (re-verified in Phase 0) settles its case regardless of anything above.",
+  "completeness_check": {
+    "all_70_rows_accounted_for": true
+  }
+}

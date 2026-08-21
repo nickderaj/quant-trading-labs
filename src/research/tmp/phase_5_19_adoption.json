@@ -1,0 +1,404 @@
+{
+  "notebook": "019_dsr_correlation_switch",
+  "phase": 5,
+  "DS5": {
+    "fires": true,
+    "tests": {
+      "test_v3_reduces_to_v0_below_threshold": {
+        "passed": true
+      },
+      "test_v3_reduces_to_v1_above_threshold": {
+        "passed": true
+      },
+      "test_v3_boundary_resolves_to_v0": {
+        "passed": true
+      }
+    }
+  },
+  "DS6_by_tau": {
+    "0.15": {
+      "fires": true,
+      "first_clause_fires": true,
+      "second_clause_fires": true,
+      "second_clause_n_rho0_edge_cells_checked": 18,
+      "second_clause_shortfalls": []
+    },
+    "0.3": {
+      "fires": true,
+      "first_clause_fires": true,
+      "second_clause_fires": true,
+      "second_clause_n_rho0_edge_cells_checked": 18,
+      "second_clause_shortfalls": []
+    }
+  },
+  "DS7_by_tau": {
+    "0.15": {
+      "fires": true,
+      "n_comparisons": 46,
+      "frac_within_3_combined_se": 1.0,
+      "max_se_multiple": 2.3492053412117895,
+      "worst_comparisons": [
+        {
+          "n_trials": 8,
+          "n_obs": 1000,
+          "rho": 0.25,
+          "moments_label": "018_measured",
+          "mode": "edge",
+          "subset": "C2",
+          "predicted_rate": 0.017673175,
+          "measured_rate": 0.02075,
+          "combined_se": 0.0013097301227881955,
+          "diff": 0.0030768250000000018,
+          "se_multiple": 2.3492053412117895
+        },
+        {
+          "n_trials": 4,
+          "n_obs": 300,
+          "rho": 0.5,
+          "moments_label": "018_measured",
+          "mode": "edge",
+          "subset": "C2",
+          "predicted_rate": 0.041744250000000004,
+          "measured_rate": 0.03725,
+          "combined_se": 0.0019189584445580433,
+          "diff": 0.004494250000000005,
+          "se_multiple": 2.3420257029250466
+        },
+        {
+          "n_trials": 4,
+          "n_obs": 1000,
+          "rho": 0.25,
+          "moments_label": "018_measured",
+          "mode": "edge",
+          "subset": "C2",
+          "predicted_rate": 0.040592475,
+          "measured_rate": 0.0449,
+          "combined_se": 0.0018995926759063787,
+          "diff": 0.0043075249999999995,
+          "se_multiple": 2.267604552615308
+        },
+        {
+          "n_trials": 8,
+          "n_obs": 300,
+          "rho": 0.99,
+          "moments_label": "018_measured",
+          "mode": "null",
+          "subset": "C3",
+          "predicted_rate": 0.05045,
+          "measured_rate": 0.05525,
+          "combined_se": 0.0022372107075552808,
+          "diff": 0.004799999999999999,
+          "se_multiple": 2.14552879788655
+        },
+        {
+          "n_trials": 4,
+          "n_obs": 300,
+          "rho": 0.25,
+          "moments_label": "018_measured",
+          "mode": "edge",
+          "subset": "C2",
+          "predicted_rate": 0.021061625,
+          "measured_rate": 0.02415,
+          "combined_se": 0.0014512808896735949,
+          "diff": 0.003088375000000001,
+          "se_multiple": 2.1280339470980025
+        },
+        {
+          "n_trials": 18,
+          "n_obs": 300,
+          "rho": 0.0,
+          "moments_label": "moderate_nongaussian",
+          "mode": "null",
+          "subset": "C3",
+          "predicted_rate": 0.0028,
+          "measured_rate": 0.00395,
+          "combined_se": 0.0005799378199427936,
+          "diff": 0.0011500000000000004,
+          "se_multiple": 1.9829712090745162
+        },
+        {
+          "n_trials": 8,
+          "n_obs": 300,
+          "rho": 0.25,
+          "moments_label": "018_measured",
+          "mode": "null",
+          "subset": "C2",
+          "predicted_rate": 0.0066428,
+          "measured_rate": 0.00825,
+          "combined_se": 0.0008316704102756091,
+          "diff": 0.0016072000000000005,
+          "se_multiple": 1.9324963112098539
+        },
+        {
+          "n_trials": 36,
+          "n_obs": 3840,
+          "rho": 0.0,
+          "moments_label": "gaussian",
+          "mode": "edge",
+          "subset": "C3",
+          "predicted_rate": 0.03225,
+          "measured_rate": 0.0292,
+          "combined_se": 0.0017256491169991655,
+          "diff": 0.0030500000000000006,
+          "se_multiple": 1.7674508507869944
+        },
+        {
+          "n_trials": 12,
+          "n_obs": 1000,
+          "rho": 0.25,
+          "moments_label": "018_measured",
+          "mode": "null",
+          "subset": "C2",
+          "predicted_rate": 0.006542575,
+          "measured_rate": 0.0053,
+          "combined_se": 0.0007472061525142552,
+          "diff": 0.001242575,
+          "se_multiple": 1.6629614140875189
+        },
+        {
+          "n_trials": 4,
+          "n_obs": 300,
+          "rho": 0.25,
+          "moments_label": "018_measured",
+          "mode": "null",
+          "subset": "C2",
+          "predicted_rate": 0.012668,
+          "measured_rate": 0.01095,
+          "combined_se": 0.0010534184920059073,
+          "diff": 0.0017180000000000008,
+          "se_multiple": 1.6308808066664986
+        }
+      ]
+    },
+    "0.3": {
+      "fires": true,
+      "n_comparisons": 46,
+      "frac_within_3_combined_se": 1.0,
+      "max_se_multiple": 2.2897348568656284,
+      "worst_comparisons": [
+        {
+          "n_trials": 4,
+          "n_obs": 300,
+          "rho": 0.5,
+          "moments_label": "018_measured",
+          "mode": "edge",
+          "subset": "C2",
+          "predicted_rate": 0.04168645,
+          "measured_rate": 0.0373,
+          "combined_se": 0.0019157021551414572,
+          "diff": 0.00438645,
+          "se_multiple": 2.2897348568656284
+        },
+        {
+          "n_trials": 12,
+          "n_obs": 1000,
+          "rho": 0.25,
+          "moments_label": "018_measured",
+          "mode": "edge",
+          "subset": "C2",
+          "predicted_rate": 0.0221,
+          "measured_rate": 0.01905,
+          "combined_se": 0.0014194838410492739,
+          "diff": 0.0030500000000000006,
+          "se_multiple": 2.1486683481690494
+        },
+        {
+          "n_trials": 8,
+          "n_obs": 300,
+          "rho": 0.99,
+          "moments_label": "018_measured",
+          "mode": "null",
+          "subset": "C3",
+          "predicted_rate": 0.05045,
+          "measured_rate": 0.05525,
+          "combined_se": 0.0022372107075552808,
+          "diff": 0.004799999999999999,
+          "se_multiple": 2.14552879788655
+        },
+        {
+          "n_trials": 18,
+          "n_obs": 300,
+          "rho": 0.0,
+          "moments_label": "moderate_nongaussian",
+          "mode": "null",
+          "subset": "C3",
+          "predicted_rate": 0.0028,
+          "measured_rate": 0.00395,
+          "combined_se": 0.0005799378199427936,
+          "diff": 0.0011500000000000004,
+          "se_multiple": 1.9829712090745162
+        },
+        {
+          "n_trials": 36,
+          "n_obs": 3840,
+          "rho": 0.0,
+          "moments_label": "gaussian",
+          "mode": "edge",
+          "subset": "C3",
+          "predicted_rate": 0.03225,
+          "measured_rate": 0.0292,
+          "combined_se": 0.0017256491169991655,
+          "diff": 0.0030500000000000006,
+          "se_multiple": 1.7674508507869944
+        },
+        {
+          "n_trials": 95,
+          "n_obs": 1000,
+          "rho": 0.0,
+          "moments_label": "018_measured",
+          "mode": "edge",
+          "subset": "C3",
+          "predicted_rate": 0.00265,
+          "measured_rate": 0.00355,
+          "combined_se": 0.0005558945493526628,
+          "diff": 0.0009000000000000002,
+          "se_multiple": 1.61901209689508
+        },
+        {
+          "n_trials": 18,
+          "n_obs": 1000,
+          "rho": 0.0,
+          "moments_label": "018_measured",
+          "mode": "edge",
+          "subset": "C3",
+          "predicted_rate": 0.0131,
+          "measured_rate": 0.0148,
+          "combined_se": 0.0011728032656844027,
+          "diff": 0.0017000000000000001,
+          "se_multiple": 1.44951847401955
+        },
+        {
+          "n_trials": 36,
+          "n_obs": 1000,
+          "rho": 0.0,
+          "moments_label": "moderate_nongaussian",
+          "mode": "edge",
+          "subset": "C3",
+          "predicted_rate": 0.0037,
+          "measured_rate": 0.0029,
+          "combined_se": 0.0005734936791282011,
+          "diff": 0.0008000000000000004,
+          "se_multiple": 1.394958705065632
+        },
+        {
+          "n_trials": 18,
+          "n_obs": 300,
+          "rho": 0.75,
+          "moments_label": "018_measured",
+          "mode": "edge",
+          "subset": "C3",
+          "predicted_rate": 0.040970849999999996,
+          "measured_rate": 0.0385,
+          "combined_se": 0.0019519309418991042,
+          "diff": 0.0024708499999999967,
+          "se_multiple": 1.2658490866464862
+        },
+        {
+          "n_trials": 18,
+          "n_obs": 1000,
+          "rho": 0.99,
+          "moments_label": "moderate_nongaussian",
+          "mode": "null",
+          "subset": "C3",
+          "predicted_rate": 0.05005,
+          "measured_rate": 0.0476,
+          "combined_se": 0.0021549853537785354,
+          "diff": 0.002449999999999994,
+          "se_multiple": 1.1368986780834411
+        }
+      ]
+    }
+  },
+  "DS8_by_tau": {
+    "0.15": {
+      "fires": false,
+      "n_c1_cells_in_regime": 96,
+      "gate_evaluation": {
+        "variant": "v3_tau0.15",
+        "DS2a": {
+          "fires": true,
+          "n_violations": 0,
+          "violations": []
+        },
+        "DS2b": {
+          "fires": true,
+          "n_violations": 0,
+          "violations": []
+        },
+        "DS2": true,
+        "DS3": {
+          "fires": false,
+          "high_rho_violations": [
+            {
+              "n_trials": 12,
+              "n_obs": 5000,
+              "rho": 0.9,
+              "moments_label": "018_measured",
+              "diff": 0.08930000000000002
+            }
+          ],
+          "rho0_violations": []
+        },
+        "passes_both_DS2_and_DS3": false
+      }
+    },
+    "0.3": {
+      "fires": false,
+      "n_c1_cells_in_regime": 96,
+      "gate_evaluation": {
+        "variant": "v3_tau0.30",
+        "DS2a": {
+          "fires": true,
+          "n_violations": 0,
+          "violations": []
+        },
+        "DS2b": {
+          "fires": true,
+          "n_violations": 0,
+          "violations": []
+        },
+        "DS2": true,
+        "DS3": {
+          "fires": false,
+          "high_rho_violations": [
+            {
+              "n_trials": 12,
+              "n_obs": 5000,
+              "rho": 0.9,
+              "moments_label": "018_measured",
+              "diff": 0.08930000000000002
+            }
+          ],
+          "rho0_violations": []
+        },
+        "passes_both_DS2_and_DS3": false
+      }
+    }
+  },
+  "objective_A": {
+    "by_tau": {
+      "0.15": {
+        "fires": false,
+        "DS2_DS3_predicted_pass": false,
+        "DS5_fires": true,
+        "DS6_fires": true,
+        "note": "DS-3's high-rho clause failure is analytically proven (sec 0.2), not merely predicted: V3 is bit-for-bit V1 at rho>=0.9 for any tau<0.9, and V1 already fails that clause. This holds regardless of DS-7."
+      },
+      "0.3": {
+        "fires": false,
+        "DS2_DS3_predicted_pass": false,
+        "DS5_fires": true,
+        "DS6_fires": true,
+        "note": "DS-3's high-rho clause failure is analytically proven (sec 0.2), not merely predicted: V3 is bit-for-bit V1 at rho>=0.9 for any tau<0.9, and V1 already fails that clause. This holds regardless of DS-7."
+      }
+    },
+    "adopted_at_tau": null
+  },
+  "objective_B": {
+    "tau_used": 0.15,
+    "tau_selection_rule": "tau=0.15 unless it fails DS-6, then tau=0.30 (sec 1.2/sec 3.6)",
+    "fires": false
+  },
+  "final_verdict": "Neither objective adopted. research.py stays exactly as 017 left it.",
+  "research_py_patch_required": false
+}

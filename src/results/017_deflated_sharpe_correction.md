@@ -173,4 +173,18 @@ value.
 
 ---
 
+## Erratum (2026-08-20, found by notebook 019)
+
+`run_phase_4_17_adoption.py`'s `evaluate_variant` stores each gate clause's violation list truncated
+to `violations[:20]`, and this write-up's DS-3 row above quotes the length of that truncated list. The
+high-rho clause's count is therefore reported as 20 when the uncapped count is **78**; the rho=0 count,
+also reported as 20, happens to be exact. This changes no verdict: V1/V1b already failed DS-3 either
+way (20 or 78 both exceed zero), every downstream conclusion in this document stands unedited, and
+neither `phase_3_17_calibration.json` nor `phase_4_17_adoption.json` was touched to produce this note —
+per this document's own "Inventory discrepancy" precedent, the fact is disclosed here rather than the
+frozen numbers above being patched in place. Full detail: `scratch/019/preflight.json` → `ds3_count_correction`, and
+`src/results/019_dsr_correlation_switch.md`.
+
+---
+
 *Co-produced with Claude Sonnet 5. Notebook: `src/research/017_deflated_sharpe_correction.ipynb`.*

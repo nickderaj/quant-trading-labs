@@ -135,11 +135,12 @@ def dsr_variant(
     trial_sharpes: Sequence[float] | None = None,
     mean_pairwise_corr: float | None = None,
     shrinkage_c: float | None = None,
+    tau: float | None = None,
 ) -> dict[str, float | str | bool | int | None]:
-    """One DSR evaluation under one of sec 2.1's variants. Returns the
-    probability AND the working (dispersion used, SR*, n_trials used in the
-    bracket, family size, family_mismatch) so Phase 5's ledger is auditable
-    (sec 7.1).
+    """One DSR evaluation under one of sec 2.1's variants (plus 019's V3
+    correlation-thresholded switch, sec 1.1). Returns the probability AND
+    the working (dispersion used, SR*, n_trials used in the bracket, family
+    size, family_mismatch) so Phase 5's ledger is auditable (sec 7.1).
 
     sharpe, n_obs, skew, kurtosis: same units/meaning as
     research.deflated_sharpe_prob (sharpe is PER-PERIOD, not annualized --
@@ -149,6 +150,41 @@ def dsr_variant(
     """
     if n_obs <= 1:
         return {"probability": float("nan"), "variant": variant}
+
+    if variant == "v3":
+        # 019 sec 1.1/3.2: mean_pairwise_corr <= tau routes to V0 (the
+        # boundary resolves to V0, per sec 3.2's DS-5 -- NOT the strict "<"
+        # the sec 1.1 pseudocode literally shows, which would route an
+        # exact-equality boundary to V1 instead; sec 3.2's test is the
+        # authoritative spec). Delegates entirely to a recursive dsr_variant
+        # call so the branch's output is bit-for-bit whatever v0/v1 alone
+        # would produce, with a few v3-only keys layered on top.
+        if mean_pairwise_corr is None:
+            raise ValueError("v3 requires mean_pairwise_corr")
+        if tau is None:
+            raise ValueError("v3 requires tau")
+        branch = "v0" if mean_pairwise_corr <= tau else "v1"
+        if branch == "v0":
+            sub = dsr_variant(sharpe, n_trials, n_obs, skew, kurtosis, variant="v0")
+        else:
+            if trial_sharpes is None:
+                raise ValueError(
+                    "v3 requires trial_sharpes when mean_pairwise_corr > tau"
+                )
+            sub = dsr_variant(
+                sharpe,
+                n_trials,
+                n_obs,
+                skew,
+                kurtosis,
+                variant="v1",
+                trial_sharpes=trial_sharpes,
+            )
+        sub["variant"] = "v3"
+        sub["branch_used"] = branch
+        sub["mean_pairwise_corr"] = mean_pairwise_corr
+        sub["tau"] = tau
+        return sub
 
     sr_se = float(_sr_se(sharpe, n_obs, skew, kurtosis))
     if sr_se == 0:
@@ -356,6 +392,8 @@ VARIANT_SPECS: tuple[tuple[str, str, float | None], ...] = (
     ("v2", "v2", None),
     ("v1b_c0.25", "v1b", 0.25),
     ("v1b_c0.5", "v1b", 0.5),
+    ("v3_tau0.15", "v3", 0.15),
+    ("v3_tau0.30", "v3", 0.30),
 )
 
 
@@ -439,12 +477,19 @@ def mc_cell(
         )
         n_eff = np.maximum(n_eff, 1.0 + 1e-9)
 
+        # v3's dispersion is a per-replication np.where select on rho_bar
+        # (already computed above for the mean-pairwise-corr estimator) --
+        # no second correlation pass (sec 4/Phase 1's explicit instruction).
+        # Bracket N is n_trials either way (both V0 and V1 use n_trials, not
+        # n_eff), so v3 never needs n_eff.
         dispersions = {
             "v0": sr_se_arr,
             "v1": disp_v1,
             "v2": sr_se_arr,
             "v1b_c0.25": np.maximum(disp_v1, 0.25 * sr_se_arr),
             "v1b_c0.5": np.maximum(disp_v1, 0.5 * sr_se_arr),
+            "v3_tau0.15": np.where(rho_bar <= 0.15, sr_se_arr, disp_v1),
+            "v3_tau0.30": np.where(rho_bar <= 0.30, sr_se_arr, disp_v1),
         }
         n_brackets: dict[str, float | np.ndarray] = {
             "v0": n_trials,
@@ -452,6 +497,8 @@ def mc_cell(
             "v2": n_eff,
             "v1b_c0.25": n_trials,
             "v1b_c0.5": n_trials,
+            "v3_tau0.15": n_trials,
+            "v3_tau0.30": n_trials,
         }
         for name, _, _ in VARIANT_SPECS:
             sr_star = expected_max_sharpe(dispersions[name], n_brackets[name])
