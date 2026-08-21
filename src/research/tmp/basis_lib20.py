@@ -77,7 +77,8 @@ MAX_POSITIONS_XV = 10
 N_MIN_XV = 3
 
 BYBIT_DEV_CACHE_DIR = "src/research/cache/bybit20/dev"
-BYBIT_HOLDOUT_CACHE_DIR = "src/research/cache/bybit20/holdout"
+# No BYBIT_HOLDOUT_CACHE_DIR constant here, deliberately: sec 9 point 6
+# reserves that literal for run_phase_6_20_holdout.py alone.
 PHASE1_MANIFEST_PATH = "scratch/020/phase1_manifest.json"
 PHASE1A_PROBE_PATH = "scratch/020/phase1a_probe.json"
 

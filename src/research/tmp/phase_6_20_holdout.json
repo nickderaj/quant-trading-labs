@@ -1,0 +1,8 @@
+{
+  "ran": false,
+  "reason": "Neither mechanism qualified: Mechanism A needs RC-2 AND RC-3 (RC-2 fired, RC-3 did not -- the paired diff vs the 018-baseline reproduction did not clear its bootstrap CI). Mechanism B needs XD-2 AND XD-3 (neither fired -- H-B was not supported). No path into a holdout directory was constructed.",
+  "holdout_access_read": {
+    "mechanism_a_unlocked": false,
+    "mechanism_b_unlocked": false
+  }
+}

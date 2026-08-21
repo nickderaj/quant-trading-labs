@@ -318,7 +318,9 @@ def main() -> None:
         json.dump(doc, f, indent=2)
     print(f"written {OUT_PATH}")
     print(f"n_trials total: {N_TRIALS_ITEMISATION['total']}")
-    print(f"N_MIN={N_MIN}  THETA_IN_SLOW={THETA_IN_SLOW}  ROUND_TURN_BP_XV={ROUND_TURN_BP_XV}")
+    print(
+        f"N_MIN={N_MIN}  THETA_IN_SLOW={THETA_IN_SLOW}  ROUND_TURN_BP_XV={ROUND_TURN_BP_XV}"
+    )
 
 
 if __name__ == "__main__":
