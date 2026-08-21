@@ -1,0 +1,137 @@
+{
+  "mechanism_a": {
+    "A0": {
+      "symbols_held_distribution": {
+        "median": 10.0,
+        "mean": 6.775,
+        "frac_1_symbol": 0.054427083333333334,
+        "frac_2_symbols": 0.04375,
+        "frac_lt_n_min_3": 0.26458333333333334,
+        "frac_zero": 0.16640625,
+        "frac_at_cap_10": 0.53828125
+      },
+      "gross_moments": {
+        "skew": -11.65214646152349,
+        "kurtosis_non_excess": 849.3780142425057,
+        "n_obs": 3840
+      },
+      "gross_pooled_mean": 0.00011301092158472236,
+      "gross_newey_west_t": 7.4457153921747325,
+      "mean_gross_turnover_per_bar": 0.0519489914021164
+    },
+    "A1": {
+      "symbols_held_distribution": {
+        "median": 10.0,
+        "mean": 6.610677083333333,
+        "frac_1_symbol": 0.0,
+        "frac_2_symbols": 0.0,
+        "frac_lt_n_min_3": 0.27109375,
+        "frac_zero": 0.27109375,
+        "frac_at_cap_10": 0.53828125
+      },
+      "gross_moments": {
+        "skew": 0.5337115614001775,
+        "kurtosis_non_excess": 18.71152015212094,
+        "n_obs": 3840
+      },
+      "gross_pooled_mean": 0.00010654359755719009,
+      "gross_newey_west_t": 10.53346101062513,
+      "mean_gross_turnover_per_bar": 0.0449177414021164,
+      "standdown_frac_bars_in_cash": 0.27109375
+    },
+    "A2": {
+      "symbols_held_distribution": {
+        "median": 10.0,
+        "mean": 8.675,
+        "frac_1_symbol": 0.021354166666666667,
+        "frac_2_symbols": 0.0078125,
+        "frac_lt_n_min_3": 0.05234375,
+        "frac_zero": 0.023177083333333334,
+        "frac_at_cap_10": 0.71484375
+      },
+      "gross_moments": {
+        "skew": -10.663573076476485,
+        "kurtosis_non_excess": 528.9812911687832,
+        "n_obs": 3840
+      },
+      "gross_pooled_mean": 0.00011856075319368444,
+      "gross_newey_west_t": 9.787713636659316,
+      "mean_gross_turnover_per_bar": 0.04106078455687831
+    },
+    "A3": {
+      "symbols_held_distribution": {
+        "median": 10.0,
+        "mean": 8.638020833333334,
+        "frac_1_symbol": 0.0,
+        "frac_2_symbols": 0.0,
+        "frac_lt_n_min_3": 0.05234375,
+        "frac_zero": 0.05234375,
+        "frac_at_cap_10": 0.71484375
+      },
+      "gross_moments": {
+        "skew": 0.33882040211866704,
+        "kurtosis_non_excess": 16.083695475520244,
+        "n_obs": 3840
+      },
+      "gross_pooled_mean": 0.00011322812923665361,
+      "gross_newey_west_t": 11.714445523440244,
+      "mean_gross_turnover_per_bar": 0.04036634011243387,
+      "standdown_frac_bars_in_cash": 0.05234375
+    },
+    "A0_reproduces_018_5.4pct_singlesymbol": {
+      "measured": 0.054427083333333334,
+      "expected_018": 0.054,
+      "close": true
+    },
+    "gate_rc1": {
+      "fires": true,
+      "pooled_mean_gross_paired_return": 0.00011322812923665361,
+      "newey_west_t": 11.714445523440244,
+      "n_obs": 3840
+    }
+  },
+  "mechanism_b": {
+    "n_symbols": 93,
+    "gate_xd1": {
+      "pooled_mean_gross_xvenue_paired_return": -2.2085070380905425e-05,
+      "newey_west_t": -6.733196500463478,
+      "n_obs": 362323,
+      "fires": false
+    },
+    "b0_gross_moments": {
+      "skew": 0.1677514066826242,
+      "kurtosis_non_excess": 51.20080426619135,
+      "n_obs": 4381
+    },
+    "b0_gross_pooled_mean": 7.151725635646362e-05,
+    "b0_gross_newey_west_t": 10.83586120056997,
+    "decomposition": {
+      "n_obs_excluded_implausible_basis": 551,
+      "symbols_with_excluded_bars": [
+        "WAVESUSDT",
+        "ICPUSDT"
+      ],
+      "funding_spread_term_pooled_mean": -2.1992617560231305e-05,
+      "funding_spread_term_newey_west_t": -15.53022250060984,
+      "price_divergence_term_pooled_mean": 1.0041481139641254e-07,
+      "price_divergence_term_newey_west_t": 0.053436608560057455,
+      "funding_dominates_by_magnitude": true,
+      "funding_dominates_by_significance": true
+    },
+    "spread_persistence": {
+      "n_runs": 3001,
+      "mean_run_length_periods": 29.827724091969344,
+      "median_run_length_periods": 10.0,
+      "frac_runs_clearing_breakeven": 0.32022659113628793,
+      "breakeven_periods_used": 25
+    },
+    "sign_convention_check": {
+      "symbol": "LPTUSDT",
+      "datetime": "2025-05-30 16:00:00",
+      "binance_funding_rate": -0.01510317,
+      "bybit_funding_rate": -0.15177409,
+      "funding_term_in_w_plus1_return": 0.13667092,
+      "interpretation": "w=+1 (short Binance perp/long Bybit perp) receives +binance_funding (short receives positive funding) and pays -bybit_funding (long pays positive funding); funding_term = a_funding - b_funding matches the formula exactly, verified against this real bar."
+    }
+  }
+}

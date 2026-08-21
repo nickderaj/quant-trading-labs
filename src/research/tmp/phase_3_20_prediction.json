@@ -1,0 +1,44 @@
+{
+  "predicted_moments": {
+    "A1": {
+      "skew": 0.5337115614001775,
+      "kurtosis_non_excess": 18.71152015212094
+    },
+    "A3": {
+      "skew": 0.33882040211866704,
+      "kurtosis_non_excess": 16.083695475520244
+    }
+  },
+  "counterfactual_dsr_A3": {
+    "definition": "if A3 merely matched 018's net Sharpe (0.5766) but carried A3's own predicted moments, would RC-2's DSR leg clear 0.95?",
+    "sharpe_used": 0.5766182328943011,
+    "n_obs": 3840,
+    "skew_used": 0.33882040211866704,
+    "kurtosis_used": 16.083695475520244,
+    "dsr": 0.1544289194460517,
+    "clears_0.95": false
+  },
+  "rc2_dsr_leg_prediction": {
+    "predicted_verdict": "does_not_fire",
+    "reason": "counterfactual DSR at 018's Sharpe with A3's predicted moments = 0.1544, below the 0.95 bar -- A3 would need a higher Sharpe than 018, not just better moments, for the DSR leg to clear."
+  },
+  "b_single": {
+    "n_symbols_ok": 93,
+    "n_symbols_requested": 93,
+    "net_sharpe": 0.8540558012085119,
+    "n_obs": 3840
+  },
+  "counterfactual_dsr_B0": {
+    "definition": "if B0 merely matched B_single's net Sharpe but carried B0's own predicted moments, would XD-2's DSR leg clear 0.95?",
+    "sharpe_used": 0.8540558012085119,
+    "n_obs": 4381,
+    "skew_used": 0.1677514066826242,
+    "kurtosis_used": 51.20080426619135,
+    "dsr": 0.3463518961680861,
+    "clears_0.95": false
+  },
+  "xd2_dsr_leg_prediction": {
+    "predicted_verdict": "does_not_fire",
+    "reason": "counterfactual DSR at B_single's Sharpe with B0's predicted moments = 0.3464, below the 0.95 bar."
+  }
+}
