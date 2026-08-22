@@ -1,61 +1,88 @@
-# Simple Linear Models - Results Summary
+# 001 — Simple Linear Models
 
-## What
+## The question
 
-Two notebooks fit the simplest possible model - a straight line - to predict BTC's next-bar return and trade on the sign of the prediction: notebook 1 with mean-reversion features, notebook 2 with trend-following features swept across hundreds of configs. This is the starting point of the research programme, meant to establish baseline machinery (fee accounting, no-trade logic) before anything more sophisticated is attempted.
+Can the simplest possible model — a straight line — predict Bitcoin's next-bar return well
+enough to trade on the sign of that prediction?
 
-## Why
+This is the first notebook in the programme. Its real job is less about finding an edge and more
+about building the basic machinery (fee accounting, position logic, backtest plumbing) and
+proving it works, because a broken cost model can turn a losing strategy into an apparently
+winning one and quietly poison everything built on top of it.
 
-The goal was to get a first read on whether a trivially simple linear signal could produce a profitable BTC strategy, and in the process shake out basic bugs in the backtest/fee logic before they contaminate later, more complex work. Getting fee and trading mechanics right first matters because a broken cost model can flip a losing strategy into an apparently winning one (or vice versa), making everything downstream untrustworthy.
+## What was done
 
-## How
+Two notebooks, both on Bitcoin:
 
-Built linear models (single-lag and multi-feature) on BTC at several bar intervals, predicting next return and trading sign(prediction), with a single train/test split on one symbol and about one year of data. Along the way, three bugs were found and fixed: fees charged on every bar instead of only on position changes, a sign error in the fee log-return formula (`log(fee)` instead of `log(1-fee)`), and no ability for the model to sit out a trade even when its predicted edge was smaller than the round-trip cost (fixed with a no-trade zone).
+- **001a** fits a linear model on mean-reversion features (the return some number of bars ago,
+  expecting it to reverse).
+- **001b** fits a linear model on trend-following features and sweeps 756 configurations
+  (3 bar intervals × 3 loss functions × 3 test-set sizes × 28 feature combinations).
+
+Both predict the next bar's return and take a position equal to the sign of that prediction. One
+train/test split, one symbol, roughly one year of hourly data.
+
+## Three bugs found and fixed
+
+These were real defects in the backtest code, not modelling choices, and all three are now fixed
+in `src/research.py`.
+
+**1. Fees charged on every bar instead of only when the position changed.** The original code
+deducted a full round-trip fee every single bar, even when the position had been held unchanged
+for months. Fixed so the fee scales with how much the position actually moved that bar — zero if
+it didn't move.
+
+**2. The fee formula used `log(fee)` where it should have used `log(1 - fee)`.** With a 1bp fee,
+`log(0.0001) = -9.2` in log-return terms. That isn't a transaction cost, it's a total wipeout of
+the account on every trade.
+
+**3. The model could never sit out.** Taking `sign(prediction)` forces a position on every bar,
+including when the prediction is indistinguishable from zero. Added a no-trade band: if the
+predicted edge is smaller than the round-trip cost of acting on it, go flat instead.
 
 ## Results
 
-After fixing the three bugs, headline numbers flipped from big losses to big gains: the mean-reversion notebook's "always short" model netted +34% after fees (though weight inspection showed it was essentially a constant short bet, not a real signal, since BTC fell during the test window), and the trend-following notebook's best-swept config (picked from 756 combinations) netted +59.10% after correct fees. Both results were judged untrustworthy: one is a disguised constant directional bet, the other is the best pick out of hundreds of overfit combinations on a single train/test split, one symbol, one year - neither validated out of sample, cross-asset, or against a buy-and-hold baseline. The notebook concludes with a punch list (walk-forward testing, multiple splits, baseline comparisons, deflated Sharpe, weight inspection) that directly motivates notebook 2.
+Fixing the fee bugs flipped the headline numbers from large losses to large gains — and neither
+gain is real.
 
-Both notebooks fit a straight line to predict BTC next return, trade on the sign. Found 3 bugs in fee/trading logic. Fixed them, reran everything. Numbers changed a lot. Still don't trust these as real strategies.
+**001a, mean reversion.** Before the fixes, hourly single-lag models lost 15–25% with Sharpe
+between −1.5 and −2.5, though those after-fee numbers were meaningless given the broken fee code.
+After the fixes, the best model returned **+34% net of fees**.
 
-## The 3 bugs (now fixed in research.py)
+Inspecting the fitted weights explains why: the bias term dominates and the feature weight barely
+contributes, so the position is effectively a constant short held across the whole window. Bitcoin
+fell during that window, so the number came out positive. It is a directional bet wearing a model
+costume, not a signal.
 
-1. Fees charged every bar, not just when you trade.
-   - Old code charged the round trip fee on every bar, even when position held for months.
-   - Fixed: fee now based on how much position actually changed that bar (0 if unchanged).
+The 6-hour and 12-hour multi-feature configurations still showed Sharpe between 2.0 and 2.7, but
+on roughly 182 trades from a single train/test split — far too small a sample to mean anything.
 
-2. Fee math bug: add_tx_fees_log used log(fee) instead of log(1 - fee).
-   - log(0.0001) = -9.2 per trade. Not a fee, a wipeout.
-   - Fixed the formula.
+**001b, trend following.** Before the fixes, the best swept configuration showed a pre-fee Sharpe
+of 8.89 that became −23.23% after the (broken) fee deduction. After the fixes, the same
+configuration returned **+59.10% net**, with the no-trade band visibly skipping bars.
 
-3. Models couldn't sit out.
-   - Old code always forced a trade (sign(prediction)), even when prediction was basically zero/noise.
-   - Added a no-trade zone: if predicted edge is smaller than round trip fee, don't trade. Position goes flat instead.
-
-## Notebook 1 - Mean Reversion
-
-- Before fixes: single lag 1h models lost money (-15% to -25%), Sharpe -1.5 to -2.5. Fee code broken so after fee numbers meaningless.
-- After fixes: the always short model (lag 3 feature) nets +34% after fees over test window.
-- Model weights show bias term dominates, feature weight barely matters. It's basically a constant short bet the whole window. BTC fell during the test window so the number is positive.
-- 6h/12h multi feature configs still show positive Sharpe (2 to 2.7) but only ~182 trades from one single train/test split. Sample too small.
-
-## Notebook 2 - Trend Following
-
-- Before fixes: best swept config showed Sharpe 8.89 pre fee, but after (broken) fees lost -23.23%.
-- After fixes: same config nets +59.10% after (correct) fees, no-trade filter visibly skipping some bars.
-- Model was picked by sweeping 756 combinations (3 intervals x 3 loss functions x 3 test sizes x 28 feature combos) and taking best Sharpe. Same warning as before still applies: this shows how easy it is to overfit a backtest, not a strategy to trade.
+That configuration was chosen as the best Sharpe out of 756 combinations. Selecting the maximum
+of hundreds of noisy trials inflates it even when no edge exists at all. This demonstrates how
+easily a backtest overfits; it does not demonstrate a strategy.
 
 ## Bottom line
 
-- The 3 fixes were real bugs, results flipped from big losses to big gains.
-- Fixing fee math doesn't fix the actual problem: no real edge found yet.
-- Both winning results are either a constant directional bet, or the best pick out of hundreds of overfit combinations on one asset, one split, one year of data.
-- None of this validated out of sample, cross asset, or against buy and hold baseline.
+- The three fixes were genuine bugs, and correcting them moved results dramatically.
+- Correct fee arithmetic does not create an edge. None was found here.
+- Both apparently profitable results have a mundane explanation: one is a constant directional
+  bet, the other is the best of hundreds of overfit configurations on one asset, one split, one
+  year.
+- Nothing here was validated out of sample, across assets, or against a buy-and-hold benchmark.
 
-## What would make these numbers trustworthy
+## What would make numbers like these trustworthy
 
-- Walk forward testing, many splits not one.
-- Compare against buy and hold and always flat baselines.
-- Penalize for how many configs were tried (deflated Sharpe).
-- Test on more than 1 symbol / 1 year.
-- Check model isn't just a constant directional bet, inspect weights before trusting Sharpe.
+This list is the direct agenda for notebook 002:
+
+- Walk-forward testing across many splits, not one.
+- Comparison against buy-and-hold and always-flat benchmarks.
+- A penalty for the number of configurations tried (deflated Sharpe).
+- More than one symbol and more than one year.
+- Weight inspection on every fit, to catch constant-bet degeneracy before trusting any Sharpe.
+
+*Notebooks: `src/research/001a_mean_reversion_single_asset_ML.ipynb`,
+`src/research/001b_trend_following_single_asset_ML.ipynb`.*

@@ -1,355 +1,332 @@
-# Tail Risk and Conditional Non-Normality - Results Summary
+# 005 — Tail Risk and Conditional Non-Normality
 
-## What
+## The question
 
-This notebook picks up where notebook 4's volatility point-forecast ladder ended in a tie, and instead asks which model gives the best-calibrated conditional tail: it adds new models (GJR-GARCH for leverage, conditional EVT/GPD via the McNeil-Frey two-stage method), runs a density-scoring contest (log score with Diebold-Mariano significance testing), a full tail-calibration battery (Kupiec, Christoffersen, Acerbi-Székely expected-shortfall backtests across 6 quantile levels), and a gated trading application that only runs if the tail-calibration evidence is strong and stable enough.
+Notebook 004 ran a seven-method volatility *point*-forecast contest and found no clear winner at
+any interval — HAR-RV, the range estimators and normal-innovation GARCH all sat in one
+statistically indistinguishable cluster. That contest is exhausted: conditional variance at these
+horizons has an R² of 0.004–0.19, and every reasonable point estimator lands in the same place.
 
-## Why
+But notebook 004 did surface one narrower real result: GARCH with Student-t innovations scored
+better than any normal density. Given how extreme crypto's tails are — fitted degrees of freedom
+of 2–3 at every interval — the question worth asking next isn't "who forecasts variance best" but
+**which model gives the best-calibrated conditional tail**, scored with the same rigour.
 
-Notebook 4's 7-rung QLIKE ladder found no clear volatility point-forecast winner - every reasonable estimator landed in one statistically indistinguishable cluster - but it did surface one narrower, real result along the way: GARCH-t's Student-t innovation distribution scored better than a normal density. Since BTC's tails are extreme (fitted Student-t degrees of freedom of 2-3 at every interval), the natural next question isn't "who forecasts variance best" (exhausted) but "which model's conditional tail is best-calibrated," evaluated with the same statistical rigor as the variance ladder.
+Notebooks 004 and 005 are not in disagreement. They answer different questions.
 
-## How
+Primary asset BTC at all four intervals, with checks transferred to ETH, SOL, DOGE, BNB and XRP at
+daily bars.
 
-First corrected two bugs found in notebook 4's already-committed code (a lookahead leak in the degrees-of-freedom used to score GARCH-t's density, and an inconsistent CRPS integration grid across distribution families) and re-ran the affected results. Then added GJR-GARCH (asymmetric/leverage) and conditional EVT (GPD fit to GARCH-standardized residuals) to an 8-model density contest scored by log score with all-pairs Diebold-Mariano tests (Benjamini-Hochberg corrected, bootstrap p-values primary). Ran a full tail-calibration battery (Kupiec, Christoffersen independence and conditional coverage, at 6 quantile levels, across all 10 models including EVT variants) and an Acerbi-Székely expected-shortfall backtest. Also ran a Hill-estimator tail-index check independent of the GARCH machinery, and tested whether working in log-RV space improves distributional fit. Transferred key checks to ETH/SOL/DOGE/BNB/XRP at 1d. A trading application (Phase 6) was gated to require both a certified density or calibration winner and cross-sectional stability at the same interval.
+## Four decision points, fixed in advance
 
-## Results
+The notebook commits up front to what would count as a result:
 
-This produced the cleanest results in the research programme so far. The density contest (Gate A) found GARCH-t as a statistically certified winner - beating every other model significantly - at 3 of 4 BTC intervals (1h/4h/12h), though not at 1d, and this null replicated perfectly across all 6 transfer symbols at 1d (0 of 6 fired). The tail-calibration battery (Gate B) found GARCH-EVT clearing all 36 coverage tests at 12h, and the Acerbi-Székely ES backtest delivered the headline finding: every non-fat-tailed model significantly underestimated 1%-tail losses at every interval with zero exceptions, while fat-tailed/EVT models were far better calibrated. GJR-GARCH's leverage effect was real in a meaningful minority of individual refits but did not survive as a net improvement once rolled forward, and its prevalence varied enormously by asset (6x range across symbols). Because Gate A's interval-specific wins (1h/4h/12h) and Gate B's cross-sectional stability (mostly at 1d) never jointly held at the same interval across all symbols, Gate D's requirements for the trading application were not met, so Phase 6 correctly did not run. Two more bugs were found and fixed (a sign error in the Acerbi-Székely calibration formula, and small-sample noise investigated in the GPD shape parameter). Bottom line: real, statistically certified new knowledge about crypto's conditional tail behavior, but still no tradeable application that clears the bar.
+- **A density winner** — one model whose log score beats *every* other model's with statistical
+  significance.
+- **A calibration winner** — one model that passes *all 36* tail-coverage tests at an interval.
+- **Stability** — either of those replicating across the transfer symbols at the same interval.
+- **A trading application** — pre-declared to run only if a density or calibration winner
+  coincides with stability at the same interval.
 
-**The evaluation criterion changes here, deliberately.** Notebook 4 ran a 7-rung
-volatility *point*-forecast contest (QLIKE) and found no clear winner at any interval -
-HAR-RV, the range estimators, and GARCH-normal all sit in one statistically
-indistinguishable cluster, at every interval, on BTC. That contest is exhausted:
-conditional variance at these horizons has an R² of 0.004-0.19, and every reasonable
-point estimator lands in the same place. Notebook 4 did surface one real, narrower
-result along the way - GARCH-t's own Student-t innovation distribution scored better
-than a normal density - and that result is the reason this notebook exists: crypto's
-tails are extreme (fitted Student-t df of 2-3 across every interval tested), and the
-question worth asking next is not "who forecasts variance best" but **which model gives
-the best-calibrated conditional tail, scored with the same rigor the variance ladder
-was.** Notebooks 4 and 5 are not in disagreement - they answer different questions.
+There's also a standing caveat check: if the tail index came back at or below 2 with a confidence
+interval excluding 2, the variance of these returns would not exist and a prominent warning would
+be required at the top of this document.
 
-Primary asset **BTCUSDT**, all 4 intervals (1h/4h/12h/1d), frozen-transferred to
-ETH/SOL/DOGE/BNB/XRP at 1d. Full machinery: `src/distributions.py` (closed-form CRPS
-added this notebook), `src/research/tmp/dist_lib.py` (notebook 4's own machinery, reused
-without modification except the one causality fix below), and the new
-`src/research/tmp/dist_lib5.py` (Hill estimator, GJR-GARCH, GPD/EVT, vectorized density
-scoring, Benjamini-Hochberg, the coverage battery, Acerbi-Székely). Terminology used
-throughout this write-up is defined from scratch, with worked examples grounded in this
-repo's own numbers, in `docs/` (start at `docs/README.md`).
+---
 
-## Correction to notebook 4 (mandatory, landed before any new model code)
+## First: two corrections to notebook 004
 
-Two bugs in already-committed code were found and fixed before any Phase 1-5 work in
-this notebook began, because Phase 3's density contest is built directly on the same
-scoring machinery they touch.
+Both were fixed before any new modelling here, because the density contest is built directly on
+the same scoring machinery.
 
-### The GARCH-t degrees-of-freedom lookahead
+### The degrees-of-freedom lookahead
 
-`run_phase3.py` scored GARCH-t's own-distribution log score and VaR using
-`fits[-1]["params"][3]` - the Student-t degrees of freedom estimated on the **final**
-training window of the whole sample - applied to score every bar from the start of the
-evaluation period onward. The variance forecast itself was properly causal and rolling;
-only the shape parameter scoring it was not. This is the same class of bug as notebook
-4's own HAR-RV same-bar leak (bug #3 there), one level deeper: in the innovation
-distribution's shape parameter rather than the point forecast.
+GARCH-t's density score and Value-at-Risk were computed using the Student-t degrees of freedom
+estimated on the **final** training window of the whole sample, applied to score every bar from
+the start of the evaluation period. The variance forecast was properly causal and rolling; only
+the shape parameter scoring it was not.
 
-**Fix**: `dist_lib.nu_path_from_fits` builds a causal, forward-filled step-function path
-of ν from the fits list, mirroring the variance forecast's own forward-fill exactly.
-Diagnosing the fitted ν path directly (not just trusting the fix ran) shows it genuinely
-varies across the 46 refits at 1h - from 2.2 (the optimizer's own lower search bound,
-during the 2021-2022 stretch) to 8.1 (later, calmer refits) - confirming the bug was
-real, not cosmetic.
+The fix reconstructs a causal, forward-filled path of the parameter, mirroring the variance
+forecast's own forward-fill exactly. Checking the path directly rather than trusting the fix
+confirms the bug was real, not cosmetic: the fitted value varies from 2.2 (during the 2021–2022
+turbulence) to 8.1 in later, calmer refits.
 
-**Both halves of notebook 4's original claim moved, in different directions, once fixed
-and Phase 3 fully re-run:**
+**Both halves of the original claim moved, in opposite directions:**
 
-| interval | GARCH-t log score, OLD (contaminated) | NEW (corrected) | Kupiec 5% VaR p, OLD | NEW |
+| Interval | Log score, contaminated | Corrected | VaR coverage p, contaminated | Corrected |
 |---|---|---|---|---|
-| 1h  | 3.979 | **4.000** | 0.42 | **0.0000** |
-| 4h  | 3.194 | **3.254** | 0.18 | **0.0008** |
+| 1h | 3.979 | **4.000** | 0.42 | **0.0000** |
+| 4h | 3.194 | **3.254** | 0.18 | **0.0008** |
 | 12h | 2.614 | **2.623** | 0.39 | 0.35 |
-| 1d  | 2.187 | **2.220** | 0.84 | 0.68 |
+| 1d | 2.187 | **2.220** | 0.84 | 0.68 |
 
-The **log-score win strengthened**: GARCH-t now beats every normal-density rung at all 4
-intervals (previously 3 of 4 - 1d had been marginally the other way before the fix). The
-**VaR-coverage claim weakened materially**: Kupiec now rejects GARCH-t's 5% VaR at 1h
-and 4h (previously reported as never rejected anywhere). Per this notebook's own stop
-condition, this was reported and flagged as a decision point before any further work -
-it does not overturn notebook 4's bottom line (no point-forecast rung wins outright) but
-it changes the strength of the one calibration-specific result notebook 4 did find, and
-this notebook's own Gate B (below) is the real, fuller test of GARCH-t's VaR calibration
-rather than assuming it from notebook 4's original, uncorrected number.
+The log-score win **strengthened** to all four intervals. The coverage claim **weakened
+materially** — the 5% VaR is now rejected at 1h and 4h, where it had previously never been
+rejected anywhere. This doesn't overturn notebook 004's bottom line, but it does change the
+strength of the one calibration result it found. The full battery below is the real test of that
+calibration rather than an assumption inherited from an uncorrected number.
 
 ### The CRPS integration grid
 
-`distributions.crps`'s numerical grid (`linspace(ppf(1e-6), ppf(1-1e-6), n_points)`)
-spans ~10 units for a normal but ~1,400 units for a t(2) at the same `n_points=400` -
-wildly different effective resolution across families, so any cross-family CRPS
-comparison was partly measuring integration error, not forecast quality. Verified
-directly: on a t(2.1) forecast, the old default grid disagrees with the true
-(closed-form) value by **13-79%** depending on the observation. Added
-`crps_normal_closed_form`/`crps_t_closed_form` (Gneiting & Raftery 2007;
-Jordan/Krüger/Lerch, matching R's `scoringRules::crps_t`), verified to match a very fine
-numerical grid to ~1e-5 on light-tailed cases. This is also what makes the 28-pair,
-bootstrap-heavy Phase 3 contest below computationally tractable on this hardware - the
-old per-observation frozen-distribution CRPS loop would have been far too slow at this
-scale.
+The numerical grid used for the continuous ranked probability score spanned about 10 units for a
+normal distribution but about 1,400 units for a Student-t with 2 degrees of freedom, at the same
+number of grid points. Effective resolution therefore differed wildly across families, so any
+cross-family comparison was partly measuring integration error rather than forecast quality.
+Verified directly: on a t(2.1) forecast, the old grid disagrees with the exact value by **13–79%**
+depending on the observation.
 
-## Phase 1 - Foundations: does the variance even exist?
+Fixed by adding closed-form expressions for the normal and Student-t cases, verified against a
+very fine numerical grid. This is also what makes the bootstrap-heavy contest below tractable on
+this hardware — the old per-observation loop would have been far too slow at this scale.
 
-Fit-once on the full pre-holdout history (descriptive, same status as notebook 4's own
-Phase 1 - Phase 2 onward is where everything becomes rolling and causal).
+---
 
-### Hill estimator: independent of the scipy `t.fit` optimizer notebook 4 already caught pinning at a boundary
+## Foundations: does the variance even exist?
 
-| interval | tail | plateau k-range | α̂ (point) | 95% bootstrap CI |
+### An independent estimate of tail heaviness
+
+Notebook 004's parametric fits kept pinning at the optimiser's boundary, so the tail index is
+re-estimated here by the Hill method, which doesn't depend on that machinery at all. A tail index
+α at or below 2 would mean infinite variance.
+
+| Interval | Tail | Stable range | Estimate | 95% bootstrap CI |
 |---|---|---|---|---|
-| 1h  | upper | [143, 3506] | 2.220 | [2.134, 2.315] |
-| 1h  | lower | [158, 3506] | 2.187 | [2.106, 2.286] |
-| 4h  | upper | [176, 876]  | 2.356 | [2.189, 2.544] |
-| 4h  | lower | [88, 876]   | 2.381 | [2.232, 2.594] |
-| 12h | upper | [106, 198]  | 2.716 | [2.352, 3.092] |
-| 12h | lower | [151, 272]  | 2.203 | [1.970, 2.495] |
-| 1d  | upper | **no stable plateau found** | - | - |
-| 1d  | lower | [79, 146]   | 2.278 | [1.979, 2.671] |
+| 1h | Upper | [143, 3506] | 2.220 | [2.134, 2.315] |
+| 1h | Lower | [158, 3506] | 2.187 | [2.106, 2.286] |
+| 4h | Upper | [176, 876] | 2.356 | [2.189, 2.544] |
+| 4h | Lower | [88, 876] | 2.381 | [2.232, 2.594] |
+| 12h | Upper | [106, 198] | 2.716 | [2.352, 3.092] |
+| 12h | Lower | [151, 272] | 2.203 | [1.970, 2.495] |
+| 1d | Upper | **no stable range found** | — | — |
+| 1d | Lower | [79, 146] | 2.278 | [1.979, 2.671] |
 
-Every point estimate sits **above** 2, and every computed CI either sits fully above 2
-(1h, 4h) or dips only barely below it (12h/1d lower tails, CI lower bound ~1.97-1.98).
-**Gate E does not fire anywhere** (0/4 intervals meet "α≤2 with CI excluding 2") - no
-prominent top-of-file caveat is triggered. 1d's upper tail found no stable plateau at
-any `k` and is reported as provisional, honestly, per this notebook's own tripwire rule,
-rather than quoting a point value anyway.
+Every point estimate sits **above 2**, and every interval either sits fully above it or dips only
+barely below at the lower bound. **The infinite-variance caveat is not triggered anywhere.** The
+daily upper tail found no stable range at any threshold and is reported as provisional rather than
+quoting a point value anyway.
 
-This is itself a real finding, not a non-event, and it sits in **mild tension** with
-notebook 4's own parametric Student-t MLE fit, which found degrees of freedom as low as
-1.98 at 1h (right at the boundary). The non-parametric Hill estimate is consistently
-somewhat higher (further from the boundary) at every interval - **variance most likely
-does exist, though not by a wide margin**, and the two independent estimators broadly
-agree without literally agreeing on the point value.
+This sits in mild tension with notebook 004's parametric fit, which found degrees of freedom as low
+as 1.98 at hourly bars — right at the boundary. The non-parametric estimate is consistently a bit
+higher, i.e. further from the boundary. **Variance most likely does exist, though not by a wide
+margin,** and two independent estimators broadly agree without agreeing exactly.
 
-### Does the Diebold-Mariano test's own CLT hold here?
+### Does the significance test's own approximation hold?
 
-Compared DM's normal-approximation p-value against a block-bootstrap p-value on the
-same QLIKE loss-differential series, for the closest (least-significant) pair from
-notebook 4's own Phase 3 all-pairs DM at each interval:
+The Diebold-Mariano test relies on a central limit theorem. Comparing its normal-approximation
+p-value against a block-bootstrap p-value on the same loss-differential series, for the closest
+(least significant) pair at each interval from notebook 004:
 
-| interval | pair | normal-approx p | bootstrap p | materially disagree? | loss-diff Hill α (upper, lower) |
+| Interval | Pair | Normal-approx p | Bootstrap p | Materially differ? | Loss-diff tail index |
 |---|---|---|---|---|---|
-| 1h  | Garman-Klass vs GARCH-normal | 0.936 | 0.955 | No | 1.50, 1.42 |
-| 4h  | Garman-Klass vs GARCH-normal | 0.878 | 0.887 | No | 1.25, 1.80 |
+| 1h | Garman-Klass vs GARCH-normal | 0.936 | 0.955 | No | 1.50, 1.42 |
+| 4h | Garman-Klass vs GARCH-normal | 0.878 | 0.887 | No | 1.25, 1.80 |
 | 12h | EWMA vs Garman-Klass | 0.967 | 0.851 | **Yes** | 1.50, 1.38 |
-| 1d  | trailing-96 vs Parkinson | 0.966 | 0.943 | No | 2.00, 1.90 |
+| 1d | Trailing-96 vs Parkinson | 0.966 | 0.943 | No | 2.00, 1.90 |
 
-Materially disagree (>0.05 apart) only at 12h - both still say "not significant," so no
-notebook 4 conclusion is overturned by this specific check. But the QLIKE loss
-differential's **own** Hill-estimated tail index runs as low as ~1.2-1.9 at several
-interval/tail combinations - low enough that DM's CLT-based p-value is worth treating as
-approximate rather than exact in general. Consequence carried through the rest of this
-notebook: **Phase 3's own Gate A verdict below uses bootstrap p-values as primary**, not
-the normal approximation alone.
+They differ by more than 0.05 only at 12h, and both still say "not significant", so no notebook
+004 conclusion is overturned. But the loss differential's *own* tail index runs as low as 1.2–1.9
+at several interval and tail combinations — low enough that the normal approximation should be
+treated as approximate rather than exact. **Consequence carried through the rest of this notebook:
+bootstrap p-values are primary for every significance verdict below.**
 
-### Is log-RV the better-behaved object? (cheap, done as asked)
+### Is log-variance the better-behaved object?
 
-Fit normal/t/skew-t to `rv` directly and to `log(rv)`, compared PIT/KS calibration
-(large p = not rejected = well-calibrated):
+Fitting normal, Student-t and skew-t to realised variance directly and to its logarithm, and
+comparing goodness of fit (a large p means not rejected, i.e. well calibrated):
 
-| interval | RV levels: normal / t / skew-t KS p | log(RV): normal / t / skew-t KS p |
+| Interval | Variance levels: normal / t / skew-t | Log variance: normal / t / skew-t |
 |---|---|---|
-| 1h  | ~0 / ~0 / ~0                | 1.4e-88 / 2.5e-88 / (fit failed) |
-| 4h  | ~0 / ~0 / 7.5e-29           | **0.377** / **0.383** / **0.980** |
-| 12h | 1.4e-191 / 6.6e-92 / 4.5e-9 | 0.068 / 0.069 / **0.799** |
-| 1d  | 1.0e-69 / 1.5e-32 / 3.5e-5  | 0.004 / **0.054** / **0.158** |
+| 1h | ≈0 / ≈0 / ≈0 | 1.4e−88 / 2.5e−88 / (fit failed) |
+| 4h | ≈0 / ≈0 / 7.5e−29 | **0.377** / **0.383** / **0.980** |
+| 12h | 1.4e−191 / 6.6e−92 / 4.5e−9 | 0.068 / 0.069 / **0.799** |
+| 1d | 1.0e−69 / 1.5e−32 / 3.5e−5 | 0.004 / **0.054** / **0.158** |
 
-**Raw RV is rejected outright, every family, every interval, with no exceptions** (KS p
-effectively 0 at every single cell in the left half of this table). **log(RV) is
-dramatically better-calibrated at every interval except 1h** - not rejected at any
-family at 4h/12h, and skew-t not rejected even at 1d. Only at 1h does log(RV) also fail
-(p~1e-88) - the finest interval already flagged as having the heaviest, least stable
-tail by every other check in this notebook. This is a clean, direct confirmation that
-notebook 4's rung 2/4 (HAR-RV, RV-distribution fits) were handicapped by working in the
-wrong space; the HAR-log-RV rung added to Phase 3 below is the direct consequence.
+**Raw realised variance is rejected outright — every family, every interval, no exceptions.**
+Log variance is dramatically better calibrated everywhere except hourly bars, where the finest
+interval already flagged as having the heaviest and least stable tail also fails.
 
-**Gate E verdict: does not fire.** Stated here in full per §3's requirement to report it
-regardless of outcome.
+This directly confirms that notebook 004's HAR-RV and variance-distribution methods were
+handicapped by working in the wrong space. A HAR model on log variance is added to the contest
+below as the direct consequence.
 
-## Phase 2 - New models
+---
 
-### GJR-GARCH (leverage)
+## Two new models
 
-Fit with normal and t innovations (skew-t skipped as over-parameterized, per notebook
-4's own finding that skew-t buys nothing unconditionally for BTC). GJR nests plain
-GARCH(1,1) exactly at γ=0, tested directly via a likelihood-ratio test at every refit:
+### GJR-GARCH, for the leverage effect
 
-| interval | frac. refits with significant leverage (normal innov.) | frac. (t innov.) |
+Fitted with normal and Student-t innovations. (Skew-t was skipped as over-parameterised, following
+notebook 004's finding that it buys nothing unconditionally for BTC.) GJR-GARCH nests plain
+GARCH exactly when its asymmetry parameter is zero, which can be tested directly at every refit:
+
+| Interval | Refits with significant leverage (normal) | (Student-t) |
 |---|---|---|
-| 1h  | **43.5%** | 21.7% |
-| 4h  | 34.8% | 17.4% |
+| 1h | **43.5%** | 21.7% |
+| 4h | 34.8% | 17.4% |
 | 12h | 39.1% | 19.6% |
-| 1d  | 17.4% | 6.5% |
+| 1d | 17.4% | 6.5% |
 
-Leverage is real and non-trivial in a substantial minority of individual refits,
-strongest at 1h. But this does **not** translate into a better *pooled* density
-forecast: all-pairs DM shows GARCH-t significantly beats GJR-t at 1h/4h/12h
-(bootstrap-BH p<0.05 at all three) and ties at 1d; GARCH-normal vs. GJR-normal never
-differs significantly at any interval. **Leverage is a real, occasionally-significant
-refit-level effect that does not survive as a net improvement once rolled forward** -
-the extra parameter's estimation noise outweighs its benefit in this rolling-refit
-setting, a clean, numbers-backed illustration of overparameterization rather than a
-hypothetical.
+Leverage is real and non-trivial in a substantial minority of individual refits, strongest at
+hourly bars. But it does **not** translate into a better pooled density forecast: plain GARCH-t
+significantly beats GJR-t at 1h, 4h and 12h and ties at daily; the normal-innovation versions never
+differ significantly anywhere.
 
-### Conditional EVT (McNeil-Frey two-stage)
+**Leverage is a real, occasionally significant refit-level effect that does not survive as a net
+improvement once rolled forward.** The extra parameter's estimation noise outweighs its benefit in
+a rolling-refit setting — a clean, numbers-backed illustration of over-parameterisation rather than
+a hypothetical one.
 
-GPD fitted to standardized residuals from the GARCH fit, refit at exactly the same
-cadence and training windows as the variance model (causal, forward-filled, per
-NEXT_RUN_PROMPT.md's critical-causality note). Summary of the fitted shape ξ across all
-individual rolling refits (both tails pooled):
+### Conditional extreme value theory
 
-| interval | n refits (both tails) | ξ median | ξ range | frac. with ξ<0 |
+A generalised Pareto distribution fitted to the standardised residuals of the GARCH fit, refit at
+exactly the same cadence and on the same training windows as the variance model, and
+forward-filled causally. Summary of the fitted shape parameter ξ across all rolling refits, both
+tails pooled:
+
+| Interval | Refits | Median ξ | Range | Fraction with ξ < 0 |
 |---|---|---|---|---|
-| 1h  | 92 | 0.16  | [-0.27, 0.73] | 12% |
-| 4h  | 92 | 0.05  | [-0.47, 0.49] | 35% |
-| 12h | 88 | 0.03  | [-0.49, 0.43] | 45% |
-| 1d  | 78 | -0.13 | [-0.52, 0.22] | **78%** |
+| 1h | 92 | 0.16 | [−0.27, 0.73] | 12% |
+| 4h | 92 | 0.05 | [−0.47, 0.49] | 35% |
+| 12h | 88 | 0.03 | [−0.49, 0.43] | 45% |
+| 1d | 78 | −0.13 | [−0.52, 0.22] | **78%** |
 
-**Tripwire investigated, per §9's own instruction to stop and check ξ<0 rather than
-ignore it.** A substantial and *growing-with-interval-width* fraction of individual
-500-bar-window refits show ξ<0 (formally a bounded tail - implausible for crypto taken
-at face value). Investigated directly rather than waved through: with `tail_frac=0.10`
-on a 500-bar window, each individual refit estimates ξ from only ~50 exceedances - a
-genuinely small sample for a shape parameter, and the *median* ξ across refits stays
-positive at 1h/4h/12h and only dips slightly negative at 1d, in a pattern that exactly
-tracks aggregational Gaussianity (thinner tails at coarser intervals) already established
-everywhere else in this research programme. Read plainly: this is consistent with a
-true ξ that is small-but-positive at fine intervals and close to zero at 1d, with **the
-individual ξ<0 refits being small-sample noise scattered around that true value**, not
-genuine evidence of a bounded tail at every one of those refits. Still worth flagging
-honestly as a real limitation of a 500-bar/50-exceedance rolling GPD fit, not
-papered over.
+A negative ξ formally means a *bounded* tail, which is implausible for crypto taken at face value.
+Rather than waving this through, it was investigated. Each refit estimates ξ from only about 50
+exceedances within a 500-bar window — a genuinely small sample for a shape parameter. The *median*
+across refits stays positive at 1h, 4h and 12h and only dips slightly negative at daily, in a
+pattern that tracks aggregational Gaussianity exactly as established elsewhere in the programme.
 
-**A second, informative cross-check**: Phase 1's Hill estimator (on raw, unconditional
-returns) implies ξ = 1/α ≈ 0.37-0.45 at every interval - consistently *higher* than the
-median standardized-residual GPD ξ above (0.16 down to -0.13). This gap is itself a
-real, explainable finding, not a contradiction: Hill measures the **unconditional** tail
-(mixing every volatility regime together), while the GPD here is fit to **GARCH-
-standardized residuals** - the **conditional** tail, after the time-varying variance
-has already been divided out. A meaningful share of what makes raw crypto returns look
-so fat-tailed is volatility clustering itself (a mixture-of-regimes effect), not a
-genuinely heavy-tailed *conditional* innovation - exactly consistent with GARCH-t's own
-own-distribution degrees of freedom (7-8 at most refits, per notebook 4/this notebook's
-diagnostics) sitting far higher than the ~2-3 df found unconditionally in notebook 4's
-Phase 1. Conditioning on volatility genuinely thins the tail that's left over.
+Read plainly: this is consistent with a true ξ that is small-but-positive at fine intervals and
+close to zero at daily, with the individual negative estimates being small-sample scatter around
+that value rather than genuine evidence of a bounded tail. It remains a real limitation of a
+500-bar rolling fit and is flagged as such rather than papered over.
 
-## Phase 3 - The density contest
+### A revealing cross-check
 
-**Log score is primary** (QLIKE kept only as a secondary column, for continuity with
-notebook 4). d8/d9 (GARCH-EVT, GJR-EVT) are **not entered** in this log-score/CRPS
-contest - continuously normalizing a GPD-tails-plus-empirical-body density proved
-exactly as fiddly as anticipated, and this notebook uses its own sanctioned fallback
-("an honest partial entry beats a hand-waved density") rather than forcing a shaky
-density through. So this is an **8-model, 28-pair-per-interval contest** (documented
-plainly, not silently smaller than the originally-planned 10-model/45-pair one).
+The Hill estimates on raw returns imply ξ ≈ 0.37–0.45 at every interval — consistently *higher*
+than the median GPD ξ above (0.16 down to −0.13). This gap is a real, explainable finding rather
+than a contradiction.
 
-### Log score by model (higher is better; ranked within each interval)
+The Hill estimator measures the **unconditional** tail, mixing every volatility regime together.
+The GPD here is fitted to GARCH-standardised residuals, i.e. the **conditional** tail after the
+time-varying variance has been divided out. A meaningful share of what makes raw crypto returns
+look so fat-tailed is volatility clustering itself — a mixture-of-regimes effect — rather than a
+genuinely heavy-tailed conditional innovation. That is consistent with GARCH-t's own fitted
+degrees of freedom sitting at 7–8 in most refits, far above the 2–3 found unconditionally.
 
-| rank | 1h | 4h | 12h | 1d |
+**Conditioning on volatility genuinely thins the tail that's left over.**
+
+---
+
+## The density contest
+
+Log score is the primary metric here. Eight models compete, giving 28 pairwise comparisons per
+interval.
+
+The two EVT models are **not entered** in this contest. Continuously normalising a
+GPD-tails-plus-empirical-body density proved as fiddly as anticipated, and an honest partial entry
+beats a hand-waved density. They are entered in the calibration battery below, where their
+quantile and expected-shortfall forecasts are well defined regardless. This is documented plainly
+rather than reported as a silently smaller contest than planned.
+
+### Log score by model (higher is better)
+
+| Rank | 1h | 4h | 12h | 1d |
 |---|---|---|---|---|
 | 1 | **GARCH-t** 4.000 | **GARCH-t** 3.254 | **GARCH-t** 2.623 | HAR-log-RV 2.244 |
 | 2 | GJR-t 3.988 | GJR-t 3.233 | GJR-t 2.609 | GARCH-t 2.220 |
 | 3 | GARCH-normal 3.848 | HAR-log-RV 3.167 | HAR-log-RV 2.572 | GJR-t 2.220 |
 | 4 | HAR-RV 3.844 | HAR-RV 3.139 | HAR-RV 2.543 | HAR-RV 2.191 |
-| 5 | GJR-normal 3.842 | GARCH-normal 3.130 | GJR-normal 2.530 | GJR-normal 2.167 |
-| 6 | Garman-Klass 3.826 | GJR-normal 3.124 | GARCH-normal 2.522 | GARCH-normal 2.163 |
-| 7 | trailing-96 3.768 | range 3.101 | trailing-96 2.471 | trailing-96 2.139 |
-| 8 | HAR-log-RV 3.707 | trailing-96 3.073 | range 2.399 | Parkinson 2.117 |
+| 5 | GJR-normal 3.842 | GJR-normal 3.124 | GJR-normal 2.530 | GJR-normal 2.167 |
+| 6 | Garman-Klass 3.826 | GARCH-normal 3.130 | GARCH-normal 2.522 | GARCH-normal 2.163 |
+| 7 | Trailing-96 3.768 | Range 3.101 | Trailing-96 2.471 | Trailing-96 2.139 |
+| 8 | HAR-log-RV 3.707 | Trailing-96 3.073 | Range 2.399 | Parkinson 2.117 |
 
-**This is the cleanest result this research programme has produced.** Notebook 4's
-QLIKE ladder found ties everywhere; scoring the identical underlying variance recursions
-on log score instead surfaces a real, ordered, mostly-replicating ranking - t-innovation
-models at the top, normal-innovation in the middle, trailing-std/range at the bottom, at
-every interval - rather than noise.
+**This is the cleanest result the research programme has produced.** Notebook 004's point-forecast
+contest found ties everywhere. Scoring the *identical underlying variance recursions* on log score
+instead surfaces a real, ordered, mostly-replicating ranking — Student-t innovation models at the
+top, normal-innovation in the middle, trailing standard deviation and range estimators at the
+bottom, at every interval.
 
-### Gate A verdict (all-pairs Diebold-Mariano, Benjamini-Hochberg-adjusted, bootstrap p-values primary)
+### Verdict, with all pairwise comparisons corrected for multiple testing
 
-| interval | best model | beats every other, significantly? |
+| Interval | Best model | Beats every other model significantly? |
 |---|---|---|
-| 1h  | GARCH-t | **Yes** |
-| 4h  | GARCH-t | **Yes** |
+| 1h | GARCH-t | **Yes** |
+| 4h | GARCH-t | **Yes** |
 | 12h | GARCH-t | **Yes** |
-| 1d  | HAR-log-RV | No |
+| 1d | HAR-log-RV | No |
 
-**Gate A fires at 3 of 4 intervals.** GARCH-t is a genuine, statistically certified
-density winner at 1h/4h/12h - both the bootstrap-adjusted and normal-approximation
-verdicts agree at every interval this time. Only at 1d does no model win significantly
-(HAR-log-RV edges narrowly ahead, 2.244 vs. GARCH-t's 2.220, but not significantly) -
-consistent with 1d being the interval where notebook 4's own point-forecast ladder came
-closest to a real result and where Phase 1's own Hill/GPD diagnostics show the tail
-closest to normal.
+**A certified density winner at three of four intervals.** GARCH-t genuinely beats everything
+else at 1h, 4h and 12h, and the bootstrap and normal-approximation verdicts agree everywhere this
+time. Only at daily bars does no model win significantly — HAR-log-RV edges narrowly ahead (2.244
+against 2.220) but not significantly. That is consistent with daily being the interval where the
+tail diagnostics above show the distribution closest to normal.
 
-## Phase 4 - The tail calibration battery
+---
 
-Full grid: Kupiec + Christoffersen independence + Christoffersen conditional coverage,
-all 6 quantile levels (1%/2.5%/5%/95%/97.5%/99%), all 10 models (d8/d9's quantile/ES
-forecasts are well-defined from their GPD fits even though their full density wasn't
-entered in Phase 3), all 4 intervals - **1,440 individual tests.**
+## The tail-calibration battery
 
-### Gate B verdict
+The full grid: an unconditional coverage test, an independence test on violation clustering, and a
+joint conditional-coverage test, at all six quantile levels (1%, 2.5%, 5%, 95%, 97.5%, 99%),
+across all ten models and all four intervals — **1,440 individual tests.**
 
-| interval | model(s) clearing all 36 tests |
+### Which models clear every test
+
+| Interval | Models passing all 36 tests |
 |---|---|
-| 1h  | none |
-| 4h  | none (GARCH-EVT comes closest: 0 Kupiec failures, 1 independence, 1 conditional-coverage failure out of 18 tests) |
+| 1h | none |
+| 4h | none — GARCH-EVT comes closest, failing 2 of 18 |
 | 12h | **GARCH-EVT** |
-| 1d  | none (GARCH-EVT/GJR-EVT each fail only 1 of 18 tests) |
+| 1d | none — GARCH-EVT and GJR-EVT each fail only 1 of 18 |
 
-**Gate B fires exactly once**: GARCH-EVT clears every single one of the 36 tests at 12h.
-At every other interval, both EVT models come close (0-3 failures out of 18 tests each)
-while every non-EVT model fails multiple tests at every interval, usually on 4-6 of the
-6 quantile levels on at least one of the three tests. 1h is the hardest interval across
-the board, including for the EVT models - consistent with every other diagnostic in this
-notebook flagging it as the heaviest, least-stable tail.
+**Exactly one clean pass:** GARCH-EVT clears every one of the 36 tests at 12h. Everywhere else,
+both EVT models come close (0–3 failures out of 18 each) while every non-EVT model fails multiple
+tests at every interval, usually on four to six of the six quantile levels. Hourly bars are the
+hardest interval across the board, including for the EVT models — consistent with every other
+diagnostic flagging that interval as the heaviest, least stable tail.
 
-### The single cleanest result in this notebook: the Acerbi-Székely ES backtest
+### The single cleanest finding here
 
-At the 1% level, **at every interval, with zero exceptions**, every non-fat-tailed model
-(trailing-std, HAR-RV, HAR-log-RV, range, GARCH-normal, GJR-normal) has a significantly
-positive Z statistic (bootstrap p<0.05, usually p=0.000):
+The expected-shortfall backtest asks a sharper question than coverage: not "how often does the
+model's threshold get breached", but "when it *is* breached, is the loss as bad as the model said
+it would be on average?"
 
-| interval | non-fat-tailed models' Z range (all significant) | t-innovation Z (1h/4h sig.; 12h/1d not) | EVT Z (never significant except 1h/4h borderline) |
+At the 1% level, **at every interval, with zero exceptions**, every model that does not account for
+fat tails — trailing standard deviation, HAR-RV, HAR-log-RV, range estimators, normal-innovation
+GARCH and GJR — comes back with a significantly positive test statistic:
+
+| Interval | Non-fat-tailed models (all significant) | Student-t innovation | EVT |
 |---|---|---|---|
-| 1h  | 1.04 to 1.98 | 1.34 - 1.71 | 0.17 - 0.21 |
-| 4h  | 0.98 to 2.11 | 0.71 - 1.57 | 0.24 |
-| 12h | 1.15 to 2.92 | 0.66 - 1.51 | 0.04 - 0.09 (not sig.) |
-| 1d  | 0.48 to 1.38 | 0.38 - 0.48 (not sig.) | 0.13 - 0.18 (not sig.) |
+| 1h | 1.04 to 1.98 | 1.34–1.71 (significant) | 0.17–0.21 |
+| 4h | 0.98 to 2.11 | 0.71–1.57 (significant) | 0.24 |
+| 12h | 1.15 to 2.92 | 0.66–1.51 (not significant) | 0.04–0.09 (not significant) |
+| 1d | 0.48 to 1.38 | 0.38–0.48 (not significant) | 0.13–0.18 (not significant) |
 
-(Recall $Z \approx 0$ means well-calibrated ES; $Z>0$ means realized 1%-tail losses are
-significantly *worse* than the model's own expected-shortfall prediction - the model
-understates tail risk. A genuine bug in the runbook's own pseudocode was caught and
-fixed here before this table was trusted: both the sign of the statistic's additive
-constant and the stated direction of the failure mode were backwards, verified
-numerically with a deliberately mis-specified model before correcting - see
-`docs/06-scoring-rules-and-calibration.md#acerbi-székely`.)
+A statistic near zero means well-calibrated expected shortfall. A positive statistic means realised
+1%-tail losses are significantly *worse* than the model's own prediction — the model understates
+tail risk.
 
-Plainly stated, this is the headline finding of the whole notebook: **models that don't
-account for fat tails don't just score worse on an abstract log-score metric - they
-concretely, measurably underestimate how bad the worst days actually get, every single
-time this was checked, at every interval.** Fat-tailed and EVT-based models are
-dramatically better calibrated for this specific, practically-important risk, clearing
-the strict coverage bar outright at 12h and coming within one or two tests of it
-everywhere else except 1h.
+Plainly stated, this is the headline finding of the whole notebook: **models that don't account
+for fat tails don't merely score worse on an abstract metric — they concretely and measurably
+underestimate how bad the worst days actually get, every single time this was checked, at every
+interval.** Fat-tailed and EVT-based models are dramatically better calibrated on exactly the risk
+that matters most, clearing the strict bar outright at 12h and coming within one or two tests of
+it everywhere except hourly.
 
-## Phase 5 - Transfer / stability
+---
 
-ETH/SOL/DOGE/BNB/XRP, 1d only (same scoping rationale as notebook 4 - wall-clock cost on
-this hardware). **A real scoping limit, stated plainly**: BTC's headline Gate A win
-(GARCH-t, significant at 1h/4h/12h) cannot be directly transfer-tested, because Phase 5
-is scoped to 1d only and 1d is the one interval where BTC's own contest found no
-significant winner. What follows tests whether *that* (1d, no-significant-winner)
-pattern replicates, and whether Gate B's calibration story does.
+## Does it replicate across symbols?
 
-### Gate A: a perfectly stable null
+Transfer testing ran at daily bars only, for wall-clock reasons on this hardware. **A real scoping
+limit, stated plainly:** BTC's actual certified density win is at 1h, 4h and 12h, and cannot be
+transfer-tested at all here, because daily is the one interval where BTC's own contest found no
+significant winner. What follows tests whether *that* pattern replicates, and whether the
+calibration story does.
 
-| symbol | best-by-log-score model | Gate A fires? |
+### The density result: a perfectly stable null
+
+| Symbol | Best model by log score | Significant winner? |
 |---|---|---|
 | BTC (reference) | HAR-log-RV | No |
 | ETH | GJR-t | No |
@@ -358,16 +335,14 @@ pattern replicates, and whether Gate B's calibration story does.
 | BNB | HAR-log-RV | No |
 | XRP | GARCH-t | No |
 
-**Gate A fires at 0 of 6 symbols at 1d** - a perfectly replicating null, not a single
-spurious "winner" anywhere. The identity of the best model splits three ways (GJR-t,
-HAR-log-RV, GARCH-t) but never lands on a naive baseline (trailing std, plain range,
-GARCH-normal) on any symbol - the *cluster* of plausible winners (fat-tailed/log-RV
-models) replicates even though the single best does not, the same pattern notebook 4
-found for its own point-forecast ladder.
+**Zero of six symbols produce a significant winner at daily bars** — a perfectly replicating null,
+with not a single spurious "winner" anywhere. The identity of the best model splits three ways but
+never lands on a naive baseline on any symbol. The *cluster* of plausible winners replicates even
+though the single best does not, the same pattern notebook 004 found for its point forecasts.
 
-### Gate B: clears on most altcoins, not on BTC or ETH
+### Calibration: clears on most altcoins, not on BTC or ETH
 
-| symbol | model(s) clearing all 36 tests at 1d |
+| Symbol | Models passing all 36 tests at daily |
 |---|---|
 | BTC | none |
 | ETH | none |
@@ -376,110 +351,100 @@ found for its own point-forecast ladder.
 | BNB | GARCH-normal, GJR-normal, GARCH-t, GJR-t, GARCH-EVT, GJR-EVT (6 of 10) |
 | XRP | GARCH-t, GJR-t |
 
-Gate B clears on 4 of 5 transfer symbols (not ETH), and an EVT model is present in every
-clearing set except XRP's. BNB is a standout with six of ten models clearing at once -
-unusually well-behaved 1d tails for that symbol specifically. Read plainly: **EVT-based
-tail calibration replicates as a genuinely good idea across most of this symbol set, but
-"which specific model clears, or whether any does" is asset-specific**, not a single
-portable number - exactly notebook 4's own standard (tail-shape findings replicate more
-readily than rankings), confirmed again on a different question.
+Calibration clears on four of five transfer symbols, and an EVT model appears in every clearing set
+except XRP's. BNB is a standout with six of ten models clearing at once — unusually well-behaved
+daily tails for that symbol specifically.
 
-### Leverage is not a stable, quotable quantity across assets
+Read plainly: **EVT-based tail calibration replicates as a genuinely good idea across most of this
+symbol set, but which specific model clears — or whether any does — is asset-specific.** That is
+notebook 004's own standard confirmed again on a different question: tail-shape findings replicate
+more readily than rankings do.
 
-GJR's leverage LR-test significant-refit fraction (normal innovation): 0.087 (SOL),
-0.174 (BTC), 0.217 (XRP), 0.370 (DOGE), 0.413 (BNB), 0.457 (ETH) - a nearly 6x range
-across six assets at the same interval. Leverage exists intermittently and its
-prevalence is genuinely asset-dependent; reported as such rather than averaged into one
-misleading number.
+### Leverage is not a portable quantity
 
-## Phase 6 - Application (gated, does not run)
+The fraction of refits with significant leverage, at the same interval across six assets: 0.087
+(SOL), 0.174 (BTC), 0.217 (XRP), 0.370 (DOGE), 0.413 (BNB), 0.457 (ETH) — a nearly **sixfold
+range**. Leverage exists intermittently and its prevalence is genuinely asset-dependent, reported
+as such rather than averaged into one misleading number.
 
-Pre-declared application: an EVT-conditional risk-limit overlay on buy-and-hold BTC,
-judged against buy-and-hold and a normal-GARCH-driven overlay on Sharpe, max drawdown,
-1% exceedance count, and turnover cost. **Gate D requires a Gate A or Gate B winner AND
-Gate C stability.** Gate A fired at 1h/4h/12h (BTC only - not tested cross-sectionally
-at those intervals, per Phase 5's own scoping limit) and Gate B fired at 12h (BTC) and
-at 4 of 5 transfer symbols at 1d, but never together with a stability check spanning
-the *same* interval and *all six* symbols - Gate A's 1h/4h/12h wins were never
-transfer-tested, and Gate B's cross-sectional success is at 1d, where Gate A does not
-fire on BTC at all. **Gate D does not fire. Phase 6 does not run.** Written up here, as
-notebook 4 did, rather than silently skipped.
+---
+
+## The trading application did not run
+
+The pre-declared application was an EVT-conditional risk-limit overlay on buy-and-hold BTC, judged
+against buy-and-hold and a normal-GARCH overlay on Sharpe, maximum drawdown, 1% exceedance count
+and turnover cost.
+
+It required a density or calibration winner **and** stability at the same interval. The density
+winner fired at 1h, 4h and 12h on BTC, which were never transfer-tested. Calibration fired at 12h
+on BTC and at four of five transfer symbols at daily. The two never held together at the same
+interval across the symbol set. **The application does not run** — written up here rather than
+silently skipped.
+
+---
 
 ## Bugs found
 
-Beyond the two mandatory corrections to notebook 4 at the top of this write-up:
+Beyond the two corrections at the top:
 
-1. **Acerbi-Székely sign error in the runbook's own pseudocode.** Both the sign of the
-   statistic's additive constant ("+1" vs. the correct "-1") and the stated direction
-   of the failure mode ("Z<0 means worse than predicted" vs. the correct "Z>0") were
-   backwards. Caught by verifying numerically - not just re-deriving on paper - with a
-   deliberately mis-specified model (known-wrong volatility) before trusting either the
-   formula or its interpretation. Fixed in `dist_lib5.acerbi_szekely_z` and documented
-   in `docs/06-scoring-rules-and-calibration.md#acerbi-székely` so it isn't silently
-   re-broken.
-2. **GPD ξ<0 tripwire, investigated rather than ignored.** A substantial and growing
-   (12% to 78% across 1h→1d) fraction of individual 500-bar-window GPD refits produced
-   ξ<0 (a bounded tail, implausible on its face for crypto). Investigated directly:
-   each refit estimates ξ from only ~50 exceedances, a genuinely small sample; the
-   *median* ξ across refits stays sensible (tracking aggregational Gaussianity) and the
-   scattered negative estimates are consistent with small-sample noise around a small,
-   true ξ rather than a real, per-refit finding. Reported honestly as a real limitation
-   of a 500-bar/50-exceedance rolling fit, not smoothed over.
+1. **A sign error in the expected-shortfall test formula.** Both the sign of the statistic's
+   additive constant and the stated direction of the failure mode were backwards. Caught by
+   verifying numerically — not just re-deriving on paper — against a deliberately mis-specified
+   model with known-wrong volatility, before trusting either the formula or its interpretation.
+   Documented in `docs/06-scoring-rules-and-calibration.md` so it can't be silently re-broken.
 
-None of these were caught by a unit test in the driver scripts themselves (matching
-notebook 4's own convention - the driver/contest machinery isn't unit-tested by design;
-the new *modelling* code in `dist_lib5.py` does have a dedicated test suite,
-`tests/test_dist_lib5.py`, 15 tests). Both were caught the same way every bug in this
-research programme's history has been: by reading the actual numbers - a Monte Carlo
-check against a case whose right answer was already known, and a direct tabulation of
-how often a supposedly-rare tripwire condition actually fired - rather than trusting
-that code which ran without raising had produced a correct or complete answer.
+2. **The negative shape-parameter warning, investigated rather than ignored** — described in full
+   above. A growing fraction of individual refits (12% at hourly rising to 78% at daily) produced a
+   formally bounded tail. Investigating directly showed it to be small-sample scatter around a
+   small true value rather than a real per-refit finding, and it's reported honestly as a
+   limitation of a 500-bar rolling fit.
+
+Both were caught the same way every bug in this programme has been: by reading the actual numbers —
+a Monte Carlo check against a case whose right answer was already known, and a direct tabulation
+of how often a supposedly-rare warning condition actually fired — rather than trusting that code
+which ran without raising had produced a correct answer.
+
+---
 
 ## Bottom line
 
-**The point-forecast question notebook 4 asked is exhausted; the density/tail question
-this notebook asks is not.** Reframing the identical variance models' scoring from QLIKE
-to log score surfaces a real, replicating, statistically certified density winner
-(GARCH-t) at 3 of 4 BTC intervals - something the point-forecast ladder never found
-anywhere. The tail-calibration battery is stricter still, and still finds something:
-GARCH-EVT clears every one of 36 coverage tests at 12h, and - more practically than any
-single gate - **every model that ignores fat tails significantly underestimates how bad
-the worst 1% of days actually are, at every interval, with no exceptions**, confirmed
-by the Acerbi-Székely ES backtest. GJR's leverage effect is real in a meaningful
-minority of individual refits but does not survive as a net pooled improvement, and its
-prevalence varies enormously by asset. The 1d interval, and the transfer check run
-there, tell a consistent, honest story of their own: no significant density winner
-anywhere at 1d (a stable null across 6 symbols), and tail-calibration success that
-replicates on most but not all of the transfer set, via EVT models specifically where
-it does.
+**The point-forecast question is exhausted; the tail question is not.** Rescoring the identical
+variance models from a point-forecast metric to a density metric surfaces a real, statistically
+certified winner — GARCH-t — at three of four BTC intervals, something the point-forecast contest
+never found anywhere.
 
-**Phase 6 did not run** - Gate D's dual requirement (a Gate A or B winner, plus
-cross-sectional stability at the *same* interval) was never jointly satisfied, a
-legitimate outcome under this notebook's own pre-declared rule, not a shortfall. This
-notebook adds genuinely new, certified knowledge notebook 4 could not produce on its
-own: crypto's conditional tails are real, extreme, non-normal in a way that concretely
-costs risk-unaware models measurable accuracy on the outcomes that matter most, and this
-is now established with the same pre-declared, multiple-testing-corrected rigor the
-variance ladder was held to - even though, per this whole research programme's
-consistent pattern, no tradeable application clears the bar this notebook set for it.
+The calibration battery is stricter still and still finds something: GARCH-EVT clears every one of
+36 coverage tests at 12h. And more practically than any single verdict, **every model that ignores
+fat tails significantly underestimates how bad the worst 1% of days actually are, at every
+interval, with no exceptions.**
+
+GJR's leverage effect is real in a meaningful minority of refits but doesn't survive as a net
+pooled improvement, and its prevalence varies enormously by asset. The daily interval and the
+transfer check tell a consistent story of their own: no significant density winner anywhere at
+daily (a stable null across six symbols), and calibration success that replicates on most but not
+all of the transfer set, via EVT models specifically where it does.
+
+The trading application didn't run, because its dual requirement was never jointly satisfied — a
+legitimate outcome under the notebook's own pre-declared rule.
+
+This adds genuinely new, certified knowledge notebook 004 couldn't produce on its own: crypto's
+conditional tails are real, extreme, and non-normal in a way that concretely costs risk-unaware
+models measurable accuracy on the outcomes that matter most. Consistent with the rest of the
+programme, no tradeable application clears the bar.
 
 ## What to test next
 
-- **Extend Gate A's 1h/4h/12h transfer test.** Phase 5 was scoped to 1d only for
-  compute reasons; BTC's actual certified win (GARCH-t at 1h/4h/12h) has never been
-  transfer-tested at all. This is the single most valuable, cheapest-to-articulate
-  follow-up: it would either turn Gate A into a stability-certified, Phase-6-eligible
-  finding, or reveal that BTC's win doesn't generalize the way notebook 4's own HAR-RV
-  point-forecast ranking didn't.
-- **A properly normalized d8/d9 density**, to enter GARCH-EVT/GJR-EVT in the log-score
-  contest directly rather than deferring them to Gate B alone - given how strong their
-  coverage/ES performance already is, they are a natural candidate to also win Gate A
-  if their density can be made to integrate cleanly.
-- **A formal test of whether GJR's leverage effect is asset-class-general or BTC/crypto-
-  specific**, given how widely its significant-refit fraction varied (0.09 to 0.46)
-  across just six crypto symbols in Phase 5 - the traditional-equities "leverage effect"
-  literature this model borrows from was built on a very different asset class.
-- **Revisit the deferred Phase 4-of-notebook-4 regime-comparison gap** alongside this
-  notebook's own tail work - a joint regime-and-tail model (does the EVT shape parameter
-  itself differ meaningfully by volatility regime?) is a natural, currently untested
-  extension of both notebooks' machinery.
+- **Transfer-test the density win at 1h, 4h and 12h.** BTC's actual certified result has never been
+  transfer-tested at all. This is the single most valuable follow-up: it would either turn it into
+  a stability-certified, application-eligible finding, or reveal that BTC's win doesn't generalise.
+- **A properly normalised EVT density**, so the EVT models can enter the log-score contest
+  directly. Given how strong their coverage and expected-shortfall performance already is, they are
+  natural candidates to win it too.
+- **Test whether the leverage effect is asset-class-general or crypto-specific,** given how widely
+  its prevalence varied (0.09 to 0.46) across just six crypto symbols. The equity literature this
+  model borrows from was built on a very different asset class.
+- **Join the regime work to the tail work.** Does the EVT shape parameter itself differ meaningfully
+  by volatility regime? That's a natural extension of both notebooks' machinery, currently untested.
+
+*Notebook: `src/research/005_tail_risk_evt.ipynb`. Terminology used here is defined from scratch,
+with worked examples from this repo's own numbers, in `docs/` — start at `docs/README.md`.*

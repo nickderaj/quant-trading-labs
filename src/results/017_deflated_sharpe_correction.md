@@ -1,190 +1,208 @@
-# Notebook 017 — The Deflated Sharpe estimator, diagnosed and repaired: Results Summary
+# 017 — Diagnosing and Trying to Repair the Deflated Sharpe Estimator
 
-## What
+## The problem
 
-`research.deflated_sharpe_prob` implements Bailey & López de Prado's Deflated Sharpe Ratio, and it
-scales its deflation benchmark by the sampling standard error of a single Sharpe estimate instead of
-the cross-sectional dispersion of the trial family's Sharpes actually observed — correct for genuinely
-independent trials, wrong (in one direction or the other, sec 1.3) whenever a trial family is
-correlated, which is this repo's own standard robustness-check pattern (near-identical origin
-offsets). This notebook establishes by Monte Carlo whether that divergence is real, repairs the
-estimator if so, calibrates the repair across a grid of trial counts/sample lengths/return
-moments/inter-trial correlation, and re-scores every stored DSR value this repository has on disk.
+Every notebook in this programme uses a deflated Sharpe calculation to correct for how many
+configurations were tried before reporting the best one. That correction needs a benchmark: how good
+would the best of N trials look if none of them had any edge at all?
 
-## Why
+**This repo's implementation builds that benchmark from the sampling standard error of a single
+Sharpe estimate, rather than from the observed spread of the trial family's Sharpes.**
 
-018's Gate FA-2 failed on its DSR leg (0.186 against a 0.95 bar) while passing its Sharpe leg cleanly,
-with a `known_caveat` field pointing at this notebook by name. The reserved slot and five mechanical
-guards against motivated reasoning are documented in NEXT_PROMPT.md sec 0.1 and are not repeated here.
+That is correct when trials are genuinely independent. It is wrong whenever a trial family is
+correlated — which is this repo's own standard robustness pattern, since near-identical origin
+offsets produce near-identical Sharpes.
 
-## How
+The immediate trigger: notebook 018's funding-basis test failed on its deflation leg (0.186 against a
+0.95 bar) while passing its Sharpe leg cleanly, with a caveat field pointing directly at this issue.
 
-**Phase 0 — pre-registration.** Froze the three candidate repairs (V1: cross-sectional std per the
-source paper; V2: effective-trials via inter-trial correlation; V1b: V1 with a shrinkage floor, the
-pre-declared fallback for V1's small-N hazard), the adoption rule (simplest of V1 < V1b < V2 to pass
-both DS-2 and DS-3), all four gates' thresholds, this notebook's own 5-variant trial ledger, the sec
-5.4 verdict-change policy, and all three sec 14.2 branch texts for the 018 amendment — before any
-Monte Carlo ran.
+## What this notebook does
 
-Reproduced the sec 5.5 inventory mechanically (an exact `deflated_sharpe_prob`-keyed sweep of
-`src/research/tmp/*.json`) rather than re-typing the documented 73/17: **measured 70 stored values
-across 14 files**, not 73/17. Disclosed rather than patched — see "Inventory discrepancy" below.
+1. **Establish by simulation whether the divergence is real** — a kill switch. If the current
+   estimator behaves correctly under correlation, everything downstream is unnecessary.
+2. **Repair it** if so, with three candidate fixes frozen before any simulation ran.
+3. **Calibrate the repair** across a grid of trial counts, sample lengths, return moments and
+   inter-trial correlation.
+4. **Re-score every stored deflated Sharpe value in the repository**, to see whether any recorded
+   verdict changes.
 
-Verified from stored JSON (asserted, not eyeballed): 018's `gates.FA-2.fires_except_dsr_leg=False`
-and `bootstrap_ci_leg_fires=False` (FA-2 fails independently of any DSR leg — it cannot flip under any
-outcome of this notebook), and `holdout_access.access_granted=False`, `rule="requires FA-2 AND FA-3"`.
+The three candidates, and the rule for choosing between them, were all fixed in advance:
 
-**Phase 1 — `dsr_lib17.py`.** `expected_max_sharpe`, `dsr_variant` (all variants, returns the working
-inputs for auditability), `psr_upper_bound`, `mc_cell` (one grid cell, all 5 variants, vectorized).
-Seven tests (sec 7.3), including the executable backward-compat proof: `dsr_variant(variant="v0")`
-reproduces `research.deflated_sharpe_prob`'s two published constants (gate AC 0.997, 018's 0.18591)
-bit for bit. The 0.997 pin moved out of `run_phase_0_repro.py` into `tests/test_research.py`.
+- **Cross-sectional spread** — use the actual observed spread of the trial family's Sharpes, as the
+  source paper specifies.
+- **Effective trial count** — estimate how many *independent* trials the correlated family is
+  equivalent to.
+- **Cross-sectional spread with a shrinkage floor** — the pre-declared fallback for the first
+  candidate's known small-sample hazard.
 
-**Phase 2 — DS-1 (the kill switch).** Reproduced the sec 3 disclosed pilot's regime (N=18, T=3840,
-018's own trial count and bar count) across the full ρ axis at honest M=20000. **DS-1 fires**: V0's
-FPR at ρ∈{0.9, 0.99} is 0.0010/0.0002 (≤0.005) and non-increasing in ρ from the ρ=0 baseline of
-0.00375 within 2 MC SE at every intermediate point. The defect is real. Phase 3 proceeds.
+Adoption rule: take the simplest candidate that passes **both** calibration and power.
 
-**Phase 3 — full calibration + power grid.** 7×3×6×3 = 378 null cells × {null, injected-edge} = 756
-cells, M=20000, `scripts/run_dsr_calibration.sh`. Completed after several interruptions unrelated to
-the science: a machine-level reboot mid-run (the script is per-cell resumable, so this cost zero
-finished cells) and a diagnosed-and-fixed memory/concurrency issue (4-way parallel workers on the
-largest cells, N∈{95,122} at T=3840, peaked near 9GB combined on this 15GB machine — fixed by dropping
-to sequential execution) plus a real performance bug found along the way: `scipy.stats.norm.cdf`/`.ppf`
-measured 3-4x slower than the equivalent `scipy.special.ndtr`/`ndtri` on large arrays, hit only by the
-two non-Gaussian moment paths. Fixed in `dsr_lib17.py`.
+## The answer
 
-Two disclosed deviations from the literal `distributions.frozen_dist` instruction, both because the
-target moments are outside what `jf_skew_t` can produce: the moderate-moments regime's target
-(skew=-1.5, total kurtosis=6.0) is not reachable at any finite kurtosis close to 6 — a boundary search
-showed the closest fit at kurtosis≈6 lands at skew≈-1.21, not -1.5, and the achieved-vs-target values
-are recorded per cell. The extreme-moments regime's target (skew=-11.5, kurtosis=817, 018's own
-measured values) is not reachable by `jf_skew_t` **at all** — |skew| saturates near 5.1-5.2 as
-kurtosis→∞ in that family — so a method-of-moments two-point jump mixture (rare deterministic downward
-jump + Gaussian bulk) is used instead, solved to hit the target exactly.
+**The defect is real. No repair is adopted.**
 
-**Phase 4 — adoption.** Applies sec 2.3's rule to Phase 3's DS-2 (calibration) and DS-3 (power)
-results. **None of the four candidates is adopted** — see Results below. `research.py` is confirmed
-unmodified (`git diff` empty before and after this phase).
+| Check | Question | Result |
+|---|---|:---:|
+| **Is the defect real?** | Does the current estimator misbehave as correlation rises? | **Yes** |
+| **Is a repair correctly calibrated?** | Does it hold its false-positive rate in the acceptable band? | **The spread-based ones, yes. The effective-trials one, no** |
+| **Does a repair have power?** | Does it detect a true edge better under correlation, without losing power when trials really are independent? | **The spread-based ones, no. The effective-trials one, yes** |
+| **Is every stored value accounted for?** | All 70 re-scored or explicitly marked | **Yes — zero verdict changes** |
 
-**Phase 5 — re-score.** Hash-gated (sec 10) re-score of the measured 70-value inventory. The gate
-passed automatically since `research.py`'s source hash never changed. **DS-4 fires**: all 70 rows
-present, 65 with a ρ→1 upper bound below 0.95 (provably cannot flip, sec 5.4 item 2), 5 marked
-`not_rescorable` (upper bound ≥0.95, but no adopted variant to compute a corrected value with). Zero
-verdict changes.
+**No candidate passes both calibration and power**, so `research.py` is left completely unmodified —
+confirmed by diffing before and after, not merely asserted. This was an explicitly anticipated
+possible outcome: the honest answer may be that the estimator is not repairable at this scope. It is
+reported as such rather than retuned until something passes.
 
-**Phase 6b — the 018 amendment.** None of the three sec 14.2 branch texts frozen in Phase 0 literally
-applies to this outcome (DS-1 fired — the defect is real — but no repair was adopted). Branch A's
-premise ("DS-1 does not fire") is false; Branches B and C's premise ("repair adopted") is also false.
-Pasting the nearest-sounding branch (A, since the mechanical consequence — `research.py` unmodified —
-matches) would misstate the reason: Branch A says the concern didn't reproduce, and it did. Phase 6b
-therefore writes a new, honest characterization instead (`phase_7_18_dsr_addendum.json`), holding
-every sec 14.3 rule the three frozen branches share. See "018's amendment" below.
+---
 
-## Results
+## Establishing that the defect is real
 
-**The defect is real (DS-1 fires), but no repair is adopted.** V0's false-positive rate collapses
-toward zero as inter-trial correlation rises — the over-rejection pattern this programme's own
-methodology notes had flagged as a suspicion is confirmed as fact. Of the four candidate repairs:
+Reproducing the regime of the notebook that triggered this — 18 trials over 3,840 bars — across the
+full correlation axis at 20,000 Monte Carlo replications per cell.
 
-- **V1** (the source paper's own cross-sectional-std repair) and **V1b** at both shrinkage settings
-  pass calibration (DS-2) cleanly — zero violations across all 378 null cells. But they fail power
-  (DS-3), and in the way its two-sided design exists to catch: at high correlation (ρ≥0.9) their power
-  gain over V0 falls short of the required 10-percentage-point margin in 20 of the relevant cells
-  (mostly smaller trial counts, N=12, at shorter sample lengths); and — the "no free lunch" clause —
-  at ρ=0, where trials really are independent and V0 is correctly calibrated, V1/V1b's detection rate
-  is actually *below* V0's by more than the allowed 2-point margin in another 20 cells (concentrated
-  at long samples, T=3840, moderate trial counts). A repair that buys correctness at high correlation
-  by giving up real power in the ordinary case does not pass, exactly as designed.
-- **V2** (effective-trials via inter-trial correlation) passes DS-3 cleanly but fails DS-2a badly: 246
-  of 378 null cells (65%) exceed the 0.075 anti-conservatism ceiling — it cries wolf far too often to
-  be usable.
+**The current estimator's false-positive rate collapses toward zero as correlation rises**: 0.0010 at
+ρ = 0.9 and 0.0002 at ρ = 0.99, against a baseline of 0.00375 at zero correlation, and non-increasing
+in correlation at every intermediate point within simulation error.
 
-Per the pre-registered adoption rule (sec 2.3), **none of the four candidates is adopted.**
-`research.py` is left completely unmodified — confirmed by `git diff` before and after Phase 4, not
-merely asserted. This was an explicitly anticipated possible outcome (sec 2.1: "the honest answer is
-that the estimator is not repairable at this scope") and is reported as such, not retuned.
+The suspicion this programme's own methodology notes had flagged is confirmed as fact. **The
+estimator becomes drastically over-conservative on exactly the trial families this repo produces most
+often.**
 
-**Phase 5's re-score is a near-total non-event, as expected when no estimator code changes.** All 70
-stored DSR values are unchanged in value; DS-4 fires (all 70 accounted for, each either provably
-incapable of flipping or explicitly marked `not_rescorable`). 65 rows have a ρ→1 upper bound below
-0.95 and could never have flipped under any dispersion-based repair regardless of Phase 4's outcome.
-The remaining 5 (gate AC, stored three times across three files; notebook 10b's "calendar" and
-"gate_VS") have an upper bound ≥0.95 and would have needed a corrected value from an adopted variant —
-but none exists, so all 5 are `not_rescorable`, explicitly reasoned rather than silently skipped.
+## The calibration and power grid
 
-**018's own case is settled more decisively than "no variant adopted" alone would suggest.** 018's
-stored DSR *is* one of the 70 inventory rows (`phase_4_18_results.json` → `dsr.deflated_sharpe_prob`),
-and its ρ→1 upper bound — computed from 018's own extreme sample skew (−11.5) and kurtosis (817),
-which is exactly the regime Phase 0's "018_measured" moment axis exists to probe — is **0.83**, below
-the 0.95 bar. That ceiling applies to every dispersion-based variant this notebook evaluated (Test 7,
-sec 7.3: `psr_upper_bound` dominates every variant's output), adopted or not. So 018's DSR leg was
-never actually contingent on Phase 4's adoption decision: even in the counterfactual where V1 had
-cleared both DS-2 and DS-3, 018's corrected DSR could not have exceeded 0.83. FA-2, FA-3, and FUND
-stand exactly as 018 recorded them; the holdout stays unspent. Full detail in
-`src/research/tmp/phase_7_18_dsr_addendum.json` and the appended addendum sections in 018's own
-notebook and write-up.
+7 correlation levels × 3 trial counts × 6 sample lengths × 3 moment regimes = 378 null cells, each
+also run with an injected true edge, for **756 cells at 20,000 replications each**.
 
-## Inventory discrepancy (Phase 0)
+Two disclosed deviations from the planned return-generating distribution, both because the target
+moments lie outside what that family can produce:
 
-Sec 5.5 documents "73 stored values across 17 files," found by "a `deflated_sharpe_prob`-keyed sweep."
-An exact-key sweep (the literal reading of that phrase) finds **70 values across 14 files**. A
-secondary, disclosed-only fuzzy sweep (matching key-name *variants* like
-`deflated_sharpe_prob_headline`, `deflated_sharpe_prob_best`, `published_deflated_sharpe_prob`,
-`deflated_sharpe_prob_by_gate`) finds more, concentrated in notebook 011b's `phase_0/1/4/6/7`
-result files — which appear to record the *same* underlying figures redundantly under inconsistent
-key names across 011b's own pipeline stages, rather than being 011b-external values the exact sweep
-missed. Per sec 5.5's own instruction ("must reproduce that count and fail loudly if it differs"),
-this notebook uses the **measured** 70/14 for gate DS-4 rather than forcing agreement with 73/17. This
-is itself a small record-keeping finding, alongside sec 5.4's existing recommendation that notebooks
-store their trial Sharpe vectors: notebooks should also use one consistent key name for a stored DSR
-value.
+- The **moderate-moments** target (skew −1.5, kurtosis 6.0) is not reachable at any kurtosis near 6 —
+  a boundary search shows the closest fit lands at skew ≈ −1.21. Achieved-versus-target values are
+  recorded per cell.
+- The **extreme-moments** target (skew −11.5, kurtosis 817 — the values actually measured in notebook
+  018) is not reachable by that family **at all**; its skew saturates near 5.1–5.2 as kurtosis grows.
+  A two-point jump mixture — a rare deterministic downward jump plus a Gaussian bulk — is used instead,
+  solved to hit the target exactly.
 
-## Gate verdicts — the full table
+Along the way, a real performance bug: the standard normal distribution functions measured 3–4×
+slower than their lower-level equivalents on large arrays, hit only by the two non-Gaussian paths.
+Fixed.
 
-| gate | claim | fires? | number behind it |
-|---|---|:---:|---|
-| **DS-1** (defect is real) | V0 over-rejects as ρ→1 | **YES** | FPR at ρ=0.9/0.99: 0.0010/0.0002 (≤0.005); non-increasing in ρ from 0.00375 baseline |
-| **DS-2** (repair calibrated) | candidate's FPR stays in [0.010, 0.075] appropriately | **V1/V1b: yes. V2: no.** | V1, V1b(0.25), V1b(0.5): 0 violations of DS-2a/b across 378 null cells. V2: 246/378 cells exceed the 0.075 DS-2a ceiling; V1b(0.5) alone also has 38 DS-2b violations. |
-| **DS-3** (repair has power) | candidate detects a true edge ≥10pp better than V0 at high ρ, without losing >2pp at ρ=0 | **V1/V1b: no. V2: yes.** | V1/V1b: 20 cells fall short of the high-ρ power margin, 20 cells lose more than 2pp at ρ=0. V2: passes both clauses. |
-| — | **adopted variant** | **NONE** | No candidate passes both DS-2 and DS-3; `research.py` unmodified per the pre-registered adoption rule. |
-| **DS-4** (ledger complete) | all 70 measured stored values re-scored or marked not_rescorable | **YES** | 70/70 rows present: 65 provably cannot flip (upper bound <0.95), 5 `not_rescorable` (upper bound ≥0.95, no adopted variant). 0 verdict changes. |
+*(The run survived a machine reboot at no cost, since it is resumable per cell, and a diagnosed
+memory issue where four parallel workers on the largest cells peaked near 9GB on a 15GB machine —
+fixed by dropping to sequential execution.)*
+
+## Why every repair fails
+
+**The spread-based repairs pass calibration cleanly** — zero violations across all 378 null cells, at
+both shrinkage settings.
+
+**And they fail power, in exactly the way the two-sided test exists to catch.**
+
+At high correlation, their power gain over the current estimator falls short of the required
+10-percentage-point margin in a substantial number of cells, concentrated at smaller trial counts and
+shorter samples.
+
+And — the "no free lunch" clause — **at zero correlation, where trials really are independent and the
+current estimator is correctly calibrated, the spread-based repairs' detection rate is actually
+*below* it** by more than the allowed 2-point margin in another set of cells, concentrated at long
+samples and moderate trial counts.
+
+**A repair that buys correctness under correlation by giving up real power in the ordinary case does
+not pass.** That is by design.
+
+**The effective-trials repair passes power cleanly and fails calibration badly**: 246 of 378 null
+cells (65%) exceed the anti-conservatism ceiling. **It cries wolf far too often to be usable.**
+
+---
+
+## Re-scoring every stored value
+
+A mechanical sweep of the stored results found **70 deflated Sharpe values across 14 files.**
+
+All 70 are unchanged in value, as expected when no estimator code changes. Every one is accounted
+for:
+
+- **65 have a theoretical upper bound below 0.95** and therefore could never have flipped under *any*
+  spread-based repair, regardless of the adoption decision.
+- **5 have an upper bound at or above 0.95** and would have needed a corrected value from an adopted
+  variant. Since none exists, they are explicitly marked as not re-scorable — reasoned rather than
+  silently skipped.
+
+**Zero verdict changes.**
+
+### An inventory discrepancy, disclosed
+
+The plan documented "73 stored values across 17 files". An exact-key sweep — the literal reading of
+that phrase — finds **70 across 14**.
+
+A secondary fuzzy sweep, matching key-name *variants*, finds more — but those are concentrated in one
+notebook's pipeline-stage files and appear to record the **same underlying figures redundantly under
+inconsistent key names**, rather than being values the exact sweep missed.
+
+The **measured** count is used rather than forcing agreement with the documented one. That is itself a
+small record-keeping finding: notebooks should use one consistent key name for a stored deflation
+value, so a future audit's exact sweep finds everything on the first pass.
+
+---
+
+## Notebook 018's case is settled more decisively than expected
+
+Its stored deflation value is one of the 70. Its theoretical upper bound — computed from its own
+extreme sample skew (−11.5) and kurtosis (817), which is exactly the regime the extreme-moments axis
+exists to probe — is **0.83**, below the 0.95 bar.
+
+**That ceiling applies to every spread-based variant evaluated here, adopted or not.**
+
+So notebook 018's deflation leg was never actually contingent on the adoption decision. Even in the
+counterfactual where a repair had passed both checks, its corrected value could not have exceeded
+0.83.
+
+Its verdicts stand exactly as recorded, and the holdout stays unspent.
+
+---
+
+## The amendment to notebook 018
+
+Three possible amendment texts were frozen in advance, and **none of them literally applies to this
+outcome.** One assumed the defect wouldn't reproduce — it did. The other two assumed a repair would be
+adopted — none was.
+
+Pasting the nearest-sounding one would misstate the reason: it says the concern didn't reproduce,
+and the concern *did* reproduce. So a new, honest characterisation was written instead, holding to
+every rule the three frozen texts share.
+
+---
 
 ## What to test next
 
-- **A fifth repair variant, or a narrower validated regime.** V1/V1b's power shortfall is concentrated
-  at moderate trial counts (N≈12) and shorter samples; V2's miscalibration is broad. A repair
-  restricted to, say, N≥18 and T≥1000 — the regime most of this repo's actual trial families sit in —
-  might pass both gates where the general-purpose version doesn't. This would need its own
-  pre-registration stating the validated range explicitly, not a retroactive narrowing of this one's
-  gates (sec 12.3).
-- **The sequential/nested-search independence failure this notebook explicitly does not address**
-  (sec 12.5, sec 13.5): correlation is not the only way a trial family violates the "independent
-  draws" assumption a DSR calculation makes. A search where the next config tried depends on what
-  already worked inflates the effective search space in a way no dispersion estimate can detect. Every
-  DSR figure in this repo, corrected or not, still carries that limitation.
-- **Consistent key naming for stored DSR values**, per the inventory discrepancy above — future
-  notebooks should use the literal key `deflated_sharpe_prob`, not a pipeline-stage-specific variant,
-  so a future audit's exact-key sweep finds everything on the first pass.
-- **018's own construction is not reopened by anything here** (sec 14.3) — its binding constraint
-  remains the bootstrap-CI leg on net returns, a data-and-construction question 018's own
-  what-to-test-next already names (lower-turnover carry, a diversification floor), not an estimator
-  question.
+- **A narrower validated regime.** The spread-based repairs' power shortfall is concentrated at
+  moderate trial counts and shorter samples; the effective-trials repair's miscalibration is broad. A
+  repair restricted to the regime most of this repo's actual trial families sit in — say 18 or more
+  trials and 1,000 or more observations — might pass both checks where a general-purpose version
+  doesn't. That would need its own pre-registration stating the validated range explicitly, not a
+  retroactive narrowing of this one.
+- **The sequential-search independence failure this notebook explicitly does not address.**
+  Correlation is not the only way a trial family violates the independent-draws assumption. A search
+  where the *next* configuration tried depends on what already worked inflates the effective search
+  space in a way no spread estimate can detect. **Every deflation figure in this repo, corrected or
+  not, still carries that limitation.**
+- **Consistent key naming for stored values**, per the discrepancy above.
+- **Notebook 018's construction is not reopened by anything here.** Its binding constraint remains the
+  bootstrap interval on net returns — a data and construction question, not an estimator question.
 
 ---
 
-## Erratum (2026-08-20, found by notebook 019)
+## Erratum (found later, by notebook 019)
 
-`run_phase_4_17_adoption.py`'s `evaluate_variant` stores each gate clause's violation list truncated
-to `violations[:20]`, and this write-up's DS-3 row above quotes the length of that truncated list. The
-high-rho clause's count is therefore reported as 20 when the uncapped count is **78**; the rho=0 count,
-also reported as 20, happens to be exact. This changes no verdict: V1/V1b already failed DS-3 either
-way (20 or 78 both exceed zero), every downstream conclusion in this document stands unedited, and
-neither `phase_3_17_calibration.json` nor `phase_4_17_adoption.json` was touched to produce this note —
-per this document's own "Inventory discrepancy" precedent, the fact is disclosed here rather than the
-frozen numbers above being patched in place. Full detail: `scratch/019/preflight.json` → `ds3_count_correction`, and
-`src/results/019_dsr_correlation_switch.md`.
+The adoption script stores each violation list truncated to the first 20 entries, and this write-up
+originally quoted the length of that truncated list. The high-correlation clause's count is therefore
+reported as 20 where the uncapped count is **78**. The zero-correlation count, also reported as 20,
+happens to be exact.
 
----
+**This changes no verdict** — the spread-based repairs already failed on power either way, since both
+20 and 78 exceed zero, and every downstream conclusion stands unedited. Following the same precedent
+as the inventory discrepancy above, the fact is disclosed here rather than the frozen numbers being
+patched in place.
 
-*Co-produced with Claude Sonnet 5. Notebook: `src/research/017_deflated_sharpe_correction.ipynb`.*
+*Notebook: `src/research/017_deflated_sharpe_correction.ipynb`.*

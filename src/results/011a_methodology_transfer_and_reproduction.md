@@ -1,176 +1,180 @@
-# Notebook 11a — Methodology Transfer and Reproduction: Results Summary
+# 011a — Reproducing an Outside Spread-Trading Programme
 
-## What
+## Purpose
 
-This notebook absorbs a second, independent codebase's commodity-spread-trading research (an external repo, `~/Documents/ultron/apps/trading-labs`) into this repo: porting its evaluation machinery, reproducing its half-life measurements and control-book backtest on this repo's own data and statistics, rebuilding and calibrating its stationarity screen, replicating its trade-shape analysis, and pre-registering the full gate table, DSR trial counts, and inclusion decisions for notebooks 11b, 11c, and 11d before any of those notebooks' backtests exist.
+A second, independent research programme has been working on commodity spread trading, with its own
+codebase, its own data pipeline and its own reported results. It is a potential source of validated
+strategy ideas and parameter priors.
 
-## Why
+But it had recently gone through a major data correction — a contract-substitution bug that
+corrupted 12.6 years of its spread series and changed three of its six strategy verdicts. So before
+trusting any of its numbers, this notebook independently verifies them.
 
-The external programme's research is a potential source of validated strategy ideas and parameter priors, but it had recently undergone a major data-correction (a contract-substitution bug that corrupted 12.6 years of its spread series and changed three of six of its own verdicts). Before trusting any of its numbers or transferring its methodology, this repo needed to independently verify the corrected findings, check whether its reported control-book performance reproduces on this repo's own data and stricter cost model, and lock in pre-registered gate criteria so that 11b/11c/11d's later backtests cannot be influenced by their own results (avoiding data-snooping/multiple-testing bias).
+Four things get done here:
 
-## How
+1. **Reproduce its half-life measurements** on this repo's own independently built data.
+2. **Reproduce its control-book backtest** under this repo's own, stricter cost model.
+3. **Rebuild and calibrate its stationarity screen**, both the old version and the new stricter one.
+4. **Replicate its trade-shape analysis** on the reproduced book.
 
-Phase 0/1 re-derive and independently reproduce the external repo's half-life measurements using this repo's own Databento-derived data and a from-spec reimplementation of its AR(1) primitive. Phase 3 rebuilds both the external repo's old and new stationarity screens and calibrates them against synthetic random walks. Phase 4 reruns the external repo's pre-declared trading rule (z-score thresholds, ATR stops, fixed-fractional sizing, regime gates) on this repo's own five live spreads under two cost models. Phase 5 replicates the external repo's trade-shape/pattern analysis on the reproduced book. Phase 6 pre-registers ten gates (TS, TS-S, BF, BF-X, SCR, VA, RE, LC, MB, MB-E) with fixed DSR trial counts (85 total) for the downstream notebooks.
+And then pre-register everything the follow-on notebooks (011b, 011c, 011d) will test, before any
+of those backtests exist.
 
-## Results
+**This notebook is descriptive and infrastructural only — no verdicts, no strategy conclusions.**
 
-The half-life corroboration is genuine and independent: all five measured half-lives land inside the external repo's corrected ranges and nowhere near its corrupted ones, closing that programme's top open item. However, the control-book Sharpe cannot be validated — this repo's reproduction is materially worse (Sharpe −0.16 vs. their reported 0.889) under both cost models, a divergence reported honestly with several candidate (non-isolated) explanations, meaning all downstream 11b comparisons must be internal, not validations of the external repo's absolute numbers. The new, stricter screen passes only 8 of 30 spreads (vs. 23 for the old, badly-miscalibrated screen) and even rejects the external repo's own flagship spread, brent_calendar, on its variance-ratio leg. The trade-shape analysis corroborates strongly despite the magnitude divergence: entry extremity does not discriminate winners from losers, and the catastrophic tail comes almost entirely from stop-exits — the empirical basis motivating 11c's entry-time loss classifier.
+## Four findings
 
-**This notebook is descriptive and infrastructural only — no gate verdicts, no Sharpe-based
-strategy conclusions (NEXT_PROMPT.md sec 1 rule 1, unchanged from the 10a/10b split).** Its
-purpose is to absorb a second, independent codebase's spread-trading research
-(`~/Documents/ultron/apps/trading-labs`) into this repo: port its evaluation machinery, build
-its evaluation harness, reproduce its control book on our own data and statistics, settle the
-data-quality question its own v3 correction opened, and — its actual deliverable — pre-register
-11b/11c/11d's full gate table, DSR trial counts, and the sec 4.3 include/exclude decision
-**before any of those three notebooks' backtests exist**. That pre-registration (Phase 6,
-`phase_6_11a_results.json`) is committed as part of this notebook and may not be edited once
-11b/11c/11d starts running.
+### The half-life corroboration is real, and it closes the other programme's top open item
 
-## The half-life corroboration is real, and it closes their own top open item
+That programme's data correction changed two of its verdicts specifically because a half-life had
+been measured on corrupted data — its flagship Brent calendar spread measured 1.7–4.7 days
+corrupted against 28–73 days (mean 59.5) corrected. Its own highest-priority follow-up was to
+remeasure half-life on the corrected series as a standalone check.
 
-The external programme's own v3 correction (2026-07-27) found a contract-substitution bug that
-corrupted its entire 12.6-year spread series; on correction, three of six of its strategy
-verdicts changed materially, and two of those changes traced back to a half-life measured on
-the corrupted data (`brent_calendar`: 1.7–4.7 days corrupted vs. 28–73 days, mean 59.5,
-corrected). Their v4's own highest-priority follow-up was to remeasure half-life on the
-corrected series as a standalone check.
+This repo already had that measurement, built independently from a different data vendor with no
+code shared between the two programmes at any point. It's re-derived here and then reproduced a
+second way, via a from-specification reimplementation calling the same underlying regression on the
+same roll-window-excluded series.
 
-This repo already had that measurement — 10a Phase 2's AR(1)-in-differences half-life, built
-independently from Databento `ohlcv`/`contracts`/`roll_calendar` via
-`commod_lib8.build_continuous_series`, with no code shared between the two repos at any point.
-Phase 0 re-derives it here and Phase 1 reproduces it a second way (`spread_lib11.rolling_stability`,
-a from-spec reimplementation, calling the same `research_lib9.ols_ar1_diff` primitive on the
-same roll-window-excluded series): every one of the five half-lives (`brent_calendar` 42.7d,
-`brent_wti` 79.3d, `corn_wheat` 45.4d, `bean_corn` 118.2d, `kc_chicago_wheat` 113.4d) lands
-inside their *corrected* ranges and nowhere near their *corrupted* ones. This is a genuine
-cross-repo validation result, obtained without either programme ever reading the other's data
-pipeline, and it substantially closes their v4's own open item.
+| Spread | Half-life measured here |
+|---|---|
+| Brent calendar | 42.7 days |
+| Brent–WTI | 79.3 days |
+| Corn–wheat | 45.4 days |
+| Bean–corn | 118.2 days |
+| KC–Chicago wheat | 113.4 days |
 
-## We cannot validate their reported control-book Sharpe
+**Every one lands inside the corrected ranges and nowhere near the corrupted ones.** A genuine
+cross-programme validation, obtained without either side ever reading the other's data pipeline.
 
-Phase 4 runs NEXT_PROMPT.md sec 4.1's pre-declared trading rule — entry/exit z-score
-thresholds, per-spread ATR stops (`brent_calendar` 4.0×, `kc_chicago_wheat` 12.0×, 6.0× global
-default elsewhere), fixed-fractional risk sizing, the vol/vol-regime suppression filters, the
-cooldown/gated-reentry mechanism, and `brent_calendar`'s backwardation-only regime gate — on
-the five live spreads (`brent_wti`, `brent_calendar`, `corn_wheat`, `bean_corn`,
-`kc_chicago_wheat`), on our own dev-window data (2010-06-06 to 2024-12-31), under two cost
-models: ours (`commod_lib8.round_turn_cost_per_contract`, materially more conservative per sec
-3.1's own cost table) and a reimplementation of their stated $2/contract + 5bps + 2bps flat
-cost.
+### The reported control-book Sharpe does not reproduce
 
-| metric | theirs (tune, 2014–2023) | ours, our costs | ours, their costs |
+The other programme's pre-declared trading rule was re-run in full — entry and exit z-score
+thresholds, per-spread volatility-based stops, fixed-fractional risk sizing, volatility suppression
+filters, a cooldown and gated-reentry mechanism, and a backwardation-only regime gate on the Brent
+calendar spread — on the five live spreads, over this repo's development window, under two cost
+models: this repo's own (materially more conservative) and a reimplementation of theirs.
+
+| Metric | Theirs (2014–2023) | Ours, our costs | Ours, their costs |
 |---|---:|---:|---:|
-| fixed-notional return | +85.1% | −1.1% | −1.1% |
-| equity-path return | +122.4% | −1.1% | −1.1% |
-| Sharpe | 0.889 | −0.16 | −0.16 |
-| max drawdown | −7.30% | −1.9% | −1.9% |
-| n trades | 333 | 57 | 57 |
+| Fixed-notional return | +85.1% | −1.1% | −1.1% |
+| Equity-path return | +122.4% | −1.1% | −1.1% |
+| Sharpe | 0.889 | **−0.16** | **−0.16** |
+| Max drawdown | −7.30% | −1.9% | −1.9% |
+| Number of trades | 333 | 57 | 57 |
 
-**This is a material divergence on every axis, and it is reported honestly rather than tuned
-away** — exactly the outcome NEXT_PROMPT.md sec 3 Phase 4 explicitly flagged as "a live
-possibility" given the data-corruption history. `phase_4_11a_results.json`'s reconciliation
-record lists the candidate, non-exhaustive explanations without isolating one: a dev window
-that is longer and differently dated than their 2014–2023 tune window; an independently-built
-spread series; this notebook's own reimplementation-from-specification (not their code) of the
-suppression filters and the gated-reentry mechanism, including an approximate ADF p-value
-(`spread_lib11.approx_adf_pvalue`, a linear interpolation against three tabulated critical
-values, not the exact Dickey-Fuller CDF); and `simulate_book`'s documented joint-sizing
-simplification — five independently-sized per-spread books pooled by dollar P&L, not one
-shared-equity risk engine enforcing the real joint `max_gross_exposure_pct`/
-`daily_drawdown_limit_pct` caps.
+**A material divergence on every axis, reported honestly rather than tuned away.** It was flagged
+in advance as a live possibility given the data-corruption history.
 
-The practical consequence: **every 11b comparison against this control book is internal**
-(structured vs. unconditional for Gate TS, sign-flipped vs. unconditional for Gate BF,
-screen-inclusive vs. screen-exclusive for Gate SCR, and so on) — never a validation of their
-absolute reported numbers. The noise floor on our own book (95% CI half-width of a few
-percentage points around a near-zero point estimate) states plainly what any of those internal
-comparisons can resolve.
+The candidate explanations are recorded without isolating one:
 
-## The new screen is strict enough to reject their own flagship spread
+- A development window that is longer and differently dated than their 2014–2023 tuning window.
+- An independently built spread series from a different vendor.
+- Reimplementation from specification rather than from their code — including an *approximate*
+  p-value for the stationarity test, interpolated between three tabulated critical values rather
+  than computed from the exact distribution.
+- A documented simplification in book construction: five independently sized per-spread books
+  pooled by dollar P&L, rather than one shared-equity risk engine enforcing real joint exposure and
+  daily drawdown caps.
 
-Phase 3 rebuilds both screens. The **old screen** — ADF on the 30-day deviation from a 30-day
-rolling mean — fails its own random-walk check completely: run on 20 synthetic pure random
-walks, it flags all 20 as stationary (median t-stat deeply negative, matching the ≈1e-19-p-value
-order of magnitude the external repo reported for the same construction). Detrending a random
-walk against its own rolling mean manufactures a bounded, spuriously stationary residual almost
-by construction — a screen built this way carries no information about genuine mean reversion.
+**The practical consequence: every downstream comparison against this control book is internal** —
+structured versus unconditional, sign-flipped versus unconditional, screen-inclusive versus
+screen-exclusive — never a validation of their absolute reported numbers. The noise floor on this
+book (a 95% interval half-width of a few percentage points around a near-zero point estimate) states
+plainly what any internal comparison can resolve.
 
-The **new screen** — ADF-on-level AND variance ratio (q=5, q=20, one-sided z=1.645) AND
-Hurst<0.5 AND half-life stability (full-sample half-life in a 3–60-day band AND ≥3 of 4
-contiguous sub-periods also in band) — calibrates close to its nominal 5% false-positive rate
-on 500 seeded random walks at both q=5 (5.8%) and q=20 (4.6%), so the variance-ratio component
-itself is not miscalibrated. But applied to all 30 of our spreads it passes only 8, against the
-old screen's 23. Strikingly, `brent_calendar` — one of the external repo's own five live
-spreads, with a clean ADF rejection (t=−5.22) and the 42.7-day half-life corroborated above —
-fails the new screen on its variance-ratio leg alone (VR(5) z=+1.71, positive rather than the
-required <−1.645). This is a real finding, not a screen bug: `brent_calendar`'s daily changes
-show short-horizon positive autocorrelation (momentum at the 5-day horizon) layered on top of
-genuine long-horizon mean reversion measured by the AR(1)/half-life test — the two diagnostics
-measure different things and can legitimately disagree. Whether this stricter screen earns its
-place in 11b's trading universe, or is itself an example of sec 0.3's "any mechanism that
-improves quality by deletion should be expected to fail," is Gate SCR's decision, not assumed
-here.
+### The new screen is strict enough to reject their own flagship spread
 
-## The trade-shape corroboration is the strongest evidence the mechanism, not just the number, is real
+Both versions of their stationarity screen were rebuilt.
 
-Phase 5 replicates their `pattern-summary.md` analysis on our own 57-trade Phase 4 book.
-Despite the aggregate-P&L divergence above, the trade *shape* corroborates theirs closely:
+**The old screen fails its own random-walk check completely.** It tested stationarity of the 30-day
+deviation from a 30-day rolling mean. Run on 20 synthetic pure random walks, it flags **all 20** as
+stationary, with test statistics matching the astronomically small p-values that programme reported
+for the same construction.
 
-| | ours (n=57) | theirs (n=9,545 pooled) |
+The reason is structural: detrending a random walk against its own rolling mean manufactures a
+bounded, spuriously stationary residual almost by construction. A screen built this way carries no
+information about genuine mean reversion.
+
+**The new screen is properly calibrated but very strict.** It requires a stationarity test on the
+level, *and* a variance ratio at two horizons, *and* a Hurst exponent below 0.5, *and* half-life
+stability — the full-sample half-life inside a 3–60-day band, with at least three of four contiguous
+sub-periods also in band.
+
+Calibrated against 500 seeded random walks it comes in close to its nominal 5% false-positive rate
+at both variance-ratio horizons (5.8% and 4.6%), so that component is not miscalibrated. But applied
+to all 30 spreads here it passes only **8**, against the old screen's 23.
+
+Strikingly, the Brent calendar spread — one of their own five live spreads, with a clean stationarity
+rejection and the 42.7-day half-life corroborated above — **fails on the variance-ratio leg alone**
+(z = +1.71, positive rather than the required negative).
+
+**This is a real finding, not a screen bug.** That spread's daily changes show short-horizon
+*positive* autocorrelation — momentum at the five-day horizon — layered on top of genuine
+long-horizon mean reversion. The two diagnostics measure different things and can legitimately
+disagree.
+
+Whether the stricter screen earns its place in the trading universe, or is itself an example of a
+mechanism that improves quality only by deletion, is left as a question for the follow-on notebook
+to decide rather than assumed here.
+
+### The trade-shape corroboration is the strongest evidence the mechanism is real
+
+Their trade-pattern analysis was replicated on this repo's own 57-trade reproduction. Despite the
+aggregate P&L divergence, the *shape* corroborates closely:
+
+| | Here (n = 57) | Theirs (n = 9,545 pooled) |
 |---|---:|---:|
-| entry `\|z\|` discriminates winners/losers | no (2.13 vs. 2.23 median) | no (2.06 vs. 1.95 median) |
-| stop-exit fraction, top half vs. worst half | 0% / 82% | 0% / 85% |
-| loss:win `pnl_atr` asymmetry | 2.09× | ≈3.4× (698 stop trades at −6.94 ATR vs. 6,837 z-score trades at +2.05 ATR) |
+| Does entry extremity separate winners from losers? | No (2.13 vs 2.23 median) | No (2.06 vs 1.95 median) |
+| Stop-exit fraction, best half vs worst half | 0% / 82% | 0% / 85% |
+| Loss-to-win size asymmetry | 2.09× | ≈3.4× |
 
-An independently-built book, roughly 170× smaller, under a materially stricter cost model,
-still reproduces the central pattern: entry extremity does not discriminate winners from
-losers, and the catastrophic tail comes almost entirely from stop-exits while the bulk of
-trades exit cleanly via z-score normalization. That the *shape* survives even though the
-*magnitude* diverges is meaningful — it suggests the underlying mechanism (a small number of
-adverse continuations doing most of the damage) is a genuine property of this trading rule
-family, not an artifact of one repo's particular parameterization or data. This is the
-empirical basis for 11c's entry-time loss classifier: worth building properly even though sec
-6's own honest prior, informed by this exact pattern, is that entry-time features will not
-predict the tail.
+An independently built book, roughly **170× smaller**, under a materially stricter cost model, still
+reproduces the central pattern: **entry extremity does not discriminate winners from losers, and the
+catastrophic tail comes almost entirely from stop exits**, while the bulk of trades exit cleanly
+when the spread normalises.
 
-## What is pre-registered for 11b/11c/11d (Phase 6)
+That the shape survives even where the magnitude diverges is meaningful. It suggests the underlying
+mechanism — a small number of adverse continuations doing most of the damage — is a genuine property
+of this trading-rule family rather than an artefact of one programme's parameterisation or data.
 
-Ten gates (TS, TS-S, BF, BF-X, SCR, VA, RE for 11b; LC for 11c; MB, MB-E for 11d), transcribed
-verbatim from NEXT_PROMPT.md sec 4.2/6/7, with their firing criteria fixed before any backtest.
-DSR trial counts total **85** across all ten gates, transcribed verbatim from NEXT_PROMPT.md
-sec 9 — Gate RE's count of 36 (a genuine 3×3×4 grid) is the largest single component and is not
-to be reduced even if it proves unreachable; an unreachable grid is itself the finding. Gate
-SCR's two competing universes (the 10a ADF-passing screen vs. the full eligible universe
-including `kc_chicago_wheat`, `gc_cal_m2m3`, and `es_calendar`) are fixed here, with resolution
-of the two named cross-repo conflicts (`gc_cal_m2m3` and `es_calendar`, not `kc_chicago_wheat`,
-which is simply one of the five live spreads and not itself in conflict) left to Gate SCR's own
-paired comparison, not assumed. COT positioning extremes are recorded as a hard data gap — this
-repo's `data/market/cot/` holds only CL, not the corn/wheat/soybeans series their proposal
-needs — and are out of scope for every 11b/c/d gate, not proxied.
+**This is the empirical basis for notebook 011c's entry-time loss classifier** — worth building
+properly, even though the honest prior informed by exactly this pattern is that entry-time features
+will not predict the tail.
 
-The holdout (2025-01-01 to 2026-07-28) is untouched by this notebook and remains unspent, but
-its independence for commodity-spread strategies specifically is disclosed as reduced: the
-external programme's own held-out window (2024-01-01 to 2026-07-21) overlaps it, and their
-held-out numbers were read during this notebook's design (NEXT_PROMPT.md sec 8). Every future
-write-up touching the holdout for 11a/11b/11c must carry that disclosure; 11d's crypto momentum
-work is unaffected, since the external crypto programme produced no held-out numbers.
+---
 
-## Also flagged, not resolved, here
+## What is pre-registered for the follow-on notebooks
 
-`spread_lib11.carry_ratio`'s literal implementation of `c_t = -value_t / full_carry_t` — as
-specified in NEXT_PROMPT.md sec 3 Phase 1 — evaluates to approximately −1 at the deep-contango
-"full carry" boundary under this repo's leg1-front sign convention, the opposite of the "+1 at
-the contango ceiling" description in the same spec. The function is implemented literally, and
-the discrepancy is documented in its own docstring rather than silently corrected; it does not
-affect anything computed in 11a and is left for 11b — the first notebook to actually consume
-`carry_ratio` for Gate BF — to resolve against the external repo's own live output.
+Ten tests across three notebooks, with their firing criteria fixed before any backtest.
 
-Machinery: `src/research/tmp/run_phase_{0..6}_11a_*.py` (Phase 0 reproduction check; Phase 1
-ported primitives; Phase 2 evaluation harness demo; Phase 3 screen rebuild/calibration; Phase 4
-control-book reproduction; Phase 5 trade-shape atlas; Phase 6 pre-registration),
-`src/research/tmp/spread_lib11.py` (the new computation this notebook needed — z-score/ATR
-primitives, fixed-fractional sizing, carry fair value/ratio, term-structure regime label,
-variance ratio, Hurst exponent, rolling half-life/ADF/stability, the paired block bootstrap and
-noise-floor construction, and the full single-position-per-spread backtest engine), with unit
-tests in `tests/test_spread_lib11.py`.
+**Trial counts total 85.** The largest single component is a 36-cell grid (3 × 3 × 4) for the
+reentry-mechanism test, and it is not to be reduced even if it proves unreachable — an unreachable
+grid is itself the finding.
+
+**Two competing trading universes are fixed here** — the cointegration-passing screen from notebook
+010a versus the fuller eligible universe — with the resolution of two specific cross-programme
+disagreements left to a paired comparison rather than assumed.
+
+**Positioning data is recorded as a hard gap.** This repo's cache holds only crude oil, not the
+grain series the other programme's proposal needs. It is out of scope for every downstream test, and
+is not proxied.
+
+**A holdout disclosure.** The holdout period is untouched here and remains unspent, but its
+independence for commodity-spread strategies specifically is **reduced**: the other programme's own
+held-out window overlaps it, and their held-out numbers were read while designing this notebook.
+Every future write-up touching the holdout for the spread work must carry that disclosure. The
+crypto momentum work is unaffected, since the corresponding crypto programme produced no held-out
+numbers.
+
+## One discrepancy flagged, not resolved
+
+The carry-ratio primitive, implemented literally to specification, evaluates to approximately −1 at
+the deep-contango boundary under this repo's sign convention — the opposite of the "+1 at the
+contango ceiling" description in the same specification.
+
+The function is implemented literally and the discrepancy is documented in place rather than
+silently corrected. It affects nothing computed here, and is left for the first notebook that
+actually consumes it to resolve against the other programme's own live output.
+
+*Notebook: `src/research/011a_methodology_transfer_and_reproduction.ipynb`.*

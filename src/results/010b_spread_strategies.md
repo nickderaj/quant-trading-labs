@@ -1,226 +1,218 @@
-# Notebook 10b — Spread Strategies: Results Summary
+# 010b — Five Spread and Sizing Strategies, Backtested
 
-## What
+## What was tested
 
-This notebook backtests five distinct spread-trading gates built on commodity spreads: Gate SP (unconditional mean-reversion on inter-commodity and calendar spreads), Gate SPR and SPR-BW (regime-gating the same spreads using term-structure state, including a brent_wti-specific robustness check), Gate VS (vol-scaled carry sizing), and Gate BM (blended multi-lookback momentum). It also resolves a data-provenance question (Gate FA) about whether the repo's cached crypto series is spot or perpetuals.
+Five distinct strategies, each with its firing criteria fixed in advance by notebook 010a's
+pre-registration, plus one data-provenance question:
 
-## Why
+1. **Unconditional spread mean reversion** — does the mechanism notebook 009's probe found survive
+   full transaction costs?
+2. **Regime-gated spread mean reversion** — does only trading when the term structure is in a
+   definite state improve on that?
+3. **The Brent–WTI regime question** specifically — is the regime effect real, or a single-spread
+   artefact, and does it depend on which leg's curve defines the regime?
+4. **Volatility-scaled carry** — does risk-weighting positions close the gap notebook 008's carry
+   left open?
+5. **Blended multi-lookback momentum** — does averaging momentum horizons beat any single one?
+6. **Is the cached crypto data spot or perpetuals?** — a precondition for a future cash-and-carry
+   test.
 
-Prior notebooks (9 and earlier) produced cheap first-look signals suggesting spread mean-reversion might survive transaction costs, and the operator held a prior that regime-gating (trading spreads differently depending on term-structure backwardation/contango state) should improve on the unconditional book. This notebook exists to test those priors rigorously — with full cost modeling and deflated-Sharpe multiple-testing correction — rather than accept the cheap first look at face value, continuing this programme's practice of only counting a strategy as validated once it clears bootstrap and DSR bars honestly.
+Every backtest charges **one round-turn cost per leg**, so a three-leg spread pays three, not one.
+All use four origin offsets and are judged on a block-bootstrap interval plus a deflated Sharpe
+probability against an honestly counted cumulative trial count.
 
-## How
+A separate **fundable-flag** standard, introduced by notebook 009's recommendation, is also
+reported: net Sharpe above 0.5 at every offset, deflated probability above 0.95, **and** a literal
+bounded drawdown. It sits alongside, not instead of, the tradeable-alpha criterion.
 
-Each gate is backtested with `commod_lib8`'s futures cost model (one round-turn cost per leg) across four origin offsets, using block-bootstrap confidence intervals and deflated Sharpe probability (DSR) with honestly-counted cumulative configuration counts (n_trials) as the firing criteria. Gate SP uses a 60-day rolling z-score mean-reversion rule; Gate SPR/SPR-BW zero the position outside a "definite" regime state under three regime definitions; Gate VS replaces equal-weighting with inverse-20-day-realized-vol sizing on the carry book; Gate BM equal-weights four momentum lookbacks. A separate §3 "fundable flag" additionally requires Sharpe, DSR, and a literal drawdown bound all to pass. The 2025-01-01 to 2026-07-28 holdout is untouched throughout.
+The holdout is untouched throughout — nothing here is a certified winner, so there is no legitimate
+reason to spend it.
 
-## Results
+## The headline
 
-All five gates return fired=False — no gate clears both the tradeable-alpha bar and the §3 fundable flag. Gate SP shows a real, cost-surviving positive Sharpe (0.42–0.51) on both taxonomy groups but fails DSR. Gate SPR is directionally consistent with the regime prior at every offset but the margin is too small for CI or DSR. Gate SPR-BW finds brent_wti's own regime effect is sensitive to which leg's curve defines the regime — absent under the primary definition, present under the secondary — reported as a genuine open question rather than forced to a verdict. Gate VS delivers the strongest absolute performance (net Sharpe 1.16–1.23, DSR 0.9997) but still doesn't close the excess-vs-basket gap and fails the fundable flag on drawdown alone (~99.6% of peak equity). Gate BM is an unambiguous null (Sharpe negative at every offset). The FA-data question resolves to FALSE: all cached crypto data is perpetuals, not spot, so no proxy is built.
+**Five strategies, five nulls — and the two most informative near-misses in this programme's
+history.**
 
-**The headline: five gates, five nulls, and the two most informative near-misses in this
-programme's history.** Gate SP (unconditional spread mean-reversion) shows a real,
-positive, cost-surviving Sharpe on both taxonomy groups but falls well short of the
-deflated-Sharpe bar once the cumulative configuration count is honestly applied. Gate SPR
-(regime-gating) is directionally consistent with the operator's prior — the gated book
-beats the unconditional book at every origin offset — but the margin is tiny and neither
-bootstrap CI nor DSR clears its bar. Gate SPR-BW delivers this notebook's single most
-interesting result: **brent_wti's own regime effect depends on which leg's curve defines
-the regime** — absent under the pre-declared primary (BZ-only) definition, present under
-the secondary (both-legs-agree) definition — reported as exactly that tension, not forced
-into a verdict either direction. Gate VS (vol-scaled carry) delivers the strongest
-absolute-performance number in this notebook (net Sharpe 1.16–1.23, DSR 0.9997) and still
-does not close Gate AC's excess-vs-basket gap — and fails the new §3 fundable-absolute-
-performance flag on drawdown alone, a finding this notebook would have missed had it
-stopped at Sharpe and DSR. Gate BM (blended momentum) is an unambiguous, small-margin
-null. **No gate fires. No gate clears the §3 fundable flag either — the closest, Gate VS,
-fails specifically and only on the drawdown bound.** A null reported this rigorously,
-across five genuinely different constructions, is this programme's expected outcome, not
-a disappointment (docs/08's own "a ninth and tenth null is the expected outcome" standard,
-now extended to an eleventh through fifteenth).
+| Strategy | Passes? | Fundable flag? | The number behind it |
+|---|---|---|---|
+| **Mean reversion, inter-commodity** | **No** | No | Net Sharpe 0.42 at every offset; deflated probability 0.562 (8 trials); interval on net return [−2.2e−5, +2.0e−4] does not exclude zero |
+| **Mean reversion, calendar** | **No** | No | Net Sharpe 0.50–0.51; deflated probability 0.680; interval [+1.9e−7, +6.8e−5] **does** exclude zero, but the deflation alone kills it |
+| **Regime gating** | **No** | No | Gated Sharpe exceeds unconditional at every offset (0.426 vs 0.423) but by a margin too small to matter; deflated probability 0.484 (12 trials); neither interval excludes zero |
+| **Brent–WTI regime check** | **No** | — | Brent–WTI itself does *not* show the effect under the primary definition (0.604 vs 0.614); 3 of 6 other eligible spreads do, clearing the "at least 3 others" bar — but the binding Brent–WTI clause is not met |
+| **Volatility-scaled carry** | **No** | **No — on drawdown alone** | Net Sharpe **1.16–1.23** (up from 0.90–0.95), deflated probability **0.9997** — both clear the fundable bar — but the excess-over-basket interval [−0.0022, +0.0098] still includes zero, and the drawdown is ≈99.6% of peak equity |
+| **Blended momentum** | **No** | No | Net Sharpe **negative** at every offset (−0.015 to −0.033); deflated probability 0.025 (20 trials) |
+| **Is the crypto data spot?** | **Resolved: no** | — | Every download path is a perpetual-futures endpoint, and every cached symbol has a matching funding file — funding only exists for perpetuals |
 
-Machinery: `src/research/tmp/run_phase_{0..4}_10b_*.py`, reusing
-`commod_lib8.portfolio_costs_futures`/`round_turn_cost_per_contract` (futures cost model,
-one round turn per leg — every spread trade here pays for *every* leg it holds, not one),
-`research.block_bootstrap_ci`/`deflated_sharpe_prob` unmodified, and
-`src/research/tmp/run_phase_5_alpha.py`'s own carry/momentum panel for Gates VS/BM
-unmodified except the position-sizing/aggregation rule. Development window only; **the
-2025-01-01 → 2026-07-28 holdout is untouched** — no gate here is a certified winner, so
-there is no legitimate reason to spend it.
+**No strategy fires. None clears the fundable flag either** — and the closest, volatility-scaled
+carry, fails specifically and only on the drawdown bound.
 
----
+## First: does notebook 010a reproduce?
 
-## Gate verdicts — the full table
-
-| gate | claim | fires? | §3 fundable flag | number behind it |
-|---|---|---|---|---|
-| **SP** (inter-commodity) | unconditional mean-reversion survives cost | **NO** | **NO** | net Sharpe 0.42–0.42 across offsets, DSR 0.562 (n_trials=8), bootstrap CI on net return [−2.2e-5, +2.0e-4] does NOT exclude zero |
-| **SP** (calendar) | unconditional mean-reversion survives cost | **NO** | **NO** | net Sharpe 0.50–0.51, DSR 0.680, CI [+1.9e-7, +6.8e-5] DOES exclude zero, but DSR alone kills it |
-| **SPR** (deadband, primary) | regime-gating improves it | **NO** | **NO** | gated Sharpe exceeds unconditional at every offset (0.426 vs 0.423 at offset 0) but by a margin too small to matter: DSR 0.484 (n_trials=12), gated-vs-zero CI does not exclude zero, gated-minus-unconditional CI [−2.3e-5, +2.0e-5] does not exclude zero |
-| **SPR-BW** | not a brent_wti artifact | **NO** | inherits SPR's NO | brent_wti itself does NOT show gated > unconditional under the primary (BZ-leg) definition (0.604 vs 0.614); 3 of 6 other eligible inter-commodity spreads do (crack_321, gasheat_rbho, gasoline_crack) — the "≥3 others" bar is cleared, but the binding brent_wti-must-show-it clause is not |
-| **VS** | vol-scaled carry closes Gate AC's gap | **NO** | **NO — fails on drawdown alone** | net Sharpe 1.16–1.23 at every offset (up sharply from Gate AC's 0.90–0.95), DSR 0.9997 (n_trials=8) — both individually clear the fundable-flag bar — but the excess-vs-basket CI [−0.0022, +0.0098] still includes zero (fails the tradeable-alpha gate, same shape as Gate AC) AND cumulative log-drawdown corresponds to ≈99.6% of peak equity, nowhere near the 25%-of-peak bound (fails the fundable flag on its own, independent criterion) |
-| **BM** | blended momentum is sign-consistent and survives cost | **NO** | **NO** | net Sharpe **negative** at every offset (−0.015 to −0.033) — sign-consistent, but consistently negative, not positive; DSR 0.025 (n_trials=20) |
-| **FA-data** | this repo caches a crypto spot series distinct from perpetuals | **resolved FALSE** | n/a | every Binance URL `src/data.py` calls is a USDS-M perpetual-futures endpoint; every cached klines/ohlc symbol has a matching funding file (funding only exists for perpetuals) — no proxy built, Gate FA deferred with this note |
+Fifteen assertions against the committed pre-registration — spread counts, the taxonomy split, the
+two cointegration exclusions, the deadband-is-primary declaration, all five trial counts, and the
+data-provenance resolution. All passed before any backtest ran.
 
 ---
 
-## The regime hypothesis — plain-English verdict, brent_wti and cross-spread stated separately
+## Unconditional spread mean reversion
 
-**Cross-spread: regime-gating does not survive as tradeable alpha, but the direction is
-genuinely, consistently supportive, not noise.** Across all four origin offsets, the
-deadband-gated inter-commodity book's net Sharpe exceeds the unconditional book's — a
-small but perfectly consistent margin (0.426–0.427 vs. 0.423–0.424). That consistency is
-worth something: it is not what four independent coin flips would produce. But the
-absolute margin is too small for either bootstrap CI (gated-vs-zero, or gated-minus-
-unconditional) to clear zero, and the DSR at the honestly-counted 12-configuration bar
-(three regime definitions × four offsets) comes in at 0.484 — essentially "no better than
-random search would produce this often." **Verdict: a real but too-small-to-trade
-directional signal, not a tradeable improvement.**
+The rule was fixed in advance and is not re-derived here: a 60-day rolling z-score of the spread's
+own value; position equals the negative z-score, clipped to ±2 and halved; one round-turn cost per
+leg, summed across legs; roll-window rows excluded from both signal and P&L; equal-weighted across
+each taxonomy group's cointegration-eligible spreads (7 inter-commodity, 16 calendar).
 
-**brent_wti-specific: genuinely unresolved, and reported as exactly that — not smoothed
-into either "confirmed" or "refuted."** Under the pre-declared PRIMARY regime definition
-(BZ's own curve alone, decided in 10a before any 10b backtest existed), brent_wti's own
-gated Sharpe (0.604) is *lower* than its unconditional Sharpe (0.614) — the operator's
-prior does not show up for brent_wti under the definition this notebook committed to in
-advance. Under the SECONDARY "both legs must agree" definition (also pre-declared, as
-sec 4.1's own named robustness check, run once, n_trials=1), the picture flips: gated
-Sharpe 0.694 clears unconditional Sharpe 0.614 by a real margin, echoing 10a Phase 3's own
-descriptive finding that brent_wti's half-life drops from 79 days (pooled) to 9.5 days
-specifically when both BZ's and CL's curves agree on backwardation. **The honest reading:
-brent_wti's regime effect, if it exists, needs *both* legs to confirm the state — a single
-leg's curve is not enough — and Gate SPR-BW's own binding criterion (evaluated on the
-pre-declared primary definition, as it must be to mean anything) correctly does not fire
-on this basis.** A future notebook with its own fresh pre-registration is the legitimate
-way to test the both-legs-agree definition as primary, not a retroactive edit here.
+**Both books show a real, positive, cost-surviving net Sharpe at every origin offset** —
+inter-commodity at 0.42, calendar at 0.50–0.51. Genuinely better than a coin flip, and directionally
+exactly what notebook 009's cheap probe predicted.
+
+**Neither clears the deflation bar** at the honestly counted 8 trials: 0.562 and 0.680. The
+calendar book's interval on net return does exclude zero on its own, but the deflation alone is
+enough to keep it from firing.
+
+That is a clean illustration of why the deflation bar exists. A Sharpe this size, found after
+screening this many configurations, is not yet distinguishable from what an unlucky search would
+produce by chance.
 
 ---
 
-## Phase 0 — Reproduction check
+## Regime gating
 
-Fifteen assertions against 10a's own committed JSON (spread counts, taxonomy split,
-ADF-exclusion of gold_silver/platinum_palladium, the deadband-primary declaration, all
-five gates' exact DSR n_trials, and the FA-data resolution) — all passed before this
-notebook's own backtests ran (`run_phase_0_10b_repro.py`).
+Same rule, same universe, with the position zeroed on any day the term-structure regime is not in a
+definite state. The deadband definition is primary; raw sign and a persistence requirement are
+secondary and both counted toward the 12-trial total.
 
----
+**Cross-spread verdict: the direction is genuinely and consistently supportive, but it isn't
+tradeable.**
 
-## Phase 1 — Gate SP
+Across all four origin offsets, the gated book's net Sharpe exceeds the unconditional book's — a
+small but perfectly consistent margin (0.426–0.427 against 0.423–0.424). **That consistency is worth
+something: it is not what four independent coin flips produce.**
 
-Trading rule (declared in 10a's pre-registration, not re-derived here): 60-day rolling
-z-score of the spread's own value, position = −clip(z,−2,2)/2, one round-turn cost per
-leg (summed across legs — crack_321 and crush_soy pay three, not one), roll-window rows
-excluded from both signal and P&L, equal-weighted book across each taxonomy group's
-eligible (ADF-cointegrated) spreads: 7 inter-commodity, 16 calendar.
+But the absolute margin is too small for either interval — gated against zero, or gated minus
+unconditional — to clear zero, and the deflated probability at 12 trials is 0.484. Essentially no
+better than random search would produce this often.
 
-Both books show a real, positive, cost-surviving net Sharpe at every origin offset
-(inter-commodity 0.42–0.42, calendar 0.50–0.51) — genuinely better than a coin flip, and
-directionally exactly what notebook 9's cheap first-look probe predicted. **Neither clears
-DSR at the honestly-counted n_trials=8** (2 taxonomy groups × 4 offsets): 0.562 for
-inter-commodity, 0.680 for calendar. The calendar book's bootstrap CI on net return does
-exclude zero on its own, but DSR alone is enough to keep Gate SP from firing on either
-group — a clean illustration of why the deflated-Sharpe bar exists: a Sharpe this size,
-found after screening this many configurations, is not yet distinguishable from what an
-unlucky multiple-testing search would produce by chance.
+**A real but too-small-to-trade directional signal, not a tradeable improvement.**
 
----
+Both secondary definitions corroborate the same picture. Raw sign shows the gated book *not*
+exceeding the unconditional one at all — exactly the structural weakness that got it demoted from
+primary in advance, since it restricts almost no days. The persistence variant shows gating
+exceeding unconditional at every offset, similar in spirit to the deadband.
 
-## Phase 2 — Gates SPR and SPR-BW
+### The Brent–WTI question: genuinely unresolved, and reported as such
 
-Same trading rule, same universe, with position zeroed on any day the term-structure
-regime is not a "definite" state. Primary definition = deadband (10a Phase 5's own
-correction from raw sign — see `src/results/010a_term_structure_regimes_and_spreads.md`).
-Full detail — including the two secondary definitions (raw sign, persistence), both run
-and both counted in the n_trials=12 total — in `phase_2_10b_results.json`.
+Under the **primary** definition committed to in advance — Brent's own curve alone — Brent–WTI's
+gated Sharpe (0.604) is *lower* than its unconditional Sharpe (0.614). The prior does not show up
+for this spread under the definition this notebook was bound to.
 
-Both secondary definitions independently corroborate the same overall picture: raw sign
-shows the gated book *not* exceeding the unconditional book at every offset at all (raw
-sign restricts almost no days, exactly the structural weakness Phase 5 flagged in advance
-as the reason it was demoted from primary); persistence shows gated exceeding
-unconditional at every offset, similar in spirit to deadband but with no DSR computed for
-it (only the primary definition's DSR feeds the fire condition, per the pre-registration).
+Under the **secondary** both-legs-agree definition, also pre-declared and run once, the picture
+flips: gated Sharpe of 0.694 clears unconditional 0.614 by a real margin. That echoes notebook
+010a's descriptive finding that Brent–WTI's half-life drops from 79 days pooled to 9.5 days
+specifically when both curves agree on backwardation.
 
----
+**The honest reading: Brent–WTI's regime effect, if it exists, needs *both* legs to confirm the
+state — one leg's curve is not enough.** The binding criterion here is evaluated on the primary
+definition, as it must be to mean anything, and correctly does not fire on that basis.
 
-## Phase 3 — Gates VS and BM
+A future notebook with its own fresh pre-registration is the legitimate way to test the
+both-legs-agree definition as primary. Not a retroactive edit here.
 
-**Gate VS is this notebook's most consequential result precisely because it does NOT
-simply fire or not-fire — it fires on two of three fundable-flag criteria and fails hard
-on the third.** Inverse-20-day-realized-vol position sizing (replacing notebook 8's
-equal-weight-within-leg carry book, the only change from Gate AC) lifts net Sharpe from
-0.90–0.95 to **1.16–1.23** and deflated Sharpe probability from 0.997 to **0.9997** — both
-comfortably inside the §3 fundable-flag's own Sharpe>0.5 and DSR>0.95 bars. But the
-excess-vs-basket bootstrap CI is essentially unchanged in shape ([−0.0022, +0.0098], still
-including zero) — vol-scaling reshapes risk *within* the carry book, it does not change
-whether carry beats a passive commodity basket, which is a question about the factor's
-own exposure to broad commodity beta, not about how that exposure is risk-weighted
-internally. And separately, the strategy's own cumulative log-drawdown corresponds to
-roughly 99.6% of peak (log-return-equity-curve terms — see the note below), nowhere near
-the 25%-of-peak bound sec 3 declares in advance — **failing the fundable flag on a
-completely independent criterion from the one that fails the tradeable-alpha gate.**
-Reported exactly per sec 3's own required framing: *fundable-looking on absolute Sharpe
-and DSR, not shown to beat passive exposure to the same asset class, and not
-institutionally fundable either once drawdown is actually checked* — never rounded up to
-"essentially a pass."
-
-*Drawdown note:* this repo's own `futures_portfolio_metrics` reports drawdown as a
-cumulative-log-return quantity (matching every other notebook's own convention, e.g.
-Gate AC's own −7.52), not a literal percentage. Converted to a percentage of peak equity
-(`1 − exp(log_drawdown)`) for the first time in this programme specifically because sec 3's
-fundable flag requires a literal bound, Gate VS's −5.41 log-drawdown is ≈99.6% of peak —
-an artifact of an 18-year, high-turnover, unconstrained-compounding backtest convention
-that was never previously asked to answer a literal percentage-drawdown question. This is
-reported honestly rather than converted to a friendlier number, and is itself a finding
-about how future notebooks should construct a backtest if the §3 flag is meant to be
-checked routinely: a capital-bounded (not continuously-reinvested) equity curve would be
-needed to make this comparison fair to the strategy.
-
-**Gate BM is an unambiguous null.** The equal-weighted blend of notebook 8's four momentum
-lookbacks is net-**negative** at every origin offset (−0.015 to −0.033) — sign-consistent,
-but consistently the wrong sign, diluting 1-month and 12-month's weak positive Sharpes
-with 3-month and 6-month's larger negative ones exactly as notebook 8's own per-lookback
-breakdown predicted it would. DSR 0.025 at the honestly-counted n_trials=20 (16 already-
-logged notebook-8 configurations forwarded + 4 new blend configurations) confirms there is
-no signal being missed here, not a near-miss.
+This is not the same as notebook 007's single-symbol artefact. There, one thinly-traded symbol was
+carrying an entire result. Here, the sensitivity is to a *definitional* choice with a clear economic
+reading, which is itself informative.
 
 ---
 
-## Phase 4 — FA-data check
+## Volatility-scaled carry — the most consequential result here
 
-Resolved **FALSE**, without a proxy. `src/data.py`'s only Binance download paths are
-`data.binance.vision/data/futures/um/...` (bulk trades/klines) and
-`fapi.binance.com/fapi/v1/fundingRate` — both USDS-M perpetual-futures endpoints. No spot
-host (`data.binance.vision/data/spot/...` or `api.binance.com`) appears anywhere in this
-repo's downloader, and every cached klines/ohlc symbol has a matching funding file — a
-genuine spot series would have none. Gate FA is deferred with this data-acquisition note;
-building a proxy (e.g. treating the perpetual's own mark price as a spot stand-in) would
-manufacture a cash-and-carry spread mechanically guaranteed to look small, not measure the
-real opportunity, exactly what NEXT_PROMPT.md sec 2 warns against.
+The only change from notebook 008's carry book is the position-sizing rule: inverse
+20-day-realised-volatility weighting instead of equal weighting within each leg.
+
+**It fires on two of three fundable criteria and fails hard on the third.**
+
+Net Sharpe lifts from 0.90–0.95 to **1.16–1.23**, and the deflated probability from 0.997 to
+**0.9997**. Both comfortably inside the fundable flag's own bars.
+
+But the excess-over-basket interval is essentially unchanged in shape — [−0.0022, +0.0098], still
+including zero. **Volatility scaling reshapes risk *within* the carry book; it does not change
+whether carry beats a passive commodity basket.** That is a question about the factor's exposure to
+broad commodity beta, not about how that exposure is risk-weighted internally.
+
+And separately, the drawdown corresponds to roughly **99.6% of peak equity**, nowhere near the
+25% bound declared in advance — **failing the fundable flag on a completely independent criterion
+from the one that fails the tradeable-alpha test.**
+
+Reported exactly as required: *fundable-looking on absolute Sharpe and deflated Sharpe, not shown to
+beat passive exposure to the same asset class, and not institutionally fundable either once drawdown
+is actually checked.* Never rounded up to "essentially a pass".
+
+### A note on that drawdown figure
+
+This repo reports drawdown as a cumulative log-return quantity, matching every other notebook's
+convention, rather than a literal percentage. Converting to a percentage of peak equity for the
+first time in this programme — because the fundable flag requires a literal bound — turns a
+log-drawdown of −5.41 into ≈99.6% of peak.
+
+That is an artefact of an 18-year, high-turnover, continuously-compounding backtest convention that
+was never previously asked to answer a literal percentage question. It's reported honestly rather
+than converted to a friendlier number, and it is itself a finding about construction: a
+**capital-bounded** equity curve, rather than a continuously reinvested one, would be needed to make
+this comparison fair to the strategy if the flag is to be checked routinely.
 
 ---
 
-## Bugs found
+## Blended momentum — an unambiguous null
 
-None new in this notebook's own machinery (10a's single caught bug, `regime_deadband`'s
-unevaluated-expression issue, was fixed before 10b began and is reported in 10a's own
-results MD). One discipline note worth recording in the same spirit: Gate VS's raw
-log-drawdown number, taken at face value without converting to a percentage, would have
-silently passed an eyeball "does this look risky" check (−5.41 reads like a moderate
-number next to Gate AC's own −7.52) — only converting it explicitly (`1 − exp(x)`) for the
-first time this programme has needed a literal percentage bound revealed the true ≈99.6%
-figure. Caught by taking sec 3's own bound literally rather than reading the existing
-metric's sign and magnitude as "probably fine because it's smaller than last time."
+An equal-weighted blend of notebook 008's four momentum lookbacks is net-**negative** at every
+offset (−0.015 to −0.033). Sign-consistent, but consistently the wrong sign — diluting the weak
+positive one-month and twelve-month Sharpes with the larger negative three-month and six-month ones,
+exactly as notebook 008's per-lookback breakdown predicted.
+
+The deflated probability of 0.025 at 20 trials confirms there is no signal being missed. Not a
+near-miss.
+
+---
+
+## The data-provenance question
+
+**Resolved: the cached crypto data is entirely perpetual futures, not spot.**
+
+Every download path in the repo points at a perpetual-futures endpoint. No spot host appears
+anywhere in the downloader. And every cached symbol has a matching funding-rate file — a genuine
+spot series would have none.
+
+The cash-and-carry test is deferred with this note, and **no proxy was built.** Treating the
+perpetual's own mark price as a stand-in for spot would manufacture a spread mechanically guaranteed
+to look small — that measures the construction, not the opportunity.
+
+---
+
+## Bugs and discipline notes
+
+No new bugs in this notebook's machinery. One discipline note worth recording in the same spirit:
+
+The volatility-scaled carry book's raw log-drawdown, taken at face value, would have silently passed
+an eyeball check — −5.41 reads like a moderate number next to notebook 008's own −7.52. Only
+converting it explicitly, for the first time this programme has needed a literal percentage bound,
+revealed the ≈99.6% figure. Caught by taking the declared bound literally rather than reading an
+existing metric's magnitude as "probably fine because it's smaller than last time".
 
 ## Bottom line
 
-Five gates, five honest nulls, delivered with more texture than a flat "nothing works."
-Gate SP shows the mean-reversion mechanism genuinely survives cost at a positive Sharpe on
-both taxonomy groups — it simply hasn't cleared the bar this programme's own multiple-
-testing discipline requires, and the honest configuration count (not a shrunk one) is why.
-Gate SPR shows the operator's regime prior pointing the right direction at every offset,
-too faintly to trade. Gate SPR-BW's brent_wti-specific result is this notebook's genuinely
-open question: the effect is leg-definition-sensitive in a way that is itself informative
-(both legs need to agree), not a simple "artifact" the way notebook 7's Gate TF single-
-symbol result was. Gate VS is the most important negative result in this notebook because
-it dissociates three previously-conflated ideas — absolute Sharpe, deflated Sharpe, and a
-literal drawdown bound — and shows a strategy can clear the first two decisively while
-failing the third just as decisively, exactly the discrimination sec 3's two-flag
-reporting standard was built to make possible. Gate BM closes cleanly, no ambiguity. No
-gate reaches the holdout; nothing here is a certified winner.
+Five honest nulls, with considerably more texture than a flat "nothing works":
+
+- **Spread mean reversion genuinely survives cost** at a positive Sharpe on both taxonomy groups. It
+  simply hasn't cleared the multiple-testing bar — and the honest trial count, not a shrunk one, is
+  why.
+- **Regime gating points the right direction at every offset**, too faintly to trade.
+- **The Brent–WTI result is a genuinely open question**, sensitive to the leg definition in a way
+  that is itself informative rather than a mere artefact.
+- **Volatility-scaled carry is the most important negative result here**, because it dissociates
+  three previously conflated ideas — absolute Sharpe, deflated Sharpe, and a literal drawdown bound —
+  and shows a strategy can clear the first two decisively while failing the third just as
+  decisively. That discrimination is exactly what the two-flag reporting standard was built for.
+- **Blended momentum closes cleanly**, with no ambiguity.
+
+Nothing reaches the holdout.
+
+*Notebook: `src/research/010b_spread_strategies.ipynb`.*

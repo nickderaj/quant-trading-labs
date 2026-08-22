@@ -1,627 +1,392 @@
-# Cross-Sectional Crypto IC Pipeline - Results Summary
+# 003 — Cross-Sectional Signal Screening Across 30 Crypto Symbols
 
-## What
+## The question
 
-This notebook builds and runs a full cross-sectional pipeline for crypto: a real transaction-cost model, a 30-symbol universe panel (deliberately including coins that later died or were delisted), a feature library (order flow, seasonality, realized vol, momentum/mean-reversion, funding rate), an information-coefficient (IC) screening harness, a dollar-neutral long/short portfolio construction layer, and backtests of the handful of configs that survive IC screening - followed by a single, unretuned holdout run.
+Notebook 002 found no edge in single-asset models, and every number it reported was gross of
+transaction costs. This notebook changes both things at once:
 
-## Why
+- **Charge real costs everywhere.** Nothing here is reported gross without saying so.
+- **Trade breadth instead of depth.** Rather than searching many single-asset configurations and
+  backtesting whichever wins — a method notebook 002 showed overfits badly — screen a 30-symbol
+  panel on rank correlation first, then backtest only the handful of signals that survive
+  screening.
 
-Notebook 2 found no validated edge on single-asset trend/mean-reversion models, and it turned out every number reported there was gross of transaction costs. This notebook fixes both problems at once: it charges real costs everywhere and switches from "search many single-asset configs, backtest whichever wins" (a method notebook 2 showed is prone to overfitting) to "screen a large cross-sectional panel on rank correlation, then backtest only the few things that survive," aiming for more statistical power (30 symbols vs. 1) and honesty about cost.
+The point is measurement power (30 symbols instead of 1) and honesty about cost.
 
-## How
+## The cost model, and which bar intervals it kills
 
-Added a turnover-based cost model (`add_trading_costs`) and confirmed 1h bars are cost-unviable, dropping them from the run. Built a 30-symbol survivorship-bias-aware universe panel, a causal feature library (order flow, seasonality, realized vol, momentum, funding rate), and an IC screening harness (`cross_sectional_ic`, `panel_ic`, `ic_stability`) with Newey-West/HAC standard errors for autocorrelated IC series. Screened 81 feature/interval configs, of which 34 survived a |t|>3 and sign-consistency filter. Built dollar-neutral portfolio construction (vol-targeted position sizing, top/bottom ranking, gross/turnover caps) and backtested the 3 pre-declared surviving configs (4h/12h/1d) across origin offsets, with deflated Sharpe (accounting for all 95 configs tried), bootstrap CIs, degenerate-bet checks, and baseline comparisons (buy-and-hold basket, random ranking). Finally ran the single best config once, unchanged, on a holdout period through mid-2026.
+Costs are charged per bar as `turnover × (taker fee + slippage)`, where turnover is the absolute
+change in position from the previous bar. The position before the first bar counts as zero, so
+the initial entry is charged too. The charge is applied as a log-return drag, so it compounds the
+same way returns do.
 
-## Results
+Before anything else, a sanity check: simulate an always-in-market ±1 position that flips sign
+with 40% probability each bar (a rough stand-in for a mediocre but real signal), 100,000 bars, at
+3bp taker fee plus 1bp slippage.
 
-No validated edge. The IC-screened mean-reversion/realized-vol signal was gross-profitable at every interval (Sharpe 0.43-1.32), but transaction costs erased it at 4h and 1d; only the 12h config was net-positive at its headline offset (+0.42), and it flipped to -2.45 just one week later on the fold grid, had a bootstrap CI on excess return that included zero, and a deflated Sharpe probability of just 3.4% given 95 trials searched. A later inference-correction rerun of the same exact config with a fresh random seed produced a negative Sharpe (-1.22), meaning the one "positive" headline result didn't even reproduce. The holdout run (spent once) came back Sharpe -0.47 net of costs, though gross was positive (+0.74), continuing the "signal is real pre-cost, costs erase it" pattern seen throughout. Bottom line: real methodological improvements (cross-sectional breadth, honest costs) but no tradeable edge found.
-
-Notebook 2 found no validated edge on single-asset trend/mean-reversion models, and never
-charged transaction costs while doing it (`add_tx_fees*` was called zero times in that
-notebook - every number in `002_walk_forward_multi_asset.md` is gross). This notebook fixes
-both root causes at once: adds real transaction costs everywhere, and switches from
-"search many single-asset configs, backtest whichever wins" to "screen a cross-sectional
-panel on rank correlation (IC), backtest at most 3 things that survive screening." The
-goal is measurement power (30 symbols instead of 1) and honesty about cost (nothing here
-is reported gross).
-
-## Phase 0 - Cost model
-
-Added `research.add_trading_costs(trades, taker_fee, slippage=1e-4)`: charges
-`turnover_t * (taker_fee + slippage)` per bar, where `turnover_t = |position_t -
-position_{t-1}|` (position before the first bar treated as 0, so the first entry is
-charged too). Cost is expressed as a log-return drag, `log(1 - cost_t)`, added to
-`trade_log_return` to produce `trade_log_return_net`, with `equity_curve_net` and
-`drawdown_log_return_net` recomputed from it. This generalizes the existing
-`add_tx_fees_log` (which only handled fees, no slippage term).
-
-Wired into `walk_forward_run` (new `taker_fee`/`slippage` params - when set, every fold's
-metrics gain `sharpe_net`, `total_log_return_net`, `compound_return_net`,
-`max_drawdown_net`, `mean_turnover_per_bar`, `turnover_per_year`, `annual_fee_drag_log`,
-`annual_fee_drag_pct`; the stitched OOS trade frame carries the net columns across fold
-boundaries, recomputed once on the full stitched series rather than concatenated
-per-fold) and into `stitched_metrics` (reports the same net/cost fields whenever the net
-columns are present, gross-only metrics unchanged when `taker_fee` is omitted so old
-callers don't break).
-
-Unit tests in `tests/test_research.py` (6 tests, all passing): zero turnover charges
-zero cost; a single sign flip charges exactly one round-trip's worth of turnover (2
-units) and nothing on the held bars before/after; holding a position across N bars
-charges the entry once and nothing else; `cost_summary`'s annualization matches a
-manual calculation; `walk_forward_run` surfaces both gross and net columns/metrics when
-a fee is given and net return is never above gross; `stitched_metrics` omits all net
-fields when no fee is given.
-
-### Sanity check: which intervals survive costs at all
-
-Simulated a `+-1`, always-in-market position that flips sign with probability 0.4 each
-bar (a rough proxy for "a mediocre but real trend/reversal signal"), 100k bars, at
-3bps taker fee (6bps round trip) plus the default 1bp slippage, across four bar
-intervals:
-
-| interval | annualized fee drag (taker only) | annualized fee drag (taker + slippage) |
+| Bar interval | Annual drag (taker only) | Annual drag (taker + slippage) |
 |---|---|---|
-| 1h  | +713%/yr  | +1535%/yr |
-| 4h  | +70%/yr   | +102%/yr  |
-| 12h | +19%/yr   | +26%/yr   |
-| 1d  | +9%/yr    | +12%/yr   |
+| 1h | 713% | 1,535% |
+| 4h | 70% | 102% |
+| 12h | 19% | 26% |
+| 1d | 9% | 12% |
 
-These are bigger than the back-of-envelope "~1.8%/yr at 12h, ~21%/yr at 1h" figure this
-run was scoped against, because that figure used simple (non-compounding) annualization
-of a per-bar cost; this cost model compounds `log(1 - cost)` the same way returns
-compound, so at 1h bars (8760/yr) a fee that looks tiny per-bar blows up geometrically
-over a year of turnover. The exact multiplier depends on assumptions (flip definition,
-fee vs. round-trip vs. slippage), but the qualitative point survives, more starkly than
-the original estimate: **going from 12h to 1h bars turns a survivable cost drag into a
-completely unviable one, for the same underlying signal and flip rate.** Sign of the
-effect is unambiguous and the ranking across intervals doesn't depend on the exact
-constant.
+These are far larger than a back-of-envelope estimate would suggest, because that estimate
+annualises a per-bar cost linearly while the real thing compounds. At hourly bars — 8,760 per
+year — a fee that looks trivial per bar explodes geometrically over a year of turnover. The exact
+multiplier depends on the flip-rate assumption, but the ranking across intervals doesn't.
 
-Decision: **1h bars are dropped from this run.** Screening and backtesting proceed at
-4h/12h/1d only, per the guardrail that 1h was conditional on surviving this check. It
-didn't.
+**Decision: hourly bars are dropped from this run entirely.** Screening and backtesting proceed
+at 4h, 12h and 1d only.
 
-## Bugs found
+## The universe, and its remaining bias
 
-- None specific to this phase beyond the one already documented in `002_walk_forward_multi_asset.md` (klines schema inference). Re-verified: `describe_linear_model`'s
-  degenerate-bet check and the fee math from `001_simple_linear.md` are unaffected by
-  this change - `add_trading_costs` is additive on top of existing gross columns, not
-  a replacement.
+30 USDT-margined perpetual futures, deliberately including 2021-era coins that later died or were
+delisted, rather than picking today's most liquid 30 and backtesting them from 2021 (which would
+be pure survivorship bias):
 
-## Phase 1 - Universe expansion
+BTC, ETH, BNB, SOL, XRP, ADA, DOGE, DOT, AVAX, MATIC, LINK, LTC, ATOM, UNI, ETC, XLM, ALGO, VET,
+FIL, TRX, EOS, AAVE, SAND, MANA, AXS, THETA, NEAR, FTM, LUNA, FTT.
 
-Added `research.load_universe_panel(symbols, interval, start_date, end_date,
-min_cross_section=10, allow_holdout=False)`: downloads each symbol's klines via
-`data.download_klines_range` (skipping symbols/months with no archive file rather
-than raising - a partial history is not an error), concatenates into one ragged
-panel with a `symbol` column, then drops any bar where fewer than
-`min_cross_section` symbols have data, so no cross-sectional rank/z-score is ever
-computed from a near-empty cross-section. `HOLDOUT_START = 2025-07-01` is a module
-constant; any call reaching past it raises `ValueError` unless `allow_holdout=True`,
-which only the Phase 7 holdout run should ever pass. This is the "enforce in the
-loader, not discipline" guardrail - verified with a unit test that the guard fires
-before any data is touched.
+**The residual bias is real and is not corrected for.** This list was chosen by hindsight — which
+coins are remembered as having mattered and died — not by reconstructing the exchange's actual
+listed-symbol history at each past date. A trader in 2021 would not have known FTM would survive
+and LUNA wouldn't. This is smaller than top-30-today survivorship bias, but it isn't zero.
 
-### Universe construction rule (and its bias)
+Nothing is forward- or back-filled across a listing or delisting boundary, so the panel is ragged
+by construction:
 
-30 USDT-M perpetual futures symbols, chosen to include several 2021-era coins that
-later died or were delisted, specifically to avoid picking today's top-30-by-liquidity
-and backtesting it from 2021 (survivorship bias): BTC, ETH, BNB, SOL, XRP, ADA, DOGE,
-DOT, AVAX, MATIC, LINK, LTC, ATOM, UNI, ETC, XLM, ALGO, VET, FIL, TRX, EOS, AAVE, SAND,
-MANA, AXS, THETA, NEAR, FTM, LUNA, FTT.
-
-This list was still chosen by hindsight ("which coins do I remember mattering and
-dying"), not by reconstructing Binance's actual listed-symbols history at each past
-date - a real backtester in 2021 wouldn't have known FTM would survive and LUNA
-wouldn't. That residual bias is real and unresolved; it's smaller than "top-30-today"
-survivorship bias but not zero. Noted, not corrected for.
-
-No forward/back-fill across a listing or delisting boundary - each symbol's series is
-whatever Binance's archive actually has, so the panel is ragged by construction.
-Downloading all 30 x 3 intervals (4h/12h/1d; 1h dropped per Phase 0) for 2021-07 to
-2026-07 confirmed real ragged coverage, not just a hypothetical:
-
-| symbol | first bar | last bar | note |
+| Symbol | First bar | Last bar | What happened |
 |---|---|---|---|
-| LUNA | 2021-07-01 | 2022-05-13 | Terra/UST collapse - died as intended, this is the canonical example the universe was built to catch |
-| MATIC | 2021-07-01 | 2024-09-11 | Binance delisted the MATIC perpetual around the POL migration |
-| EOS | 2021-07-01 | 2025-05-21 | Binance delisted the EOS perpetual |
-| FTT | 2022-04-15 | 2026-06-30 | listed ~9 months after the panel start, not delisted (FTT stayed listed through the FTX collapse, just collapsed in price) - a late-listing example rather than a died-mid-series one |
-| all other 26 | 2021-07-01 | 2026-06-30 | full coverage |
+| LUNA | 2021-07-01 | 2022-05-13 | The Terra/UST collapse — died as intended, the canonical case this universe was built to include |
+| MATIC | 2021-07-01 | 2024-09-11 | Perpetual delisted around the POL migration |
+| EOS | 2021-07-01 | 2025-05-21 | Perpetual delisted |
+| FTT | 2022-04-15 | 2026-06-30 | Listed nine months after the panel starts; never delisted (it stayed listed through the FTX collapse, it just collapsed in price) |
+| the other 26 | 2021-07-01 | 2026-06-30 | Full coverage |
 
-Confirms notebook 2's known archive gap still applies at klines granularity: SOL and
-XRP are both missing 2022-03-01 to 2022-04-03 (~128h combined across two gap segments,
-not the continuous 120h window notebook 2 described from the tick-aggregated feed, but
-the same underlying Binance archive hole). `min_cross_section=10` absorbs this cleanly
-- 28 of 30 symbols are still available at every bar in that window, so cross-sectional
-ranking is unaffected; it would matter if the panel were much smaller.
+Notebook 002's known archive gap persists: SOL and XRP are both missing 2022-03-01 to 2022-04-03.
+Requiring at least 10 symbols present before computing any cross-sectional rank absorbs this
+cleanly — 28 of 30 symbols are still available at every bar in that window.
 
-At 4h: 252,053 panel rows across 30 symbols, 2021-07-01 to 2025-07-01 (holdout excluded).
-At 12h: 84,036 rows. At 1d: 42,033 rows.
+Panel sizes with the holdout excluded: 252,053 rows at 4h, 84,036 at 12h, 42,033 at 1d.
 
-## Phase 2 - Feature library
+The holdout period begins 2025-07-01 and is enforced in the data loader itself, not by
+discipline: any request reaching past that date raises an error unless a flag is explicitly
+passed, which happens in exactly one place in the whole run.
 
-New `src/features.py`. Every raw feature is per-symbol and strictly causal (rolling
-windows computed with polars' trailing `rolling_mean`/`rolling_std`, momentum via
-`shift()` only); `apply_per_symbol` partitions the panel by symbol before applying any
-of them so a rolling window can never cross a symbol boundary (BTC's vol window
-picking up ETH's trailing bars, say). `forward_return` (the target, `shift(-horizon)`)
-is the one function in the module that's deliberately *not* causal and is documented
-as such - it must never appear on the feature side of a model.
+## The features
 
-Built, in the priority order from the guardrails:
+Every feature is computed per symbol and is strictly causal — rolling windows trail, momentum uses
+past shifts only, and the panel is partitioned by symbol before any window is applied so a
+rolling window can never pick up a different symbol's bars. The one deliberately non-causal
+function is the forward return, which is the prediction target and must never appear on the
+feature side.
 
-1. **Order flow** - `taker_buy_ratio`, `order_flow_imbalance` (signed, in [-1, 1]),
-   `avg_trade_size` (volume/count), plus rolling z-scores (20/60 bar windows) of
-   imbalance, avg trade size, and trade count. All from columns already in the
-   cached klines (`taker_buy_volume`, `count`) that notebooks 1/2 never touched.
-2. **Seasonality** - hour-of-day and day-of-week, cyclically (sin/cos) encoded so a
-   linear model doesn't see hour 23 and hour 0 as far apart. Noted in the docstring
-   that hour-of-day degenerates at 12h/1d bars - screening (Phase 4) will show that
-   directly rather than hardcoding it away here.
-3. **Realized vol** - rolling std of log returns at three windows (8/24/96 bars),
-   vol-of-vol (rolling std of the short-window vol), and a vol-regime ratio
-   (short-window vol / long-window vol).
-4. **Momentum / mean-reversion** - cumulative log return over 1/4/12 bars and its
-   negation, carried over as the notebook-2 baseline to beat.
-5. **Funding rate** - not skipped. Added `data.download_funding_rate_range`
-   (Binance's live `/fapi/v1/fundingRate`, paginated by `fundingTime` since there's
-   no bulk historical archive for it like klines have) and
-   `features.add_funding_rate_feature`, which joins it onto bars via a **backward
-   asof join** so a bar only ever sees funding published at or before its own close.
-   Downloaded successfully for all 30 symbols, 2021-07 to 2025-07 (4,383 rows/symbol
-   for the continuously-listed ones; ragged for LUNA/FTT matching their klines
-   coverage) - well inside the 30-minute time-box.
+1. **Order flow** — taker-buy ratio, signed order-flow imbalance, average trade size, plus
+   rolling z-scores of imbalance, trade size and trade count. All derived from columns already
+   present in the cached bar data that notebooks 001 and 002 never touched.
+2. **Seasonality** — hour of day and day of week, encoded as sine/cosine pairs so a linear model
+   doesn't treat hour 23 and hour 0 as far apart.
+3. **Realised volatility** — rolling standard deviation of log returns at three windows (8, 24
+   and 96 bars), volatility-of-volatility, and a short-over-long volatility regime ratio.
+4. **Momentum and mean reversion** — cumulative log return over 1, 4 and 12 bars, and its
+   negation. Carried over from notebook 002 as the baseline to beat.
+5. **Funding rate** — joined onto bars with a backward as-of join, so a bar only ever sees
+   funding that was published at or before its own close. Downloaded for all 30 symbols across
+   the full period.
 
-Cross-sectional variants (`_cs_demean`, `_cs_z`) computed per-timestamp across the
-whole panel - what the pooled ranking model in Phase 5 actually consumes, so a fitted
-weight means the same thing regardless of a symbol's own scale.
+All features also have cross-sectionally demeaned and standardised variants, computed per
+timestamp across the panel, so a fitted weight means the same thing regardless of an individual
+symbol's scale.
 
-### Tests (`tests/test_features.py`, 9 passing)
+Two tests guard this. **Causality under truncation:** recompute every feature on a truncated
+history; every row that still exists must produce an identical value. If truncating the future
+changes a past value, that feature was using the future. **A lookahead tripwire:** on synthetic
+random-walk data with no implanted signal, no feature's correlation with next-bar return may
+exceed 0.10 — notebook 001b's implausible Sharpe of 8.89 was exactly this kind of bug.
 
-- **Causality under truncation**: every raw feature, recomputed on a truncated
-  history, must produce identical values for every row that still exists - if
-  truncating the future changed a past value, that feature was using the future.
-  This is the concrete form of "assert no lookahead with an explicit shift test."
-- **Lookahead magnitude tripwire**: on synthetic random-walk data with no implanted
-  signal, every raw feature's correlation with next-bar return must stay under 0.10
-  - the guardrail's own example (notebook 1b's Sharpe 8.89) was exactly a `shift()`
-  bug producing a similarly implausible bar-level correlation.
-- Formula checks (order-flow-imbalance bounds and formula, momentum vs. manual log
-  return, mean-reversion as momentum's negation), a cross-sectional z-score check
-  (zero mean / unit std per bar), a funding-rate backward-asof-join causality check,
-  and an end-to-end `build_feature_panel` smoke test.
+## How signals are screened
 
-## Phase 3 - IC harness
+The screening metric is the **information coefficient**: the per-timestamp Spearman rank
+correlation between a feature and the forward return, taken across symbols.
 
-Added to `research.py`:
+This is the right metric for a dollar-neutral book because it never compares one timestamp to
+another. BTC and ETH moving together within a bar is absorbed inside that bar's single
+correlation rather than counted as two independent observations.
 
-- **`cross_sectional_ic`** - per-timestamp Spearman IC of a prediction against forward
-  return, across symbols. This is the right metric for a dollar-neutral book: it never
-  compares different timestamps to each other, so BTC and ETH moving together within
-  one bar is absorbed inside that bar's single IC_t rather than counted as two
-  independent data points. `cross_sectional_ic_stats` then summarizes the resulting
-  IC_t series with `newey_west_tstat` (Bartlett-kernel HAC), because a feature built
-  from a W-bar rolling window makes IC_t itself autocorrelated out to about W lags -
-  the naive i.i.d. standard error of the mean would understate that.
-- **`panel_ic`** - Spearman IC stacked over every (symbol, bar) row, with a
-  Driscoll-Kraay-style standard error: average the rank-product within each timestamp
-  first (so a heavily-populated bar doesn't outweigh a thin one and symbols within a
-  bar aren't treated as independent), then apply the same Newey-West machinery across
-  that per-timestamp series. `naive_tstat` (assuming all `n_obs` rows are i.i.d.) is
-  reported alongside for contrast - it's the number that would be badly overstated if
-  reported on its own, which is exactly the guardrail's warning about panel IC.
-- **`ic_stability`** - rolling mean IC, per-year IC breakdown, and fraction of months
-  with positive mean IC, since stability outranks magnitude for deciding what to trust.
+Two corrections matter for the significance test:
 
-### Tests (`tests/test_ic_harness.py`, 7 passing)
+- A feature built from a W-bar rolling window makes the IC series itself autocorrelated out to
+  roughly W lags, so the naive standard error understates the noise. All t-statistics use a
+  Newey-West (HAC) correction with the lag set to roughly each feature's own lookback.
+- When correlations are stacked over every (symbol, bar) row rather than per timestamp, the
+  rank products are first averaged within each timestamp — so a heavily populated bar doesn't
+  outweigh a thin one, and symbols within a bar aren't treated as independent — before the same
+  HAC machinery is applied.
 
-- `newey_west_tstat` matches a plain t-test at lag=0 on i.i.d. data, and produces a
-  visibly smaller |t-stat| than the naive calculation on a strongly autocorrelated
-  (AR(1), rho=0.9) series with the same marginal variance - confirming the HAC
-  correction actually does something, not just that it runs.
-- Synthetic panels with a known implanted IC (target = true_ic * pred + orthogonal
-  noise): both `cross_sectional_ic` and `panel_ic` recover a mean IC within a
-  reasonable band of the true value with a clearly significant t-stat (>5), while a
-  true_ic=0 panel comes back with |IC| < 0.1 and |t-stat| < 3.
-- `panel_ic`'s clustered+HAC t-stat is asserted to not exceed the naive i.i.d. one by
-  more than a small margin on data with real cross-sectional/temporal structure - the
-  whole point of the correction is that it should be equal or smaller, never larger.
-- `ic_stability` on a strong, constant-sign synthetic signal reports >90% positive
-  months, and an empty-panel edge case returns NaN stats rather than raising.
+Stability is tracked alongside magnitude: rolling mean IC, a per-year breakdown, and the fraction
+of months with positive mean IC. Stability outranks magnitude for deciding what to trust.
 
-## Phase 4 - IC screening
+### A bug found by running the screen
 
-Screened all 27 raw candidate features (`src/research/tmp/screen_features.py`) across
-all 3 surviving intervals (4h/12h/1d; 1h dropped in Phase 0) against `fwd_return_1`,
-using `cross_sectional_ic`. Newey-West lag set per-feature to roughly its own lookback
-window (20/60 bars for the z-scored order-flow features, the window itself for
-momentum/mean-reversion/realized-vol, 1 bar for anything with no rolling window).
-**81 configs evaluated total, every one logged to `src/research/tmp/config_log.jsonl`**
-(27 features x 3 intervals) - this is the true count the deflated Sharpe in Phase 6
-must use.
+The zero-variance guard — skip a bar if the prediction or target has no cross-sectional spread —
+tested for standard deviation *exactly* equal to zero. Floating-point summation leaves a residual
+around 1e-16 on a genuinely constant cross-section, so the guard silently never fired and the bar
+leaked through as a missing value instead of being skipped, corrupting the mean IC and t-statistic
+for any affected feature. Fixed with a tolerance rather than exact equality. It was caught by the
+screen producing an all-missing result for hour-of-day at daily bars, not by a unit test.
 
-### Bug found during screening
+### A structural finding: seasonality is invisible to this method
 
-The zero-variance guard in `cross_sectional_ic` (skip a bar if pred or target has no
-cross-sectional spread that bar) compared `np.std(x) == 0` exactly. Floating-point
-summation leaves a residual of ~1e-16 on a *genuinely* constant cross-section rather
-than exactly 0.0, so the guard silently failed to fire and the bar leaked through as
-`ic = NaN` instead of being skipped - corrupting `mean_ic`/`nw_tstat` for every such
-feature. Fixed with a `< 1e-12` tolerance instead of exact equality. Caught by running
-the screen itself (`hour_sin` at 1d bars came back all-NaN), not by a unit test -
-added no regression test for it since the fix is a one-line tolerance change covered
-implicitly by every screening result no longer being NaN.
+Hour-of-day and day-of-week come back undefined at every interval, and that is correct rather
+than broken. They are properties of the *timestamp*, identical for every symbol at a given bar, so
+they have exactly zero cross-sectional variance by construction. Cross-sectional IC only measures
+whether a feature ranks symbols correctly *against each other*; a market-wide seasonal effect, if
+one exists, is invisible to it by design. It would show up in a directional strategy, not a
+dollar-neutral one.
 
-### A structural finding, not a bug: seasonality is invisible to cross-sectional IC
+### What survived
 
-`hour_sin/cos` and `dow_sin/cos` come back `NaN` at every interval, and this is
-correct, not broken: day-of-week and hour-of-day are properties of the *timestamp*,
-identical for every symbol at a given bar - so they have exactly zero cross-sectional
-variance by construction, at any interval. Cross-sectional IC only ever measures
-whether a feature ranks symbols correctly *relative to each other*, and a market-wide
-seasonality effect (if one exists) is invisible to that by design - it would show up
-in a directional/beta strategy's IC, not a dollar-neutral one. Worth remembering for
-"what to test next."
+**81 configurations were evaluated** (27 features × 3 intervals), and every one was logged, since
+the deflation calculation later depends on the true count. **34 survived** a filter of
+|t| > 3 together with a consistent sign across years. Momentum and mean reversion at a given
+window are exact sign-flips of the same feature, so they always survive or fail together and are
+listed once:
 
-### Ranked IC table (surviving |t| > 3 AND consistent sign across years)
-
-**34 of 81 configs survive.** Grouped by underlying signal (momentum_W and
-mean_reversion_W are sign-flips of the same feature, so they always survive or fail
-together and are listed once):
-
-| feature family | best interval | mean IC | NW t-stat | % positive months | notes |
+| Signal family | Best interval | Mean IC | t-stat (HAC) | % positive months | Notes |
 |---|---|---|---|---|---|
-| mean_reversion_1 (= -momentum_1 = -log_return) | 4h | +0.042 | 14.2 | 93.8% | strongest and most stable signal found; survives at 4h/12h/1d |
-| realized_vol_8/24/96 (negative) | 4h | -0.038 (vol_24) | -11.4 | 8-17% | high recent vol -> lower forward return; survives at all 3 intervals |
-| vol_of_vol_96 (negative) | 4h | -0.028 | -8.9 | 12.5% | survives at 4h/12h |
-| mean_reversion_4 | 4h | +0.035 | 12.1 | 93.8% | survives at 4h/12h/1d |
-| mean_reversion_12 | 4h | +0.029 | 10.0 | 95.8% | survives at 4h/12h/1d |
-| funding_rate (negative) | 4h | -0.0095 | -4.4 | 31.3% | weak but survives at 4h only |
+| Mean reversion, 1 bar | 4h | +0.042 | 14.2 | 93.8% | Strongest and most stable found; survives at all three intervals |
+| Realised vol (negative) | 4h | −0.038 | −11.4 | 8–17% | High recent volatility predicts lower forward return; survives at all three |
+| Vol-of-vol, 96 bar (negative) | 4h | −0.028 | −8.9 | 12.5% | Survives at 4h and 12h |
+| Mean reversion, 4 bar | 4h | +0.035 | 12.1 | 93.8% | Survives at all three |
+| Mean reversion, 12 bar | 4h | +0.029 | 10.0 | 95.8% | Survives at all three |
+| Funding rate (negative) | 4h | −0.0095 | −4.4 | 31.3% | Weak; survives at 4h only |
 
-Everything else - order flow imbalance/taker-buy-ratio, avg trade size, vol regime,
-funding_rate_z20 - fails the filter at every interval (either |t| < 3, or sign flips
-across years, or both). Full 81-row table with every feature/interval/mean IC/t-stat/
-year-by-year breakdown is in `config_log.jsonl`.
+Everything else — order-flow imbalance, taker-buy ratio, average trade size, the volatility regime
+ratio, the funding-rate z-score — fails at every interval on either significance, sign
+consistency, or both.
 
-Max |mean IC| observed across all 81 configs was 0.073 (count_z60 at 1d, which failed
-the sign-consistency filter anyway) - **nothing tripped the 0.10 lookahead tripwire.**
-The mean-reversion and realized-vol families sit at 0.03-0.06, above the guardrail's
-stated "normal" range of 0.01-0.03 but well clear of the tripwire; both are
-well-documented, unsurprising effects (short-horizon mean reversion / bid-ask-bounce
-microstructure, and a vol-regime effect) rather than a red flag, but Phase 6's
-backtest is exactly where a real signal this size either survives costs or turns out
-to be too fast/thin to trade profitably - noted as something to watch, not assumed.
+The largest absolute mean IC anywhere in the 81 was 0.073, so **nothing tripped the 0.10 lookahead
+tripwire**. The surviving families sit at 0.03–0.06, above the 0.01–0.03 range that's typical but
+well clear of the tripwire. Both are well-documented effects (short-horizon mean reversion and
+bid-ask bounce; a volatility-regime effect) rather than a red flag — but a signal this size is
+exactly the case where the backtest decides whether it survives costs or is simply too fast and
+too thin to trade.
 
-## Phase 5 - Portfolio construction
+## Portfolio construction
 
-Added to `research.py`:
+The pieces, each applied once and left alone rather than tuned per backtest:
 
-- **`panel_walk_forward_splits`** - the multi-symbol analogue of `walk_forward_splits`,
-  built by delegating to it (folds computed over unique timestamps, not raw row
-  position) so the fold-boundary logic isn't duplicated. This is what makes a pooled
-  model possible without leaking: splitting a stacked (symbol, bar) panel by row
-  position would let some symbols' bar-t rows land in train while others at the same
-  bar land in test, even though they're the same instant. Verified by test that every
-  timestamp's rows are entirely on one side of the boundary.
-- **`vol_normalized_target`** - `fwd_return_1 / realized_vol_t` as the regression
-  target instead of raw return, so training loss stops being dominated by high-vol
-  bars/eras (2022) at the expense of everything else.
-- **`vol_targeted_size`** - `clip(pred, -1, 1) * (vol_target / vol_t)`: continuous
-  position size instead of `sign(pred)`. Since the model predicts the vol-normalized
-  target, `pred` is already in "predicted move per unit of that bar's own vol" units,
-  so clipping to [-1, 1] is a natural risk cap (never bet bigger than a 1-sigma-
-  equivalent move) and the `vol_target/vol_t` scaling keeps realized vol roughly
-  constant across symbols/regimes - a risk-management effect, applied once and left
-  alone, not something to tune per backtest.
-- **`dollar_neutral_weights`** - per-bar: rank symbols by prediction, take the top/
-  bottom `top_frac` as long/short legs (stripping whatever's common to the whole
-  cross-section that bar, i.e. crypto beta, since both legs only ever bet on relative
-  ranking), weight *within* each leg proportionally to `vol_targeted_size` (or equally
-  if no size given), normalize so long sums to `+gross/2` and short to `-gross/2`, then
-  clip each symbol to `max_position_per_symbol`. Clipping can only shrink gross
-  exposure, never breach the target, so no separate total-gross-cap step was needed.
-- **`portfolio_turnover`** / **`portfolio_trade_frame`** / **`add_portfolio_costs`** /
-  **`portfolio_metrics`** - the multi-symbol analogues of Phase 0's
-  `add_trading_costs`/`stitched_metrics`, reusing the same cost math and
-  `_series_metrics`/`cost_summary` helpers rather than duplicating them. Turns a
-  weights panel + forward returns into one portfolio-level bar return series with
-  gross and net (fee-charged) variants, ready for the same reporting Phase 6 uses.
+- **Panel-aware walk-forward splitting.** Folds are computed over unique timestamps, not raw row
+  positions. Splitting a stacked panel by row position would put some symbols' bar-*t* rows in
+  training and others from the same instant in test.
+- **A volatility-normalised target.** The model predicts forward return divided by that bar's
+  realised volatility, so training loss stops being dominated by high-volatility eras (2022) at
+  the expense of everything else.
+- **Continuous, volatility-targeted sizing** rather than `sign(prediction)`. Because the model
+  predicts a vol-normalised quantity, the prediction is already in units of "move per unit of that
+  bar's own volatility", so clipping it to [−1, 1] is a natural risk cap — never bet more than a
+  one-sigma-equivalent move — and scaling by target-vol over current-vol keeps realised risk
+  roughly constant across symbols and regimes.
+- **Dollar-neutral weights.** Each bar, rank symbols by prediction and take the top and bottom
+  20% as the long and short legs. Because both legs only bet on relative ranking, whatever is
+  common to the whole cross-section that bar — crypto beta — is stripped out. Weights within each
+  leg are proportional to the vol-targeted size, normalised so the long leg sums to +0.5 gross and
+  the short to −0.5, then each symbol is capped at 25% of the book. Capping can only shrink gross
+  exposure, so no separate total-gross step is needed.
 
-### Tests (`tests/test_portfolio.py`, 9 passing)
+## Backtest configurations, declared before running
 
-Dollar-neutral weights are net-zero and within the gross cap every bar; only the
-top/bottom `top_frac` symbols get nonzero weight and the split is on the right side of
-the ranking; `max_position_per_symbol` actually caps; leg weights scale proportionally
-to a given size column; turnover charges a symbol's entry and exit but not the held
-middle bar; `portfolio_trade_frame` matches a hand-computed weighted sum; net metrics
-never exceed gross; `vol_targeted_size` clips before scaling; and the walk-forward
-split test described above.
+All three use one pooled linear model across all symbols (not one per symbol), fitted on
+cross-sectionally standardised features, with a volatility-normalised target, 20% long/short
+fractions, gross exposure 1.0, a 25% per-symbol cap, 4bp taker fee plus 1bp slippage, and rolling
+walk-forward folds of roughly one year training to one quarter testing.
 
-## Phase 6 - Backtest configs (pre-declared before running)
-
-Also added to `research.py` in support of this phase: `bootstrap_ci` (generic
-percentile bootstrap CI of a mean), `equal_weight_basket_returns` (the buy-and-hold
-baseline for a cross-sectional book - see below), and `random_dollar_neutral_metrics`
-(a null baseline that goes through the exact same `dollar_neutral_weights` /
-`portfolio_trade_frame` pipeline as the real strategy, just with random instead of
-model-based ranking - stronger than a simple coin-flip baseline).
-
-Per the screening result, momentum_W and mean_reversion_W are exact sign-flips of each
-other (and log_return == momentum_1 exactly), so only one representation of that
-family is used per config to avoid feeding a linear model two perfectly
-anti-correlated columns. All three configs: pooled `nn.Linear` model (one model across
-all symbols, not per-symbol) on the `_cs_z` cross-sectionally-standardized feature
-variants, target = `fwd_return_1 / realized_vol_24` (vol-normalized), position size =
-`clip(pred, -1, 1) * (vol_target / realized_vol_24)` with `vol_target` fixed as the
-training panel's median `realized_vol_24`, `dollar_neutral_weights` with
-`top_frac=0.2`, `gross_exposure=1.0`, `max_position_per_symbol=0.25`, taker fee 4bps +
-1bp slippage, `panel_walk_forward_splits` rolling with roughly 1 year train / 1 quarter
-test, 300 training epochs (grid-work cap). Declared now, before any run:
-
-| # | interval | features (mean_reversion_{1,4,12}, realized_vol_{8,24,96}, vol_of_vol_96, funding_rate where it survived) |
+| # | Interval | Features |
 |---|---|---|
-| 1 | 4h  | mean_reversion_1, mean_reversion_4, mean_reversion_12, realized_vol_8, realized_vol_24, realized_vol_96, vol_of_vol_96, funding_rate |
-| 2 | 12h | mean_reversion_1, mean_reversion_4, mean_reversion_12, realized_vol_8, realized_vol_24, realized_vol_96, vol_of_vol_96 |
-| 3 | 1d  | mean_reversion_1, mean_reversion_4, mean_reversion_12, realized_vol_8, realized_vol_24, realized_vol_96, vol_of_vol_96 |
+| 1 | 4h | Mean reversion 1/4/12, realised vol 8/24/96, vol-of-vol 96, funding rate |
+| 2 | 12h | Mean reversion 1/4/12, realised vol 8/24/96, vol-of-vol 96 |
+| 3 | 1d | Mean reversion 1/4/12, realised vol 8/24/96, vol-of-vol 96 |
 
-Each will also be re-run at origin offsets of 0/7/14/21 days for robustness (12
-evaluations total: 3 configs x 4 offsets, offset=0 being the headline result); every
-one gets appended to `config_log.jsonl` alongside Phase 4's 81, since they are
-genuinely separate configurations fit and evaluated, and the final deflated Sharpe
-must reflect that true total, not just the 3 "headline" configs.
+Each is also re-run at fold-grid start offsets of 0, 7, 14 and 21 days. Every one of those 12
+evaluations counts as a separate trial for the deflation, alongside the 81 from screening.
 
 ### Results
 
-Ran as declared. `config_log.jsonl` ended up with **95 total lines, not 93**: two
-extra `cfg3_1d`/offset-0 entries came from a debugging run (see "bug found" below) -
-logged anyway per "no exceptions, no undercounting," since a fit-and-evaluate that
-happened is a trial that happened, bug or not.
+The log ended with **95 trials, not 93** — two extra entries came from a debugging run. They were
+counted anyway, since a fit-and-evaluate that happened is a trial that happened, bug or not.
 
-| config | offset 0d | offset 7d | offset 14d | offset 21d | gross (offset 0) |
+Annualised Sharpe, net of costs:
+
+| Config | Offset 0d | Offset 7d | Offset 14d | Offset 21d | Gross (offset 0) |
 |---|---|---|---|---|---|
-| cfg1_4h  | -1.94 | -4.20 | -3.91 | -3.10 | +0.95 |
-| cfg2_12h | +0.42 | -2.45 | -1.12 | -0.96 | +1.32 |
-| cfg3_1d  | -0.29 | -1.15 | -1.66 | -0.45 | +0.43 |
+| 4h | −1.94 | −4.20 | −3.91 | −3.10 | +0.95 |
+| 12h | **+0.42** | −2.45 | −1.12 | −0.96 | +1.32 |
+| 1d | −0.29 | −1.15 | −1.66 | −0.45 | +0.43 |
 
-(Sharpe, net of costs, annualized.) Same origin-shift instability notebook 2 found:
-cfg2_12h is the only positive headline result, and it flips to -2.45 just one week
-later on the fold grid - a result that depends on exactly where the walk-forward grid
-happens to start isn't a result. cfg1_4h and cfg3_1d are negative net of costs at
-every offset tried. Every config's **gross** Sharpe is positive (0.43 to 1.32) - the
-IC-screened signal is real enough to show up before costs, and transaction costs are
-what kill it, exactly the failure mode Phase 0 was built to catch.
+The same origin instability notebook 002 found. The 12h configuration is the only positive
+headline result, and it drops to −2.45 from moving the fold grid one week. The 4h and 1d
+configurations are negative at every offset.
 
-**Baselines** (offset-0 OOS window, each config against its own basket):
+Crucially, **every configuration's gross Sharpe is positive** (0.43 to 1.32). The screened signal
+is real enough to appear before costs; costs are what kill it. That is precisely the failure mode
+the cost model was built to expose.
 
-| config | strategy net | basket buy-hold | always-short-basket | random (200 seeds, same costs) mean / p90 |
+**Against baselines** (offset 0, each against its own basket):
+
+| Config | Strategy net | Basket buy-and-hold | Always-short basket | Random ranking (200 seeds), mean / p90 |
 |---|---|---|---|---|
-| cfg1_4h  | -1.94 | -0.06 | +0.06 | -10.40 / -9.55 |
-| cfg2_12h | +0.42 | +0.05 | -0.05 | -3.51 / -2.79 |
-| cfg3_1d  | -0.29 | +0.00 | -0.00 | -1.61 / -0.93 |
+| 4h | −1.94 | −0.06 | +0.06 | −10.40 / −9.55 |
+| 12h | +0.42 | +0.05 | −0.05 | −3.51 / −2.79 |
+| 1d | −0.29 | +0.00 | −0.00 | −1.61 / −0.93 |
 
-The random baseline (identical portfolio construction and cost model, random instead
-of model-based ranking) is *always* substantially worse than the real strategy - the
-model is doing something, just not enough to turn a profit net of costs except
-transiently at one config/offset combination. Buy-and-hold's own basket Sharpe is
-near zero over these particular OOS windows (unlike the full-history BTC B&H numbers
-in `002_walk_forward_multi_asset.md` - a dollar-neutral book's fair comparison is a
-diversified basket, not a single levered-beta bet, and this basket happened to be
-roughly flat over these specific windows).
+The random baseline runs through the identical portfolio construction and cost model with random
+instead of model-based ranking — a much stronger null than a coin flip. The real strategy beats it
+comfortably every time. The model *is* doing something; it just isn't enough to profit net of
+costs, except transiently at one configuration and offset. The basket's own Sharpe is near zero
+over these windows, unlike the full-history buy-and-hold numbers in notebook 002 — the fair
+comparison for a dollar-neutral book is a diversified basket, not a single levered directional
+bet.
 
-**Degenerate-bet check**: 0% of folds degenerate across all 3 configs x 4 offsets (48
-fold-fits total) - every fitted model's weights genuinely respond to its features
-rather than collapsing to a constant directional bet. Rules out that specific failure
-mode; doesn't rescue the Sharpe.
+**Degeneracy:** 0 of 48 fold-fits collapsed to a constant directional bet. That failure mode is
+ruled out; it doesn't rescue the Sharpe.
 
-**Bootstrap 95% CI on per-fold excess return (strategy net minus basket), offset 0**:
+**Bootstrap 95% intervals on per-fold excess return over the basket** (offset 0): 4h
+[−0.35, +0.07], 12h [−0.21, +0.30], 1d [−0.34, +0.28]. All three contain zero. Fold-by-fold win
+rates against the basket were 27%, 45% and 60% — only the daily configuration beat its basket in a
+majority of folds, and its Sharpe is still negative.
 
-- cfg1_4h: [-0.35, +0.07]
-- cfg2_12h: [-0.21, +0.30]
-- cfg3_1d: [-0.34, +0.28]
+**Deflated Sharpe**, using the true 95-trial count: for the 12h configuration, the only positive
+headline result, **P(true Sharpe > 0 | best of 95 trials) = 3.4%**. That is higher than notebook
+002's 0.69%, but combined with the origin-shift sign flip and an interval containing zero, it
+doesn't change the conclusion.
 
-All three include zero. Combined with fold-by-fold win rates against basket of 27%,
-45%, and 60% respectively (only cfg3_1d beats its basket in a majority of folds, and
-its Sharpe is still negative) - none of the three configs can reject "no real edge"
-this way either.
+**Realised turnover cost** came in far below the illustrative worst case: roughly 1.5–2.1% a year
+at 4h, 0.33–0.37% at 12h, 0.17–0.21% at 1d. A volatility-targeted, ranked long/short book trades
+much less than a bar-by-bar sign-flipping strategy. Costs still flip the 4h and 1d configurations
+from gross-positive to net-negative.
 
-**Deflated Sharpe**, using the true 95-config count from `config_log.jsonl` and each
-config's own offset-0 per-period Sharpe/n_obs: cfg2_12h (the only positive headline
-result) gets P(true Sharpe > 0 | best of 95 trials) = **3.4%**. cfg1_4h and cfg3_1d,
-being negative, deflate to even less (0.0000005% and 0.15% respectively - deflated
-Sharpe on a negative input is close to meaningless as a "how good is this" number, but
-confirms neither looks good even before the correction). 3.4% is higher than notebook
-2's 0.69%, but still low enough, combined with the origin-shift sign flip and a
-bootstrap CI that includes zero, that it doesn't change the conclusion.
+### A bug found during backtesting
 
-**Turnover/fee drag actually realized** (vs. Phase 0's illustrative sanity check):
-cfg1_4h ~1.5-2.1%/yr, cfg2_12h ~0.33-0.37%/yr, cfg3_1d ~0.17-0.21%/yr - all far below
-Phase 0's worst-case 40%-flip-rate illustration, because a vol-targeted, ranked
-long/short book trades far less often than a bar-by-bar sign-flipping strategy. Costs
-still matter enough to flip cfg1_4h and cfg3_1d from gross-positive to net-negative.
+Dividing forward return by realised volatility divides by exactly zero whenever a symbol's
+trailing volatility is 0 — a frozen or pinned price. The clearest case is LUNA's final bars after
+the Terra collapse, where the symbol stayed listed at a near-zero, barely-moving price. This
+produced infinite training targets that corrupted training silently until every fold Sharpe came
+back undefined. Fixed by dropping bars with essentially zero realised volatility (2.7–2.8% of
+rows), which carry no usable vol-normalised signal anyway.
 
-### Bug found during this phase
+## The holdout, spent once
 
-The vol-normalized target (`fwd_return_1 / realized_vol_24`) divides by exactly zero
-for bars where a symbol's realized vol over its trailing 24-bar window is 0.0 - a
-frozen/pinned price (the clearest example: LUNA's last few bars post-Terra-collapse,
-where Binance kept the symbol listed at a near-zero, barely-moving price). This
-produced +-inf targets that corrupted training silently until `describe_linear_model`
-and the fold Sharpes came back all-NaN. Fixed by dropping bars with
-`realized_vol_24 <= 1e-12` before training (2.7-2.8% of rows across all three
-intervals) - these bars carry no usable vol-normalized signal anyway.
+The 12h configuration — the highest headline net Sharpe — was run completely unchanged on a panel
+extended through 2026-07-01. Same features, same hyperparameters, same fold grid, same training
+length. Reusing the same grid means the fold boundaries simply continue forward; only folds whose
+*entire* test window falls at or after 2025-07-01 were evaluated.
 
-## Bottom line so far
+That yields **three folds fully inside the holdout**, covering 2025-08-17 to 2026-05-17 (546
+bars). The grid's fixed 91-day step doesn't tile the holdout year exactly, so a stretch at each
+end falls outside any complete fold. Reported as-is rather than re-gridded to force full coverage.
 
-**No validated edge**, matching `002_walk_forward_multi_asset.md`'s conclusion, now
-demonstrated cross-sectionally across 30 symbols with real transaction costs rather
-than on one symbol gross of fees. The IC-screened mean-reversion/realized-vol signal
-is real enough to be gross-profitable at every interval tried, but costs erase it at
-4h and 1d, and the one config that survives costs at its headline offset (12h,
-Sharpe +0.42) fails every robustness check that matters: it flips sharply negative
-under a one-week origin shift, its bootstrap CI on excess return includes zero, and
-its deflated Sharpe of 3.4% means the best of 95 trials still isn't distinguishable
-from what noise produces at that search width.
-
-## Phase 7 - Holdout, spent once
-
-Ran cfg2_12h (highest headline net Sharpe in Phase 6) completely unchanged - same
-features, same hyperparameters, same `panel_walk_forward_splits(train_bars=730,
-test_bars=182, origin_offset=0)` grid, same 300 training epochs - on a panel extended
-through 2026-07-01 (`load_universe_panel(..., allow_holdout=True)`, the only place in
-this run that flag is ever passed). Reusing the exact origin_offset=0 fold grid means
-the walk-forward boundaries already established in Phase 6 for the pre-holdout period
-simply continue forward; only the folds whose *entire* test window falls at or after
-2025-07-01 were evaluated.
-
-That grid produces **3 folds fully inside the holdout**, covering 2025-08-17 through
-2026-05-17 (546 bars). The grid's fixed 91-day step doesn't tile the holdout year
-exactly, so 2025-07-01 to 2025-08-17 and 2026-05-17 to 2026-07-01 fall outside any
-complete fold and aren't included - reported as-is, not stretched or re-gridded to
-force full-year coverage.
-
-One caught-and-fixed bug in this phase: the vol-normalization divisor had the same
-zero-realized-vol issue as Phase 6 (3,682 rows dropped here, a larger fraction than
-Phase 6 since the extended range includes more of LUNA's frozen post-collapse tail);
-same fix (drop rows with `realized_vol_24 <= 1e-12`).
-
-| metric | value |
+| Metric | Value |
 |---|---|
-| Sharpe, net of costs | **-0.47** |
+| Sharpe, net of costs | **−0.47** |
 | Sharpe, gross | +0.74 |
-| basket buy-hold Sharpe (same window) | -1.79 |
-| random-ranking baseline (200 seeds), mean / p90 | -4.17 / -2.75 |
-| win rate vs basket (folds) | 2/3 |
-| degenerate-bet fraction | 0/3 |
-| bootstrap 95% CI, excess return vs basket | [-0.17, +0.50] |
+| Basket buy-and-hold, same window | −1.79 |
+| Random ranking (200 seeds), mean / p90 | −4.17 / −2.75 |
+| Folds beating the basket | 2 of 3 |
+| Degenerate fits | 0 of 3 |
+| Bootstrap 95% CI, excess return vs basket | [−0.17, +0.50] |
 
-The holdout year net Sharpe is **negative**, consistent with the Phase 6 conclusion
-that this config's positive headline result doesn't hold up. Gross is positive again
-(+0.74) - the same "signal is real pre-cost, costs erase it" pattern as every other
-result in this run. The basket itself had a rough year (Sharpe -1.79, crypto broadly
-down over this window) and the random-ranking baseline was worse still (-4.17 mean),
-so the strategy did beat both naive alternatives on a relative basis (2 of 3 folds
-beat the basket, and comfortably beat the random null) - it just didn't clear zero
-net of its own costs. The bootstrap CI on excess return includes zero, same as every
-other result in this run: can't reject "no real edge" here either, even though the
-point estimate happens to be positive this time (a reminder of how wide these
-intervals are with only 3 holdout folds).
+The holdout year is **negative net of costs**, consistent with everything above. Gross is positive
+again (+0.74) — the same "signal is real pre-cost, costs erase it" pattern as every other result
+here. The basket itself had a rough year and the random baseline was worse still, so the strategy
+did beat both naive alternatives in relative terms; it simply didn't clear zero after paying for
+itself. The interval on excess return contains zero, as everywhere else, though the point estimate
+happens to be positive this time — a reminder of how wide these intervals are on three folds.
+
+## Reproducibility check, and what it revealed
+
+Two inference assumptions were revisited: normality in the deflated Sharpe, and independent
+resampling in the bootstrap.
+
+Reproducing the backtest turned up a defect in the analysis itself. The deflated Sharpe values
+above were computed by hand from the logged Sharpe and observation counts, and the per-bar net
+return series the moment corrections need was never saved. Worse, the model fitting was never
+seeded, so re-running an identical configuration is methodologically identical but not a bit-exact
+replay — unlike notebook 002, which reproduced exactly.
+
+**Re-running the three configurations produced different headline numbers.** Same code, same data,
+same folds, different random initialisation:
+
+| Config | Original net Sharpe | Rerun net Sharpe |
+|---|---|---|
+| 4h | −1.94 | −2.32 |
+| 12h | **+0.42** | **−1.22** |
+| 1d | −0.29 | −1.16 |
+
+The 12h configuration — the only one ever net-positive at its headline setting — **flips negative
+on a fresh run of the exact same configuration.** It had already failed the origin shift, the
+bootstrap interval and the deflation; now it also fails to reproduce its own headline number. That
+is a second, independent route to the same conclusion.
+
+**Deflated Sharpe under real moments**, 95 trials throughout:
+
+| Config | Skew | Kurtosis | Normal assumption, original Sharpe | Real moments, rerun Sharpe |
+|---|---|---|---|---|
+| 4h | +6.25 | 189.3 | 0.0000005% | 0.00000050% |
+| 12h | +0.26 | 11.7 | 3.4% | 0.00032% |
+| 1d | −0.44 | 10.1 | 0.15% | 0.00065% |
+
+The 4h configuration's kurtosis of 189 reflects a handful of extreme fold-level blowups in a book
+rebalanced every four hours. Nothing here is normally distributed, and the deflated probability is
+unmeasurably small under either assumption.
+
+Those two columns confound two separate effects — the moment correction and the rerun's worse
+starting Sharpe. Isolating the moment correction alone, holding the rerun's Sharpe fixed: 4h moves
+from 0.0000000105% to 0.0000005%, 12h from 0.00030% to 0.00032%, 1d from 0.00071% to 0.00065%.
+Real moments move the number by less than an order of magnitude in every case, and the direction
+isn't consistent — it depends on the sign of skew relative to the sign of the Sharpe, not on a
+uniform "fat tails always look worse".
+
+**Bootstrap intervals**, original versus rerun. The block-length heuristic selected length 1 for
+all three — the same finding as notebook 002, since these 10–11-point fold series don't show enough
+autocorrelation to warrant longer blocks, so the block and independent bootstraps agree:
+
+| Config | Original | Rerun |
+|---|---|---|
+| 4h | [−0.35, +0.07] | [−0.30, −0.03] |
+| 12h | [−0.21, +0.30] | [−0.28, +0.12] |
+| 1d | [−0.34, +0.28] | [−0.33, +0.17] |
+
+The 4h interval no longer contains zero — but it is entirely *negative*, meaning this run is
+confident the configuration underperforms its basket. The opposite of an edge.
 
 ## Bottom line
 
-**No validated edge**, holdout included. Every stage of this run
-told the same story: an IC-screened, statistically real (if modest) mean-reversion /
-realized-vol signal exists in the cross-sectional panel and is gross-profitable at
-every interval and in the holdout year, but transaction costs consistently erase it,
-the one config that looked good net of costs at its headline setting didn't survive
-an origin shift of a single week, and the holdout - spent once, unchanged, no
-retuning - came back Sharpe -0.47. This matches `002_walk_forward_multi_asset.md`'s
-conclusion and extends it: the fix for single-asset noise (more breadth via a
-cross-sectional book) and the fix for gross-return blindness (Phase 0's cost model)
-were both real improvements to the methodology, and neither one turned up a tradeable
-edge.
+**No validated edge, holdout included.** Every stage told the same story: a statistically real if
+modest mean-reversion and volatility signal exists in the cross-sectional panel and is
+gross-profitable at every interval and in the holdout year, but transaction costs consistently
+erase it; the one configuration that cleared costs at its headline setting didn't survive a
+one-week shift in the fold grid, didn't survive deflation for search width, and didn't even
+survive being run again; and the holdout, spent once with no retuning, came back at −0.47.
+
+The two methodological fixes — breadth through a cross-sectional book, and honest costs — were
+both real improvements. Neither produced a tradeable edge.
 
 ## What to test next
 
-- **Funding rate at scale.** Only weakly and narrowly survived screening here (4h
-  only, |t|=4.4, best-effort implementation). Carry is historically the most robust
-  crypto signal; a dedicated notebook using the full futures funding history (not
-  just what happened to be time-boxed here) with proper carry construction (e.g.
-  funding-rate-weighted basis trades) might do better than treating it as one more
-  cross-sectional feature among many.
-- **Slower rebalancing / lower turnover.** cfg1_4h and cfg3_1d were gross-positive but
-  lost to costs; cfg2_12h (middling turnover) is the one that came closest net. Worth
-  trying deliberately lower-turnover variants (e.g. rebalance every N bars instead of
-  every bar, or a wider no-trade band) rather than more intervals.
-- **Seasonality, properly.** Documented in Phase 4 that hour-of-day/day-of-week are
-  structurally invisible to cross-sectional IC (identical across symbols at a given
-  bar) - if seasonality is real in crypto, it needs a directional/beta-exposed
-  backtest to even be measurable, which is a fundamentally different validation
-  path than everything else in this run.
-- **Regime-conditioning the mean-reversion/vol signals.** Both surviving families are
-  vol-related (mean reversion at short horizons, negative realized vol). Worth
-  testing whether they're specifically a high-vol-regime phenomenon (e.g. only fit
-  during the 2022 drawdown) rather than a stable year-round effect - the per-year IC
-  breakdown in `config_log.jsonl` would answer this directly and wasn't fully
-  exploited here.
-- **A genuinely lower-cost venue or maker-only execution.** All costs here assumed
-  taker fees; if maker fills are realistic for this turnover profile, cfg2_12h's
-  economics could look different - worth quantifying rather than assuming.
+- **Funding rate at scale.** It only weakly and narrowly survived screening here (4h only,
+  |t| = 4.4). Carry is historically the most robust crypto signal, and a dedicated study using
+  the full funding history with proper carry construction — funding-weighted basis trades rather
+  than one cross-sectional feature among many — could do considerably better.
+- **Slower rebalancing.** The 4h and 1d configurations were gross-positive and lost to costs; the
+  middling-turnover 12h one came closest. Deliberately lower-turnover variants (rebalance every N
+  bars, or widen the no-trade band) are more promising than more intervals.
+- **Seasonality, measured properly.** It is structurally invisible to cross-sectional IC. If it is
+  real, it needs a directional backtest, which is a different validation path entirely.
+- **Regime-conditioning.** Both surviving families are volatility-related. Whether they are
+  specifically a high-volatility phenomenon rather than a stable year-round effect is answerable
+  directly from the per-year breakdown already logged.
+- **Maker execution.** All costs here assume taker fees. If maker fills are realistic at this
+  turnover, the economics could look different — worth quantifying rather than assuming.
 
-## Inference correction
-
-Same two fixes as `002_walk_forward_multi_asset.md`: real skew/kurtosis instead of the
-normal-distribution default in `deflated_sharpe_prob`, and a block bootstrap
-alongside the i.i.d. one for the excess-return CIs.
-
-**Bug found reproducing this phase**: `backtest_configs.py`'s `run_config` never
-called `deflated_sharpe_prob` at all - the 3.4%/0.0000005%/0.15% figures above were
-computed by hand from `config_log.jsonl`'s logged `sharpe_net` and the offset-0
-`n_obs`, and the per-bar net return series the moments need was never persisted
-(`backtest_results.json` explicitly strips `stitched_trade_frame` before writing).
-Also, `train_predict_fold`'s `nn.Linear` is never seeded (`backtest_configs.py` calls
-`research.set_seed` nowhere), so re-running the identical config is methodologically
-identical but not a bit-exact replay - unlike notebook 2, which reproduced exactly.
-Recomputed by re-running each of the 3 pre-declared configs at origin_offset=0 only
-(`src/research/tmp/inference_correction.py`, same features/model/splits/cost model as
-`backtest_configs.py`) to recover a real per-bar net return series per config.
-
-**The rerun's own headline Sharpe moved** (unseeded training, not a methodology
-change - same code, same data, same splits, different random init):
-
-| config | original sharpe_net (offset 0) | rerun sharpe_net (offset 0) |
-|---|---|---|
-| cfg1_4h | -1.94 | -2.32 |
-| cfg2_12h | **+0.42** | **-1.22** |
-| cfg3_1d | -0.29 | -1.16 |
-
-cfg2_12h - the only config that was ever net-positive at its headline offset - flips
-negative on a fresh run of the exact same config. It already failed every robustness
-check in this doc (origin shift, bootstrap CI, deflated Sharpe); it now also fails to
-reproduce its own headline number. That's a second, independent way of reaching the
-same "no real edge" conclusion, not a change to it.
-
-**Deflated Sharpe, old (normal, original sharpe) vs new (real moments, rerun sharpe)**,
-n_trials=95 throughout:
-
-| config | skew | kurtosis | old: normal / original sharpe | new: real moments / rerun sharpe |
-|---|---|---|---|---|
-| cfg1_4h | +6.25 | 189.3 | 0.0000005% | 0.00000050% |
-| cfg2_12h | +0.26 | 11.7 | 3.4% | 0.00032% |
-| cfg3_1d | -0.44 | 10.1 | 0.15% | 0.00065% |
-
-cfg1_4h's kurtosis (189) reflects a handful of extreme fold-level blowups in a
-vol-targeted book rebalanced every 4h; nothing here is normal, and the deflated
-probability is unmeasurably small under either assumption. Because the rerun's own
-Sharpes are all more negative than the originally logged ones, the real-moment
-deflated Sharpe is computed on top of a worse starting point (cfg2_12h moved from
-"the one config with a real number to talk about" to a fourth decimal-place
-rounding error) - the two effects (real moments, and the rerun's own more negative
-Sharpe) aren't separable in the table above, so also isolating just the moment
-correction, holding the rerun's own Sharpe fixed: cfg1_4h 0.0000000105% -> 0.0000005%,
-cfg2_12h 0.00030% -> 0.00032%, cfg3_1d 0.00071% -> 0.00065%. Real moments move the
-number by less than an order of magnitude in every case - never material - and the
-direction isn't consistent (it depends on the sign of skew relative to the sign of
-the Sharpe, not a uniform "fat tails always look worse").
-
-**Bootstrap 95% CI on excess return, old (i.i.d., as originally reported) vs new
-(i.i.d. and block from the rerun - `research._auto_block_length` picked block length
-1 for all three, same finding as notebook 2: these 10-11-point fold-level series don't
-show enough autocorrelation for the heuristic to pick a longer block, so i.i.d. and
-block agree)**:
-
-| config | original (i.i.d.) | rerun (i.i.d. = block, length 1) |
-|---|---|---|
-| cfg1_4h | [-0.35, +0.07] | [-0.30, -0.03] |
-| cfg2_12h | [-0.21, +0.30] | [-0.28, +0.12] |
-| cfg3_1d | [-0.34, +0.28] | [-0.33, +0.17] |
-
-cfg1_4h's rerun CI no longer includes zero - but it's entirely negative, i.e. this
-rerun is confident cfg1_4h *underperforms* its basket, the opposite of an edge. cfg2
-and cfg3 both still include zero.
-
-**Conclusion unchanged, and if anything more overwhelming.** Every deflated-Sharpe
-number stays far below any credible threshold under both the old and new moment
-assumption, and the one config that ever cleared costs at its headline setting
-(cfg2_12h, +0.42) does not survive being run a second time with unchanged code. "No
-validated edge" stands.
+*Notebook: `src/research/003_cross_sectional_ic.ipynb`.*

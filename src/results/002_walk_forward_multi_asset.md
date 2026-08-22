@@ -1,126 +1,218 @@
-# Walk-Forward Multi-Asset - Results Summary
+# 002 — Walk-Forward Validation Across Multiple Assets
 
-## What
+## The question
 
-This notebook takes the linear return-prediction approach from notebook 1 and subjects it to rigorous validation: walk-forward testing over 5 years instead of one split, an origin-shift robustness check, a timeframe sweep, a large "try different things" grid search, weight inspection for degenerate constant bets, honest buy-and-hold benchmarking, deflated Sharpe correction for multiple testing, bootstrap confidence intervals, and a frozen-config test across 6 symbols.
+Notebook 001 produced apparently profitable results from a single train/test split on one symbol
+and one year of data, and flagged that those numbers could not be trusted. Does any of that
+apparent edge survive proper validation?
 
-## Why
+## What was done
 
-Notebook 1 found apparently profitable results from a single train/test split on one symbol/year, but explicitly flagged that these numbers weren't trustworthy without walk-forward validation, baseline comparisons, and protection against overfitting via many-config search. This notebook exists to apply exactly those checks and see whether any of notebook 1's apparent edge survives.
+The same linear return-prediction approach, put through every check notebook 001 said was
+missing:
 
-## How
+- **Walk-forward testing** over five years instead of a single split.
+- **An origin-shift check** — the identical configuration, with only the start date of the fold
+  grid moved by 0, 7, 14 and 21 days.
+- **A timeframe sweep** — 28 combinations of bar interval and train/test window length.
+- **A structured grid search** — 54 pre-declared combinations of features, loss function,
+  no-trade threshold and model form.
+- **Weight inspection on every fold**, to detect the constant-bet degeneracy that explained
+  notebook 001's headline result.
+- **A properly annualised buy-and-hold comparison** per symbol.
+- **Deflated Sharpe** across all 122 configurations searched in the notebook.
+- **Bootstrap confidence intervals** on excess return over buy-and-hold.
+- **A frozen-configuration test** applying the BTC winner unchanged to ETH, DOGE, SOL, XRP and BNB.
 
-Switched from tick-aggregated Binance data to pre-aggregated klines for tractability across 5 years and 6 symbols, then ran: an origin-shift check (same config, fold grid shifted by 0/7/14/21 days), a 28-combo timeframe/window sweep, a 54-combo "try different things" grid (features x loss x threshold x model), a weight/bias degenerate-bet check on every fold, a properly annualized buy-and-hold comparison per symbol, deflated Sharpe probability across all 122 configs searched, bootstrap CIs on excess return, and application of the frozen winning config unchanged across ETH/DOGE/SOL/XRP/BNB. A later inference correction re-ran the deflated Sharpe and bootstrap CI using real return moments (skew/kurtosis) and block bootstrapping instead of normal/i.i.d. assumptions.
+A later correction re-ran the deflated Sharpe and the bootstrap using the return series' real
+skew and kurtosis and a block bootstrap, instead of assuming normality and independence.
+
+## Data
+
+Notebooks 001a/001b downloaded raw trades and aggregated them into bars at load time. One
+symbol-year of ticks is about 12GB; five years across six symbols would run to hundreds of
+gigabytes. This notebook switched to pre-aggregated kline files instead — tens of kilobytes per
+symbol-month.
+
+The two feeds were reconciled before the switch: open and close match to about 1e-6 relative
+difference; high, low and volume differ by up to roughly 0.1%, most likely from differing
+trade-type inclusion between feeds. Not a blocker.
+
+Two data bugs surfaced and were fixed. The kline CSV schema was being inferred, and it failed on
+months where the volume column's early rows happened to look integer-valued and a later row
+carried a decimal — fixed with explicit schema overrides so nothing is guessed. And a fold
+containing zero losing trades returned `None` from a `.mean()` call and tripped an assertion,
+which was guaranteed to happen somewhere across dozens of folds.
+
+SOL and XRP are each missing the same 120 hours between February and April 2022. This is a real
+gap in the exchange's own archive for those two symbols, not a downloader fault — about 0.27% of
+bars, noted and not patched.
 
 ## Results
 
-No validated edge was found. The origin-shift check alone showed Sharpe flipping sign twice from moving the fold grid by three weeks (-1.29 to +0.07 to +0.0001 to -0.62). The best grid-search config (momentum features, huber loss, tanh model) had Sharpe 0.76, but deflated Sharpe probability of a true edge given 122 trials searched was only 0.69%, and its bootstrap CI on excess return over buy-and-hold included zero. It beat buy-and-hold in only 9 of 17 out-of-sample folds (a coin flip), and its own OOS monthly return was less than a third of BTC buy-and-hold's average monthly rate. Applied unchanged across 6 symbols, it beat buy-and-hold on some and lost on others with no consistent pattern. The later inference correction (real skew/kurtosis, block bootstrap) left all conclusions unchanged. Bottom line: no tradeable edge, but reusable walk-forward/deflated-Sharpe/baseline machinery for future notebooks.
+**No validated edge was found.**
 
-Notebook 1 fit a straight line on one train/test split of one symbol, one year of data. This notebook walk-forward validates over 5 years, shifts the fold grid to check it isn't an artifact, benchmarks against buy-and-hold properly, inspects every fitted model's weights for the "it's just a constant bet" failure, and runs the same frozen config across 6 symbols.
+### The origin-shift check alone is nearly decisive
 
-## Data source switch
+Same configuration (BTC hourly, 180-day train, 30-day test, rolling), only the fold grid's start
+date moved:
 
-Notebooks 1 and 2 download raw Binance trades and aggregate into bars at load time - one symbol-year of ticks is ~12GB, 5 years of 6 symbols that way would be hundreds of GB and hours of downloading. Switched to Binance's pre-aggregated klines files instead, tens of KB per symbol-month. Checked they agree with the tick-aggregated bars first: close/open match to ~1e-6 relative difference, high/low/volume differ by up to ~0.1% (probably differing trade-type inclusion between the two feeds), not a blocker. Klines used throughout.
+| Grid start offset | Sharpe |
+|---|---|
+| 0 days | −1.29 |
+| 7 days | +0.07 |
+| 14 days | +0.0001 |
+| 21 days | −0.62 |
 
-Found a bug along the way: klines CSV schema inference chokes on months where the volume column's early rows happen to look integer valued, then fails when a later row has a decimal. Fixed with explicit schema_overrides so parsing doesn't guess. Also fixed a crash in eval_model_performance - a fold with zero losing trades returned None from .mean() and the assert blew up, guaranteed to happen somewhere across dozens of folds.
+Nothing else changed. The sign flips twice from shifting the calendar alignment by up to three
+weeks. A result that only appears at one arbitrary alignment is not a result.
 
-SOL and XRP are each missing the same 120 hours in Feb-Apr 2022 - a real gap in Binance's own archive for those two symbols, not a downloader bug. ~0.27% of bars, noted and not corrected for.
+### Timeframe sweep
 
-## Origin shift
+28 combinations of bar interval (1h, 4h, 12h, 1d) against train/test window (from 90/30 up to
+365/180, both rolling and anchored), using a single mean-reversion feature. Sharpe ranged from
++1.06 (daily bars, 90/30 rolling) down to −0.79, with no dominant setting. Whatever wins is
+winning because it happened to suit this particular grid.
 
-Same baseline config (BTC 1h, 180d train / 30d test, rolling), only the fold grid's start date shifted by 0/7/14/21 days:
+### Grid search
 
-- offset 0: sharpe -1.29
-- offset 7: sharpe +0.07
-- offset 14: sharpe +0.0001
-- offset 21: sharpe -0.62
+54 pre-declared combinations: features (mean-reversion / momentum / combined) × loss
+(MSE / L1 / Huber) × no-trade threshold (0 / one taker fee / round trip) × model form (linear /
+tanh-bounded linear), on BTC 12-hour bars, 180-day train, 90-day test, rolling.
 
-Nothing else changed. Sign flips twice just from moving where the grid starts by up to three weeks. A result that only looks good on one specific calendar alignment isn't a result.
+Winner: momentum features, Huber loss, one-taker-fee threshold, tanh model. **Sharpe 0.76**,
+compounding to +411% across 17 folds, with 0% of folds flagged degenerate.
 
-## Timeframe sweep
+### Weight inspection
 
-28 combos of bar interval (1h/4h/12h/1d) x train/test window (90/30 up to 365/180, rolling and anchored), single mean-reversion feature. Sharpe ranged from +1.06 (1d bars, 90d/30d rolling) down to -0.79. No dominant setting - whatever wins is winning because it happened to fit this particular grid, not because that timeframe is structurally better.
+Every fold of both the baseline and the winning configuration was checked for whether the
+absolute bias term exceeded the largest contribution the feature itself ever made in that fold.
+When it does, the position never really depends on the feature — it is a constant long or short,
+which is exactly what notebook 001's "+34%" turned out to be.
 
-## Try different things grid
+Result: **0% degenerate**, everywhere. The weights were genuinely responsive to the feature in
+every fold. That does not establish an edge; it rules out one specific way of faking one.
 
-54 pre-declared combos: features (mean-reversion / momentum / combined) x loss (mse/l1/huber) x threshold (0 / 1x taker fee / round trip) x model (linear / tanh-bounded linear), BTC 12h bars, 180d/90d rolling. Winner: momentum features, huber loss, 1x taker threshold, tanh model. Sharpe 0.76, compound +411% over 17 folds, 0% degenerate.
+### Buy-and-hold, measured honestly
 
-## Weight/bias check
+Five-year BTC buy-and-hold: Sharpe 0.21, +75% compound. Year by year, though:
 
-Every fold of both the baseline and the winning grid config got inspected: is |bias| bigger than the max the feature's own contribution ever reaches in that fold. If so the position never actually depends on the feature, it's a constant long or short bet wearing a model costume - exactly what notebook 1's "always short" result turned out to be.
+| Year | Sharpe |
+|---|---|
+| 2021 | +0.98 |
+| 2022 | −1.64 |
+| 2023 | +2.14 |
+| 2024 | +1.42 |
+| 2025 | −0.18 |
+| 2026 (partial) | −1.70 |
 
-This time: 0% degenerate across every section, baseline and winning config both. The linear/tanh weights were genuinely responsive to the feature in every fold checked. Doesn't mean there's an edge, just rules out this specific failure mode.
+Rolling one-year compound return ranges from −71% to +166% purely on start date, and is positive
+in 61% of windows. Any single-period buy-and-hold comparison is exactly as fragile as the
+strategy number it is supposed to discipline.
 
-## Buy and hold - per year is noisy, wide average is not
+Because log returns add over time, dividing total log return by the number of years gives a true
+geometric average rate rather than an arithmetic mean of noisy annual percentages:
 
-Full 5yr BTC buy and hold: sharpe 0.21, +75% compound. But year by year:
-
-- 2021: sharpe +0.98
-- 2022: sharpe -1.64
-- 2023: sharpe +2.14
-- 2024: sharpe +1.42
-- 2025: sharpe -0.18
-- 2026 (partial): sharpe -1.70
-
-Rolling 1yr compound return ranges -71% to +166% depending purely on start date, positive in 61% of windows. Any single-period B&H comparison is exactly as fragile as the strategy numbers it's meant to benchmark against.
-
-Fix: since log returns are additive over time, total_log_return / years gives a true geometric average rate, not an arithmetic mean of noisy yearly percentages. BTC average annual: +11.84%. Average monthly: +0.94%. Same treatment across all six:
-
-| symbol | avg annual | avg monthly | sharpe |
+| Symbol | Avg annual | Avg monthly | Sharpe |
 |---|---|---|---|
 | BNB | +13.7% | +1.08% | 0.21 |
 | SOL | +17.2% | +1.33% | 0.16 |
 | BTC | +11.9% | +0.94% | 0.21 |
 | XRP | +9.6% | +0.76% | 0.11 |
-| ETH | -5.7% | -0.49% | -0.08 |
-| DOGE | -21.6% | -2.01% | -0.27 |
+| ETH | −5.7% | −0.49% | −0.08 |
+| DOGE | −21.6% | −2.01% | −0.27 |
 
-Strategy's own OOS return put through the same treatment: average monthly +0.29% over its 50.2 month span, against BTC buy-and-hold's +0.94%/month over its full history. Buy and hold averaged more than 3x the strategy's monthly rate. Not close.
+The strategy's own out-of-sample return under the same treatment: **+0.29% per month** over its
+50.2-month span, against BTC buy-and-hold's **+0.94% per month**. Simply holding the asset earned
+more than three times the rate. Not close.
 
-Also checked always-long/short/flat and random (200 seeds): random baseline sharpe mean -0.02, std 0.48, 90% range [-0.80, +0.78]. The winning grid config's 0.76 sits outside that range on its own - but see deflated sharpe below for why that's not enough.
+Always-long, always-short, always-flat and random baselines were also run. Across 200 random
+seeds the random baseline had mean Sharpe −0.02, standard deviation 0.48, and a 90% range of
+[−0.80, +0.78]. The winning configuration's 0.76 sits just outside that range on its own — but
+see the deflation below for why that isn't enough.
 
-Fold by fold, the winning BTC config beat buy-and-hold in 9 of 17 out-of-sample folds. Coin flip.
+Fold by fold, the winning configuration beat buy-and-hold in **9 of 17** out-of-sample folds. A
+coin flip.
 
-## Deflated sharpe
+### Deflated Sharpe and bootstrap
 
-122 configs searched total across the notebook (28 timeframe + 16 origin shift + 54 grid + 24 symbol x interval). Picking the best of many noisy trials inflates its sharpe even with zero real edge, since you're reporting the max of N draws not one draw. Deflated sharpe corrects for this: P(true sharpe > 0 | best of 122 trials) = 0.69%. Not "unlikely" - indistinguishable from what noise's best-of-122 looks like.
+122 configurations were searched in total across the notebook (28 timeframe + 16 origin-shift +
+54 grid + 24 symbol × interval). Reporting the best of many noisy trials inflates it even with
+zero true edge, because what's being reported is the maximum of N draws rather than one draw.
+Correcting for that:
 
-Bootstrap 95% CI on strategy-minus-buy&hold excess return per fold: [-0.19, +0.14]. Includes zero, can't reject no real edge.
+**P(true Sharpe > 0 | best of 122 trials) = 0.69%.**
 
-## Multi-asset
+That is not "unlikely" — it is indistinguishable from what the best of 122 pure-noise trials
+looks like.
 
-Winning config frozen from BTC, applied unchanged to ETH/DOGE/SOL/XRP/BNB - no per-symbol retuning, that would just reintroduce the overfitting notebook 2 already showed. Beat its own buy-and-hold on BTC/SOL/DOGE/ETH (excess sharpe +0.64/+0.49/+0.39/+0.20), lost on BNB/XRP (-0.08/-0.61). Symbol x interval sharpe heatmap is a checkerboard, no consistent sign per symbol across intervals - the noise signature the heatmap was built to catch.
+The bootstrap 95% confidence interval on per-fold excess return (strategy minus buy-and-hold) is
+**[−0.19, +0.14]**, which contains zero.
 
-Cross-symbol correlation of fold returns mostly weak (|r| < 0.5, BTC-ETH 0.01, BTC-SOL 0.35, DOGE anti-correlated with most at -0.15 to -0.35). Not just one leveraged crypto-beta bet wearing six tickers, at least at fold granularity.
+### Across six symbols
+
+The winning configuration was frozen on BTC and applied unchanged to the other five, with no
+per-symbol retuning (which would simply reintroduce the overfitting notebook 001b already
+demonstrated). It beat its own buy-and-hold on BTC, SOL, DOGE and ETH (excess Sharpe +0.64, +0.49,
++0.39, +0.20) and lost on BNB and XRP (−0.08, −0.61). The symbol × interval Sharpe heatmap is a
+checkerboard with no consistent sign per symbol across intervals — precisely the noise signature
+the heatmap was built to detect.
+
+Cross-symbol correlation of fold returns is mostly weak (|r| < 0.5; BTC–ETH 0.01, BTC–SOL 0.35,
+DOGE anti-correlated with most at −0.15 to −0.35). At fold granularity this is not one leveraged
+crypto-beta bet wearing six tickers.
+
+## Correcting the inference assumptions
+
+Both the deflated Sharpe and the bootstrap above relied on assumptions that don't hold for crypto
+returns: normality (skew 0, kurtosis 3) for the first, and independent resampling for the second.
+Both were re-run with real inputs, and the notebook was re-executed end to end. It reproduced
+bit-for-bit — the retrained winning configuration's Sharpe of 0.07 and every downstream number
+matched the prior run exactly, confirming the seeding and deterministic-algorithm settings
+genuinely pin this notebook down.
+
+**Real moments of the winning configuration's own return series:** skew **+0.059** (essentially
+symmetric), kurtosis **8.56** (excess kurtosis +5.56 over the normal's 3 — heavily fat-tailed, as
+expected).
+
+**Deflated Sharpe, before and after** (same Sharpe 0.07, 122 trials, 3,060 observations):
+
+| Assumption | Skew | Kurtosis | P(true Sharpe > 0) |
+|---|---|---|---|
+| Normal | 0 | 3 | 0.69% |
+| Real moments | +0.059 | 8.56 | 0.69% |
+
+Unchanged at this precision. Near-zero skew means the skew term in the standard-error correction
+contributes almost nothing, and at a per-period Sharpe this close to zero the kurtosis term
+cannot move the headline. The correction matters when skew is large or the raw Sharpe is larger —
+notebook 003 contains a case where it does.
+
+**Bootstrap, independent versus block**, on fold-level excess return over the same 17 folds and
+the same seed:
+
+| Method | Block length | 95% CI |
+|---|---|---|
+| Independent resampling | 1 (n/a) | [−0.190, +0.135] |
+| Block bootstrap (auto length) | 1 | [−0.190, +0.135] |
+
+Identical. The autocorrelation-based rule selected block length 1 for this 17-point series — no
+significant autocorrelation was detectable at fold level, so the block bootstrap degenerates to
+the independent case. This does not mean autocorrelation is irrelevant in general (bar-level
+returns are visibly autocorrelated through volatility clustering); it means this particular
+17-point summary series doesn't show it strongly enough for the heuristic to lengthen the block.
+
+Both conclusions stand unchanged.
 
 ## Bottom line
 
-No validated edge found. Same conclusion as notebook 1, now with the tools to show it quantitatively instead of asserting it: a result that looks good by raw sharpe or beating a directional baseline falls apart under origin-shift robustness, deflated sharpe, bootstrap CI on excess return, fold-by-fold comparison, cross-asset generalization, and a fair per-month comparison against just holding the asset.
+No validated edge — the same conclusion as notebook 001, but now demonstrated quantitatively
+rather than asserted. A result that looks good on raw Sharpe, or on beating a directional
+baseline, falls apart under origin-shift robustness, deflation for the number of trials, a
+bootstrap interval on excess return, fold-by-fold comparison, cross-asset generalisation, and a
+fair per-month comparison against simply holding the asset.
 
-The walk-forward machinery (research.walk_forward_splits, walk_forward_run, describe_linear_model, deflated_sharpe_prob, the buy-and-hold/constant/random baselines) is reusable for whatever gets tried next. The bar it needs to clear is all of the above, not a good headline sharpe.
+What carries forward is the machinery: walk-forward splitting and running, model description and
+degeneracy checks, deflated Sharpe, and the buy-and-hold, constant and random baselines. The bar
+any future result has to clear is all of the above — not a good headline Sharpe.
 
-## Inference correction
-
-`deflated_sharpe_prob` and the fold-excess-return bootstrap CI above both used unexamined assumptions: normal returns (skew=0, kurtosis=3) for the former, i.i.d. resampling for the latter. Neither holds for crypto strategy returns. Re-ran both with real inputs, notebook re-executed end to end (fully reproducible - the retrained winning config's Sharpe, 0.07, and every downstream number matched the prior run bit-for-bit, confirming `research.set_seed(123)` plus `torch.use_deterministic_algorithms` actually pins this notebook down).
-
-**Real moments of the winning config's own per-period return series**: skew = **+0.059** (essentially symmetric), kurtosis = **8.56** (fisher=False; excess kurtosis +5.56 over the normal's 3 - heavily fat-tailed, as expected for crypto).
-
-**Deflated Sharpe, old vs new** (same sharpe=0.07, n_trials=122, n_obs=3060):
-
-| | skew | kurtosis | P(true Sharpe > 0) |
-|---|---|---|---|
-| old (normal assumption) | 0 | 3 | 0.69% |
-| new (real moments) | +0.059 | 8.56 | 0.69% |
-
-Unchanged at this precision. The near-zero skew means the skew term in `deflated_sharpe_prob`'s standard-error correction contributes almost nothing, and at a per-period Sharpe this close to zero the kurtosis term's effect on the deflation is too small to move the headline number. The correction matters more when skew is large or the raw Sharpe is larger - see notebook 3's cfg1_4h below for a case where it does.
-
-**Bootstrap CI, old (i.i.d.) vs new (block)**, fold-level excess return (strategy − buy&hold), same 17 folds, same seed/n_boot:
-
-| | block length | 95% CI |
-|---|---|---|
-| old (`bootstrap_ci`, i.i.d.) | 1 (n/a) | [-0.190, +0.135] |
-| new (`block_bootstrap_ci`, auto block length) | 1 | [-0.190, +0.135] |
-
-Identical. `research._auto_block_length`'s ACF-based rule picked block length 1 for this 17-observation fold-excess-return series - no significant autocorrelation was detected at the fold level, so the block bootstrap degenerates to the i.i.d. case here. This doesn't mean autocorrelation isn't a real concern in general (bar-level returns are visibly autocorrelated via volatility clustering); it means this particular fold-level summary series, with only 17 points, doesn't show it strongly enough for the heuristic to pick a longer block.
-
-**Conclusion unchanged.** Both the normal-assumption and real-moment deflated Sharpe sit at 0.69% - indistinguishable from noise's best-of-122 either way - and the bootstrap CI still includes zero either way. "No validated edge" stands.
+*Notebook: `src/research/002_walk_forward_multi_asset.ipynb`.*

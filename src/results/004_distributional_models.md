@@ -1,680 +1,566 @@
-# Distributional Models for Volatility and Regime - Results Summary
+# 004 — Distributional Models for Volatility and Regime
 
-## What
+## The question
 
-This notebook shifts away from predicting the direction of the next return (which notebooks 1-3 exhausted without finding an edge) and instead characterizes BTC's return distribution directly, then runs two forecasting contests: can distributional/statistical models forecast volatility (the second moment) better than trivial baselines, and can they identify persistent, informative market regimes. It covers descriptive stylized facts (fat tails, clustering, aggregational Gaussianity), a 7-rung volatility forecasting ladder (trailing std, EWMA, HAR-RV, range estimators, RV-distribution fits, GARCH, activity regression), and regime models (threshold, Gaussian mixture, HMM), with a trading application gated to run only if either contest produces a certified winner.
+Notebooks 001–003 all asked statistical tools to predict the **first moment** — the next return —
+and all three found nothing. Rather than keep trying variations on direction prediction, this
+notebook asks two questions those notebooks never asked:
 
-## Why
+1. Can distributional modelling forecast **volatility** better than the trivial baselines already
+   in use?
+2. Can it identify persistent **market regimes** that are informative about anything?
 
-Notebooks 1-3 all asked distributional/statistical tools to predict the first moment (next return) and all found nothing. Rather than keep trying variations on direction prediction, this notebook asks two questions those notebooks never asked: is volatility itself forecastable beyond naive baselines, and do statistically-defined regimes carry useful information (about risk, if not return)? These are framed as rigorous forecasting contests with proper scoring rules and significance tests, not as backtests, so a "win" here means something statistically real, not just a good-looking Sharpe.
+Both are judged as forecasting contests with proper scoring rules and significance tests, not as
+backtests. A win here has to be statistically real, not just a good-looking Sharpe. A trading
+application was pre-declared to run only if one of the two contests produced a certified winner.
 
-## How
+Primary asset: **BTC**, at all four bar intervals (1h, 4h, 12h, 1d), with findings frozen and
+transferred to ETH, SOL, DOGE, BNB and XRP where noted. Hourly bars are back in scope here —
+notebook 003 dropped them because their *transaction cost drag* was unviable, and a forecasting
+contest places no trades.
 
-Used BTC across all 4 bar intervals (1h/4h/12h/1d), transferring frozen findings to ETH/SOL/DOGE/BNB/XRP where noted. Phase 1 characterized stylized facts (fat tails via normal/Student-t/skew-t fits, aggregational Gaussianity, volatility clustering via waiting-time gamma fits, overdispersed trade activity, bounded observables, intrabar range vs. Brownian prediction, run-length memorylessness). Phase 3 ran a 7-rung volatility forecasting ladder scored by QLIKE and all-pairs Diebold-Mariano significance tests, plus a density-scoring comparison (log score, Kupiec/Christoffersen VaR coverage) for GARCH-t's own Student-t innovation distribution. Phase 4 fit and compared regime models (threshold, GMM, HMM-Gaussian/t) for state persistence and their ability to predict next-bar volatility and direction. Phase 5 (the trading application) was pre-declared to run only if Phase 3 or 4 produced a statistically certified winner.
+---
 
-## Results
+# Part 1 — What these series actually look like
 
-Phase 1 confirmed extreme, well-documented crypto stylized facts: normal distributions underestimate 5-sigma-day frequency by 2,400x-7,100x, fitted Student-t degrees of freedom sit near 2 (the edge of finite variance), and volatility clustering, overdispersed activity, and short-horizon mean-reversion are all statistically confirmed. In Phase 3, no single rung won the point-forecast (QLIKE) ladder outright at any interval - HAR-RV, range estimators, and GARCH-normal formed a statistically indistinguishable top cluster - but a narrower, real result emerged: GARCH-t's own Student-t innovation distribution gave a better log-score density forecast than any normal-density alternative at all 4 intervals (after fixing a lookahead bug in how its degrees-of-freedom parameter was scored), though its 5% VaR coverage was only well-calibrated at 12h/1d, not 1h/4h. In Phase 4, no regime model was formally certified as beating the naive threshold baseline (no significance test was built for that comparison), but every model at every interval robustly predicted next-bar volatility while never reliably predicting direction - a clean "regimes predict risk, not return" finding that replicated across all 5 transfer symbols. Since neither contest produced a certified winner, Phase 5 (the trading application) correctly did not run. Seven implementation bugs were found and fixed along the way, most notably an unlagged HAR feature that caused same-bar lookahead leakage.
+All numbers in this part are fit once on the full pre-holdout history. This is explicitly the
+"characterise the data" stage; everything from Part 2 onwards is rolling, refit and
+out-of-sample.
 
-Notebooks 1-3 all asked distributions to predict the first moment (next return) and all
-three found nothing. This notebook resets to single-asset, deliberately basic, and asks
-the two questions those notebooks never asked: can distributional modelling forecast
-**volatility** (the second moment) better than the trivial baselines already in use, and
-can it identify persistent **regimes** that are informative about anything? Both are
-judged as forecasting contests with proper scoring rules, not backtests - Phase 5 only
-runs if Phase 3 or 4 produces an actual winner.
+## Fat tails
 
-Primary asset: **BTC**, all 4 intervals (1h/4h/12h/1d). 1h is back in for this notebook
-(dropped in notebook 3 only because its *transaction-cost drag* was unviable - a
-volatility-forecasting contest places no trades, so that guardrail doesn't apply here).
-Frozen-and-transferred to ETH/SOL/DOGE/BNB/XRP where noted.
-
-Full machinery: `src/distributions.py` (`fit_rolling`, scoring rules - Phase 2, already
-built and committed separately) and `src/research/tmp/dist_lib.py` (notebook-4-specific
-feature engineering, forecasting rungs, GARCH/GMM/HMM from-scratch fits - this notebook's
-own shared library, mirroring how `backtest_configs.py` supported notebook 3).
-
-## Phase 1 - Descriptive: what these series actually look like
-
-All Phase 1 numbers are **fit once on the full pre-holdout history** (causal-to-date, not
-rolling - Phase 1 is explicitly the "characterize the data" phase; Phase 3/4 are where
-everything becomes a rolling, refit, out-of-sample forecast). BTC, all 4 intervals.
-
-### Fat tails
-
-| interval | n | normal (mu, sigma) | Student-t df | skew-t (a, b) | frac \|z\|>=5sigma (normal) | normal-implied | ratio obs/implied |
+| Interval | n | Normal (μ, σ) | Student-t df | Skew-t (a, b) | Observed \|z\| ≥ 5σ | Normal-implied | Ratio |
 |---|---|---|---|---|---|---|---|
-| 1h  | 35,064 | (3.2e-5, 0.00584) | **1.98** | (1.25, 1.27) | 0.00814% | 0.00000011% | **7,114x** |
-| 4h  | 8,766  | (1.3e-4, 0.01156) | **2.10** | (1.30, 1.34) | 0.00811% | 0.00000016% | **5,174x** |
-| 12h | 2,922  | (3.9e-4, 0.02060) | **2.23** | (1.32, 1.32) | 0.00959% | 0.00000027% | **3,582x** |
-| 1d  | 1,461  | (7.9e-4, 0.02881) | **2.88** | (1.39, 1.33) | 0.01711% | 0.00000717% | **2,388x** |
+| 1h | 35,064 | (3.2e−5, 0.00584) | **1.98** | (1.25, 1.27) | 0.00814% | 0.00000011% | **7,114×** |
+| 4h | 8,766 | (1.3e−4, 0.01156) | **2.10** | (1.30, 1.34) | 0.00811% | 0.00000016% | **5,174×** |
+| 12h | 2,922 | (3.9e−4, 0.02060) | **2.23** | (1.32, 1.32) | 0.00959% | 0.00000027% | **3,582×** |
+| 1d | 1,461 | (7.9e−4, 0.02881) | **2.88** | (1.39, 1.33) | 0.01711% | 0.00000717% | **2,388×** |
 
-A normal fit underestimates 5-sigma-day frequency by **2,400x to 7,100x** depending on
-interval - not "fat tails," a distribution that is simply the wrong model. Fitted
-Student-t degrees of freedom sit between 2 and 3 at every interval (df=2 is the edge of
-having a finite variance at all), consistent with the crypto-GARCH literature's finding
-that these are among the heaviest-tailed liquid asset return series traded.
+A normal distribution underestimates the frequency of five-sigma days by **2,400× to 7,100×**.
+That isn't "fat tails" — it is simply the wrong model. Fitted Student-t degrees of freedom sit
+between 2 and 3 at every interval, and df = 2 is the boundary at which variance stops being finite
+at all. These are among the heaviest-tailed liquid return series traded anywhere.
 
-**PIT/KS calibration** (KS statistic, p-value; small p rejects "this family's fit is
-well-calibrated"):
+**Goodness of fit** (Kolmogorov-Smirnov statistic and p-value; a small p rejects the claim that
+the fit is well-calibrated):
 
-| interval | normal | t | skew-t |
+| Interval | Normal | Student-t | Skew-t |
 |---|---|---|---|
-| 1h  | 0.108, p~0 | 0.0069, p=0.069 | 0.0118, p=0.0001 |
-| 4h  | 0.101, p~0 | 0.0164, p=0.017 | 0.0223, p=0.0003 |
-| 12h | 0.094, p~0 | 0.0253, p=0.047 | 0.0293, p=0.013 |
-| 1d  | 0.078, p~0 | 0.0270, p=0.231 | 0.0251, p=0.313 |
+| 1h | 0.108, p ≈ 0 | 0.0069, p = 0.069 | 0.0118, p = 0.0001 |
+| 4h | 0.101, p ≈ 0 | 0.0164, p = 0.017 | 0.0223, p = 0.0003 |
+| 12h | 0.094, p ≈ 0 | 0.0253, p = 0.047 | 0.0293, p = 0.013 |
+| 1d | 0.078, p ≈ 0 | 0.0270, p = 0.231 | 0.0251, p = 0.313 |
 
-Normal is rejected outright at every interval (KS statistic 0.08-0.11, p effectively
-zero). Student-t is not rejected at 1d (p=0.23) and is borderline elsewhere; skew-t is
-*not* an improvement over plain t on this data (worse or comparable KS at every interval,
-including a strict rejection at 1h/4h/12h) - BTC's estimated skew parameters (a, b) are
-close to symmetric (a~b), so the extra shape parameter buys calibration noise, not fit.
-**t is the best simple parametric fit found here; skew-t is not worth its complexity for
-BTC log returns specifically** (revisited in Phase 3 rung 5, where GARCH innovations are
-a different, conditional question).
+The normal is rejected outright everywhere. Student-t is not rejected at daily bars and is
+borderline elsewhere. **Skew-t is not an improvement on plain t** — it is worse or comparable at
+every interval, and strictly rejected at 1h, 4h and 12h. BTC's estimated skew parameters are close
+to symmetric, so the extra shape parameter buys calibration noise rather than fit. Plain
+Student-t is the best simple parametric description found here.
 
-A 2-component Gaussian scale mixture (EM) recovers a low-vol component (weight ~0.79,
-variance ~10x smaller) and a high-vol component (weight ~0.21) at 1h, with the pattern
-holding at all 4 intervals (weight on the high-vol component rises to ~0.44 at 1d as
-squeezing 5 years into ~1,461 daily bars puts more regime-switching inside a smaller
-sample) - this is volatility clustering, described as a static mixture rather than a
-dynamic process (Phase 4 makes it dynamic).
+A two-component Gaussian scale mixture separates a low-volatility component (weight ≈ 0.79,
+variance ~10× smaller) from a high-volatility one (weight ≈ 0.21) at hourly bars, with the pattern
+holding at every interval. The high-volatility weight rises to ≈ 0.44 at daily bars, because
+compressing five years into ~1,461 daily observations puts more regime switching inside a smaller
+sample. This is volatility clustering described as a static mixture; Part 3 makes it dynamic.
 
-### Aggregational Gaussianity
+## Returns become more normal as you aggregate — slowly
 
-Fitted t degrees of freedom **rise monotonically with interval**: 1.98 (1h) -> 2.10 (4h)
--> 2.23 (12h) -> 2.88 (1d). Returns become measurably more normal as you aggregate, the
-textbook aggregational-Gaussianity pattern - but crypto starts from an extreme baseline
-(df~2, barely inside "finite variance") and even at 1d is still far from Gaussian
-(df->infinity). Aggregating 24 hourly bars into one daily bar buys less than one
-additional degree of freedom's worth of normality.
+Fitted degrees of freedom rise monotonically with interval: **1.98 → 2.10 → 2.23 → 2.88** from
+hourly to daily. That is the textbook aggregational-Gaussianity pattern. But crypto starts from
+an extreme baseline and is still nowhere near Gaussian at daily bars. Aggregating 24 hourly bars
+into one daily bar buys less than a single additional degree of freedom's worth of normality.
 
-### Volatility clustering as a distributional statement
+## Volatility clustering, stated distributionally
 
-Waiting times between k-sigma moves, exponential vs gamma fit (gamma shape k<1 = the
-waiting-time distribution is over-dispersed relative to a memoryless Poisson process =
-big moves cluster):
+Waiting times between k-sigma moves, fit with a gamma distribution. A shape parameter below 1
+means waiting times are over-dispersed relative to a memoryless Poisson process — i.e. big moves
+cluster:
 
-| interval | k=2sigma gamma shape | k=2sigma KS(gamma) p | k=3sigma gamma shape | k=3sigma KS(gamma) p |
+| Interval | Shape (k = 2σ) | KS p (k = 2σ) | Shape (k = 3σ) | KS p (k = 3σ) |
 |---|---|---|---|---|
-| 1h  | 0.63 | 6e-25 | 0.52 | 2e-7 |
-| 4h  | 0.74 | 7e-6 | 0.64 | 0.070 |
+| 1h | 0.63 | 6e−25 | 0.52 | 2e−7 |
+| 4h | 0.74 | 7e−6 | 0.64 | 0.070 |
 | 12h | 0.80 | 0.088 | 0.67 | 0.275 |
-| 1d  | 0.85 | 0.390 | 0.66 | 0.944 |
+| 1d | 0.85 | 0.390 | 0.66 | 0.944 |
 
-Shape < 1 at every interval and every threshold - waiting times are over-dispersed,
-i.e. big moves genuinely cluster rather than arriving as a Poisson process, and even
-gamma (which already captures some of this) is itself rejected by KS at 1h/4h (its own
-functional form isn't quite right at high frequency, though it's a much better
-description than exponential - exponential KS statistics are 2-3x larger at every row,
-not tabulated in full here). Clustering is strongest at 1h and weakens, but never
-disappears, at 1d - the same aggregational pattern as the tail-index result above.
+Shape is below 1 at every interval and every threshold. Big moves genuinely cluster. Gamma itself
+is rejected at 1h and 4h — its functional form isn't quite right at high frequency — though it is
+a far better description than the exponential, whose KS statistics run 2–3× larger throughout.
+Clustering is strongest at hourly bars and weakens without disappearing at daily, the same
+aggregational pattern as the tail index.
 
-### Overdispersed activity
+## Trade activity is wildly over-dispersed
 
-Trade-count dispersion index (Var/Mean, Poisson predicts exactly 1):
+Dispersion index of trade counts (variance ÷ mean; a Poisson process predicts exactly 1):
 
-| interval | dispersion index | NB (n, p) |
+| Interval | Dispersion index | Negative binomial (n, p) |
 |---|---|---|
-| 1h  | 114,393 | (1.33, 8.7e-6) |
-| 4h  | 300,973 | (2.01, 3.3e-6) |
-| 12h | 617,751 | (2.94, 1.6e-6) |
-| 1d  | 891,044 | (4.08, 1.1e-6) |
+| 1h | 114,393 | (1.33, 8.7e−6) |
+| 4h | 300,973 | (2.01, 3.3e−6) |
+| 12h | 617,751 | (2.94, 1.6e−6) |
+| 1d | 891,044 | (4.08, 1.1e−6) |
 
-Dispersion indices in the hundreds of thousands, not near 1 - per NEW_PROMPT's own
-tripwire ("if it comes back near 1, suspect an aggregation bug"), this is the expected
-and correct result: trade counts are massively overdispersed, not remotely
-Poisson-shaped, and a negative binomial is a far better (though still imperfect - not
-KS-tested here since NB's discrete CDF makes exact KS awkward at this scale) description.
+Indices in the hundreds of thousands rather than near 1. Trade counts are not remotely
+Poisson-shaped, and a negative binomial is a much better description. (A value near 1 here would
+have indicated an aggregation bug, not a real finding.)
 
-### Bounded observables
+## Bounded quantities
 
-Beta fits to `taker_buy_ratio` and intrabar close position `(close-low)/(high-low)`:
+Beta fits to the taker-buy ratio and to where a bar closes within its own high–low range:
 
-| interval | taker_buy_ratio (a, b) | alpha+beta | intrabar_close_pos (a, b) | alpha+beta |
+| Interval | Taker-buy ratio (a, b) | a+b | Intrabar close position (a, b) | a+b |
 |---|---|---|---|---|
-| 1h  | fit failed (boundary obs) | - | fit failed (boundary obs) | - |
-| 4h  | (245.8, 247.7) | 493 | fit failed (boundary obs) | - |
+| 1h | fit failed | — | fit failed | — |
+| 4h | (245.8, 247.7) | 493 | fit failed | — |
 | 12h | (570.5, 574.9) | 1,145 | (1.45, 1.34) | 2.79 |
-| 1d  | (869.3, 875.8) | 1,745 | (1.35, 1.25) | 2.60 |
+| 1d | (869.3, 875.8) | 1,745 | (1.35, 1.25) | 2.60 |
 
-`taker_buy_ratio` is tightly concentrated near 0.5 (alpha~beta, alpha+beta growing with
-bar width - more trades per bar averages the ratio toward its mean, exactly what a
-sum-of-many-trades ratio should do) - buy/sell pressure is close to balanced in aggregate,
-consistent with a two-sided perpetual futures market. `intrabar_close_pos` has a much
-lower concentration (alpha+beta ~2.6-2.8, i.e. close to Uniform(0,1)'s alpha=beta=1) -
-where a bar closes within its own high-low range is close to uninformative, mildly
-U-shaped-avoiding (alpha,beta slightly >1 means mass pulls in from the 0/1 edges, not
-toward them). The 1h/4h "fit failed" cells are a real data-boundary effect, not a code
-bug: `distributions.py`'s beta fitter requires every observation strictly inside (0,1),
-and at finer bars, exact 0 or 1 ratios (a bar with taker volume = 0 or = total volume,
-or price never leaving its open==high==low corner) occur often enough in a 35k-row
-history that a single such bar kills a whole-history fit-once. Noted as a data
-granularity fact worth handling (winsorize or filter before fitting) if this Beta family
-is ever fit rolling in a later phase - it isn't used again in this notebook.
+The taker-buy ratio is tightly concentrated near 0.5, with concentration growing as bars widen —
+more trades per bar averages the ratio toward its mean, exactly as a sum-of-many-trades ratio
+should. Buying and selling pressure is close to balanced in aggregate, consistent with a two-sided
+perpetual futures market.
 
-### The intrabar range, distributionally
+Where a bar closes within its range is much less concentrated (a+b ≈ 2.6–2.8, against a uniform
+distribution's a = b = 1) — close to uninformative, with a slight pull away from the extremes.
 
-Normalized range `ln(high/low) / (full-sample close-to-close sigma)`, vs. the driftless
-Brownian prediction `E[range/sigma] = 2*sqrt(2/pi) ~ 1.596`:
+The failed fits at fine intervals are a data-boundary effect, not a code fault: the fitter requires
+every observation strictly inside (0, 1), and at hourly bars exact 0 or 1 values occur often
+enough in a 35,000-row history that a single such bar kills a whole-history fit. Worth
+winsorising if this family is ever fit rolling; it isn't used again here.
 
-| interval | observed/predicted excess |
+## The intrabar range is smaller than Brownian motion predicts
+
+Normalised range — log(high/low) divided by the full-sample close-to-close volatility — compared
+against the driftless Brownian prediction of 2√(2/π) ≈ 1.596:
+
+| Interval | Observed vs predicted |
 |---|---|
-| 1h  | -13.5% |
-| 4h  | -9.3% |
-| 12h | -8.7% |
-| 1d  | -6.1% |
+| 1h | −13.5% |
+| 4h | −9.3% |
+| 12h | −8.7% |
+| 1d | −6.1% |
 
-Crypto's intrabar range is **systematically smaller** than a driftless Brownian path
-predicts, at every interval, and the gap shrinks toward zero as bars widen. This runs
-against the naive intuition ("crypto jumps a lot, so range should be *larger* than
-Brownian") - the more likely explanation is intrabar mean-reversion / bid-ask-bounce
-microstructure (consistent with the run-length finding below) suppressing the realized
-high-low spread relative to what a pure random walk with the same close-to-close
-variance would produce. This is exactly the kind of departure NEW_PROMPT flags as
-"tells you in advance which range estimators will and won't work": Parkinson assumes
-this Brownian relationship holds and will be **biased low** here by construction; the
-drift-independent estimators (Rogers-Satchell, Yang-Zhang) don't share this specific
-assumption and are worth watching for whether they correct it (Phase 3).
+Crypto's intrabar range is **systematically smaller** than a driftless Brownian path predicts, at
+every interval, with the gap shrinking as bars widen. This runs against the naive intuition that
+crypto jumps a lot so its range should be larger. The likely explanation is intrabar mean
+reversion and bid-ask bounce suppressing the realised high–low spread relative to a pure random
+walk with the same close-to-close variance.
 
-### Gap vs. intrabar decomposition
+This has a direct, testable consequence: the Parkinson range estimator assumes exactly this
+Brownian relationship, so it will be **biased low here by construction**. The drift-independent
+estimators (Rogers-Satchell, Yang-Zhang) don't share that specific assumption. Part 2 checks
+whether the difference shows up.
 
-| interval | gap std | intrabar std | gap t-df | intrabar t-df |
+## Gaps versus intrabar movement
+
+| Interval | Gap std | Intrabar std | Gap t-df | Intrabar t-df |
 |---|---|---|---|---|
-| 1h  | 1.35e-5 | 0.00584 | 1.99 | 1.98 |
-| 4h  | 1.89e-5 | 0.01157 | 1.99 | 2.05 |
-| 12h | 2.37e-5 | 0.01880 (rs) / 0.02061 | 1.99 | 2.23 |
-| 1d  | 1.27e-5 | 0.02882 | 1.99 | 2.89 |
+| 1h | 1.35e−5 | 0.00584 | 1.99 | 1.98 |
+| 4h | 1.89e−5 | 0.01157 | 1.99 | 2.05 |
+| 12h | 2.37e−5 | 0.02061 | 1.99 | 2.23 |
+| 1d | 1.27e−5 | 0.02882 | 1.99 | 2.89 |
 
-Gap std is **400-2,000x smaller** than intrabar std at every interval - perpetual
-futures trade continuously, so there is essentially no overnight/inter-bar gap here (as
-expected), confirming the premise behind Yang-Zhang's gap term being small for this
-instrument. The gap series' fitted t-df sits at ~1.99 at *every* interval, which is not
-a real finding - the gap series is so close to a point mass at 0 that scipy's t.fit
-optimizer converges near its lower search boundary regardless of interval; a
-near-degenerate variance makes the shape parameter poorly identified. Intrabar std, by
-contrast, tracks total std almost exactly (return is almost entirely intrabar move) and
-its t-df reproduces the same aggregational-Gaussianity pattern as the total-return fit
-above.
+Gap volatility is **400–2,000× smaller** than intrabar volatility. Perpetual futures trade
+continuously, so there is essentially no inter-bar gap — which confirms the premise behind
+Yang-Zhang's gap term being negligible for this instrument.
 
-### Run lengths
+The gap series' fitted degrees of freedom sitting at ≈ 1.99 at *every* interval is not a finding:
+the series is so close to a point mass at zero that the optimiser converges near its lower search
+boundary regardless. A near-degenerate variance leaves the shape parameter unidentified.
 
-| interval | mean run length | implied geometric p | KS vs geometric |
+## Sign runs are not memoryless
+
+| Interval | Mean run length | Implied geometric p | KS vs geometric |
 |---|---|---|---|
-| 1h  | 1.88 | 0.532 | p ~ 0 |
-| 4h  | 1.83 | 0.547 | p ~ 0 |
+| 1h | 1.88 | 0.532 | p ≈ 0 |
+| 4h | 1.83 | 0.547 | p ≈ 0 |
 | 12h | 1.89 | 0.529 | p = 0.047 |
-| 1d  | 1.90 | 0.526 | p ~ 0 |
+| 1d | 1.90 | 0.526 | p ≈ 0 |
 
-Mean run length matches the geometric distribution's own mean by construction (p is
-fit from it), but the *shape* is rejected at every interval (p<0.05, and effectively 0 at
-1h/4h/1d) - actual sign-run lengths are not geometric, they carry more short-run
-structure than a memoryless coin flip would produce. This is the distributional
-expression of exactly the short-horizon mean-reversion effect notebook 3's cross-
-sectional IC screen found (`mean_reversion_1`, the single strongest surviving feature
-there) - not a new discovery, but a second, independent distributional confirmation of
-the same effect using none of notebook 3's machinery.
+The mean matches the geometric distribution by construction, since p is fitted from it — but the
+*shape* is rejected at every interval. Actual sign-run lengths carry more short-run structure than
+a memoryless coin flip produces.
 
-### Stylized-fact summary table
+This is the distributional expression of exactly the short-horizon mean-reversion effect notebook
+003's cross-sectional screen identified as its single strongest surviving signal. Not a new
+discovery, but an independent confirmation using none of that notebook's machinery.
 
-| stylized fact | test | headline number | crypto does this? |
+## Summary
+
+| Stylised fact | Test | Headline | Does crypto do this? |
 |---|---|---|---|
-| Fat tails | normal vs t vs skew-t MLE + 5sigma frequency | t df~2-2.9; 5sigma freq 2,400-7,100x normal-implied | **yes, extreme** |
-| Aggregational Gaussianity | t-df across intervals | 1.98 -> 2.88 (1h->1d) | **yes, but slow** - still far from normal at 1d |
-| Volatility clustering | gamma vs exponential waiting times | gamma shape 0.52-0.85 (<1 = clustering) | **yes, at every interval** |
-| Overdispersed activity | count Var/Mean | 114k-891k (Poisson predicts 1) | **yes, extreme** |
-| Bounded taker-buy-ratio | Beta alpha+beta | 493-1,745, tightly centered on 0.5 | **balanced, low dispersion** |
-| Bounded intrabar close position | Beta alpha+beta | 2.6-2.8 (near-Uniform) | **close to uninformative** |
-| Intrabar range vs Brownian | normalized range excess | -6% to -14% (range **smaller** than Brownian) | **yes, systematic departure** |
-| Gap vs intrabar tails | std ratio, t-df | gap std ~400-2000x smaller; gap df uninformative (near-degenerate) | **gap negligible on perps, as expected** |
-| Run-length memorylessness | KS vs geometric | rejected at 3/4 intervals (p<0.05) | **no - excess short-run reversal** |
+| Fat tails | Normal / t / skew-t fits + 5σ frequency | t df ≈ 2–2.9; 5σ moves 2,400–7,100× the normal-implied rate | **Yes, extreme** |
+| Aggregational Gaussianity | t-df across intervals | 1.98 → 2.88 | **Yes, but slow** — still far from normal at daily |
+| Volatility clustering | Gamma vs exponential waiting times | Gamma shape 0.52–0.85 | **Yes, at every interval** |
+| Over-dispersed activity | Count variance ÷ mean | 114k–891k (Poisson predicts 1) | **Yes, extreme** |
+| Bounded taker-buy ratio | Beta concentration | 493–1,745, centred on 0.5 | **Balanced, low dispersion** |
+| Bounded close position | Beta concentration | 2.6–2.8 (near-uniform) | **Close to uninformative** |
+| Intrabar range vs Brownian | Normalised range excess | −6% to −14% (range *smaller*) | **Yes, systematic departure** |
+| Gap vs intrabar tails | Std ratio | Gap 400–2,000× smaller | **Gap negligible, as expected** |
+| Run-length memorylessness | KS vs geometric | Rejected at 3 of 4 intervals | **No — excess short-run reversal** |
 
-## Phase 2 - Machinery
+---
 
-`src/distributions.py` (families: normal/t/skewt/poisson/nbinom/beta via `fit_rolling`;
-scoring: `log_score`, `crps`, `pit_values`/`pit_ks_test`, `qlike`, `kupiec_test`,
-`christoffersen_independence_test`/`christoffersen_conditional_coverage_test`) and
-`tests/test_distributions.py` (77 tests total in the repo, distributions.py's own suite
-already passing) were built and committed in advance of this notebook (commit 37fdc8b)
-and were not modified while building it - see that commit for their own writeup.
+# Part 2 — The volatility forecasting contest
 
-`src/research/tmp/dist_lib.py` is this notebook's own supporting library (feature
-engineering from the full OHLCV bar, the Phase 3 forecasting-rung implementations, and
-the from-scratch GARCH(1,1)/Gaussian-mixture/HMM fits used in Phase 3-4 - none of these
-are in `distributions.py` because they're forecasting-contest machinery specific to this
-notebook, not the general-purpose fitting/scoring primitives `distributions.py` provides).
+Seven methods, evaluated against each other at all four intervals. None was skipped:
 
-**Bug found and fixed**: `dist_lib.fit_once` (the causal-to-date single fit used
-throughout Phase 1) looked up fitted parameter columns by their bare name (e.g.
-`"loc"`), but `distributions.fit_rolling` names its output columns
-`f"{col}_{family}_{name}"` (e.g. `"log_return_normal_loc"`) - every Phase 1 call failed
-with a `ColumnNotFoundError` before this was fixed. This is a bug in the notebook-4-local
-`dist_lib.py`, not in the committed `distributions.py`/its tests, so no change to the
-Phase 2 deliverable or its test suite was needed; fixed in place before any Phase 1
-number was produced.
+0. **Trailing standard deviation** (8, 24 and 96-bar windows)
+1. **Exponentially weighted moving average** (λ = 0.94)
+2. **Heterogeneous autoregressive realised volatility** (HAR-RV) — a regression on daily, weekly
+   and monthly averages of past realised variance
+3. **Range estimators** — Parkinson, Garman-Klass, Rogers-Satchell, Yang-Zhang
+4. **Parametric fits to realised variance** — gamma, inverse gamma, lognormal
+5. **GARCH(1,1)** with normal, Student-t and skew-t innovations
+6. **A trade-activity regression** on the count dispersion index
 
-## Phase 3 - Volatility forecasting contest
+**Refit cadence** was declared in advance and bounded by calendar time rather than bar count. The
+cheap methods refit weekly; the maximum-likelihood methods (variance distribution fits, GARCH)
+refit monthly on a trailing window capped at 500 bars. This keeps the number of expensive fits
+roughly constant across intervals (~45–50 per interval) rather than scaling with bar count. The
+hardware here is a Raspberry Pi, where a from-scratch skew-t GARCH fit costs 0.3–1 second, and
+refitting a GARCH more often than monthly buys essentially nothing — its persistence parameter
+already responds to information over weeks, not hours.
 
-BTC, all 4 intervals, full 7-rung ladder (0: trailing std 8/24/96; 1: EWMA lambda=0.94;
-2: HAR-RV; 3: Parkinson/Garman-Klass/Rogers-Satchell/Yang-Zhang; 4: gamma/inverse-
-gamma/lognormal fits on RV; 5: GARCH(1,1) normal/t/skew-t; 6: activity/dispersion-index
-regression), every rung implemented and scored - no rung skipped.
+**The target** is realised variance built from hourly sub-bars wherever the interval is coarser
+than an hour. At hourly bars themselves the target is the bar's own squared return, which is a
+noisier proxy — noted at that one interval.
 
-**Refit cadence, declared up front and bounded by calendar time, not bar count**: cheap
-rungs (HAR-RV, activity - a single `lstsq` call) refit weekly; the MLE rungs (RV
-distribution fits, GARCH) refit monthly on a trailing window capped at 500 bars. This
-keeps the number of expensive MLE fits *constant across intervals* (~45-50 refits per
-interval regardless of whether a "month" is 720 hourly bars or 30 daily ones) rather than
-scaling with bar count - a from-scratch skew-t GARCH MLE costs ~0.3-1s per fit on the
-Raspberry Pi this ran on, and refitting a GARCH more often than monthly buys essentially
-nothing (its own persistence parameter already responds to information over weeks, not
-hours). Target: realized variance from higher-frequency (1h) sub-bars where the interval
-is coarser than 1h (4h/12h/1d); 1h itself uses the bar's own squared return (no finer
-cached series exists), noted as a noisier proxy at that one interval. Evaluated on the
-full pre-holdout rolling out-of-sample sample (thousands of scored bars per interval, not
-the frozen holdout - see "A note on the holdout" below).
+## Point-forecast accuracy (QLIKE — lower is better)
 
-### QLIKE by rung (BTC, best-in-group representative; lower is better)
-
-| rung | 1h | 4h | 12h | 1d |
+| Method | 1h | 4h | 12h | 1d |
 |---|---|---|---|---|
-| 0 trailing std (best window) | 2.083 | 1.015 | 0.706 | 0.545 |
-| 1 EWMA | 2.121 | 3.036 | 2.113 | 1.909 |
-| 2 HAR-RV | **1.974** | **0.917** | **0.608** | **0.472** |
-| 3 range (best estimator) | 1.965 | 0.944 | 0.757 | 0.542 |
-| 4 RV-distribution fit (best family) | 2.217 | 1.088 | 0.740 | 0.592 |
-| 5 GARCH (best innovation, normal) | 1.966 | 0.947 | 0.663 | 0.537 |
-| 6 activity | 2.096 | 0.992 | 0.687 | 0.592 |
+| Trailing std (best window) | 2.083 | 1.015 | 0.706 | 0.545 |
+| EWMA | 2.121 | 3.036 | 2.113 | 1.909 |
+| HAR-RV | **1.974** | **0.917** | **0.608** | **0.472** |
+| Range (best estimator) | 1.965 | 0.944 | 0.757 | 0.542 |
+| Variance-distribution fit | 2.217 | 1.088 | 0.740 | 0.592 |
+| GARCH (normal innovations) | 1.966 | 0.947 | 0.663 | 0.537 |
+| Trade activity | 2.096 | 0.992 | 0.687 | 0.592 |
 
-HAR-RV has the lowest QLIKE at **every single interval** - the "real benchmark in the
-modern literature" NEW_PROMPT names it as beats everything else on raw QLIKE, every time.
-Range estimators and GARCH-normal cluster close behind (within ~0.5-3% of HAR-RV's
-QLIKE); rung 4 (fitting a distribution directly to RV) is reliably the *worst* rung
-after EWMA - a genuinely useful negative finding (a parametric fit to realized variance
-buys nothing over just averaging it, once you're already averaging it correctly via
-HAR's multi-horizon components). EWMA is anomalously bad at 4h/12h/1d (QLIKE 1.9-3.0,
-worse even than trailing std) - traced to the fixed lambda=0.94 (RiskMetrics' own choice,
-calibrated for daily-or-finer data): applying the same per-bar decay to 4h/12h/1d bars
-makes the filter adapt far too slowly to genuine variance jumps at those coarser
-horizons. Not investigated further (out of scope to re-tune lambda per interval - the
-ladder's job is to test the standard baseline as commonly used, not the best-tuned
-version of it), but flagged here rather than silently reported.
+HAR-RV has the lowest QLIKE at **every interval** — the standard modern benchmark beats everything
+else on raw score every time. Range estimators and normal-innovation GARCH cluster close behind.
 
-### Which rungs actually *beat* which - all-pairs Diebold-Mariano
+Two negative findings are worth stating. Fitting a distribution directly to realised variance is
+reliably the worst method after EWMA: a parametric fit to realised variance buys nothing over
+simply averaging it, once you are already averaging it correctly across multiple horizons the way
+HAR does. And **EWMA is anomalously bad at every interval coarser than hourly** (QLIKE 1.9–3.0,
+worse even than a trailing standard deviation). This traces to the fixed λ = 0.94, which is
+calibrated for daily-or-finer data; applying the same per-bar decay to 4h, 12h and daily bars
+makes the filter adapt far too slowly to genuine variance jumps. Re-tuning λ per interval was out
+of scope — the contest tests the standard baseline as commonly used — but the effect is flagged
+rather than silently reported.
 
-Adjacent-rung DM tests establish "beats the rung directly below," but the ladder's own
-rule ("only a winner if it beats *every* rung below it, with a significance test") is not
-transitive from adjacent comparisons alone. All 21 pairwise DM tests among the 7 rung
-representatives were run at every interval; a rung counts as a winner only if its QLIKE
-is significantly (p<0.05) lower than **every other** rung's.
+## Which methods actually *beat* which
 
-| interval | best-by-QLIKE rung | beats every other rung significantly? |
+A method only counts as a winner if its QLIKE is significantly lower (p < 0.05) than **every
+other** method's. That is not transitive from adjacent comparisons alone, so all 21 pairwise
+Diebold-Mariano tests were run at every interval.
+
+| Interval | Lowest QLIKE | Beats every other method significantly? |
 |---|---|---|
-| 1h  | rung3 (Garman-Klass) | **No** |
-| 4h  | rung2 (HAR-RV) | **No** |
-| 12h | rung2 (HAR-RV) | **No** |
-| 1d  | rung2 (HAR-RV) | **No** |
+| 1h | Range (Garman-Klass) | **No** |
+| 4h | HAR-RV | **No** |
+| 12h | HAR-RV | **No** |
+| 1d | HAR-RV | **No** |
 
-**No rung wins the ladder outright at any interval on BTC.** HAR-RV, the range
-estimators, and GARCH-normal are statistically indistinguishable from each other at
-every interval (pairwise DM p-values between them mostly >0.05); what *is* significant,
-consistently, is that all three of those beat EWMA and the RV-distribution-fit rung
-(p<0.05 in most such pairs). So the honest Phase 3 finding is narrower than "X wins":
-**a small cluster of methods (HAR-RV, range estimators, GARCH-normal) all sit at
-roughly the same, better level than trailing-std/EWMA/RV-distribution-fits, and nothing
-inside that cluster beats the others with significance.**
+**No method wins the contest outright at any interval on BTC.** HAR-RV, the range estimators and
+normal-innovation GARCH are statistically indistinguishable from one another everywhere. What *is*
+consistently significant is that all three of those beat EWMA and the variance-distribution fits.
 
-### Mincer-Zarnowitz and density scoring
+The honest finding is therefore narrower than "X wins": **a small cluster of methods sits at
+roughly the same, better level than the rest, and nothing inside that cluster beats the others
+with significance.**
 
-MZ slope is closest to the ideal (1.0, 0 intercept) for HAR-RV at every interval (slope
-1.02-1.05, small negative intercept) and for GARCH-normal (slope 0.60-0.93) - both
-notably better-calibrated in the point-forecast-regression sense than the range
-estimators (MZ slope 0.19-0.45 at every interval - **systematically biased low**, which
-is exactly Phase 1's normalized-range finding predicted: crypto's intrabar range runs
-6-14% below the Brownian prediction Parkinson/GK/RS/YZ are built on, so a range-based
-variance forecast under-predicts and a regression of realized-on-forecast comes back
-with slope well under 1). R² is low everywhere (0.004-0.19) - variance is inherently hard
-to forecast precisely at these horizons even for the best-performing rungs, consistent
-with NEW_PROMPT's own warning that vol-forecasting gains are real but modest.
+## Forecast bias
 
-**Density scoring is where a real, if narrow, distributional-modelling result shows up -
-and this section was amended after a lookahead bug in the original scoring was found
-and fixed; see "Correction" below before trusting the table.**
+Regressing realised on forecast variance (the ideal is slope 1, intercept 0) puts HAR-RV closest
+at every interval (slope 1.02–1.05 with a small negative intercept) and normal-GARCH next (slope
+0.60–0.93). The range estimators come back with **slope 0.19–0.45 everywhere — systematically
+biased low.**
 
-Comparing normal-density log scores across all rungs' variance forecasts is close
-(within ~5% of each other at every interval, same near-tie as the point forecasts), but
-scoring GARCH-t under its **own fitted Student-t innovation distribution** (rather than
-forcing every rung through a normal density for comparability) changes the picture:
+That is exactly what Part 1 predicted. Crypto's intrabar range runs 6–14% below the Brownian
+prediction the range estimators are built on, so a range-based variance forecast under-predicts,
+and a regression of realised on forecast returns a slope well under 1. A descriptive finding from
+Part 1 correctly anticipated a forecasting result in Part 2.
 
-| interval | GARCH-t log score (own dist) | best other rung's log score (normal density) | Kupiec 5% VaR coverage p-value, GARCH-t |
+R² is low everywhere (0.004–0.19). Variance is inherently hard to forecast precisely at these
+horizons even for the best methods.
+
+## Density scoring — where a real result appears
+
+Comparing all methods through a common normal density puts them within ~5% of each other, the same
+near-tie as the point forecasts. But scoring GARCH-t under **its own fitted Student-t innovation
+distribution**, rather than forcing it through a normal density for comparability, changes the
+picture:
+
+| Interval | GARCH-t log score (own distribution) | Best alternative (normal density) | 5% VaR coverage test, p-value |
 |---|---|---|---|
-| 1h  | **4.000** | 3.848 (GARCH-normal) | **0.0000** |
-| 4h  | **3.254** | 3.139 (HAR-RV) | **0.0008** |
+| 1h | **4.000** | 3.848 (GARCH-normal) | **0.0000** |
+| 4h | **3.254** | 3.139 (HAR-RV) | **0.0008** |
 | 12h | **2.623** | 2.543 (HAR-RV) | 0.35 |
-| 1d  | **2.220** | 2.191 (HAR-RV) | 0.68 |
+| 1d | **2.220** | 2.191 (HAR-RV) | 0.68 |
 
-GARCH-t's own-distribution log score is now the best of any rung/family combination at
-**all 4** intervals (previously reported as 3 of 4 - see correction below), but its 5%
-VaR exceedance rate is now **rejected by Kupiec at 1h and 4h** (p effectively 0 and
-0.0008), and not rejected at 12h/1d (p=0.35, 0.68). This is a materially different, more
-mixed calibration picture than originally reported. This still matches NEW_PROMPT's own
-expectation from the crypto-GARCH literature ("heavy-tailed innovations win") on the log
-score specifically: **the point-forecast (QLIKE) contest found no clear winner, but the
-density contest shows Student-t innovations give a better *log-score* tail forecast than
-assuming normal, at every interval.** The VaR-*coverage* half of the original claim does
-not survive the correction below - GARCH-t's 5% VaR is well-calibrated at the two
-coarser intervals but rejected at the two finer ones, not "never rejected anywhere." This
-is not, on its own, enough to call GARCH-t the Phase 3 "winner" in the ladder's own
-QLIKE-beats-everything sense - it is a narrower, calibration-specific finding, and now a
-more qualified one than first reported.
+GARCH-t's own-distribution log score is the best of any method-and-family combination at **all four
+intervals**. Its 5% Value-at-Risk exceedance rate, however, is **rejected at 1h and 4h** and not
+rejected at 12h and 1d.
 
-### Correction (added after this notebook was first written)
+So: the point-forecast contest found no clear winner, but the density contest shows Student-t
+innovations give a better log-score tail forecast than assuming normality, everywhere. The
+calibration half of that is mixed — well calibrated at the two coarser intervals, rejected at the
+two finer ones. This is not enough to call GARCH-t the contest winner in the
+beats-everything-on-QLIKE sense; it is a narrower, calibration-specific finding.
 
-The GARCH-t density score above was originally computed with a lookahead bug: the
-Student-t degrees-of-freedom parameter used to *score* every bar was
-`fits[-1]["params"][3]` - the value estimated on the **final** training window of the
-whole sample - applied uniformly to every scored bar from the start of the evaluation
-period onward. The variance forecast itself was properly causal and rolling; only the
-shape parameter scoring it was not. This is the same class of bug as bug #3 below (a
-lookahead leak), one level deeper: in the innovation distribution's shape parameter
-rather than the point forecast itself.
+### A lookahead bug in the density scoring, found and fixed
 
-Diagnosing the fitted nu path directly (`dist_lib.nu_path_from_fits`) shows it genuinely
-varies across the 46 refits at 1h - from 2.2 (at the optimizer's own lower search bound,
-during the more turbulent 2021-2022 stretch of the sample) up to 8.1 (later, calmer
-refits) - not the constant value the bug effectively assumed. The original scoring used
-only the *last* of these (7.87, one of the thinnest-tailed fits in the whole path) to
-score bars throughout the entire sample, including the early, much-fatter-tailed
-stretch where the true causal nu was closer to 2.2-3.4.
+The density scores above were originally computed with a lookahead leak. The Student-t degrees-of-
+freedom parameter used to *score* every bar was the value estimated on the **final** training
+window of the whole sample, applied uniformly to every scored bar from the start of the evaluation
+period. The variance forecast itself was properly causal and rolling; only the shape parameter
+scoring it was not.
 
-**Both halves of the original claim moved, in different directions, once this was
-fixed and Phase 3 was fully re-run (all 4 intervals):**
-- The **log score** win *strengthened*: GARCH-t now beats every normal-density rung at
-  all 4 intervals (previously 3 of 4 - 1d's comparison was marginally the other way
-  before the fix).
-- The **VaR-coverage** claim *weakened materially*: Kupiec now rejects GARCH-t's 5% VaR
-  at 1h and 4h (previously never rejected anywhere). The independence test
-  (Christoffersen) was already rejected at 1h before the fix (clustering in violations,
-  unaffected by this bug) and remains rejected after it.
+Reconstructing the fitted degrees-of-freedom path directly shows it varies substantially across
+the 46 refits at hourly bars — from 2.2 (at the optimiser's lower bound, during the turbulent
+2021–2022 stretch) up to 8.1 in later, calmer refits. The original scoring used only the last of
+these (7.87, one of the thinnest-tailed fits in the entire path) to score bars throughout the
+sample, including the early, much fatter-tailed stretch where the true causal value was closer to
+2.2–3.4.
 
-**What this changes about notebook 4's bottom line**: the density-scoring result is
-real but narrower than originally stated. "GARCH-t's own-distribution log score beats
-every normal-density rung, at every interval" still stands and is, if anything,
-strengthened. "Its 5% VaR coverage was never rejected by Kupiec" does **not** stand -
-replace it with "its 5% VaR coverage is well-calibrated at 12h/1d but rejected at 1h/4h."
-This does not change the notebook's overall conclusion (no rung wins the point-forecast
-ladder outright; a narrower density/calibration result exists for GARCH-t) but it does
-change the *strength* of the calibration half of that narrower result, and notebook 5's
-own tail-risk work should not assume GARCH-t's VaR is well-calibrated everywhere.
+**Both halves of the original claim moved once this was fixed, in opposite directions:**
 
-### Frozen transfer check (ETH/SOL/DOGE/BNB/XRP, 1d only)
+- The **log-score win strengthened** — GARCH-t now beats every normal-density alternative at all
+  four intervals, where before the correction daily was marginally the other way.
+- The **coverage claim weakened materially** — the 5% VaR is now rejected at 1h and 4h, where
+  before the correction it had never been rejected anywhere. (The independence test on violation
+  clustering was already rejected at hourly bars before the fix, and remains so.)
 
-Scoped down to 1d (not all 4 intervals) for the transfer check - BTC already got the
-full 4-interval, 21-pairwise-DM treatment; this checks whether the "no clear winner"
-finding generalizes, at lighter cost.
+The corrected numbers are what appears in the table above. Anything downstream — notebook 005's
+tail-risk work in particular — must not assume GARCH-t's Value-at-Risk is well calibrated
+everywhere.
 
-| symbol | best-by-QLIKE rung | QLIKE | beats every other rung significantly? |
+## Does the "no clear winner" finding generalise?
+
+Checked at daily bars only on the five transfer symbols, since BTC already received the full
+four-interval, 21-comparison treatment:
+
+| Symbol | Lowest QLIKE | QLIKE | Beats every other method significantly? |
 |---|---|---|---|
-| BTC (1d, for reference) | HAR-RV | 0.472 | No |
+| BTC (reference) | HAR-RV | 0.472 | No |
 | ETH | HAR-RV | 0.416 | **Yes** |
 | SOL | HAR-RV | 0.341 | **Yes** |
 | DOGE | GARCH-normal | 0.528 | No |
 | BNB | HAR-RV | 0.483 | No |
 | XRP | HAR-RV | 0.614 | No |
 
-**Not stable.** HAR-RV is the best-by-QLIKE rung at 5 of 6 symbols (DOGE is the
-exception), consistent with the QLIKE-ranking pattern found on BTC - but whether it
-*significantly* beats every other rung flips symbol by symbol (clear winner on ETH/SOL,
-not on BTC/BNB/XRP/DOGE). Per notebook 3's own standard ("stability outranks
-magnitude"), this is reported as **no stable winner**, not as "HAR-RV wins 5/6."
+**Not stable.** HAR-RV has the lowest QLIKE at 5 of 6 symbols, consistent with the BTC ranking —
+but whether it *significantly* beats everything else flips symbol by symbol. By the standard
+notebook 003 set (stability outranks magnitude) this is reported as **no stable winner**, not as
+"HAR-RV wins 5 of 6".
 
-## Phase 4 - Regime estimation
+---
 
-BTC, all 4 intervals: threshold baseline (2-state, trailing-median RV), Gaussian mixture
-(K=2,3), HMM (Gaussian and Student-t emissions), activity regime (count-dispersion
-threshold). Same monthly rolling-refit cadence and 500-bar cap as Phase 3's MLE rungs,
-for the same cost reasons. **Filtered, never smoothed**: state probabilities come only
-from `hmm_filter_step`'s one-step forward recursion applied to an already-fit (on past
-data only) frozen model; the Baum-Welch backward pass that estimates the fit's own
-parameters never touches bars after its own training window, and its smoothed gamma is
-discarded, never used as a state estimate. **Rolling refit, never full-sample**: every
-model refits monthly on a trailing, capped window. **Label switching**: `fit_gmm_em`/
-`fit_hmm` impose ascending-fitted-variance ordering at every refit.
+# Part 3 — Regime models
 
-### Regime duration and vol/direction prediction (BTC)
+Five model families at all four intervals: a threshold baseline (two states split on trailing
+median realised variance), Gaussian mixtures with two and three components, hidden Markov models
+with Gaussian and Student-t emissions, and an activity regime based on the count dispersion index.
+Same monthly refit cadence and 500-bar cap as the maximum-likelihood methods above.
 
-| interval | model | mean state duration (bars) | geometric-null KS p | predicts vol (Kruskal p) | predicts direction (ANOVA p) |
+Three methodological commitments, all of which matter for whether these results are honest:
+
+- **Filtered, never smoothed.** State probabilities come only from a one-step forward recursion
+  applied to a model already fitted on past data. The backward pass that estimates the fit's own
+  parameters never touches bars after its training window, and its smoothed state estimates are
+  discarded rather than used.
+- **Rolling refit, never full-sample.** Every model refits monthly on a trailing, capped window.
+- **Label switching handled.** Fitted states are ordered by ascending variance at every refit, so
+  "state 0" means the same thing across refits.
+
+## Persistence, and what regimes predict
+
+| Interval | Model | Mean duration (bars) | KS vs geometric | Predicts volatility (p) | Predicts direction (p) |
 |---|---|---|---|---|---|
-| 1h | baseline threshold | 2.34 | ~0 | 4.7e-188 | 0.016 |
-| 1h | HMM-Gaussian | **6.62** | ~0 | **0** | 0.030 |
-| 4h | baseline threshold | 2.75 | ~0 | 9.6e-144 | 0.273 |
-| 4h | HMM-Gaussian | **4.86** | 3.1e-63 | 1.3e-112 | 0.008 |
-| 12h | baseline threshold | 2.41 | 1.9e-184 | 1.4e-20 | 0.558 |
-| 12h | HMM-Gaussian | **4.58** | 1.5e-25 | 1.5e-24 | 0.057 |
-| 1d | baseline threshold | 2.74 | 3.4e-62 | 1.4e-22 | 0.182 |
-| 1d | HMM-Gaussian | **4.71** | 5.8e-12 | **6.2e-40** | 0.243 |
+| 1h | Threshold baseline | 2.34 | ≈ 0 | 4.7e−188 | 0.016 |
+| 1h | HMM-Gaussian | **6.62** | ≈ 0 | **≈ 0** | 0.030 |
+| 4h | Threshold baseline | 2.75 | ≈ 0 | 9.6e−144 | 0.273 |
+| 4h | HMM-Gaussian | **4.86** | 3.1e−63 | 1.3e−112 | 0.008 |
+| 12h | Threshold baseline | 2.41 | 1.9e−184 | 1.4e−20 | 0.558 |
+| 12h | HMM-Gaussian | **4.58** | 1.5e−25 | 1.5e−24 | 0.057 |
+| 1d | Threshold baseline | 2.74 | 3.4e−62 | 1.4e−22 | 0.182 |
+| 1d | HMM-Gaussian | **4.71** | 5.8e−12 | **6.2e−40** | 0.243 |
 
-(Full table for GMM K=2/3, HMM-t, and activity regime across all 4 intervals is in
-`phase4_results.json` - summarized here to the two most informative rows per interval.)
+(The two most informative rows per interval; the mixtures, Student-t HMM and activity regime were
+all run too.)
 
-**No regime duration is geometric anywhere** (KS p effectively 0 at every model/interval
-except the smallest-sample cases) - states are more persistent than a memoryless Markov
-model's own core assumption predicts, a real (if expected) departure worth stating
-plainly rather than treated as a modelling failure: a Markov chain is the null being
-tested against, not the claim being made.
+**No regime duration is geometric anywhere.** States persist more than a Markov model's own core
+assumption predicts. That is a real departure worth stating plainly rather than treating as a
+modelling failure — the Markov chain is the null being tested against, not the claim being made.
 
-**Every single model, at every interval, predicts next-bar volatility with overwhelming
-significance** (Kruskal-Wallis p-values from 1e-4 to effectively 0) - unsurprising (that
-is almost definitionally what a vol-based regime is), but confirmed directly rather than
-assumed. **Direction is a different story**: p-values scatter around and above 0.05 with
-no consistent pattern (some marginal exceptions - 4h HMM-Gaussian p=0.008, 1h baseline
-p=0.016 - expected by chance alone across the ~48 vol/direction tests run in Phase 4;
-not treated as a real direction-prediction finding given no consistent sign or
-replication across intervals/models). **"Regimes predict risk, not return"** - exactly
-the clean result NEW_PROMPT called likely and asked to be written up as one, not
-apologized for.
+**Every model, at every interval, predicts next-bar volatility with overwhelming significance.**
+Unsurprising, since that is almost definitionally what a volatility-based regime is, but confirmed
+directly rather than assumed.
 
-HMM-Gaussian shows the clearest improvement over the naive threshold baseline: 1.7-2.8x
-longer mean state duration at every interval (states that actually persist, rather than
-the threshold's near-random 2-3 bar flip-flopping around its own trailing median), and a
-comparable-or-better vol-Kruskal statistic at 3 of 4 intervals (1h, 12h, 1d; roughly tied
-at 4h). This is real, useful structure - but **no formal head-to-head significance test
-between regime models was built** (unlike Phase 3's DM-test apparatus for the vol
-ladder), so this is reported as suggestive rather than as a rigorously established
-"winner" - see Phase 5 gating below for why that distinction matters here.
+**Direction is a different story.** The p-values scatter around and above 0.05 with no consistent
+pattern. A couple are marginal (0.008 at 4h, 0.016 at 1h) — about what chance produces across the
+~48 tests run here, and not treated as a real finding given no consistent sign and no replication
+across intervals or models.
 
-### Frozen transfer check (ETH/SOL/DOGE/BNB/XRP, 1d, baseline vs. HMM-Gaussian)
+**Regimes predict risk, not return.** That is the clean result.
 
-| symbol | baseline predicts-vol p | HMM predicts-vol p | baseline predicts-dir p | HMM predicts-dir p |
+HMM-Gaussian shows the clearest improvement over the naive threshold: **1.7–2.8× longer mean state
+duration** at every interval — states that actually persist, rather than flip-flopping every two
+or three bars around a trailing median — and comparable or better volatility discrimination at
+three of four intervals.
+
+That is real, useful structure. But **no formal head-to-head significance test between regime
+models was built**, unlike the pairwise testing apparatus used for the volatility contest. So it
+is reported as suggestive rather than established, which matters for the gating decision below.
+
+## Does it replicate?
+
+Daily bars, threshold baseline versus HMM-Gaussian, on the five transfer symbols:
+
+| Symbol | Baseline, volatility p | HMM, volatility p | Baseline, direction p | HMM, direction p |
 |---|---|---|---|---|
-| ETH  | 2.3e-16 | 1.1e-36 | 0.333 | 0.118 |
-| SOL  | 8.8e-46 | 7.2e-18 | 0.100 | 0.113 |
-| DOGE | 1.2e-43 | 2.2e-37 | 0.005 | 0.331 |
-| BNB  | 2.1e-40 | 3.0e-35 | 0.011 | 0.225 |
-| XRP  | 1.6e-38 | 3.7e-40 | 0.011 | 0.061 |
+| ETH | 2.3e−16 | 1.1e−36 | 0.333 | 0.118 |
+| SOL | 8.8e−46 | 7.2e−18 | 0.100 | 0.113 |
+| DOGE | 1.2e−43 | 2.2e−37 | 0.005 | 0.331 |
+| BNB | 2.1e−40 | 3.0e−35 | 0.011 | 0.225 |
+| XRP | 1.6e−38 | 3.7e−40 | 0.011 | 0.061 |
 
-"Predicts vol overwhelmingly, direction inconsistently and never both baseline+HMM
-together" replicates at every one of the 5 transfer symbols - the single most stable
-finding in this entire notebook. DOGE/BNB/XRP's baseline model shows a marginal
-direction effect (p=0.005-0.011) that HMM does *not* reproduce (p=0.06-0.33 on the same
-symbols) - if anything, evidence against a real, model-robust direction effect rather
-than for one (a real effect should show up in the more expressive model too, not
-disappear).
+"Predicts volatility overwhelmingly, direction inconsistently, and never both models together"
+replicates at all five symbols — the single most stable finding in this notebook.
 
-## Bugs found
+Note what happens on DOGE, BNB and XRP: the *baseline* shows a marginal direction effect
+(p = 0.005–0.011) that the HMM does not reproduce (p = 0.06–0.33 on the same symbols). If
+anything that is evidence *against* a real direction effect. A genuine one should appear in the
+more expressive model too, not vanish.
 
-Six real bugs surfaced while building this notebook, all in the notebook-4-local
-`dist_lib.py`/`run_phase3.py`/`run_phase4.py` (none in the committed, previously-tested
-`distributions.py` - no changes needed there):
+---
 
-1. **`fit_once` column lookup** (Phase 1/2) - looked up bare parameter names instead of
-   `fit_rolling`'s actual `f"{col}_{family}_{name}"` column names. Every Phase 1 call
-   failed outright before the fix.
-2. **`diebold_mariano` mislabeled `research.newey_west_tstat`'s return values.**
-   `newey_west_tstat` returns `(mean, tstat)`, not `(tstat, pvalue)` - `diebold_mariano`
-   originally unpacked it as `tstat, pvalue = newey_west_tstat(...)`, silently taking the
-   series *mean* as the reported "t-stat" and the real t-stat as the reported "p-value."
-   Every DM test in an early run of Phase 3 reported nonsensical "p-values" outside
-   [0, 1] (including negative ones) - caught by actually reading the numbers rather than
-   trusting that the code ran without raising. Fixed by taking the real HAC t-stat and
-   converting it to a two-sided p-value via the normal approximation.
-3. **`make_har_features` had no lag - the single most serious bug found in this
-   notebook.** The daily/weekly/monthly rolling-mean RV components were not shifted, so
-   at the 1d interval (`bpd=1`), the "daily" component (`rolling_mean(window_size=1)`)
-   was *literally identical* to that bar's own `rv_target` - the HAR-RV forecast was
-   regressing the target on itself, a same-bar lookahead leak, not a forecast. Visible as
-   HAR-RV's QLIKE coming back exactly 0.000000 at 1d in an early run - exactly the
-   "any result that looks implausibly good" tripwire NEW_PROMPT's guardrails describe.
-   Fixed by shifting all three HAR windows by 1 bar. Re-running after the fix moved
-   HAR-RV from a suspicious perfect score to a normal, still-strong (but not
-   ladder-winning) QLIKE - the corrected numbers above already reflect the fix.
-4. **`qlike_mse`'s mask allowed `actual == 0`.** QLIKE's `log(ratio)` term is undefined
-   there; BTC 1h has 13 bars with exactly zero realized variance (frozen-price bars -
-   the same class of bug as notebook 3's `realized_vol_24 == 0`, which NEW_PROMPT
-   explicitly predicted would recur). Those 13 bars poisoned the whole-series mean QLIKE
-   to `+inf` for *every single rung* at 1h. Fixed with a strict `actual > 0` mask for
-   QLIKE specifically (MSE, which has no such issue, keeps the wider `actual >= 0`
-   mask and its own observation count, so it doesn't lose those 13 bars unnecessarily).
-5. **`rolling_garch_forecast` stripped `params` from each fit record before it was
-   needed downstream** - `run_phase3.py` needed the fitted degrees-of-freedom
-   (`fits[-1]["params"][3]`) for GARCH-t's own-distribution density scoring, but the
-   fit records it consumed had already dropped `params` on the way into the returned
-   list. Fixed by keeping the full fit dict in the returned `fits` list (the JSON-output
-   code strips `params` separately, later, only when serializing - so output size is
-   unaffected).
-6. **Phase 4's rolling-refit sufficiency check compared the wrong window size.**
-   `rolling_refit_states` capped every training window at `max_train=500` bars but
-   required `len(window) >= min_train // 2` before fitting - and `min_train` scales
-   with bars-per-day (2160 at 1h), so `min_train // 2` (1080) could never be satisfied
-   by a window that's capped at 500. Every GMM/HMM refit at 1h silently no-opped for
-   the entire series - `gmm_k2`, `gmm_k3`, `hmm_gaussian`, and `hmm_t` all came back
-   with zero fits and all-null hard states at 1h in an early run, while other intervals
-   looked fine (their `min_train//2` happens to be under 500). Fixed by flooring the
-   sufficiency check at `min(min_train, max_train) // 2` - the window that will actually
-   be fit, not the warm-up gate.
-7. **GARCH-t's density score used the wrong (future-only) degrees of freedom - found
-   while preparing notebook 5, not while building this one.** `run_phase3.py` scored
-   GARCH-t's own-distribution log score/VaR using `fits[-1]["params"][3]`, the
-   degrees-of-freedom estimated on the *final* training window of the whole sample,
-   applied to score every bar from the start of the evaluation period - the variance
-   forecast was properly causal and rolling; the shape parameter scoring it was not.
-   Fixed with `dist_lib.nu_path_from_fits`, a causal, forward-filled step-function path
-   mirroring the variance forecast's own forward-fill exactly. See "Correction" above
-   for how the corrected numbers moved (log-score win strengthened to 4/4 intervals;
-   Kupiec VaR coverage, previously reported as never rejected, is now rejected at 1h/4h).
+# Bugs found
 
-None of these were caught by a unit test (there is no test suite for the notebook-4-local
-`dist_lib.py`/driver scripts, by design - they're forecasting-contest machinery specific
-to this notebook, not the general-purpose `distributions.py` primitives that do have
-one). All seven were caught the same way: by reading the actual output numbers rather
-than trusting that a script which ran without raising had produced correct output - bug 3
-(a lookahead leak) would have silently inflated HAR-RV into an undeserved Phase 3
-"winner" at 1d if the suspiciously perfect QLIKE score hadn't been checked by eye before
-being written up, and bug 7 (a subtler, one-level-deeper lookahead leak in a shape
-parameter rather than a point forecast) was only caught by deliberately re-deriving the
-causal parameter path and comparing it against what had been used to score.
+Seven real bugs surfaced while building this notebook. None were caught by a unit test — all seven
+were caught by reading the actual output numbers rather than trusting that a script which ran
+without raising had produced correct output.
 
-## Phase 5 - Does any of it pay?
+1. **Parameter lookup by the wrong column name** in the descriptive-phase fitting helper. Every
+   call failed outright before the fix.
 
-**Not run.** Phase 5 is pre-declared to run only if Phase 3 or Phase 4 produced an actual
-winner. Neither did, held to a consistent standard:
+2. **The Diebold-Mariano test mislabelled its own inputs.** The underlying HAC routine returns
+   (mean, t-statistic), but the test unpacked it as (t-statistic, p-value) — silently reporting the
+   series *mean* as the t-statistic and the real t-statistic as the p-value. Every early
+   comparison reported nonsensical p-values outside [0, 1], including negative ones. Caught by
+   reading the numbers, not by the code raising.
 
-- **Phase 3**: no rung beats every other rung with significance at any BTC interval, and
-  the frozen transfer check shows the ranking isn't even stable across symbols (HAR-RV
-  is a significant all-beating winner on ETH/SOL but not on BTC/BNB/XRP/DOGE). There is
-  a real, narrower density-scoring result (GARCH-t's own-distribution calibration beats
-  every other rung's normal-density score at 3 of 4 intervals and is never rejected by
-  Kupiec) - but that is a calibration finding, not a point-forecast-ladder win, and
-  Phase 5(a) as pre-declared ("vol-targeted buy-and-hold using the Phase 3 winner")
-  requires a point *variance* forecast to scale exposure by, which is exactly the
-  contest that produced no winner.
-- **Phase 4**: HMM-Gaussian shows real, replicated structure (longer state persistence,
-  comparable-or-better vol discrimination than the naive threshold at most intervals,
-  and the vol-not-direction pattern replicates on every one of the 5 transfer symbols) -
-  but no formal significance test was built to compare regime models head-to-head the
-  way Phase 3's DM apparatus does for the vol ladder, so calling it a "winner" by the
-  same rigor the rest of this notebook demands would be inconsistent. Phase 5(b)'s own
-  gate ("chosen by Phase 4's own conditional-autocorrelation finding") also has nothing
-  to point at: per-state return autocorrelation was computed (see `phase4_results.json`'s
-  `conditional_stats`) but shows no consistent, replicated pattern of one state having
-  reliably stronger reversal than another across intervals/symbols - there is no clean
-  gate to pre-declare.
+3. **The HAR features had no lag — the most serious bug found here.** The daily, weekly and monthly
+   rolling averages of realised variance were never shifted, so at daily bars the "daily"
+   component was *literally identical* to that bar's own target. HAR-RV was regressing the target
+   on itself. This showed up as a QLIKE of exactly 0.000000 at daily bars — a result implausibly
+   good enough to trip a tripwire. Fixed by shifting all three windows by one bar; re-running moved
+   HAR-RV from a suspicious perfect score to a normal, still-strong but not contest-winning score.
+   **All numbers reported above reflect the fix.**
 
-Running Phase 5 anyway on either "almost" result would mean backtesting a forecast this
-notebook itself declined to certify as a winner - precisely the "no tuning until the
-backtest looks good" failure mode NEW_PROMPT warns against. Skipping it here is the
-correct application of this notebook's own rule, not a shortfall.
+4. **The QLIKE mask allowed a realised variance of exactly zero,** where its log-ratio term is
+   undefined. BTC hourly bars include 13 with exactly zero realised variance (frozen-price bars —
+   the same class of problem as notebook 003's zero-volatility divisor). Those 13 bars poisoned the
+   mean QLIKE to infinity for *every method* at hourly bars. Fixed with a strictly-positive mask
+   for QLIKE specifically.
 
-### A note on the holdout
+5. **Fitted GARCH parameters were stripped before they were needed downstream,** so the
+   degrees-of-freedom values required for density scoring weren't available. Fixed by retaining
+   the full fit record and stripping only at serialisation time.
 
-Not spent by this notebook. `HOLDOUT_START = 2025-07-01` was already used once by
-notebook 3 (its `cfg2_12h` holdout run) and would only be relevant here for Phase 5's
-trading application, which didn't run. All Phase 1/3/4 numbers above use the full
-pre-holdout rolling out-of-sample evaluation, which per NEW_PROMPT's own framing doesn't
-depend on holdout purity the way a return-prediction backtest does (thousands of scored
-bars per phase, not 3 folds).
+6. **The regime refit sufficiency check compared the wrong window size.** Training windows were
+   capped at 500 bars, but the check required a window of at least half the *minimum* training
+   size — and that minimum scales with bars per day (2,160 at hourly), so the requirement (1,080)
+   could never be satisfied by a window capped at 500. Every mixture and HMM refit at hourly bars
+   silently did nothing for the entire series, coming back with zero fits and no states, while
+   other intervals looked fine. Fixed by flooring the check at the window that will actually be
+   fit rather than the warm-up gate.
 
-## Bottom line
+7. **The GARCH-t density score used a future-only degrees-of-freedom value** — described in full in
+   the correction above. Found while preparing notebook 005, not while building this one, and only
+   caught by deliberately re-deriving the causal parameter path and comparing it against what had
+   been used.
 
-**Volatility**: no single rung of the mandatory 7-rung ladder wins the forecasting
-contest outright on BTC at any interval, and the frozen transfer check shows the closest
-thing to a leader (HAR-RV, lowest QLIKE at 5 of 6 symbols) doesn't clear significance
-against every other rung consistently across symbols either. What *is* established:
-HAR-RV, the four range estimators, and GARCH-normal cluster together as the best
-available point forecasts (all beating EWMA and RV-distribution fits with significance,
-none beating each other); a range-based forecast is measurably, predictably biased low
-by exactly the amount Phase 1's normalized-range departure from the Brownian prediction
-implies; and a real, narrower distributional win exists in density calibration -
-GARCH-t's own Student-t innovation distribution gives a better log-score tail forecast
-(best log score at all 4 intervals, after correcting a lookahead bug in the shape
-parameter used to score it - see "Correction" in Phase 3 above) than any normal-density
-alternative, confirming the crypto-GARCH literature's standard finding even though it
-doesn't rescue the point-forecast contest - though its 5% VaR coverage, once corrected,
-is only actually well-calibrated at 12h/1d and is rejected by Kupiec at 1h/4h, a more
-qualified calibration story than first reported.
+Bug 3 in particular would have silently promoted HAR-RV to an undeserved contest win at daily
+bars, had the suspiciously perfect score not been checked by eye before being written up.
 
-**Regime**: distributional regime models (especially HMM-Gaussian) find real, more
-persistent structure than a naive trailing-median threshold, and every model at every
-BTC interval - replicated on all 5 transfer symbols - shows the same clean pattern:
-**regimes predict next-bar volatility with overwhelming significance and do not predict
-direction.** No regime duration is geometric anywhere, meaning states persist more than
-a Markov model's own core assumption implies. No regime model was rigorously certified
-as beating the baseline with a significance test, so it isn't reported as a "winner" by
-this notebook's own standard.
+---
 
-**Phase 5 did not run** - neither forecasting contest produced a certified winner to
-backtest, which is a legitimate outcome per NEW_PROMPT's own framing ("the notebook
-produces a real result whether or not any strategy is profitable"). Matches notebooks
-1-3's overall pattern (no validated tradeable edge found in this research programme so
-far) while adding genuinely new, non-null knowledge this time: crypto's tails, clustering,
-and regime structure are real, extreme, and now measured with proper scoring rules,
-even though none of it clears the bar this notebook set for calling something a winner.
+# The trading application did not run
 
-## What to test next
+It was pre-declared to run only if the volatility contest or the regime contest produced a
+certified winner. Neither did, held to a consistent standard:
 
-- **A formal Phase 4 model-comparison test.** Phase 3 has a full DM-test apparatus;
-  Phase 4 does not (documented above as a real gap, not a bug) - a proper likelihood-
-  ratio or out-of-sample predictive-density comparison between HMM-Gaussian and the
-  threshold baseline could turn the "suggestive" persistence/vol-discrimination edge
-  into a certified Phase 4 winner, which would then make Phase 5(b) reachable.
-- **Retune EWMA's lambda per interval.** The RiskMetrics lambda=0.94 was applied
-  unchanged across 1h/4h/12h/1d and degraded badly at every interval coarser than 1h -
-  worth testing whether a per-interval-calibrated lambda closes that gap and changes
-  EWMA's ladder position.
-- **GARCH-t/skew-t density scoring against the full ladder, not just GARCH-normal.**
-  This notebook scored GARCH-t's own-distribution calibration separately but didn't
-  extend the all-pairs DM machinery to density-score comparisons across the whole
-  ladder - doing so properly could reveal whether GARCH-t is a genuine density-scoring
-  winner (not just "better than normal-GARCH"), which the point-forecast ladder alone
-  cannot show.
-- **A range-estimator drift correction.** Phase 1 found crypto's normalized range runs
-  6-14% below the Brownian prediction Parkinson's estimator assumes; Phase 3 confirmed
-  this shows up as a systematically-low MZ slope for every range estimator. A simple
-  multiplicative correction calibrated from Phase 1's own excess measurement is a cheap,
-  well-motivated next step that this notebook diagnosed but didn't apply.
-- **Extend the Phase 3/4 transfer check to all 4 intervals on all 5 symbols.** Both
-  transfer checks here were scoped to 1d only for wall-clock reasons on this hardware; a
-  faster machine (or a longer time-box) could confirm whether the 1d-only "not stable"
-  (Phase 3) and "vol yes / direction no, replicated" (Phase 4) findings hold at 1h/4h/12h
-  too.
+- **Volatility:** no method beats every other method with significance at any BTC interval, and
+  the transfer check shows the ranking isn't even stable across symbols. There is a real but
+  narrower density-scoring result for GARCH-t — but that is a calibration finding, and the
+  pre-declared application (volatility-targeted exposure using the contest winner) requires a
+  point *variance* forecast to scale by, which is exactly the contest that produced no winner.
+  The correction above also weakens the calibration half of that result at the two finer
+  intervals.
+- **Regime:** HMM-Gaussian shows real, replicated structure, but no formal head-to-head test
+  between regime models was built, so calling it a winner by the same rigour the rest of this
+  notebook demands would be inconsistent. The alternative gate — a conditional-autocorrelation
+  finding, one state having reliably stronger reversal than another — was computed and shows no
+  consistent, replicated pattern across intervals or symbols. There is nothing clean to gate on.
+
+Running it anyway on either "almost" result would mean backtesting a forecast this notebook itself
+declined to certify. Skipping it is the correct application of the notebook's own rule, not a
+shortfall.
+
+**The holdout was not spent.** It would only have been relevant to the trading application, which
+didn't run. Everything above uses the full pre-holdout rolling out-of-sample evaluation —
+thousands of scored bars per contest, not a handful of folds.
+
+---
+
+# Bottom line
+
+**Volatility.** No method wins the forecasting contest outright on BTC at any interval, and the
+transfer check shows the closest thing to a leader (HAR-RV, lowest QLIKE at 5 of 6 symbols)
+doesn't clear significance against everything else consistently across symbols either. What *is*
+established: HAR-RV, the four range estimators and normal-innovation GARCH cluster together as the
+best available point forecasts, all beating EWMA and variance-distribution fits with significance
+and none beating each other; a range-based forecast is measurably and predictably biased low, by
+exactly the amount the descriptive range departure from Brownian implies; and a real, narrower
+distributional win exists in density calibration, where GARCH-t's own Student-t innovation
+distribution gives the best log-score tail forecast at all four intervals — though its 5% VaR
+coverage, once the lookahead bug in its shape parameter was corrected, is only well calibrated at
+12h and 1d.
+
+**Regime.** Distributional regime models — HMM-Gaussian especially — find real structure that is
+substantially more persistent than a naive trailing-median threshold. Every model at every BTC
+interval, replicated on all five transfer symbols, shows the same clean pattern: **regimes predict
+next-bar volatility with overwhelming significance and do not predict direction.** No regime
+duration is geometric anywhere, meaning states persist more than a Markov model's own core
+assumption implies. No regime model was certified as beating the baseline with a significance
+test, so none is reported as a winner.
+
+This matches notebooks 001–003 in finding no validated tradeable edge, while adding genuinely new,
+non-null knowledge: crypto's tails, clustering and regime structure are real, extreme, and now
+measured with proper scoring rules — even though none of it clears the bar set here for calling
+something a winner.
+
+# What to test next
+
+- **A formal comparison test between regime models.** The volatility contest has a complete
+  pairwise-testing apparatus; the regime work does not. A proper likelihood-ratio or
+  out-of-sample predictive-density comparison could turn the suggestive persistence advantage into
+  a certified result, which would in turn make the trading application reachable.
+- **Re-tune EWMA's decay per interval.** The standard λ = 0.94 was applied unchanged everywhere
+  and degraded badly at every interval coarser than hourly.
+- **Extend density scoring across the whole ladder.** GARCH-t's own-distribution calibration was
+  scored separately, but the pairwise-testing machinery was never extended to density comparisons
+  across all methods. Doing so would reveal whether GARCH-t is a genuine density winner rather
+  than just better than normal-innovation GARCH.
+- **Apply a range-estimator drift correction.** The descriptive work found crypto's normalised
+  range runs 6–14% below the Brownian prediction, and the forecasting work confirmed it shows up
+  as a systematically low regression slope. A multiplicative correction calibrated from the
+  measured excess is a cheap, well-motivated step this notebook diagnosed but didn't apply.
+- **Extend both transfer checks to all four intervals.** Both were scoped to daily bars for
+  wall-clock reasons on this hardware.
+
+*Notebook: `src/research/004_distributional_models.ipynb`.*

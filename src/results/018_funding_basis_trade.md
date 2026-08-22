@@ -1,380 +1,288 @@
-# Notebook 018 — The Crypto Perpetual Funding Basis Trade (Gate FA): Results Summary
+# 018 — The Crypto Perpetual Funding Basis Trade
 
-## What
+## The trade
 
-This notebook tests the one candidate from notebook 009's own Phase 3 shortlist that had never been
-run: **Gate FA, the crypto perpetual funding basis trade** — long spot, short the perpetual on the
-same asset, delta-neutral by construction, collecting the 8-hourly funding payment as the return. It
-is the only structurally *non-directional* trade this research programme has attempted; every prior
-gate, in one way or another, bet that a feature predicted the direction of a price or a spread. This
-one bets that a cash flow is positive more often than it costs to collect.
+Buy the spot asset, short the perpetual future on the same asset. The two legs cancel, so the
+position has essentially no exposure to the price. What it collects is the **funding payment** —
+the 8-hourly cash flow perpetual futures use to keep their price tethered to spot.
 
-## Why
+**This is the only structurally non-directional trade this research programme has attempted.** Every
+prior test bet, in one way or another, that some feature predicted the direction of a price or a
+spread. This one bets that a cash flow is positive more often than it costs to collect.
 
-009 shortlisted Gate FA with Tier-1 evidence (by analogy to the ~$4tn Treasury cash-and-carry basis
-trade) and parked it "not confirmed — needs a spot price series this repo's cached data was not
-verified to include." That verification is done here (§Phase 1): Binance's spot, futures/um, and
-`premiumIndexKlines` archives all serve native 8h data going back to the start of this repo's crypto
-sample, including a still-unspent holdout window. A recent, superficially attractive paper
-(AdaptiveTrend, arXiv:2602.11708) was found and explicitly *not* pursued — it is notebook 013's
-Design C, already rebuilt twice and already a stronger null than a third attempt could produce.
+Notebook 009 shortlisted it with strong evidence — by analogy to the roughly $4 trillion Treasury
+cash-and-carry basis trade — but parked it because the repo's cached data hadn't been verified to
+include a spot price series. That verification is done here: the exchange's spot, futures and
+premium-index archives all serve native 8-hourly data going back to the start of this repo's crypto
+sample.
 
-## How
+## What had to be true, and what happened
 
-Pre-registered every gate, constant, and objection answer (`phase_0_18_preregistration.json`) before
-any data was fetched. Verified the 009 data blocker live, fetched spot/perp/premium-index klines for
-a 128-symbol universe seed (013's own list) across the full 2021-07-01→2025-06-30 development window
-plus the 2025-07-01+ holdout (fetched but mechanically fenced off — no Phase 3/4/5 loader can reach
-it). Built the trade mechanics (`basis_lib18.py`: causal EWMA carry, per-symbol hysteresis, explicit
-two-leg cost accounting) with six required unit tests, ran a no-cost mechanism probe before any
-backtest, then the full timed/always-on/cash backtest at four origin offsets, then six pre-registered
-ablations.
+| Question | Result | The number |
+|---|:---:|---|
+| **Does the mechanism exist?** Positive carry net of basis drift, before costs | **Yes** | Pooled mean gross paired return 4.30e−05 per period, HAC t = 3.27 |
+| **Is it tradeable?** The timed book survives costs | **No** | Net Sharpe +0.577 (clears 0.5) **but** the bootstrap interval on net return includes zero **and** the deflation is 0.186 against a 0.95 bar |
+| **Does timing add value?** Timed beats always-on | **No** | The interval on the difference includes zero, though the point estimate strongly favours timing |
+| **Is it genuinely neutral?** Not a disguised long | **Yes** | Beta of 0.0005 to the crypto basket and 0.0016 to Bitcoin, both far inside ±0.10 |
+| **Fundable on absolute performance?** | **No** | Sharpe clears; deflation fails |
+| **Holdout access?** | **Not granted** | Requires both tradeability and timing value; neither fired |
 
-## Results
+**A genuine, statistically significant funding carry exists in this data, and the hedge genuinely
+works — but it is not a tradeable strategy by this notebook's own pre-declared bar.**
 
-**Gate FA-1 fires** (the mechanism exists: pooled mean gross paired return > 0, Newey-West |t| =
-3.27) but **Gates FA-2 and FA-3 do not**, so the holdout was never touched. The timed book clears net
-Sharpe > 0.5 at every origin offset (+0.577, identical to three decimals — the offsets are vacuous
-for this fixed-parameter, non-refit design, the same pattern 012 and Design A found) but fails the
-bootstrap-CI and deflated-Sharpe legs of FA-2. Timing clearly helps on a point-estimate basis (timed
-net Sharpe +0.577 vs. always-on −0.415) but the paired bootstrap CI on the difference still includes
-zero, so FA-3 does not fire either. Gate FA-4 fires cleanly: beta to the equal-weight crypto basket
-is 0.0005 and to BTC is 0.0016, both far inside the ±0.10 bound — the hedge genuinely removes crypto
-beta, confirmed independently by the perp-leg-only ablation, whose beta is −0.90 to −1.10 without it.
-Two real bugs were found and fixed while building Phase 3 (a units error in the break-even-periods
-constant, and a small number of price-feed-artifact bars distorting a pooled correlation check), both
-disclosed below. A genuine, disclosed capacity finding traces the DSR's harsh verdict to a real
-liquidity-screen blind spot, not a code defect.
+## Everything fixed before any data was fetched
 
-## Gate verdicts — the full table
+Round-turn cost of 34 basis points. A 15-day target hold. Entry and exit carry thresholds, with the
+exit at half the entry — a hysteresis band. A 7-day exponentially-weighted half-life for the carry
+estimate. A cap of 10 simultaneous positions. A $5 million per day liquidity floor on **both legs
+independently**. And 18 trials — 3 books × 4 origin offsets, plus 6 ablations — never revised. Every
+configuration actually run was one of the 18 declared upfront.
 
-| gate | claim | fires? | number behind it |
-|---|---|:---:|---|
-| **FA-1** (mechanism) | Positive funding carry exists net of basis drift, before costs | **YES** | pooled mean gross paired return 4.30e-05/period, Newey-West \|t\|=3.27 (>3) |
-| **FA-2** (tradeable) | Timed book is cost-surviving | **No** | net Sharpe +0.577 at every offset (clears >0.5) **but** bootstrap 95% CI on net return is [-1.3e-05, +7.0e-05] (includes zero) **and** DSR=0.186 (needs >0.95) |
-| **FA-3** (timing adds value) | Timing beats always-on | **No** | (timed − always-on) net return 95% CI is [-1.0e-05, +1.05e-04] — point estimate favours timed, CI includes zero |
-| **FA-4** (genuinely neutral) | Not a disguised long | **YES** | \|beta\| to crypto basket 0.0005, to BTC 0.0016, both < 0.10 at every offset |
-| **FUND** (009 flag) | Institutionally fundable absolute performance | **No** | Sharpe leg passes, DSR leg fails (0.186 < 0.95) |
-| **Holdout access** | requires FA-2 AND FA-3 | **Not granted** | neither fired — holdout never read (verified: `run_phase_6_18_holdout.py` refuses, exit 1) |
+Two obvious objections were also answered in advance, before any result existed:
 
----
+**"Notebook 007 already tested funding carry and found nothing."** That test was a cross-sectional,
+perpetuals-only, dollar-neutral book betting that *funding predicts price direction*. Its failure mode
+— rank churn producing 674–681 round trips a year — doesn't apply to a per-symbol, spot-plus-perp,
+delta-neutral position with no cross-section to rank against. What *does* transfer is notebook 007's
+own prescribed fix: a no-trade band tuned to funding's 8-hourly cadence, which is exactly the
+hysteresis used here — built fresh rather than by reusing the cross-sectional machinery, which would
+have reimported the failure mode.
 
-## Phase 0 — Pre-registration
+**"Isn't this just crypto beta with extra steps?"** That's the neutrality check, and it passes
+cleanly.
 
-`phase_0_18_preregistration.json`, committed before Phase 1 finished, not edited since. Freezes:
-`K`=34bp round-turn cost, `H`=45 periods (15 days) target hold, `θ_in`=7.556e-05, `θ_out`=3.778e-05
-(half of `θ_in`, sec 5.3's hysteresis band), `N`=21-period EWMA half-life (7 days), `N_max`=10
-simultaneous positions, $5M/day liquidity floor on both legs independently, and the five gates
-(FA-1..4, FUND) with their exact fire conditions. `n_trials`=18 (3 books × 4 offsets = 12, + 6 Phase 5
-ablations), never revised — every configuration actually run was one of the 18 declared upfront.
+## Data
 
-Both pre-registration objections are answered in the JSON before any result existed:
+126 of 128 candidate symbols have a usable spot leg. The two that don't are a capacity finding, not
+an error.
 
-- **"007 Phase C already tested funding carry and found it null"** — 007 tested a cross-sectional,
-  perps-only, dollar-neutral book betting *funding predicts price direction*; its failure mode
-  (rank-churn, ~674-681 round-trips/yr) does not apply to a per-symbol, spot+perp, delta-neutral
-  position with no cross-section to rank against. What *does* transfer from 007 is its own prescribed
-  fix — a no-trade band tuned to funding's own 8h cadence — which is exactly `qualifies()`'s
-  hysteresis, built without calling `alpha_lib7.hysteresis_weights` (cross-sectional/rank-based,
-  would reimport 007's own failure mode).
-- **"Isn't this just crypto beta with extra steps?"** — Gate FA-4 is the check, and it fires cleanly
-  (below).
+The holdout window was fetched in the same pass, into a **separate cache directory that no
+development-phase loader can read.** The panel loader structurally guards past the holdout start date,
+and exactly one script ever names the holdout path.
 
----
+## Does the mechanism exist? Two bugs found first
 
-## Phase 1 — Data (spot + perp + premium index, 8h)
+**A units error in the break-even calculation.** The first implementation divided the round-turn cost
+by a daily rate where it needed a per-period rate, landing on **1,133 periods** instead of **34**.
+Caught because the persistence check came back at 0.1% — implausibly low against the prior.
 
-The 009 blocker is resolved: spot, futures/um, and `premiumIndexKlines` 8h monthly archives all serve
-live data back to 2021-07 (re-verified live in Phase 1, not just from the cached snapshot in
-NEXT_PROMPT.md). `src/data.py`'s `download_and_unzip_klines` gained a `market` parameter (own commit,
-own test — `tests/test_data.py`) to fetch the spot leg; `premiumIndexKlines` needed a small dedicated
-fetcher in `basis_lib18.py` since its URL path is a different endpoint family, not just a different
-market.
+**A handful of bad bars distorting two pooled statistics.** The premium-index cross-check's pooled
+correlation came back at **−0.08**, materially disagreeing with expectation, even though the
+per-symbol distribution was healthy (median 0.744).
 
-126 of 128 universe-seed symbols have a usable spot leg (`1000SHIBUSDT`, `1000XECUSDT` do not — a
-capacity finding, not an error, counted per sec 4.3). The dev-window fetch (128 symbols × 3 series ×
-48 months) hit a live transient DNS failure partway through (116/256 symbol-windows failed with
-`NameResolutionError`); because every fetch is idempotent (cached per symbol/series/month), a resumed
-run recovered all of it from cache plus the network in under 10 minutes once connectivity returned. A
-retry-with-backoff wrapper was added to `run_phase_1_18_fetch.py` afterward so a future transient blip
-doesn't need a manual resume. The holdout window (2025-07-01 onward, including funding rate history,
-which had to be freshly fetched since the existing repo-wide funding cache stops at 2025-06-30) was
-fetched in the same pass into a **separate cache directory** (`basis18/holdout/`) that no Phase 3/4/5
-loader can read — `basis_lib18.load_basis_panel` structurally guards past `research.HOLDOUT_START`,
-and only `run_phase_6_18_holdout.py` ever names the holdout path.
+Traced to two symbols. One had a perpetual price frozen at a stale value for several days — verified
+directly against the cached bars, with volume at exactly zero — while spot kept moving, producing a
+computed basis of **+275%**. The other is a real 2022 collapse where dividing by a near-zero spot
+price produces values over 100×.
 
----
+Both are excluded from the *descriptive* checks by a stated sanity bound, with the exclusion count
+reported (5,066 of 461,298 observations, touching 14 symbols) — **not** excluded from the backtest
+universe. After exclusion, the premium-index correlation recovers, and the funding-versus-basis
+identity check's correlation rises **from 0.48 to 0.994**.
 
-## Phase 2 — Library (`basis_lib18.py`)
+With both fixed:
 
-`carry_estimate` (causal EWMA, `half_life=21` — a half-life, not a span, per polars' own ambiguity),
-`paired_log_return` (explicit two-leg difference, not the sec 3.2 basis approximation, so the
-approximation can be *checked* against it rather than assumed), `qualifies` (per-symbol absolute-
-threshold hysteresis), and `apply_two_leg_costs` (explicit accounting for the 10bp spot / 5bp perp fee
-split, cross-checked in a test against the blended-rate call to `research.add_portfolio_costs`). Six
-required tests plus the cross-check, all green; `build_book_weights` does the sequential, causal,
-per-symbol book construction (hysteresis-gated for "timed," liquidity-gated only for "always-on" —
-disclosed as an implementation reading of an already-frozen book definition, not a swept parameter).
+**The mechanism exists.** Pooled mean gross paired return of 4.30e−05 per period, HAC t = 3.27, on
+461,298 observations.
 
----
+**Funding dominates the basis-change term, on both magnitude and significance.** Funding's pooled mean
+is highly significant (t = 20.5); the basis-change term's mean is **not distinguishable from zero**
+(t = 0.33). Exactly as predicted: the basis term is mean-reverting and roughly zero-mean — noise around
+the funding drift, not a competing source of return.
 
-## Phase 3 — Mechanism probe (no cost model, no Sharpe, no strategy verdict except FA-1)
+**The claimed 2025 funding decay does not yet show up here.** The development window only reaches mid
+2025, and pooled funding by year is actually *higher* in 2024 (mean 1.10e−04, t = 45.6) than in 2023
+(3.60e−05, t = 6.1), with 2022 slightly negative. This is reported as a genuine limit rather than
+smoothed over: the interesting comparison sits inside the holdout, which was never spent.
 
-**Two real bugs found and fixed here, both disclosed rather than quietly patched:**
+**Funding regimes persist long enough to matter, but not by a wide margin.** 44% of above-threshold
+carry runs last at least 34 periods, the break-even hold. Real and exploitable, but not overwhelming.
 
-1. **A units error in the break-even-periods constant.** The first implementation computed
-   `34bp / (0.01 * 3)` intending "3bp/day," landing on **1133 periods** instead of the sec 3.4 target
-   of **34**. Caught because the persistence check's `frac_runs_clearing_breakeven` came back at
-   0.1% — implausibly low against the sec 3.4 prior. Fixed to `34bp / 1.0bp-per-period = 34`.
-2. **A handful of implausible-basis bars distorting two pooled statistics.** The premium-index
-   cross-check's pooled Pearson correlation came back **−0.08** (materially disagreeing, by the
-   pre-declared bar) even though the per-symbol distribution is healthy (median 0.744). Traced to two
-   symbols: `DGBUSDT`'s perp close froze at a stale value for several days in Nov 2024 (volume=0,
-   verified directly against the cached kline data) while spot kept moving, producing a computed basis
-   of **+275%**; `LUNAUSDT`'s real 2022 collapse divides by a near-zero spot price, producing values
-   over 100×. Both are excluded from the descriptive checks in this phase (not from the backtest
-   universe) by a stated `|basis| > 20%` sanity bound, with the exclusion count reported
-   (5,066 of 461,298 obs, 14 symbols touched). After exclusion: premium-index correlation is healthy
-   (median per-symbol 0.744, pooled-after-filter recovers to a sane positive value), and the
-   funding/basis-change identity check's correlation rises from 0.48 to **0.994**.
+## The backtest
 
-With both fixed, the substantive findings:
-
-- **Gate FA-1 fires.** Pooled mean gross paired return 4.30e-05/period, Newey-West |t|=3.27 (>3),
-  n=461,298 (post-filter).
-- **Funding dominates the basis-change term, by both magnitude and significance.** Funding's pooled
-  mean is highly significant (t=20.5); basis-change's mean is **not** distinguishable from zero
-  (t=0.33) — exactly E1's claim and sec 3.2's own prediction that the basis term is mean-reverting
-  and roughly zero-mean, i.e. noise around the funding drift, not a competing source of return.
-- **E2's 2025 funding decay does not (yet) show up in this repo's dev-window data** — dev only
-  reaches 2025-06-30, so only H1 2025 is visible, and pooled funding by year is actually higher in
-  2024 (mean 1.10e-04, t=45.6) than 2021 (1.41e-04, t=25.8) or 2023 (3.60e-05, t=6.1); 2022 is
-  slightly negative (−4.22e-05, t=−11.7). This is reported as a genuine limit on this notebook's own
-  replication of E2's claim, not smoothed over: the interesting comparison (2024 vs. 2025) sits inside
-  the holdout, which was never spent.
-- **Funding regimes persist long enough to matter, but not by a wide margin.** 44% of carry-above-
-  θ_in runs last ≥34 periods (the break-even hold) — a real, exploitable persistence, not
-  overwhelming, matching sec 3.4's own "feasible but not by a wide margin" framing exactly.
-
----
-
-## Phase 4 — The backtest (timed / always-on / cash, 4 origin offsets)
-
-| book | gross Sharpe | net Sharpe | net max drawdown | annualized turnover |
+| Book | Gross Sharpe | Net Sharpe | Max drawdown | Turnover/year |
 |---|---:|---:|---:|---:|
-| **timed** (headline) | 2.66 | **+0.577** | −8.6% | 56.9/yr |
-| always-on | 0.21 | **−0.415** | −25.0% | 15.2/yr |
-| cash | 0.0 | 0.0 | 0.0% | 0 |
+| **Timed** | 2.66 | **+0.577** | −8.6% | 56.9 |
+| Always on | 0.21 | −0.415 | −25.0% | 15.2 |
+| Cash | 0.0 | 0.0 | 0.0% | 0 |
 
-(All four origin offsets — 0/1/2/3 periods — agree to 3+ decimals; vacuous for this fixed-parameter,
-non-refit design, the same pattern 012 and Design A found, disclosed rather than presented as
-robustness.)
+All four origin offsets agree to three or more decimal places. That check is **vacuous** for a
+fixed-parameter, non-refitting design like this one — the same pattern notebooks 012 and 013 found —
+and is disclosed rather than presented as robustness.
 
-**FA-2 fails on the bootstrap-CI and DSR legs, not the Sharpe leg.** Net Sharpe (+0.577) clears the
-0.5 bar at every offset. The 95% block-bootstrap CI on net return is `[-1.31e-05, +7.02e-05]` —
-includes zero. DSR is 0.186, far under 0.95, computed honestly at the pre-declared `n_trials=18`
-— **and per sec 11.4's pre-registered caveat, `research.deflated_sharpe_prob` is a known-harsh
-estimator for this specific kind of trial family (near-identical origin offsets), not fixed here** (that
-is notebook 017). The sample's extreme skew (−11.5) and kurtosis (817) driving that DSR down were
-investigated, not accepted at face value (see Concentration finding below) — real, not a stray input
-error, but their *cause* is disclosed and explained, not just reported as a number.
+**Tradeability fails on the interval and the deflation, not the Sharpe.** Net Sharpe clears the 0.5
+bar at every offset. But the 95% interval on net return is [−1.31e−05, +7.02e−05], which includes
+zero, and the deflation is 0.186 at the honest count of 18 trials.
 
-**FA-3 fails despite a large point-estimate gap.** Timed net Sharpe (+0.577) vs. always-on
-(−0.415) is a 0.99 Sharpe-point spread, and the underlying mechanism makes sense: timed only holds
-positions when carry clears θ_in, so its *gross* Sharpe (2.66) is 12× always-on's (0.21) — timing
-selectively captures the best funding periods. But turnover is *higher* for timed (56.9/yr) than
-always-on (15.2/yr, since always-on barely changes membership), so the improvement has to clear a
-real cost hurdle, and the paired bootstrap CI on (timed − always-on) net return,
-`[-1.03e-05, +1.05e-04]`, still includes zero. Read plainly: timing looks like it helps a great deal,
-and the data cannot yet rule out that it doesn't.
+That deflation figure carries a pre-registered caveat: **this repo's deflation estimator is
+known-harsh for exactly this kind of trial family** — near-identical origin offsets producing
+near-identical Sharpes. See the addendum at the end for how that was resolved.
 
-**FA-4 fires cleanly.** Beta to the equal-weight crypto basket is 0.0005, to BTC 0.0016 — both two
-orders of magnitude inside the ±0.10 bound, at every offset. The paired construction is genuinely
-delta-neutral, not luck; confirmed independently in Phase 5's perp-leg-only ablation.
+**Timing fails despite a large point-estimate gap.** The timed book's +0.577 against always-on's
+−0.415 is nearly a full Sharpe point, and the mechanism makes sense: timing only holds positions when
+carry clears the threshold, so its **gross** Sharpe is 12× always-on's. But turnover is *higher* for
+timing (56.9 against 15.2 a year, since always-on barely changes membership), so the improvement has
+to clear a real cost hurdle — and the paired interval on the difference still includes zero.
 
-**Concentration finding (why the DSR's skew/kurtosis are so extreme, investigated rather than
-reported blind).** The timed book holds a median of 10 symbols (the cap) and is at the cap 54% of
-bars, but is down to a **single symbol 5.4% of bars** — the equal-weight-among-qualifiers
-construction has no diversification floor below `N_max`. The five worst single-bar net returns are
-dominated by exactly this: `ICPUSDT` alone on 2022-06-25 (−5.7%) and `MATICUSDT` alone or nearly alone
-across four bars in early Sept 2024 (−0.6% to −2.0%). Both trace to a **real perp-market liquidity
-collapse**, verified directly against the cached kline data (open=high=low=close, volume=0 for
-several consecutive days) — Binance's own MATIC→POL rebrand transition (already documented by 013 as
-ending that symbol's clean feed after 2024-10) and, for ICP, a genuine multi-day zero-volume stretch.
-During a zero-volume stretch the short perp leg cannot actually be hedged (there is no real price
-discovery to hedge against), and the pre-registered 30-day trailing-**median** liquidity screen is
-slow to catch a sudden collapse — it does catch ICPUSDT's, one bar after the worst loss. This is a
-structural property of a median-based screen and an uncapped-below-`N_max` equal-weight book, not a
-code defect, and it is **not** fixed here by changing the frozen liquidity floor, lookback window, or
-book-construction rule (sec 12 forbids exactly that kind of after-the-fact tuning) — it is reported as
-a capacity/robustness finding, in 009's own idiom.
+Read plainly: **timing looks like it helps a great deal, and the data cannot yet rule out that it
+doesn't.**
 
-**Holdout access: not granted.** FA-2 and FA-3 both need to fire; neither did.
-`run_phase_6_18_holdout.py`, invoked directly to confirm the gate itself works, refuses (exit code 1)
-without reading `src/research/cache/basis18/holdout/` — verified, not just asserted.
+**Neutrality passes cleanly.** Beta of 0.0005 to the crypto basket and 0.0016 to Bitcoin — two orders
+of magnitude inside the bound, at every offset. Confirmed independently below.
 
----
+### Why the deflation inputs are so extreme: a concentration finding
 
-## Phase 5 — Controls and ablations (6 exhibits, `n_trials` 12→18, exactly as pre-declared)
+Rather than accepting the extreme skew (−11.5) and kurtosis (817) at face value, they were traced.
 
-| exhibit | headline number | finding |
+The timed book holds a median of 10 symbols — the cap — and is at the cap 54% of bars. But it is down
+to **a single symbol 5.4% of bars.** The equal-weight-among-qualifiers construction has **no
+diversification floor below the position cap.**
+
+The five worst single-bar returns are dominated by exactly this: one symbol alone on one day at
+−5.7%, and another alone or nearly alone across four bars at −0.6% to −2.0%.
+
+Both trace to a **real perpetual-market liquidity collapse**, verified directly against the cached
+bars: open, high, low and close all identical with zero volume, for several consecutive days. One is
+an exchange rebrand transition already documented in notebook 013; the other a genuine multi-day
+zero-volume stretch.
+
+**During a zero-volume stretch the short perpetual leg cannot actually be hedged** — there is no price
+discovery to hedge against — and the pre-registered 30-day trailing **median** liquidity screen is slow
+to catch a sudden collapse. It does catch one of them, one bar *after* the worst loss.
+
+This is a structural property of a median-based screen combined with an equal-weight book with no
+floor, **not a code defect** — and it is deliberately **not fixed here** by changing the frozen
+liquidity floor, lookback or construction rule. That would be exactly the kind of after-the-fact
+tuning the pre-registration forbids. It is reported as a capacity and robustness finding.
+
+## Controls and ablations
+
+| Exhibit | Result | Finding |
 |---|---|---|
-| **no-hysteresis** (θ_out=θ_in) | net Sharpe +0.577 → **−0.726**, turnover 56.9→95.4/yr | the hysteresis band is genuinely load-bearing — 007's own prescribed fix matters here exactly as hypothesized |
-| **perp-leg-only** (no spot hedge) | beta_basket −0.897, beta_btc −1.103 (hedged: 0.0005 / 0.0016) | confirms the spot hedge, not luck, is what removes beta — max drawdown on this unhedged variant is −99.6%, a near-total wipeout that also shows why the hedge matters practically, not just statistically |
-| **excluding LUNA/FTT** | net Sharpe +0.577 → **+0.562** | the headline does not depend on either collapse |
-| **cost sensitivity** (0/17/34/51bp round turn) | Sharpe 2.66 / 1.62 / 0.577 / −0.450 | crosses zero between the actual 34bp and 51bp — linear interpolation puts the break-even round-turn cost at roughly **43-44bp**, about 1.3× today's retail rate; a lower (VIP/institutional) fee tier would clear it by a wider margin |
-| **levered 3×/5×** (with sec 6.3 liquidation analysis) | Sharpe 0.52 / 0.45, but 1% ES on the perp leg's own 8h return is **13.9%** | at 3×/5× that is 42%/70% of deployed capital in a single bad 8h period — the levered Sharpes should not be read as investable without this attached; cited to notebook 006 (crypto tail-shape families), not 008 (commodity futures, does not transfer) |
-| **by-year decomposition** | net Sharpe 2021(H2) +7.56, 2022 −0.19, 2023 +1.72, 2024 +0.67 | 2021 H2's number is a small sample (~547 bars, half a year) during crypto's highest-funding era and should not be over-read; 2022-2024 show a real, if noisy, decline consistent with (but not a full replication of, since 2025 sits in the untouched holdout) E2's decay claim |
+| **No hysteresis** | Net Sharpe +0.577 → **−0.726**, turnover 56.9 → 95.4/yr | The band is genuinely load-bearing — notebook 007's own prescribed fix matters exactly as hypothesised |
+| **Perpetual leg only** (no hedge) | Beta −0.897 to basket, −1.103 to Bitcoin | **Confirms the hedge, not luck, removes beta.** Max drawdown on the unhedged variant is **−99.6%** — a near-total wipeout showing why the hedge matters practically, not just statistically |
+| **Excluding the two collapsed tokens** | +0.577 → **+0.562** | The headline does not depend on either collapse |
+| **Cost sensitivity** (0/17/34/51bp) | Sharpe 2.66 / 1.62 / 0.577 / −0.450 | Crosses zero between 34 and 51bp — **break-even is around 43–44bp**, about 1.3× today's retail rate. A lower institutional fee tier would clear it by a wider margin |
+| **Leverage 3× and 5×** | Sharpe 0.52 / 0.45 — but the 1% expected shortfall on the perpetual leg's own 8-hour return is **13.9%** | At 3× and 5×, that is **42% and 70% of deployed capital in a single bad 8-hour period.** The levered Sharpes should not be read as investable without this attached |
+| **By year** | +7.56 (2021 H2), −0.19 (2022), +1.72 (2023), +0.67 (2024) | The 2021 figure is a small sample during crypto's highest-funding era and shouldn't be over-read. 2022–2024 show a real if noisy decline |
 
----
+## The holdout was not spent
 
-## Phase 6 — Holdout: **not spent**
+Access required both the tradeability and timing checks to fire. Neither did.
 
-Per the pre-registration, Phase 6 runs only if Gate FA-2 **and** Gate FA-3 both fire on development.
-Neither did. `run_phase_6_18_holdout.py` — the only file in this repo that names
-`src/research/cache/basis18/holdout/` or reads past `research.HOLDOUT_START` for this notebook
-(`grep -rn "basis18/holdout\|HOLDOUT_START" src/research/tmp/*18*.py` confirms) — was invoked once,
-directly, specifically to verify it refuses correctly: it printed the `holdout_access` block read back
-from `phase_4_18_results.json`, declined, and exited 1 without ever calling
-`bl._load_basis_panel` against the holdout directory. The 2025-07-01+ window remains exactly as spent
-(not at all) as it was before this notebook ran — data for it sits pre-fetched in
-`basis18/holdout/` for whichever future notebook next has a fired gate to spend it on, per sec 9.3's
-"fetching it early costs nothing" rationale.
-
----
+The holdout runner — the only file that names the holdout directory or reads past the cutoff for this
+notebook — was invoked once, deliberately, to verify that it refuses correctly. It printed the access
+block read back from the stored results, declined, and exited with an error **without ever loading the
+holdout data.** Verified, not merely asserted.
 
 ## Bugs found
 
-Two real, in-flight bugs, both caught by suspicious numbers before being trusted (this repo's own
-standing tripwire discipline — an implausible result gets investigated, not reported):
+Two real bugs, both caught by suspicious numbers before being trusted:
 
-1. **Break-even-periods units error** (Phase 3) — `34bp / (0.01*3)` computed 1133 instead of 34;
-   caught because the persistence check's clearing fraction was implausibly low (0.1%) against the
-   sec 3.4 prior. Fixed; clearing fraction is now 44%, matching the prior.
-2. **Pooled statistics distorted by two symbols' price-feed artifacts** (Phase 3) — DGBUSDT's frozen
-   perp price (verified: volume=0 for multiple consecutive days) and LUNAUSDT's real 2022 collapse
-   both produce basis values in the hundreds-of-percent range, which dominated a naive pooled Pearson
-   correlation even though 124 of 126 symbols individually agree well (median per-symbol correlation
-   0.744). Fixed by reporting the per-symbol correlation distribution as the primary comparison and
-   excluding `|basis| > 20%` bars from pooled statistics, with the exclusion count disclosed rather
-   than silently absorbed.
+1. **The break-even units error**, caught because a persistence fraction came back implausibly low.
+   Fixed; the fraction is now 44%, matching the prior.
+2. **Two symbols' price-feed artefacts distorting pooled statistics**, fixed by making the per-symbol
+   distribution the primary comparison and excluding implausible bars from pooled statistics, with the
+   count disclosed rather than silently absorbed.
 
-One additional near-miss, not a code bug: a naive read of Phase 4's extreme DSR sample skew/kurtosis
-could have been reported as "the estimator is unreliable here" and left at that. Tracing it instead
-(Phase 4's concentration diagnostic) found a real, structural, disclosable finding — a
-median-liquidity-screen blind spot during a sudden perp-market liquidity collapse — rather than
-either hand-waving the number away or, worse, silently patching the liquidity screen to make it go
-away (which sec 12 explicitly forbids as post-hoc tuning).
+**One near-miss that wasn't a code bug.** A naive read of the extreme skew and kurtosis could have been
+reported as "the estimator is unreliable here" and left at that. Tracing it instead found the real,
+structural, disclosable concentration finding above — rather than hand-waving the number away or,
+worse, silently patching the liquidity screen to make it disappear.
 
-Also disclosed, not a bug: `join(..., suffix="_basket")` in Phase 4/5/6's beta computation does
-nothing unless the joined frames' column names already collide — three call sites initially relied on
-it and would have silently computed beta against the wrong (unrenamed) column name, caught by running
-the scripts (`ColumnNotFoundError`, not a silent wrong number) before any result was trusted. Fixed by
-renaming the basket column explicitly before joining, in all three phase scripts.
+**Also disclosed, not a bug:** a join suffix parameter does nothing unless column names already
+collide. Three call sites relied on it and would have computed beta against the wrong column — caught
+by the scripts erroring loudly rather than producing a silent wrong number. Fixed by renaming
+explicitly before joining.
 
 ## Bottom line
 
-**Gate FA-1 fires — a genuine, statistically significant funding carry exists in this repo's own
-data, and it is driven by funding, not basis drift, exactly as E1 claims.** But **Gates FA-2 and FA-3
-do not fire**, so this is not a tradeable strategy by this notebook's own pre-declared bar, and the
-holdout stays unspent. The verdict is more informative than a flat null: net Sharpe clears the
-absolute 0.5 bar at every origin offset, and timing shows a large, economically sensible edge over
-simply holding the trade always-on (12× the gross Sharpe) — but neither the bootstrap CI on net
-return nor the paired CI on timing's own value-add can yet rule out zero, and the deflated-Sharpe
-estimator (already flagged in this programme's own methodology notes as likely too harsh for a
-same-strategy, near-identical-offset trial family) fails decisively. **Gate FA-4 fires cleanly: this
-is a genuinely delta-neutral book, not a disguised long, confirmed two independent ways** (direct beta
-measurement, and the perp-leg-only ablation's beta collapse to -1 when the hedge is removed). This is
-the first gate in this programme's thirty-one-gate history where a real, structurally different
-mechanism (a cash flow, not a forecast) shows up statistically significant before costs and survives
-its own most direct validity check (neutrality) — it simply does not yet clear the higher bar of
-being a demonstrably tradeable edge net of realistic costs and multiple-testing correction. The
-Sharpe-1.2-to-2.4 development-window expectation this notebook's own pre-registration set going in
-(sec 1) was not met; the honest net Sharpe is 0.577, inside the wider "plausibly under 1.0" band the
-same section flagged as the realistic floor.
+**The mechanism is real.** A statistically significant funding carry exists in this repo's own data,
+driven by funding rather than basis drift, exactly as claimed.
 
-Real, structural reasons for caution about extrapolating even the point estimate: a $5,000,000/day
-liquidity floor with no diversification requirement below the 10-position cap leaves the book
-occasionally (5.4% of bars) concentrated in a single name, and the worst outcomes in this whole
-backtest come from exactly that combination meeting a genuine perp-market liquidity collapse the
-screen is too slow to catch. Reverse carry (negative funding) was never tested, by design (sec 3.5) —
-the strategy as built is flat, not short, in negative-funding regimes, which caps the upside relative
-to E1's own 6.45 figure (which does not appear to impose this constraint). Leverage, which is the
-only way to make this size-competitive with E1's headline, carries a 1% expected shortfall on a
-single 8h period equal to 42% (3×) to 70% (5×) of deployed capital on the unhedged leg alone.
+**The trade is not demonstrably tradeable by this notebook's bar**, and the holdout stays unspent.
 
-Machinery: `src/data.py` (`download_and_unzip_klines` gained a `market` param, own commit/test),
-`src/research/tmp/basis_lib18.py` (the library — carry, paired return, hysteresis, two-leg costs, book
-construction, beta), `src/research/tmp/run_phase_{1,3,4,5,6}_18_*.py` (fetch driver, mechanism probe,
-backtest, ablations, gated holdout runner), `tests/test_basis_lib18.py` (the six required tests plus
-one cross-check), `scripts/fetch_basis_data.sh` / `run_backtest.sh` / `run_ablations.sh` (background-
-safe runners with `scratch/018/status.json` heartbeats). `src/risk/` used only as machinery
-(`ewma_vol` implicitly via the repo's existing conventions was not needed; `risk.model.fit_risk_model`
-+ `risk.densities` for the sec 6.3 liquidation-tail fit, cited to notebook 006) and never to time
-entries, exits, or position size (sec 6.4). `src/risk/` and `src/regime/` were imported only, never
-modified. The 2025-07-01+ crypto holdout remains exactly as unspent as every notebook before this one
-left it, now pre-fetched into a mechanically fenced-off directory for whichever future notebook next
-has a fired dev gate.
+But the verdict is more informative than a flat null. Net Sharpe clears the absolute 0.5 bar at every
+offset, and timing shows a large, economically sensible edge over always-on — 12× the gross Sharpe.
+Neither the interval on net return nor the paired interval on timing's value-add can yet rule out
+zero.
+
+**And the neutrality check passes cleanly, confirmed two independent ways** — direct beta measurement,
+and the unhedged ablation's beta collapsing to −1 when the hedge is removed.
+
+This is the first test in this programme's thirty-one-test history where a **structurally different
+mechanism — a cash flow rather than a forecast — shows up statistically significant before costs and
+survives its own most direct validity check.** It simply does not clear the higher bar of being a
+demonstrably tradeable edge net of realistic costs and multiple-testing correction. The Sharpe of
+1.2–2.4 the pre-registration expected going in was not met; the honest figure is 0.577, inside the
+wider "plausibly under 1.0" band the same document flagged as the realistic floor.
+
+**Real reasons for caution about extrapolating even the point estimate:**
+
+- A liquidity floor with no diversification requirement leaves the book concentrated in a single name
+  5.4% of the time, and the worst outcomes in the whole backtest come from exactly that meeting a
+  liquidity collapse the screen is too slow to catch.
+- **Reverse carry was never tested, by design.** The strategy as built goes flat, not short, in
+  negative-funding regimes — which caps upside relative to external reports that don't appear to
+  impose this constraint.
+- Leverage, the only way to make this size-competitive, carries a 1% expected shortfall on a single
+  8-hour period equal to 42–70% of deployed capital on the unhedged leg alone.
 
 ## What to test next
 
-- **A joint diversification floor**, e.g. a minimum-N-symbols requirement below which the book stands
-  down entirely rather than concentrating, would directly address the concentration finding — but
-  this is a new, pre-registerable design choice for a future notebook, not a retroactive edit to this
-  one's frozen construction (sec 12).
-- **A faster or dual-signal liquidity screen** (e.g. a same-day zero-volume veto layered on top of the
-  30-day trailing median) would close the specific detection-lag gap this notebook found, at the cost
-  of a second pre-registered parameter and a corresponding `n_trials` increment.
-- **The DSR question this notebook's own numbers sharpen**: with FA-2 failing specifically on a
-  DSR leg already flagged as likely-too-harsh for a near-identical-offset trial family, notebook 017's
-  deferred estimator correction is now motivated by a live, borderline case rather than only a
-  methodological concern — worth prioritizing.
-- **A genuinely lower-turnover carry construction** (a slower EWMA, or a wider band re-derived from a
-  longer target hold) might clear the bootstrap-CI leg the current design misses by a small margin —
-  but any such change needs its own pre-registration and gate, not a retroactive tune of this one.
-- **Fee-tier sensitivity as a standing exhibit**: this notebook's own cost-sensitivity table already
-  shows the trade clears zero around 43-44bp and the current retail-tier round turn is 34bp — worth
-  tracking against Binance's actual VIP tier schedule (Tier 3/4 sourcing caveats apply, per 009's own
-  near-miss on this exact question) rather than re-deriving it per notebook.
+- **A diversification floor** — a minimum symbol count below which the book stands down entirely rather
+  than concentrating. This directly addresses the concentration finding, but it is a new
+  pre-registerable design choice for a future notebook, not a retroactive edit here.
+- **A faster liquidity screen**, such as a same-day zero-volume veto layered on the trailing median.
+  This closes the specific detection lag found here, at the cost of another parameter and a
+  corresponding increase in the trial count.
+- **A lower-turnover carry construction** — a slower smoothing, or a wider band derived from a longer
+  target hold — might clear the interval this design misses by a small margin. Any such change needs
+  its own pre-registration.
+- **Fee-tier sensitivity as a standing exhibit.** The trade clears zero around 43–44bp against a
+  current retail round turn of 34bp. Worth tracking against actual institutional fee schedules rather
+  than re-deriving per notebook.
+
+---
 
 ## Addendum — re-scored under notebook 017
 
-Notebook 017 set out to test the `known_caveat` this document recorded above: that
-`research.deflated_sharpe_prob` likely over-penalizes a near-identical-offset trial family like this
-one's, because it scales its deflation benchmark by the sampling standard error of a single Sharpe
-rather than the cross-sectional dispersion of the trials actually run. It confirmed that defect is
-real — by Monte Carlo, at M=20,000 across 756 grid cells spanning trial counts, sample lengths, return
-moments, and (the axis that matters) inter-trial correlation, the current estimator's false-positive
-rate collapses toward zero as correlation rises, exactly the over-rejection pattern this book's DSR
-result was suspected of.
+Notebook 017 set out to test the caveat this document recorded: that this repo's deflation estimator
+likely over-penalises a near-identical-offset trial family, because it builds its benchmark from the
+sampling error of a single Sharpe rather than the observed spread of the trials actually run.
 
-It did not, however, find a repair that could be adopted. Two candidate fixes (the source paper's own
-cross-sectional-std repair, and a shrunk version of it) pass 017's calibration checks cleanly but lose
-real detection power relative to the current estimator in the independent-trials case — a "no free
-lunch" clause built into 017's own pre-registration to catch exactly that trade-off. A third candidate
-is powerful enough but is badly miscalibrated, over-firing in roughly two-thirds of null test cases.
-Per 017's pre-registered adoption rule, none of the four candidates was adopted, and
-`research.deflated_sharpe_prob` was left completely unchanged.
+**It confirmed the defect is real** — by simulation, at 20,000 replications across 756 grid cells, the
+current estimator's false-positive rate collapses toward zero as inter-trial correlation rises. Exactly
+the pattern this result was suspected of.
 
-That would ordinarily leave this book's case open — defect confirmed, no validated fix to apply. It
-isn't left open, because of a second, independent finding: this book's own stored inputs (sample
-skew −11.5, sample kurtosis 816.9 — a genuinely extreme, fat-tailed regime, not a stylized example) cap
-what *any* dispersion-based repair could ever have produced for this exact result at 0.83, below the
-0.95 bar the DSR leg needs to clear. That ceiling holds for every candidate 017 evaluated, adopted or
-not. In other words, this book's DSR leg was never actually contingent on which repair — if any —
-017 settled on: even in the counterfactual where the source paper's own repair had cleared both of
-017's checks, this book's corrected DSR could not have exceeded 0.83.
+**It did not find an adoptable repair.** Two candidates pass calibration cleanly but lose real
+detection power in the independent-trials case — a "no free lunch" clause built into that notebook's
+pre-registration specifically to catch that trade-off. A third is powerful enough but badly
+miscalibrated, over-firing in roughly two-thirds of null cases. Per the pre-registered rule, none was
+adopted and the estimator was left unchanged.
 
-**The practical result is unchanged from what this document already reported: `deflated_sharpe_prob`
-returns exactly 0.18590973717553716 for this book, Gates FA-2, FA-3, and FUND all stand exactly as
-recorded above, and the holdout remains unspent** (access requires FA-2 AND FA-3; neither fires, and
-neither has a leg that could be affected by an estimator change to begin with — FA-2's failure is
-independently sealed by its bootstrap-CI leg, FA-3 carries no DSR leg at all). The asterisk this
-document has carried against the DSR figure is removed not because the underlying worry was
-unfounded — it wasn't — but because this book's own numbers settle the question independently of
-it: no correction to this estimator, however it eventually gets fixed, can move this result. Nothing
-above this section has been edited; `n_trials` stays 18; no backtest was re-run and this notebook's
-own `.ipynb` was not re-executed, only appended to.
+**That would ordinarily leave this case open. It isn't**, because of a second, independent finding.
+This book's own stored inputs — sample skew −11.5 and kurtosis 816.9, a genuinely extreme regime rather
+than a stylised example — **cap what *any* spread-based repair could ever have produced for this exact
+result at 0.83**, below the 0.95 bar. That ceiling holds for every candidate evaluated, adopted or
+not.
 
-Full detail, gate-by-gate: `src/research/tmp/phase_7_18_dsr_addendum.json`. Notebook 017's own
-write-up and numbers: `src/results/017_deflated_sharpe_correction.md`.
+In other words, **this result's deflation leg was never actually contingent on which repair, if any,
+was settled on.** Even in the counterfactual where the source paper's own repair had passed both
+checks, the corrected value could not have exceeded 0.83.
+
+**The practical outcome is unchanged.** Every verdict stands exactly as recorded, and the holdout
+remains unspent — access requires both the tradeability and timing checks, neither of which fires, and
+neither of which has a leg an estimator change could affect. Tradeability's failure is independently
+sealed by its bootstrap interval; the timing check carries no deflation leg at all.
+
+The asterisk this document carried against the deflation figure is removed — not because the
+underlying worry was unfounded, since it wasn't, but because this book's own numbers settle the
+question independently of it. **No correction to this estimator, however it eventually gets fixed, can
+move this result.**
+
+Nothing above this section has been edited. The trial count stays 18, no backtest was re-run, and the
+notebook was appended to rather than re-executed.
+
+*Notebook: `src/research/018_funding_basis_trade.ipynb`. Notebook 017's own write-up:
+`src/results/017_deflated_sharpe_correction.md`.*

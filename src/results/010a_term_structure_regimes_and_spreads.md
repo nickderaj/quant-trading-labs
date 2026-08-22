@@ -1,260 +1,237 @@
-# Notebook 10a — Term-Structure Regimes and the Spread Taxonomy: Results Summary
+# 010a — Term-Structure Regimes and the Spread Taxonomy
 
-## What
+## Purpose
 
-This notebook builds the descriptive groundwork for a future gated backtest of the commodity spread mean-reversion candidate identified in notebook 9: a term-structure regime atlas across all 16 products, a taxonomy classifying all 30 pre-built spread series as inter-commodity or calendar spreads, a cointegration precondition check on those spreads, an initial look at whether spreads mean-revert harder in specific term-structure regimes, and a check of CFTC positioning data against the regime label. It deliberately produces no Sharpe ratios, cost model, or gate verdicts — its actual deliverable is pre-registering notebook 10b's complete gate table, regime definitions, and trading rule before any backtest is run.
+Notebook 009's cheap probe found mean reversion in five of six commodity spreads. Before spending a
+full costed backtest on that, three things need doing properly:
 
-## Why
+1. **Classify the spread universe.** Not all 30 pre-built spread series are the same kind of
+   object, and treating them as one group would be a real error.
+2. **Apply the cointegration precondition** that probe skipped, which should resolve the two
+   spreads whose test results disagreed.
+3. **Lock in the regime definitions and trading rule in advance**, so the eventual backtest can't
+   be accused of picking its rules after seeing results.
 
-Notebook 9's cheap first-look probe found a promising mean-reversion signal in 5 of 6 commodity spreads but skipped a cointegration precondition and left two spreads (gold_silver, platinum_palladium) with disagreeing test results unresolved. Before committing to a full, costed backtest in notebook 10b, the programme needed to properly classify the spread universe, apply the missing cointegration check, and lock in regime definitions and trading rules in advance — preventing the kind of after-the-fact rule selection that would undermine the eventual gate's credibility.
+**This notebook is descriptive only — no Sharpe ratios, no cost model, no verdicts.** Its actual
+deliverable is the pre-registration for notebook 010b, committed here and unalterable once that
+notebook starts running.
 
-## How
+Development window only (2010-06-06 to 2024-12-31). The holdout period is never read here, even
+though nothing in this notebook could spend it.
 
-Using term-structure state machinery already built in notebook 8 (`commod_lib8.term_structure_state`) plus new machinery (`spread_lib10.py`) for ADF cointegration testing, three regime definitions (raw sign, deadband, persistence), and regime-conditional statistics, the notebook computed a term-structure regime atlas for all 16 products (Phase 1), classified and cointegration-tested all 30 spreads (Phase 2), tested whether inter-commodity spreads mean-revert differently by regime (Phase 3), cross-checked CFTC positioning data for crude oil against the regime label (Phase 4), and wrote a formal pre-registration of notebook 10b's gates, regime definitions, and trading rule (Phase 5).
+## Three findings that carry forward
 
-## Results
+**The cointegration check cuts the tradeable universe and resolves an open question.** Applying it
+for the first time in this programme drops the inter-commodity backtest universe from 11 spreads to
+7, and settles notebook 009's flagged disagreement: gold–silver and platinum–palladium both fail
+cointegration outright (test statistics of −1.76 and −1.41 against a 5% critical value of −2.86).
+They are not actually cointegrated pairs, which is consistent both with their weak mean-reversion
+significance and their insignificant correlation. Both are excluded on this mechanical,
+pre-declared criterion.
 
-23 of 30 spreads passed the cointegration test at 5% significance, resolving notebook 9's disagreement: gold_silver and platinum_palladium both failed cointegration outright and are excluded from the future backtest universe. The deadband regime definition was promoted to primary (over raw sign, which restricts almost no trading days and barely tests the intended hypothesis) for structural reasons decided before any backtest result was seen. Backwardation frequency varied enormously by sector and even within it, supporting a per-spread rather than repo-wide regime rule. Brent-WTI showed a genuinely two-sided result depending on which leg's curve defines the regime — weak-to-reversed under one leg alone, strongly regime-dependent (9.5-day half-life in backwardation) when both legs agree — left as an open, pre-registered question for notebook 10b. CFTC positioning data for crude oil corroborated the regime label directionally, though with modest effect size.
+**The raw-sign regime definition is too weak to test the hypothesis it's meant to test.** The raw
+sign of the curve slope is defined on essentially every trading day — only a slope of exactly zero
+is undefined. Gating a book on it barely differs from trading unconditionally, so it cannot test the
+actual claim, which is about trading only in a *definite* regime state. A **deadband** definition,
+with a real "flat, no-trade" zone, is therefore promoted to primary, with raw sign and a persistence
+requirement kept as secondary robustness variants.
 
-**This notebook is descriptive only — no Sharpe ratios, no cost model, no gate verdicts
-(NEXT_PROMPT.md sec 1 rule 1).** Its purpose is to build the term-structure regime atlas,
-classify all 30 pre-built spread series, apply the cointegration precondition notebook 9's
-probe skipped, and — its actual deliverable — pre-register 10b's full gate table, regime
-definitions, trading rule, and cumulative DSR configuration count **before any backtest
-exists**. That pre-registration (Phase 5, `phase_5_10a_results.json`) is committed as part
-of this notebook and may not be edited once 10b starts running.
+This is a structural argument available at design time, not a result-driven change. All three
+variants are computed and reported below regardless of which becomes primary, so nothing was chosen
+by looking at which performed best.
 
-**One correction made at pre-registration time, not after seeing a backtest result.** The
-raw sign of `commod_lib8.term_structure_state` is defined on essentially every trading day
-(only a slope of exactly zero is null) — gating a book by raw sign alone barely differs
-from trading it unconditionally, and cannot test the operator's actual claim ("only in a
-*definite* state," NEXT_PROMPT.md sec 0). Phase 5 therefore promotes the **deadband**
-regime definition (a real "flat, no-trade" zone) to primary for Gate SPR, with raw sign
-and a persistence requirement kept as secondary robustness variants. This is a structural
-argument available at design time, not a result-driven change — Phase 3 already computed
-and reports all three variants regardless of which one becomes primary, so nothing here
-was chosen by looking at which definition performed best.
+**Brent–WTI's regime effect depends materially on which leg's curve defines the regime** — weak or
+reversed under one leg alone, strong under a both-legs-agree definition. Left as a live, open
+question for the backtest to settle rather than smoothed into either "confirmed" or "refuted".
 
-**The taxonomy matters, and conflating it would have been a real error.** 11 of the 30
-spreads are inter-commodity (two distinct underlyings); 19 are calendar spreads (the
-term structure *itself*, both legs the same product). Per sec 4.2, the regime hypothesis
-is only meaningful for the inter-commodity group — gating a calendar spread on
-contango/backwardation is close to conditioning a signal on its own sign, and this
-notebook never uses a calendar spread as evidence for the regime hypothesis.
+## First: does the prior work reproduce?
 
-**The cointegration precondition, applied for the first time in this programme, resolves
-notebook 9's own flagged disagreement.** Notebook 9's Phase 4 probe found gold_silver and
-platinum_palladium disagreeing between the AR(1) mean-reversion test and the z-score IC
-test. Both now fail the ADF cointegration test outright (t = −1.76 and −1.41 vs. the 5%
-critical value of −2.86) — they are not actually cointegrated pairs, which is consistent
-with both their weak AR(1) significance and their insignificant IC. Both are excluded from
-10b's backtest universe on this pre-declared, mechanical criterion.
-
-Machinery: `src/research/tmp/run_phase_{0..5}_10a_*.py` (Phase 0 reproduction; Phase 1
-regime atlas; Phase 2 taxonomy/cointegration; Phase 3 regime-conditional structure; Phase
-4 COT positioning; Phase 5 pre-registration), `src/research/tmp/spread_lib10.py` (the new
-computation this notebook needed — ADF cointegration test, three regime definitions,
-taxonomy classification, rolling leg correlation, regime-conditional mean-reversion/vol —
-41 unit tests in `tests/test_spread_lib10.py`). Development window only throughout
-(2010-06-06 to 2024-12-31, ES from 2018-01-01, KE from 2013-12-16, matching notebook 8's
-own convention) — **the 2025-01-01 → 2026-07-28 holdout is never read in this notebook**,
-even though it is purely descriptive and produces no strategy verdict.
+Eight assertions re-derived from committed results before anything was built on top of them:
+notebook 009's probe (5 of 6 spreads mean-reverting, 4 of 6 with a significant negative correlation)
+and notebook 008's carry and momentum headline numbers (both failing; carry net Sharpe 0.9042–0.9459
+across four offsets, deflated probability 0.9972, excess-return interval [−0.0028, +0.0094]
+including zero; momentum deflated probability 0.098). All passed on the first run.
 
 ---
 
-## Phase 0 — Reproduction check
+## The term-structure regime atlas
 
-Two already-committed results re-derived and asserted to match before anything was built
-on top of them (`run_phase_0_10a_repro.py`): notebook 9's Phase 4 spread probe (5 of 6
-spreads mean-reverting, 4 of 6 with a significant negative IC — crack_321, gold_silver,
-brent_wti, corn_wheat, platinum_palladium, crush_soy) and notebook 8's Gate AC/AM headline
-numbers (`fires: false` for both; carry net Sharpe 0.9042–0.9459 across all four origin
-offsets, deflated Sharpe probability 0.9972, excess-vs-basket CI [−0.0028, +0.0094]
-including zero; momentum deflated Sharpe probability 0.098). All eight assertions passed
-on the first run.
+Annualised front-to-second-month roll slope, state label, state persistence and month-of-year
+pattern, for all 16 products.
 
----
+**Backwardation frequency varies enormously by sector, and even within it.**
 
-## Phase 1 — The term-structure regime atlas
+Energy is the most backwardation-prone sector but far from uniform: gasoline spends 67.5% of days
+backwardated, Brent 60.7%, heating oil 41.8%, crude 38.4% — but natural gas only 20.5%, since
+heating-season contango dominates its curve most of the year.
 
-Annualised F1→F2 roll slope, state label, state persistence, and month-of-year pattern for
-all 16 products, `commod_lib8.term_structure_state` unmodified.
+Metals sit at the other extreme, in near-permanent contango exactly as cost-of-carry theory predicts
+for a low-storage-cost, low-convenience-yield group: gold 19.9%, silver 14.8%, platinum 13.0%,
+palladium 32.2%.
 
-**Backwardation frequency varies enormously by sector, and even within it.** Energy is the
-most backwardation-prone sector but far from uniform: RB (gasoline) spends 67.5% of days
-backwardated, BZ 60.7%, HO 41.8%, CL 38.4%, but NG only 20.5% (heating-season contango
-dominates NG's own curve most of the year). Metals sit at the other extreme — near-
-permanent contango, exactly as docs/09's own cost-of-carry worked example predicts for a
-low-storage-cost, low-convenience-yield group: GC 19.9%, SI 14.8%, PL 13.0%, PA 32.2%.
-Grains are the most internally mixed sector: ZW just 5.7% backwardated, ZS 38.6%, ZM
-52.3%. **This dispersion is itself the reason a single, repo-wide regime rule would be a
-mistake** — treating "commodities" as one regime-homogeneous group would average away the
-real, product-specific structure the atlas exists to surface.
+Grains are the most internally mixed: wheat just 5.7% backwardated, soybeans 38.6%, soy meal 52.3%.
 
-**State persistence is long enough to make a regime-gated strategy's turnover plausible,
-not so long that the regime carries no information.** Mean run length ranges from a few
-days (thin, choppy products) to 50–95 days (CL contango runs ~58 days, ZC contango runs
-~95 days) — comparable to or longer than the 46–85-day half-lives notebook 9's probe found
-for spread mean-reversion, meaning a regime label is unlikely to flip mid-trade on most
-positions.
+**This dispersion is itself the reason a single repo-wide regime rule would be a mistake.** Treating
+"commodities" as one regime-homogeneous group would average away exactly the product-specific
+structure the atlas exists to surface.
 
-Curve snapshots captured for CL, NG, and ZC (deepest observed contango and deepest
-observed backwardation day each, full F1/F2/F3 term structure) — the figure sec 7 calls
-"the single most explanatory chart," making the concept concrete rather than a slope
-number.
+**State persistence is long enough for a regime-gated strategy to be plausible, without being so
+long that the regime carries no information.** Mean run lengths range from a few days for thin,
+choppy products up to 50–95 days (crude's contango runs about 58 days; corn's about 95). That is
+comparable to or longer than the 46–85-day mean-reversion half-lives notebook 009 measured, so a
+regime label is unlikely to flip mid-trade on most positions.
+
+Curve snapshots were captured for crude, natural gas and corn — the deepest observed contango and
+deepest observed backwardation day for each, with the full front three months — making the concept
+concrete rather than a slope number.
 
 ---
 
-## Phase 2 — Spread taxonomy, cointegration, and the extended mean-reversion probe
+## Taxonomy and cointegration
 
-All 30 spreads, classified from their own `leg_roles` metadata (not a hardcoded name
-list): **11 inter-commodity, 19 calendar** — matching NEXT_PROMPT.md sec 4.2's own rough
-count.
+All 30 spreads classified from their own metadata rather than a hardcoded name list: **11
+inter-commodity** (two distinct underlyings) and **19 calendar** spreads (the term structure itself,
+both legs the same product).
 
-**Cointegration (ADF, constant-only case, MacKinnon asymptotic critical values, BIC-
-selected augmentation lags — `spread_lib10.adf_test`): 23 of 30 spreads pass at 5%.**
-Failures split unevenly by taxonomy: **4 of 11 inter-commodity spreads fail**
-(gold_silver, platinum_palladium, heating_oil_crack, kc_chicago_wheat) against **3 of 19
-calendar spreads** (es_calendar, gc_cal_m1m2, gc_cal_m2m3 — notably, gold's own two nearest
-calendar spreads, echoing gold's already-weak inter-commodity cointegration result above).
-**Per sec 4.3's decision, made here before any 10b backtest: ADF failures are excluded
-from Gate SP/SPR's backtest universe**, leaving **7 of 11 inter-commodity spreads and 16
-of 19 calendar spreads** eligible.
+**This distinction matters and conflating it would be a real error.** The regime hypothesis is only
+meaningful for the inter-commodity group. Gating a *calendar* spread on contango versus
+backwardation is close to conditioning a signal on its own sign. No calendar spread is used as
+evidence for the regime hypothesis anywhere in this notebook.
 
-**The AR(1)/IC probe extends cleanly from notebook 9's 6 spreads to all 30: 27/30 mean-
-reverting on AR(1) (|t|>2), 16/30 with a significant (p<0.05) negative 5-day-forward
-z-score IC.** The 11 spreads where the two descriptive tests disagree (AR(1) says
-mean-reverting, IC does not confirm) include bean_corn, gasheat_rbho, and eight calendar
-spreads (cl_cal_m2m3, ho_cal_m2m3, ng_cal_m1m2, ng_cal_m2m3, ng_calendar, rb_cal_m2m3,
-wti_calendar, zc_cal_m1m2) — a genuinely wider disagreement than notebook 9's 2-spread
-version, reported here in full rather than smoothed into the "27/30 mean-reverting"
-headline. The three-way agreement across AR(1), IC, and now ADF is what actually decides
-10b eligibility, not any single test in isolation — exactly why sec 4.3 required adding
-the cointegration check notebook 9 never ran.
+**Cointegration: 23 of 30 spreads pass at 5%.** Failures split unevenly by type — **4 of 11
+inter-commodity** (gold–silver, platinum–palladium, the heating-oil crack, and the KC–Chicago wheat
+spread) against **3 of 19 calendar** spreads. Notably, two of the three calendar failures are gold's
+own nearest calendar spreads, echoing gold's weak inter-commodity result.
 
----
+Failures are excluded from the backtest universe, leaving **7 of 11 inter-commodity and 16 of 19
+calendar spreads** eligible.
 
-## Phase 3 — Regime-conditional structure: does the spread actually mean-revert harder in one state?
+**The mean-reversion probe extends cleanly from 6 spreads to all 30: 27 of 30 mean-revert on the
+regression test, and 16 of 30 show a significant negative forward correlation.**
 
-Inter-commodity spreads only (per sec 4.2), conditioned on **leg1's own curve** (a fixed,
-pre-declared rule applied identically to every spread — for brent_wti, BZ), all three
-regime definitions computed and reported.
+The 11 spreads where the two descriptive tests disagree — the regression says mean-reverting, the
+correlation doesn't confirm — include the bean–corn and gas–heat spreads and eight calendar spreads.
+That is a genuinely wider disagreement than notebook 009's two-spread version, reported in full
+rather than folded into the "27 of 30" headline.
 
-**Under raw sign — the definition Phase 5 explicitly does NOT use as Gate SPR's headline,
-for the structural reason above — 8 of 11 inter-commodity spreads show nominally stronger
-AR(1) mean reversion in backwardation than in contango.** This number is reported for
-completeness but should not be over-read: raw sign restricts almost nothing (backwardation
-and contango together cover ~100% of days), so "stronger in one raw-sign bucket than the
-other" is a considerably weaker test of the operator's hypothesis than a deadband-gated
-comparison will be in 10b.
-
-**brent_wti specifically tells a genuinely two-sided story depending on which leg's curve
-defines the regime — the single most important finding in this phase.** Under the primary
-rule (BZ's own curve alone), mean reversion is *nominally stronger in contango*
-(β = −0.035, half-life ≈ shorter) *than in backwardation* (β = −0.010) — on its face, the
-opposite sign from the operator's prior. But under the secondary "both legs agree"
-variant (BZ and CL curves both labelling the same state, sec 4.1's own named robustness
-check), the picture flips and sharpens considerably: half-life is **9.5 days in
-backwardation** versus **18.3 days in contango**, versus **47.5 days on days the two legs'
-curves disagree**, versus **79.3 days pooled/unconditional**. Both legs agreeing on
-backwardation is the single fastest-reverting state found anywhere in this phase for
-brent_wti, by a wide margin — and the two legs actually agree on 66.2% of trading days,
-so this is not a thin-sample artifact. **This is reported as a live, unresolved tension
-for 10b to settle empirically, not smoothed into either "confirmed" or "refuted"**: a
-single-leg regime definition does not show the operator's effect for brent_wti; a
-both-legs-agree definition shows it strongly. 10b's Gate SPR-BW carries this exact
-comparison forward as its own declared secondary check.
-
-Calendar spreads received the same machinery as a **labelled circularity diagnostic only**
-(`calendar_spread_circularity_diagnostic` in the Phase 3 JSON) — never used as evidence for
-the regime hypothesis, per sec 4.2's explicit requirement.
+**Three-way agreement across the regression test, the correlation test and cointegration is what
+decides eligibility**, not any single test in isolation. That is exactly why the cointegration check
+notebook 009 never ran had to be added.
 
 ---
 
-## Phase 4 — Inventory positioning (CL only)
+## Does a spread actually mean-revert harder in one regime state?
 
-This repo's `data/market/cot/` cache holds exactly one CFTC series (067651, light sweet
-crude, NYMEX) — a single-product check, never extrapolated into a panel claim, per
-docs/09's own documented pitfall on this exact dataset.
+Inter-commodity spreads only, conditioned on the first leg's own curve — a fixed rule applied
+identically to every spread — with all three regime definitions computed and reported.
 
-**Net non-commercial positioning corroborates the regime label for CL.** Mean net
-non-commercial fraction of open interest is 18.8% in backwardation versus 15.9% in
-contango (Welch t-test, p ≈ 8×10⁻⁷³ — a huge sample, ~3,600 joined days, so this p-value
-reflects sample size as much as effect size), and corr(roll slope, net non-commercial
-fraction) = −0.073, the theory-consistent sign (recall: negative roll slope IS
-backwardation, so speculators run *more* net-long exactly when the market is
-backwardated, as Keynes' normal-backwardation theory and the inventory-theory mechanism
-behind the regime hypothesis both predict). The correlation's magnitude is modest — this
-is corroborating, directionally-consistent evidence for one product, not a strong or
-independently decisive test of the regime hypothesis on its own.
+**Under raw sign, 8 of 11 inter-commodity spreads show nominally stronger mean reversion in
+backwardation than contango.** Reported for completeness, but it should not be over-read: raw sign
+restricts almost nothing, since backwardation and contango together cover essentially all days. A
+deadband-gated comparison is a considerably stronger test.
+
+**Brent–WTI tells a genuinely two-sided story, and it's the most important finding here.**
+
+Under the primary rule — Brent's own curve alone — mean reversion is *nominally stronger in
+contango* (coefficient −0.035) than in backwardation (−0.010). On its face, the opposite sign from
+the hypothesis.
+
+But under the both-legs-agree variant, where Brent's and WTI's curves must label the same state, the
+picture flips and sharpens considerably:
+
+| State | Half-life |
+|---|---|
+| Both legs agree on backwardation | **9.5 days** |
+| Both legs agree on contango | 18.3 days |
+| The two legs disagree | 47.5 days |
+| Unconditional | 79.3 days |
+
+Both legs agreeing on backwardation is by a wide margin the fastest-reverting state found anywhere
+in this phase — and the legs agree on 66.2% of trading days, so it isn't a thin-sample artefact.
+
+**Reported as a live, unresolved tension for the backtest to settle empirically**: a single-leg
+regime definition does not show the effect for this spread, while a both-legs-agree definition shows
+it strongly. That exact comparison is carried forward as a declared secondary check.
+
+Calendar spreads received the same machinery purely as a **labelled circularity diagnostic**, never
+used as evidence for the regime hypothesis.
 
 ---
 
-## Phase 5 — Pre-registration for 10b
+## Positioning data — one product only
 
-Written and committed here, before any 10b backtest (`phase_5_10a_results.json`),
-restating NEXT_PROMPT.md sec 4's gate table verbatim (fire conditions unedited, per sec 1
-rule 2) plus:
+The positioning cache holds exactly one series: light sweet crude. A single-product check, never
+extrapolated into a panel claim.
 
-- **Regime definitions**: deadband (±2%/year annualised slope threshold — a pre-declared,
-  round convention, not swept) is **primary** for Gate SPR; raw sign and a 5-day
-  persistence requirement are secondary/robustness variants. Primary regime leg = leg1
-  (BZ for brent_wti), fixed and identical across every spread; a both-legs-agree variant
-  runs only for brent_wti, per sec 4.1.
-- **Trading rule**: 60-day rolling z-score signal (reusing the same window as the Phase 2
-  IC probe, not re-tuned), position = −clip(z,−2,2)/2, daily rebalance, **two round-turn
-  costs per unit weight change** (one per leg — NEXT_PROMPT.md's own explicit warning),
-  roll-window rows excluded from both signal and P&L, 4 origin offsets {0,7,14,21}.
-- **Sec 4.3 decision**: ADF-failing spreads excluded from 10b's backtest universe (already
-  applied in Phase 2, restated here).
-- **DSR configuration counts, cumulative and per-gate** (full reasoning and worked
-  breakdown in `phase_5_10a_results.json`'s `DSR_CONFIG_COUNTS`):
+**Positioning corroborates the regime label for crude.** Mean net non-commercial share of open
+interest is 18.8% in backwardation against 15.9% in contango, and the correlation between roll slope
+and net non-commercial share is −0.073 — the theory-consistent sign, since a negative roll slope *is*
+backwardation, so speculators run more net-long exactly when the market is backwardated, as both
+normal-backwardation theory and the inventory mechanism predict.
 
-| gate | n_trials | breakdown |
+The p-value on the difference is astronomically small, but with roughly 3,600 joined days that
+reflects sample size as much as effect size, and the correlation's magnitude is modest. This is
+corroborating, directionally consistent evidence for one product — not an independently decisive test.
+
+---
+
+## The pre-registration
+
+Written and committed here, before any backtest exists.
+
+**Regime definitions.** Deadband (a ±2% annualised slope threshold — a pre-declared round convention,
+not swept) is **primary**. Raw sign and a 5-day persistence requirement are secondary robustness
+variants. The primary regime leg is the first leg, fixed and identical across every spread, with a
+both-legs-agree variant running only for Brent–WTI.
+
+**Trading rule.** A 60-day rolling z-score signal, reusing the same window as the descriptive probe
+rather than re-tuned. Position equals the negative of the z-score, clipped to ±2 and halved. Daily
+rebalance. **Two round-turn costs per unit of weight change** — one per leg. Roll-window rows
+excluded from both signal and P&L. Four origin offsets: 0, 7, 14 and 21 days.
+
+**Excluded universe.** Cointegration failures are out, as applied above.
+
+**Trial counts for the deflation**, cumulative and per test:
+
+| Test | Trials | Breakdown |
 |---|---|---|
-| SP | 8 | 2 taxonomy groups × 4 origin offsets |
-| SPR | 12 | 3 regime definitions × 4 origin offsets, inter-commodity only |
-| SPR-BW | +1 | brent_wti both-legs-agree variant, run once (diagnostic, not itself a search) |
-| VS | 8 | 4 already-logged notebook-8 carry configs (forwarded, not reset to 1) + 4 new vol-scaled configs |
-| BM | 20 | 16 already-logged notebook-8 momentum configs (the literal historical n_trials — see note below) + 4 new blend configs |
+| Base spread mean reversion | 8 | 2 taxonomy groups × 4 origin offsets |
+| Regime-conditional | 12 | 3 regime definitions × 4 offsets, inter-commodity only |
+| Brent–WTI both-legs variant | +1 | Run once as a diagnostic, not itself a search |
+| Volatility-scaled carry | 8 | 4 already-logged carry configurations carried forward + 4 new |
+| Blended momentum | 20 | 16 already-logged momentum configurations + 4 new |
 
-**One explicit, resolved ambiguity, flagged rather than silently picked:** NEXT_PROMPT.md
-sec 4's own prose describes BM's forwarded count as "4 already-logged single-lookback
-configs," but the number that actually fed notebook 8's own `deflated_sharpe_prob` call
-for Gate AM was **16** (4 lookbacks × 4 origin offsets — verified directly in
-`phase_5_results.json`). Per sec 1 rule 3's binding "do not shrink the count" instruction,
-the larger, technically accurate historical figure (16, not 4) is used, making Gate BM's
-bar harder to clear, not easier. Full reasoning in `phase_5_10a_results.json`.
+**One ambiguity, flagged rather than silently resolved.** The plan described the momentum test's
+carried-forward count as 4 already-logged single-lookback configurations. The number that actually
+fed notebook 008's own deflation was **16** — 4 lookbacks × 4 origin offsets, verified directly. The
+larger, technically accurate historical figure is used, which makes the bar **harder** to clear, not
+easier.
 
-Also logged for transparency (not counted toward any gate's own n_trials, since neither is
-a performance-driven search — see the JSON's own reasoning): 30 spreads mechanically
-screened by the ADF criterion in Phase 2, and 11×3 = 33 regime-conditional descriptive
-runs in Phase 3, all reported regardless of outcome.
+Also logged for transparency, though not counted toward any test's trial count since neither is a
+performance-driven search: the 30 spreads mechanically screened by the cointegration criterion, and
+the 33 regime-conditional descriptive runs, all reported regardless of outcome.
 
 ---
 
 ## Bugs found
 
-**One bug caught by unit testing before it reached any reported number.**
-`spread_lib10.regime_deadband` initially returned an unevaluated Polars expression instead
-of a materialised `Series` (a `pl.when/.then` chain with no `.select()` to force
-evaluation) — caught by `tests/test_spread_lib10.py` during construction and fixed to
-evaluate inside a one-column `DataFrame.select(...)` before Phase 3 or Phase 5 was
-finalized. The underlying deadband/contango/backwardation *logic* was correct throughout;
-only the return type was wrong, and it was wrong in a way that would have raised a hard
-`TypeError` on first real use (as it did when Phase 3 was re-run against the fixed
-signature) rather than silently producing a bad number — caught, not smoothed over.
+One, caught by unit testing before it reached any reported number. The deadband regime function
+initially returned an unevaluated query expression instead of a materialised series. The underlying
+logic was correct throughout; only the return type was wrong, and it was wrong in a way that raises
+a hard error on first real use rather than silently producing a bad number.
 
 ## Bottom line
 
-No strategy verdict belongs here, by design (sec 1 rule 1) — but three findings carry
-directly into 10b. First, the cointegration precondition notebook 9 never applied cuts the
-inter-commodity backtest universe from 11 to 7 spreads and resolves notebook 9's own
-flagged gold_silver/platinum_palladium disagreement outright (neither pair is actually
-cointegrated). Second, the raw-sign regime definition is structurally too close to
-"regime-blind" to test the operator's own hypothesis, which is why deadband — not raw sign
-— is declared primary for Gate SPR here, before any backtest exists. Third, brent_wti's
-own regime effect depends materially on which leg's curve defines the regime: weak-to-
-reversed under BZ alone, strong (9.5-day half-life in backwardation) under a both-legs-
-agree definition — an open, pre-registered question for Gate SPR-BW to settle with a real,
-costed backtest rather than a descriptive correlation.
+No strategy verdict belongs here, by design. Three findings carry directly forward:
+
+1. The cointegration precondition cuts the inter-commodity universe from 11 spreads to 7 and
+   resolves notebook 009's flagged disagreement outright — neither of those two pairs is actually
+   cointegrated.
+2. The raw-sign regime definition is structurally too close to regime-blind to test the hypothesis,
+   which is why the deadband definition is declared primary before any backtest exists.
+3. Brent–WTI's regime effect depends materially on which leg's curve defines the regime — weak or
+   reversed under one leg, strong (9.5-day half-life in backwardation) under both — an open,
+   pre-registered question for a real costed backtest to settle rather than a descriptive
+   correlation.
+
+*Notebook: `src/research/010a_term_structure_regimes_and_spreads.ipynb`.*

@@ -832,10 +832,9 @@ deflated-Sharpe denominator must include all $k$, not just the one shown — exa
 same accounting a cross-sectional factor search already requires, applied to a
 conditioning variable instead of a signal.
 
-**Why it is here.** Notebook 7's Gate TF (a term-structure-conditioned factor that cleared
-its numeric bar and then turned out to be a single-symbol artifact once checked
-individually) and notebook 10a/10b's own regime-gated spread hypothesis (NEXT_PROMPT.md
-sec 4.1) are both instances of the same trap: "it works when I condition on X" is *the*
+**Why it is here.** Notebook 7's tail-premium factor (which cleared its numeric bar and
+then turned out to be a single-symbol artifact once checked individually) and notebook
+10a/10b's regime-gated spread hypothesis are both instances of the same trap: "it works when I condition on X" is *the*
 most common route from a true null to a false positive, precisely because the conditioning
 variable is rarely pre-registered as rigorously as the primary signal is.
 
