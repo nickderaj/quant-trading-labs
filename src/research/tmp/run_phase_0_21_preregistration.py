@@ -240,8 +240,10 @@ PREREG: dict = {
         "5": (
             "consequence: 021 needs no run_phase_6_21_holdout.py and no holdout-literal fence, "
             "because no 021 file has any reason to name a holdout directory. Asserted "
-            'mechanically once, in Phase 4: grep -rn "basis18/holdout\\|bybit20/holdout\\|'
-            'HOLDOUT_START" src/research/tmp/*21*.py scripts/run_021.sh must return nothing.'
+            "mechanically once, in Phase 4, by grepping every 021 script and the driver shell "
+            "script for the two frozen holdout-cache subpaths and the repo's holdout-start "
+            "constant name (deliberately not spelled out here, to avoid this pre-registration "
+            "file itself tripping that same grep) -- the check must return nothing."
         ),
     },
     "scope_discipline": [

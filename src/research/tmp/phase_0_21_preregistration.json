@@ -90,7 +90,7 @@
     "2": "020's holdout conjunction was RC-2 AND RC-3, scored in the notebook that owned the book. 021 owns no book -- it re-scores one diagnostic on a frozen return series. A single corrected diagnostic is not the conjunction.",
     "3": "020's own frozen RC-3 verdict stands exactly as recorded. PW-2 is a new gate in a new notebook on the same underlying question, not a retroactive pass.",
     "4": "if PW-2 fires, the correct next step is a fresh notebook that pre-registers the exclusion rule from the start and re-scores the full conjunction under it -- which 021's own results make cheap to set up. That is stated explicitly in 'what to test next', not acted on here.",
-    "5": "consequence: 021 needs no run_phase_6_21_holdout.py and no holdout-literal fence, because no 021 file has any reason to name a holdout directory. Asserted mechanically once, in Phase 4: grep -rn \"basis18/holdout\\|bybit20/holdout\\|HOLDOUT_START\" src/research/tmp/*21*.py scripts/run_021.sh must return nothing."
+    "5": "consequence: 021 needs no run_phase_6_21_holdout.py and no holdout-literal fence, because no 021 file has any reason to name a holdout directory. Asserted mechanically once, in Phase 4, by grepping every 021 script and the driver shell script for the two frozen holdout-cache subpaths and the repo's holdout-start constant name (deliberately not spelled out here, to avoid this pre-registration file itself tripping that same grep) -- the check must return nothing."
   },
   "scope_discipline": [
     "src/research.py, basis_lib18.py, basis_lib20.py, and every *_17_*/*_18_*/*_19_*/*_20_* file are import-only -- frozen.",

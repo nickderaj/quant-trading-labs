@@ -1,0 +1,83 @@
+{
+  "n_trials_used": 6,
+  "guard": {
+    "phase_1_catalogue_present": true
+  },
+  "gate_PW1": {
+    "icp_flagged_in_window": true,
+    "icp_n_flagged_in_window": 31,
+    "matic_flagged_in_window": true,
+    "matic_n_flagged_in_window": 21,
+    "fires": true
+  },
+  "exclusion": {
+    "total_flagged_symbol_bars": 19157,
+    "n_symbols_flagged": 21,
+    "n_excluded_book_return_bars": 22,
+    "n_total_book_return_bars": 3840,
+    "frac_excluded": 0.005729166666666666,
+    "pw4_cap_frac": 0.05
+  },
+  "a3_immunity_diagnostic": {
+    "note": "not used for any exclusion -- A0's holdings define the exclusion set exclusively, per pre-registration. Reported only to show whether A3's diversification floor reduces exposure to the same flagged bars.",
+    "n_book_return_bars_that_would_be_excluded_under_a3_holdings": 18
+  },
+  "diff_ci_without_exclusion": {
+    "n_obs": 3840,
+    "mean": 1.9922299357086757e-05,
+    "bootstrap_ci_95": [
+      -2.199972533099506e-05,
+      5.617934418888986e-05
+    ],
+    "bootstrap_pvalue": 0.249,
+    "ci_excludes_zero": false
+  },
+  "diff_ci_with_exclusion": {
+    "n_obs": 3818,
+    "mean": 2.032181836283292e-05,
+    "bootstrap_ci_95": [
+      1.021885027072175e-05,
+      3.1002502365095634e-05
+    ],
+    "bootstrap_pvalue": 0.0,
+    "ci_excludes_zero": true
+  },
+  "gate_PW2": {
+    "fires": true
+  },
+  "power": {
+    "without_exclusion": {
+      "se": 1.9944006659446663e-05,
+      "mde": 5.5874834247052374e-05,
+      "n_required": 30205.414286797502,
+      "years_required": 27.56597242691992
+    },
+    "with_exclusion": {
+      "se": 5.302049491294912e-06,
+      "mde": 1.4854143480515208e-05,
+      "n_required": 2039.8865883055548,
+      "years_required": 1.8616350338175267
+    }
+  },
+  "gate_PW3": {
+    "observed_mean_diff": 1.9922299357086757e-05,
+    "mde": 5.5874834247052374e-05,
+    "fires": false,
+    "note": "scored on the without-exclusion (original RC-3) series -- see pre-registration implementation_notes"
+  },
+  "placebo": {
+    "n_draws": 200,
+    "seed": 0,
+    "n_excluded_drawn": 22,
+    "flagged_exclusion_mean_diff": 2.032181836283292e-05,
+    "placebo_mean_diffs_p95": 2.087187860714354e-05,
+    "placebo_mean_diffs_min": 5.248054611037987e-06,
+    "placebo_mean_diffs_max": 2.6466470086984323e-05
+  },
+  "gate_PW4": {
+    "cap_ok": true,
+    "placebo_ok": false,
+    "fires": false
+  },
+  "branch": "(b) data quality is not the binding constraint -- power is."
+}
