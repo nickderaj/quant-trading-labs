@@ -1,0 +1,219 @@
+{
+  "perp_glob": "/home/nick/Documents/quant-trading-labs/src/research/cache/basis18/dev/*-perp-8h-2021-07-01-2025-06-30.parquet",
+  "n_files_scanned": 128,
+  "total_flagged_symbol_bars": 19157,
+  "n_symbols_flagged": 21,
+  "per_symbol": {
+    "BALUSDT": {
+      "count": 230,
+      "runs": [
+        {
+          "start": "2025-04-14 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 230
+        }
+      ]
+    },
+    "BLZUSDT": {
+      "count": 566,
+      "runs": [
+        {
+          "start": "2024-12-23 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 566
+        }
+      ]
+    },
+    "DARUSDT": {
+      "count": 557,
+      "runs": [
+        {
+          "start": "2024-12-26 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 557
+        }
+      ]
+    },
+    "DGBUSDT": {
+      "count": 1364,
+      "runs": [
+        {
+          "start": "2024-04-01 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 1364
+        }
+      ]
+    },
+    "FTMUSDT": {
+      "count": 524,
+      "runs": [
+        {
+          "start": "2025-01-06 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 524
+        }
+      ]
+    },
+    "FTTUSDT": {
+      "count": 2877,
+      "runs": [
+        {
+          "start": "2022-11-14 08:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 2877
+        }
+      ]
+    },
+    "ICPUSDT": {
+      "count": 247,
+      "runs": [
+        {
+          "start": "2022-06-10 16:00:00",
+          "end": "2022-08-31 16:00:00",
+          "count": 247
+        }
+      ]
+    },
+    "KLAYUSDT": {
+      "count": 752,
+      "runs": [
+        {
+          "start": "2024-10-22 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 752
+        }
+      ]
+    },
+    "LINAUSDT": {
+      "count": 284,
+      "runs": [
+        {
+          "start": "2025-03-27 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 284
+        }
+      ]
+    },
+    "LUNAUSDT": {
+      "count": 2,
+      "runs": [
+        {
+          "start": "2022-05-12 16:00:00",
+          "end": "2022-05-13 00:00:00",
+          "count": 2
+        }
+      ]
+    },
+    "MATICUSDT": {
+      "count": 21,
+      "runs": [
+        {
+          "start": "2024-09-04 16:00:00",
+          "end": "2024-09-11 08:00:00",
+          "count": 21
+        }
+      ]
+    },
+    "OCEANUSDT": {
+      "count": 1109,
+      "runs": [
+        {
+          "start": "2024-06-25 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 1109
+        }
+      ]
+    },
+    "OMGUSDT": {
+      "count": 449,
+      "runs": [
+        {
+          "start": "2025-01-31 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 449
+        }
+      ]
+    },
+    "RAYUSDT": {
+      "count": 2874,
+      "runs": [
+        {
+          "start": "2022-11-15 08:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 2874
+        }
+      ]
+    },
+    "REEFUSDT": {
+      "count": 476,
+      "runs": [
+        {
+          "start": "2025-01-22 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 476
+        }
+      ]
+    },
+    "RENUSDT": {
+      "count": 626,
+      "runs": [
+        {
+          "start": "2024-12-03 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 626
+        }
+      ]
+    },
+    "SCUSDT": {
+      "count": 3326,
+      "runs": [
+        {
+          "start": "2022-06-17 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 3326
+        }
+      ]
+    },
+    "STMXUSDT": {
+      "count": 386,
+      "runs": [
+        {
+          "start": "2025-02-21 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 386
+        }
+      ]
+    },
+    "UNFIUSDT": {
+      "count": 728,
+      "runs": [
+        {
+          "start": "2024-10-30 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 728
+        }
+      ]
+    },
+    "WAVESUSDT": {
+      "count": 1151,
+      "runs": [
+        {
+          "start": "2024-06-11 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 1151
+        }
+      ]
+    },
+    "XEMUSDT": {
+      "count": 608,
+      "runs": [
+        {
+          "start": "2024-12-09 16:00:00",
+          "end": "2025-06-30 00:00:00",
+          "count": 608
+        }
+      ]
+    }
+  },
+  "book_return_bar_count_note": "the count that matters for the diff series -- bars where A0 was actually holding a flagged symbol -- requires A0's own weight frame and is computed and disclosed in Phase 3 (phase_3_21_results.json), before the excluded-diff CI is computed there."
+}
