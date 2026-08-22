@@ -1,13 +1,17 @@
 # docs/ — a from-scratch glossary for this research programme
 
-This folder explains, from first principles, every technical term used by notebooks 1
-through 5 of this repo's research programme (`src/results/*.md`, `src/research/*.ipynb`).
-It assumes **high-school algebra and nothing else** — no prior statistics, no prior
-probability, no prior finance. If you have never seen the word "distribution" used in a
-mathematical sense, start at the top of `01-probability-and-distributions.md` and read in
-order; by the end of `07-extreme-value-theory.md` you should be able to follow the
-argument in `src/results/005_tail_risk_evt.md` ("why GARCH-t beats GARCH-normal on tail
-calibration") without leaving this folder.
+This folder explains, from first principles, every technical term used across this repo's
+research programme (`src/results/*.md`, `src/research/*.ipynb`) and its production risk
+engine (`src/risk/`). It assumes **high-school algebra and nothing else** — no prior
+statistics, no prior probability, no prior finance. If you have never seen the word
+"distribution" used in a mathematical sense, start at the top of
+`01-probability-and-distributions.md` and read in order; by the end of
+`07-extreme-value-theory.md` you should be able to follow the argument in
+`src/results/005_tail_risk_evt.md` (why Student-t innovations beat normal ones on tail
+calibration) without leaving this folder.
+
+Files `01`–`07` are the statistical core, `08`–`09` cover methodology and market data, and
+`10` is an operator document for the running risk engine rather than a teaching file.
 
 ## How to read this
 
@@ -50,8 +54,13 @@ calibration") without leaving this folder.
    lying to you. Read this even if you skip the maths in 01-07 — it's the one file that
    explains *why* this whole programme is run the way it is.
 9. [09 — Market data and microstructure](09-market-data-and-microstructure.md) — what an
-   OHLCV bar actually is, and the crypto-specific facts (perpetual futures, no overnight
-   gap, frozen-price bars) that shape every other file's "why it is here."
+   OHLCV bar actually is, and the crypto- and futures-specific facts (perpetual futures,
+   funding rates, no overnight gap, frozen-price bars, roll adjustment, spreads and
+   cash-and-carry trades) that shape every other file's "why it is here."
+10. [10 — The risk engine](10-risk-engine.md) — an **operator document**, not a teaching
+    file: what `src/risk/` computes, its data-cleaning contract, how a density family was
+    chosen per product, how the calibration monitor works, and what the engine has and
+    has not been validated for. Read `06` and `07` first for the statistics behind it.
 
 [GLOSSARY.md](GLOSSARY.md) — every term above, one line each, alphabetical, linked.
 
@@ -96,7 +105,7 @@ re-defined in each file.
 ## A note on symbols vs. code
 
 Wherever a formula uses a Greek letter that also appears as a variable name in this
-repo's code, the entry says so explicitly (rule 2 of §11 in `NEXT_RUN_PROMPT.md`): for
+repo's code, the entry says so explicitly: for
 example $\omega$ in [GARCH(1,1)](04-volatility-models.md#garch11) is exactly the `omega`
 argument in `dist_lib._garch_negloglik`. You should be able to hold these docs next to
 the source and map every symbol to a variable one-to-one.

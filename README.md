@@ -76,6 +76,31 @@ after them. Where a fix was tried, controlling turnover was necessary but never 
 | [020](src/research/020_basis_refinement_and_cross_venue.ipynb) | [Basis Refinement and Cross-Venue Spread](src/results/020_basis_refinement_and_cross_venue.md) | A diversification floor and slower carry lift net Sharpe from 0.58 to 3.89 and clear deflation decisively — but not the paired comparison against the original book. A cross-venue funding spread loses to the plain single-venue trade. |
 | [021](src/research/021_rc3_power_and_data_quality.ipynb) | [Power or Data Quality?](src/results/021_rc3_power_and_data_quality.md) | Asked whether that paired comparison was blocked by frozen-feed artefacts or by sample size. A mechanical exclusion rule nominally clears the interval and then fails its own placebo control: the answer is power — roughly 27.6 years of history would be needed, against the 3.50 available. |
 
+## Documentation
+
+[`docs/`](docs/README.md) explains, from first principles, every technical term this
+programme uses. It assumes **high-school algebra and nothing else** — no prior statistics,
+probability or finance. Every entry follows the same shape (one sentence, the maths, why
+it's here, a worked example, pitfalls) and every entry cites **this repo's own numbers**
+rather than a textbook example.
+
+Files `01`–`07` build the statistical core in dependency order; `08`–`09` cover methodology
+and market data; `10` is an operator document for the running risk engine.
+
+| Doc | What it covers |
+|---|---|
+| [01 — Probability and distributions](docs/01-probability-and-distributions.md) | What a distribution *is*, and the specific shapes (normal, Student-t, generalized Pareto, NIG, Johnson SU, ...) this programme fits to data. |
+| [02 — Estimation and fitting](docs/02-estimation-and-fitting.md) | How you get from raw data to fitted parameters, and what goes wrong doing it — including the causal forward-filling discipline every rolling forecast here depends on. |
+| [03 — Statistical inference](docs/03-statistical-inference.md) | How you decide whether a difference between two things is real or noise: hypothesis tests, HAC standard errors, block bootstraps, and multiple-testing corrections. |
+| [04 — Volatility models](docs/04-volatility-models.md) | Models of how much a series moves rather than which way: GARCH, GJR, HAR-RV, EWMA and the range estimators. |
+| [05 — Regime models](docs/05-regime-models.md) | Models of a hidden, switching state behind the data — Gaussian mixtures and hidden Markov models. |
+| [06 — Scoring rules and calibration](docs/06-scoring-rules-and-calibration.md) | How a forecast of a whole *distribution* is graded, and what "well calibrated" means precisely: log score, CRPS, QLIKE, and the VaR coverage tests. |
+| [07 — Extreme value theory](docs/07-extreme-value-theory.md) | The mathematics of tails specifically — why they need their own machinery instead of just a fatter-tailed family for everything. |
+| [08 — Research methodology](docs/08-research-methodology.md) | The discipline that keeps a backtest from lying to you: holdouts, lookahead bias, pre-registration, deflated Sharpe, turnover budgeting. **Worth reading even if you skip the maths.** |
+| [09 — Market data and microstructure](docs/09-market-data-and-microstructure.md) | What a bar actually is, and the instrument-specific facts — perpetual futures, funding rates, roll adjustment, frozen-price bars — that shape every other file. |
+| [10 — The risk engine](docs/10-risk-engine.md) | Operator documentation for `src/risk/`: the data contract, how a density family was chosen per product, how the monitor works, and what the engine is **not** validated for. |
+| [GLOSSARY](docs/GLOSSARY.md) | Flat alphabetical lookup — one line per term, linked to its full entry. |
+
 ## Repository layout
 
 | Path | What's in it |
@@ -85,7 +110,7 @@ after them. Where a fix was tried, controlling turnover was necessary but never 
 | [`src/risk/`](src/risk/) | The production risk engine: ingest, model selection, calibration monitor, serving. |
 | [`src/regime/`](src/regime/) | The ported market-regime engine (scored in notebook 014). |
 | [`src/`](src/) | Shared machinery: walk-forward validation, distributions and scoring rules, feature engineering, data loading. |
-| [`docs/`](docs/README.md) | Concepts defined from scratch, with worked examples from this repo's own numbers. |
+| [`docs/`](docs/README.md) | The documentation above. |
 | [`tests/`](tests/) | The test suite. |
 
 ## Running things

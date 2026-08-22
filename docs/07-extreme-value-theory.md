@@ -91,14 +91,14 @@ threshold leaves too few observations to fit a stable model at all.
 [mean excess plot](#mean-excess-plot)), trading off bias (too low) against variance (too
 high, from too few remaining observations).
 
-**Why it is here.** `NEXT_RUN_PROMPT.md` fixes `tail_frac=0.10` (10%) *in advance* for
-notebook 5's `fit_gpd_tail`, explicitly not to be tuned to improve a score, with 5% and
+**Why it is here.** Notebook 005 fixes the tail fraction at 10% *in advance*, explicitly
+not to be tuned to improve a score, with 5% and
 15% reported only as a robustness/sensitivity check — this is a
 [pre-declared](08-research-methodology.md#pre-declared-gates-and-pre-registration) choice,
 not a free parameter to search over after seeing results.
 
-**Worked example.** On a 500-bar rolling window at 10%, that's 50 exceedances —
-`NEXT_RUN_PROMPT.md` explicitly calls this "marginal-but-workable," with `fit_gpd_tail`
+**Worked example.** On a 500-bar rolling window at 10%, that's 50 exceedances — marginal
+but workable, with `fit_gpd_tail`
 requiring at least 30 exceedances before attempting a fit at all (returning `None`
 otherwise, the same "null rather than propagate junk" convention as every other fitter
 in this repo).
@@ -164,9 +164,9 @@ average of the tail is infinite."
   finite mean exceedance — the range this repo's tripwires treat as the expected,
   plausible zone for crypto.
 - $\xi \ge 1$: the tail is so heavy that **even the mean of the exceedances is
-  infinite** — `NEXT_RUN_PROMPT.md` explicitly treats this as "possible in principle at
-  1h" (the finest-grained, most extreme interval) rather than automatically an error, but
-  asks that it be reported honestly (not silently emitted as NaN) and cross-checked
+  infinite** — treated as possible in principle at 1h (the finest-grained, most extreme
+  interval) rather than automatically an error, but required to be
+  reported honestly (not silently emitted as NaN) and cross-checked
   against the independent [Hill estimator](#hill-estimator).
 
 **Why it is here.** `gpd_var_es` directly encodes this last boundary: expected shortfall
@@ -179,8 +179,8 @@ directly consistent with notebook 4's own finding of the lowest fitted Student-t
 of freedom (heaviest tail) at 1h specifically — cross-checking two independently-derived
 tail estimates for internal consistency.
 
-**Pitfalls.** `NEXT_RUN_PROMPT.md` §9's own tripwire: a GPD $\xi$ that wildly disagrees
-with the Phase 1 [Hill](#hill-estimator) tail-index estimate on the same data is worth
+**Pitfalls.** A standing tripwire in this programme: a GPD $\xi$ that wildly disagrees
+with the [Hill](#hill-estimator) tail-index estimate on the same data is worth
 stopping to investigate — they're estimating related (though not identical) quantities
 ($\xi \approx 1/\alpha$ where $\alpha$ is the Hill tail index) and should be broadly
 consistent if both are working correctly.
@@ -200,9 +200,8 @@ $e(u) = \mathbb{E}[X - u \mid X > u]$ — estimated empirically as the sample av
 *exactly linear* in $u$ above the point where the GPD approximation genuinely holds:
 $e(u) = \frac{\beta + \xi u}{1-\xi}$.
 
-**Why it is here.** `NEXT_RUN_PROMPT.md`'s notebook structure (§7) calls this out as a
-key required visual — "a mean-excess plot ... the standard EVT threshold-selection
-diagnostic — it also visually justifies the fixed 10% [threshold]."
+**Why it is here.** Notebook 005 requires this plot: it is the standard threshold-selection
+diagnostic in extreme value theory, and it visually justifies the fixed 10% threshold.
 
 **Worked example.** If the mean excess plot is roughly flat/linear from the 10% tail
 cutoff onward but curves noticeably below that point, this visually confirms 10% is a
@@ -263,9 +262,9 @@ single number.
 region where $\hat{\alpha}(k)$ barely changes as $k$ varies is read as the credible
 estimate; report the plateau's range, not one arbitrarily-chosen $k$'s single value.
 
-**Why it is here.** `NEXT_RUN_PROMPT.md` is explicit that a Hill plot with **no**
-plateau at any interval must be stated plainly, with "every downstream
-tail-index-dependent claim [treated] as provisional" — the honesty discipline this whole
+**Why it is here.** A Hill plot with **no**
+plateau at any interval must be stated plainly, with every downstream
+tail-index-dependent claim treated as provisional — the honesty discipline this whole
 research programme insists on, applied specifically to a case where the estimator itself
 might simply not give a clean answer on this data.
 
@@ -306,7 +305,7 @@ tail fit (on standardized residuals, pooled across both calm and turbulent perio
 correctly flags this as a real tail event *relative to current conditions*, something a
 model using only the raw return's absolute size could miss entirely.
 
-**Pitfalls.** **Critical causality note**, stated explicitly in `NEXT_RUN_PROMPT.md`: the
+**Pitfalls.** **Critical causality note:** the
 threshold, $\xi$, and $\beta$ must all be re-estimated on each refit's training window
 and forward-filled between refits, exactly like the GARCH variance parameters — fitting
 the GPD once on the whole sample would be
@@ -343,9 +342,9 @@ scale.
 **Pitfalls.** Standardized residuals are only as good as the volatility model producing
 $\sigma_t$ — if the underlying GARCH/GJR fit is itself poorly calibrated, the resulting
 $z_t$ series will carry that mis-calibration forward into the GPD tail fit; this is
-exactly why [Gate C](08-research-methodology.md#frozen-transfer-check) (stability across
-symbols) matters for the whole two-stage pipeline, not just for the GPD piece in
-isolation.
+exactly why the [frozen transfer check](08-research-methodology.md#frozen-transfer-check)
+(stability across symbols) matters for the whole two-stage pipeline, not just for the GPD
+piece in isolation.
 
 ---
 
@@ -390,7 +389,7 @@ piece integrates to its own known weight.
 
 **Worked example.** On BTC at 12h, GARCH-EVT and GJR-EVT decisively beat every other
 model in this repo's zoo (both non-EVT and the Phase 3 wider zoo) on log score, tied
-only with each other — the single cleanest Gate A result this notebook produced. It does
+only with each other — the single cleanest density result that notebook produced. It does
 **not** replicate cross-sectionally: on the other five symbols, EVT is rarely even the
 single best model, let alone a significant winner — the same "spectacular on BTC alone"
 pattern this whole research programme has repeatedly found and repeatedly refused to

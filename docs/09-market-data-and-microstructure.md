@@ -190,7 +190,7 @@ opposite of funding rate's own raw sign.
 **Why it is here.** Notebook 7's Phase C tests carry as a PRIMARY cross-sectional
 signal for the first time in this research programme (notebook 3 only ever included
 raw `funding_rate` as one of eight features inside a fitted model). The sign convention
-above is a pre-declared correction to notebook 7's own runbook, decided from two
+above is a pre-declared correction to notebook 7's own specification, decided from two
 independent sources before any Phase C number was seen: the economic mechanism itself,
 and notebook 3's own screening result that raw `funding_rate`'s IC against forward
 return is *negative* (`src/results/003_cross_sectional_ic.md` Phase 4) — ranking directly
@@ -397,7 +397,7 @@ to this column directly.
 predicted value of 1, meaning trade activity arrives in far burstier clusters than a
 simple, constant-rate arrival process would produce.
 
-**Pitfalls.** `NEXT_RUN_PROMPT.md`'s own tripwire convention flags a dispersion index
+**Pitfalls.** This programme's tripwire convention flags a dispersion index
 *near* 1 as suspicious (an aggregation bug erasing genuine clustering), not the enormous
 observed values — the extreme overdispersion here is the expected, correct result, not a
 red flag.
@@ -434,8 +434,8 @@ taker-buy ratio exactly 0 or 1 (an extreme version of the same "the data hit a h
 boundary" phenomenon) breaks a whole-sample fit the same way a frozen-price bar breaks a
 variance-based one.
 
-**Pitfalls.** `NEXT_RUN_PROMPT.md`'s own framing treats this as a class of bug that is
-"certain to recur" in any new code touching realized variance or ratio-type features —
+**Pitfalls.** This is a class of bug that is certain to recur in any new code touching
+realized variance or ratio-type features —
 worth checking for explicitly (a strict `> 0` mask where a formula requires strictly
 positive variance/ratios) in every new model this repo adds, rather than assuming
 existing guards automatically cover a new computation.
@@ -1004,7 +1004,7 @@ institutional scale — the Treasury cash-futures basis trade alone represented 
 $4 trillion of hedge funds' gross Treasury exposure by late 2025 (Federal Reserve, Office
 of Financial Research, Dallas Fed, CFTC sources, `src/results/009_external_research_review.md`)
 — a real, large, structurally-motivated (not directional) return source this research
-programme has never tested in any form. Notebook 7's own Gate CY tested funding rate only
+programme has never tested in any form. Notebook 7 tested funding rate only
 as a *ranking* signal (§ above) and found the resulting book's own turnover exceeded the
 signal it was meant to replace; the structural, delta-neutral version is a different
 trade with a different (and untested) cost/turnover profile.
@@ -1018,8 +1018,8 @@ financial-stability question, not a return-prediction one.
 
 **Pitfalls.** "Delta-neutral" only cancels *price* risk from the underlying, not every
 risk in the trade — the Treasury version's real risk is repo-funding-rate and dealer
-intermediation-capacity risk (Dallas Fed, `src/results/009_external_research_review.md`
-Gate FA discussion), and a crypto spot-vs-perpetual version of the same idea carries
+intermediation-capacity risk (Dallas Fed, `src/results/009_external_research_review.md`),
+and a crypto spot-vs-perpetual version of the same idea carries
 exchange-counterparty risk and the possibility that funding turns negative, reversing the
 trade from collecting a payment to making one. A cash-and-carry trade being "structural"
 does not mean it is risk-free — only that its risk is a different kind than the
@@ -1044,7 +1044,7 @@ less attractive to buy into (not adding to it).
 
 **Why it is here.** Notebook 9's external research review lists this among the
 structural/mechanical return sources this research programme has never tested at all
-(`src/results/009_external_research_review.md`, Gate MM) — and, unusually for that
+(`src/results/009_external_research_review.md`) — and, unusually for that
 notebook's shortlist, explicitly could NOT be made testable with this repo's existing
 data: every backtest in this programme runs on OHLCV bars, but a market maker's entire
 risk (inventory versus the *actual order book*, fill probability at a given quote

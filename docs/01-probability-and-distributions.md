@@ -225,9 +225,8 @@ $0.0000341$.
 **Pitfalls.** Forgetting to take the square root (using variance where standard deviation
 is needed, or vice versa) silently produces numbers off by orders of magnitude,
 especially since returns are small (squaring a small number makes it much smaller). This
-is exactly the kind of unit slip flagged for the Student-t entry in `NEXT_RUN_PROMPT.md`
-§11's own example: a fitted distribution's *scale* parameter must be read in the right
-units before it can be called a volatility.
+is exactly the kind of unit slip the Student-t entry warns about: a fitted distribution's
+*scale* parameter must be read in the right units before it can be called a volatility.
 
 ---
 
@@ -927,8 +926,8 @@ equal-mean-variance signature via the dispersion index $\mathrm{Var}/\mathrm{Mea
 are massively "overdispersed" and nowhere close to Poisson-shaped, motivating the switch
 to [negative binomial](#negative-binomial) instead.
 
-**Pitfalls.** A dispersion index *near* 1 would itself be a red flag in this context per
-`NEXT_RUN_PROMPT.md`'s own tripwire convention — it would suggest an aggregation bug
+**Pitfalls.** A dispersion index *near* 1 would itself be a red flag in this context, by
+this programme's own tripwire convention — it would suggest an aggregation bug
 (e.g. counts summed across a window that erased the clustering), not a genuine finding,
 since real trade activity almost never looks Poisson at this granularity.
 
@@ -990,8 +989,8 @@ describing the same tail, just more directly.
 
 **Pitfalls.** $\xi < 0$ implies a bounded tail — implausible for financial returns
 (nothing structurally caps how bad a crash can be) and is treated in this repo as a
-tripwire: a $\xi < 0$ result almost certainly signals a threshold or sign error, not a
-genuine finding, per `NEXT_RUN_PROMPT.md` §9. See
+tripwire: a $\xi < 0$ result is investigated as a possible threshold or sign error before
+being reported as a genuine finding. See
 [generalized Pareto with $\xi$ and $\beta$ explained separately](07-extreme-value-theory.md#generalized-pareto-with-xi-and-beta-explained-separately)
 for the full physical interpretation of each regime.
 

@@ -235,8 +235,8 @@ coarser intervals, since each bar already spans much more calendar time.
 **Pitfalls.** $\lambda=0.94$ is not a universal constant — it's calibrated for a specific
 data frequency (daily), and applying the same *per-bar* decay rate at a different bar
 frequency changes its effective *calendar-time* memory length substantially. Retuning
-$\lambda$ per interval is explicitly listed as a reasonable, deferred follow-up in
-`NEXT_RUN_PROMPT.md`'s out-of-scope section, not something this repo has done yet.
+$\lambda$ per interval is a reasonable, deferred follow-up notebook 004 named explicitly,
+not something this repo has done yet.
 
 ---
 
@@ -275,8 +275,7 @@ recent shocks and smoothly persist.
 
 **The maths.**
 $$\sigma_t^2 = \omega + \alpha\, r_{t-1}^2 + \beta\, \sigma_{t-1}^2$$
-Three parameters, each with a distinct role, explained separately as `NEXT_RUN_PROMPT.md`
-requires:
+Three parameters, each with a distinct role, explained separately:
 - $\omega$ (Greek letter "omega") — a small positive constant setting the model's
   long-run, unconditional variance baseline (specifically,
   $\omega/(1-\alpha-\beta)$ is that baseline — see [stationarity constraint](#stationarity-constraint)).
@@ -299,10 +298,9 @@ structure over HAR-RV's simpler multi-horizon averaging, on this particular data
 
 **Pitfalls.** GARCH's variance recursion, once fit, must still be *forward-filled*
 between refits (re-rolled forward on realized returns using the last-fitted
-$\omega,\alpha,\beta$) — a subtle piece of causal bookkeeping `NEXT_RUN_PROMPT.md`
-explicitly warns is "correct and subtle, do not break it," and the exact mechanism that
-notebook 5's §1a fix had to extend (forward-filling $\nu$ the same careful way) rather
-than reinvent.
+$\omega,\alpha,\beta$) — a piece of causal bookkeeping that is correct but subtle, and the
+exact mechanism notebook 005's correction had to extend (forward-filling $\nu$ the same
+careful way) rather than reinvent.
 
 ---
 
@@ -440,10 +438,10 @@ completeness; it is explicitly not implemented or used anywhere in this repo.
 log-variance sidesteps needing to constrain $\sigma_t^2 > 0$ explicitly (a logarithm can
 be any sign; exponentiating back always gives a positive variance).
 
-**Why it is here.** `NEXT_RUN_PROMPT.md` explicitly places EGARCH in its out-of-scope
-list: "GJR is the one asymmetry model in scope. Expanding the model zoo re-creates
-exactly the 'everything ties' problem notebook 4 already ran into" — named here only so a
-reader encountering the term elsewhere knows what it is and why this repo doesn't use it.
+**Why it is here.** EGARCH is deliberately out of scope for this programme: GJR is the one
+asymmetry model in scope, because expanding the model zoo re-creates exactly the
+"everything ties" problem notebook 004 already ran into. It is named here only so a reader
+encountering the term elsewhere knows what it is and why this repo doesn't use it.
 
 **Worked example.** Not applicable — not fit anywhere in this codebase.
 
@@ -467,8 +465,8 @@ the trailing monthly average — all as of (and using data only through) bar $t$
 ordinary least squares.
 
 **Why it is here.** This is rung 2 of notebook 4's Phase 3 ladder, and the single
-best-by-QLIKE rung at *every* interval in that ladder — `NEXT_RUN_PROMPT.md` explicitly
-calls it "the real benchmark in the modern literature."
+best-by-QLIKE rung at *every* interval in that ladder — it is the real benchmark in the
+modern volatility-forecasting literature.
 
 **Worked example.** `make_har_features`'s docstring documents a real, serious bug found
 and fixed in this repo: the three rolling-mean windows were originally *not shifted* by
@@ -480,8 +478,8 @@ windows are now explicitly `shift(1)`ed.
 **Pitfalls.** Because HAR-RV is fit by plain OLS on rolling windows, it inherits every
 lookahead risk of [rolling OLS refit](02-estimation-and-fitting.md#rolling-trailing-window)
 generally — the bug above is the canonical, already-realized example of exactly this
-failure mode in this repo's own history, precisely the kind of "implausibly good result"
-tripwire `NEXT_RUN_PROMPT.md` §9 warns to check for on every new model.
+failure mode in this repo's own history, and precisely the kind of implausibly-good-result
+tripwire worth checking on every new model.
 
 ---
 
@@ -520,8 +518,8 @@ Yang-Zhang's extra machinery over Rogers-Satchell buys almost nothing on this sp
 instrument, even though it would matter more for a traditional market with real overnight
 gaps.
 
-**Pitfalls.** `NEXT_RUN_PROMPT.md`'s own out-of-scope list explicitly rejects a proposed
-"range-estimator drift correction" as originally specified, because the proposed
+**Pitfalls.** A proposed "range-estimator drift correction" was rejected as originally
+specified, because the proposed
 correction was itself a lookahead leak: calibrating a multiplicative bias adjustment from
 a full-pre-holdout, fit-once excess measurement and applying it to rolling forecasts
 scales bar-$t$'s forecast using data from after $t$ — the correct fix, if ever done,
@@ -580,8 +578,8 @@ application.
 **Worked example.** Notebook 5's own Phase 6 application (gated, likely not run) is
 explicitly framed as the *risk-management* analogue of vol targeting rather than an
 alpha claim — scaling exposure down when a model's own tail-risk forecast is elevated,
-using a *tail-calibration* winner (Gate B) rather than a point-variance winner, since
-that is what notebook 5's own contest actually tests for.
+using a *tail-calibration* winner rather than a point-variance winner, since
+that is what notebook 005's own contest actually tests for.
 
 **Pitfalls.** Vol targeting only works as well as the underlying volatility *forecast* —
 if no forecast beats the trivial baselines with significance (as notebook 4 found for

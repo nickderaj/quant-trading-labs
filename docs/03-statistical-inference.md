@@ -112,11 +112,12 @@ chosen after looking at the data to make a result look good.
 reuse of the same letter as the [tail index](01-probability-and-distributions.md#tail-index)
 $\alpha$; context always disambiguates). Reject $H_0$ if $p < \alpha$.
 
-**Why it is here.** $\alpha = 0.05$ is used throughout this repo's gates (Gate A, Gate B
-in `NEXT_RUN_PROMPT.md`) — declared in advance, in writing, before any model is run,
-exactly matching [pre-declared gates and pre-registration](08-research-methodology.md#pre-declared-gates-and-pre-registration).
+**Why it is here.** $\alpha = 0.05$ is used throughout this repo's pre-declared criteria —
+notebook 005's density contest and its tail-calibration battery both use it — declared in
+advance, in writing, before any model is run, exactly matching
+[pre-declared criteria and pre-registration](08-research-methodology.md#pre-declared-gates-and-pre-registration).
 
-**Worked example.** Gate B (tail calibration) requires a model to survive **36** separate
+**Worked example.** The tail-calibration battery requires a model to survive **36** separate
 tests per interval (6 quantile levels x 3 tests) all at $\alpha=0.05$ — a genuinely
 strict bar precisely because it's checked so many times; see
 [multiple-testing problem](#multiple-testing-problem) for why that repetition itself
@@ -149,8 +150,8 @@ coverage battery per interval.
 
 **Worked example.** Running 180 independent tests at $\alpha=0.05$, if every null were
 exactly true, you'd expect about $180 \times 0.05 = 9$ Type I errors (false "significant"
-results) purely by chance — exactly the number `NEXT_RUN_PROMPT.md` cites as the reason
-notebook 5 applies a
+results) purely by chance — which is exactly why
+notebook 005 applies a
 [Benjamini-Hochberg FDR](#benjamini-hochberg-fdr) correction to its density contest.
 
 **Pitfalls.** Reducing Type I errors (a stricter $\alpha$) generally increases Type II
@@ -170,15 +171,15 @@ rate); a low-power test often does.
 Power generally increases with sample size, with the true effect's size, and decreases
 as $\alpha$ is made stricter.
 
-**Why it is here.** `NEXT_RUN_PROMPT.md` §9's own tripwire flags any coverage test with
-fewer than ~10 violations as "underpowered" (report it as such rather than quoting its
+**Why it is here.** A standing tripwire in this programme flags any coverage test with
+fewer than about 10 violations as underpowered (report it as such rather than quoting its
 p-value as meaningful) — a direct, explicit acknowledgment that a test run on too few
 events can't reliably detect a real miscalibration even if one exists.
 
 **Worked example.** At 1d, only ~1,460 pre-holdout bars exist, implying ~14 expected 1%
 VaR violations — enough for Kupiec (which only needs a violation *count*) but thin for
 Christoffersen independence (which needs enough *consecutive pairs* of violations to say
-anything about clustering) — exactly the distinction `NEXT_RUN_PROMPT.md` draws between
+anything about clustering) — exactly the distinction notebook 005 draws between
 the two tests at that quantile level.
 
 **Pitfalls.** A non-significant result from a low-power test is not evidence of "no
@@ -509,7 +510,7 @@ using a [HAC](#newey-west-hac-standard-errors) [t-statistic](#t-statistic) on $\
 
 **Why it is here.** `dist_lib.diebold_mariano` is the workhorse behind every "does rung
 X beat rung Y" verdict in notebook 4's Phase 3, and behind notebook 5's log-score
-all-pairs contest (Gate A).
+all-pairs density contest.
 
 **Worked example.** Notebook 4's all-pairs DM apparatus tests all $\binom{7}{2}=21$
 pairs of ladder representatives, not just adjacent-rung comparisons, specifically because
@@ -570,8 +571,8 @@ randomly-chosen blocks of that (roughly) length until reaching the original samp
 
 **Why it is here.** `research.block_bootstrap_ci`, used throughout notebook 5 (Hill
 confidence intervals, GPD sensitivity checks) specifically because returns are
-autocorrelated *in magnitude* even when not autocorrelated in sign — per
-`NEXT_RUN_PROMPT.md`'s own framing of exactly why this matters here.
+autocorrelated *in magnitude* even when not autocorrelated in sign, which is exactly why
+it matters here.
 `research.block_bootstrap_pvalue` is the same block-resampling machinery aimed at a
 hypothesis test instead of a CI: shift the data so its mean is exactly the null value,
 resample, and see how extreme the *actual* observed mean is against that null
@@ -619,15 +620,14 @@ every null is actually true, the *expected number* of false "significant" result
 $m\alpha$ — not zero.
 
 **Why it is here.** Notebook 5's Phase 3 density contest runs $\binom{10}{2}=45$ pairwise
-comparisons at each of 4 intervals — 180 tests total. `NEXT_RUN_PROMPT.md` states this
-explicitly: at $\alpha=0.05$, about 9 spuriously "significant" results are expected by
-chance alone if nothing were really different between models, which is why Gate A's
-determination is made on
+comparisons at each of 4 intervals — 180 tests total. At $\alpha=0.05$, about 9 spuriously
+"significant" results are expected by chance alone if nothing were really different
+between models, which is why the contest's verdict is made on
 [Benjamini-Hochberg-adjusted](#benjamini-hochberg-fdr) p-values, not the raw ones.
 
 **Worked example.** Notebook 4's Phase 3 ran a smaller number of pairwise DM tests and
-"got away with" not correcting for multiple testing, per `NEXT_RUN_PROMPT.md`'s own
-framing, only because nothing came back significant regardless — a correction that would
+"got away with" not correcting for multiple testing
+only because nothing came back significant regardless — a correction that would
 have made zero difference to that particular conclusion. Notebook 5's contest is larger
 (10 models, not 7) and might have something come back significant, which is exactly why
 the omission can't be repeated safely this time.
@@ -682,10 +682,10 @@ Find the largest $k$ such that $p_{(k)} \le \frac{k}{m}\alpha$; declare all test
 $p \le p_{(k)}$ significant. This guarantees the *expected* false discovery rate (fraction
 of "significant" results that are actually false positives) is at most $\alpha$.
 
-**Why it is here.** `NEXT_RUN_PROMPT.md` mandates exactly this for notebook 5's Phase 3:
-"report a Benjamini-Hochberg FDR-adjusted verdict alongside the raw one, and make Gate
-A's determination on the adjusted p-values" across the 180 tests (45 pairs x 4
-intervals) in the density contest.
+**Why it is here.** Notebook 005's density contest requires exactly this: a
+Benjamini-Hochberg FDR-adjusted verdict reported alongside the raw one, with the contest's
+own determination made on the adjusted p-values across all 180 tests (45 pairs × 4
+intervals).
 
 **Worked example.** If 20 of 180 raw p-values are below 0.05, BH doesn't simply keep all
 20 — it re-ranks them and only keeps those below their own rank-dependent, generally

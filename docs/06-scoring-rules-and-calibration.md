@@ -112,8 +112,8 @@ expected score by strategically misreporting a different distribution instead.
 
 **Worked example.** QLIKE is a proper scoring rule specifically for a noisy *variance
 proxy* target (Patton 2011) — this specific property (not just "seems like a reasonable
-loss function") is the actual, technical reason `NEXT_RUN_PROMPT.md` and notebook 4 both
-prefer it over plain MSE for scoring variance forecasts.
+loss function") is the actual, technical reason notebook 004 prefers it over plain MSE for
+scoring variance forecasts.
 
 **Pitfalls.** Not every loss function that seems intuitively reasonable is proper — using
 an improper scoring rule can reward a forecaster for strategically hedging or distorting
@@ -136,7 +136,7 @@ split evenly), $\text{AUC} = \dfrac{\sum_{i \in \text{positive}} R_i - n_+(n_++1
 AUC = 0.5 is random ranking; 1.0 is perfect separation; below 0.5 means the score ranks
 backwards.
 
-**Why it is here.** Notebook 11c's entry-time loss classifier (Gate LC) needed a
+**Why it is here.** Notebook 011c's entry-time loss classifier needed a
 classification analogue of this file's regression/density scoring rules — none of
 [log score](#log-score), [CRPS](#crps) or QLIKE apply to a binary stop-exit-vs-zscore-exit
 label, and this repo's own `research.py` walk-forward harness (`walk_forward_run`,
@@ -144,7 +144,7 @@ label, and this repo's own `research.py` walk-forward harness (`walk_forward_run
 (`spread_lib11.roc_auc_score`) rather than pulled in from a library this repo's
 environment doesn't have (no `sklearn`).
 
-**Worked example.** Gate LC's stitched out-of-sample AUC came back in the 0.67-0.76 range
+**Worked example.** That classifier's stitched out-of-sample AUC came back in the 0.67-0.76 range
 at all four pre-registered origin offsets on a 55-trade sample — clearing the
 pre-registered ">0.60" bar by its literal point-estimate text, but see the pitfall below
 before trusting that number on its own.
@@ -292,9 +292,9 @@ trivial "always guess the average" forecast.
 
 **Why it is here.** Reported alongside every [Mincer-Zarnowitz](#mincer-zarnowitz-regression)
 regression in notebook 4's Phase 3 — and its low values (0.004-0.19 at every interval,
-for even the best-performing rungs) are the direct, quantitative basis for
-`NEXT_RUN_PROMPT.md`'s framing that "conditional variance at these horizons has an R² of
-0.004-0.19" and that vol-forecasting gains, while real, are inherently modest.
+for even the best-performing rungs) are the direct, quantitative basis for this
+programme's conclusion that conditional variance at these horizons is only weakly
+forecastable, and that volatility-forecasting gains, while real, are inherently modest.
 
 **Worked example.** An $R^2$ of 0.19 (the *upper* end of what notebook 4 found) means
 even the best-calibrated variance forecast at that interval explains only 19% of the
@@ -322,9 +322,10 @@ both to be genuinely useful.
 sharpness is checked by comparing interval widths (or predictive variance) across
 competing, similarly-calibrated models.
 
-**Why it is here.** Notebook 5's Gate B is explicitly a calibration test (coverage across
-six quantile levels, three tests each) — deliberately separate from Gate A's log-score
-contest, which rewards a combination of calibration *and* sharpness together (a sharp
+**Why it is here.** Notebook 005's tail-calibration battery is explicitly a calibration
+test (coverage across six quantile levels, three tests each) — deliberately separate from
+its log-score density contest, which rewards a combination of calibration *and* sharpness
+together (a sharp
 forecast that's also well-calibrated gets the best log score; a well-calibrated but
 needlessly wide forecast gets penalized by log score for its lack of sharpness).
 
@@ -506,8 +507,8 @@ series, fed directly into every coverage test
 ([Kupiec](#kupiec-unconditional-coverage), [Christoffersen](#christoffersen-independence)).
 
 **Worked example.** At the 1% level with ~1,460 pre-holdout 1d bars, about 14
-exceedances are expected under correct calibration — `NEXT_RUN_PROMPT.md` §9's own
-tripwire treats a level with under ~10 observed violations as underpowered, worth
+exceedances are expected under correct calibration — a standing tripwire in this programme
+treats a level with under about 10 observed violations as underpowered, worth
 reporting as such rather than quoting its test p-value as if it were meaningful.
 
 **Pitfalls.** A single exceedance is a Bernoulli (yes/no) event — any single one, on its
@@ -531,8 +532,8 @@ exceedances) against the declared rate $p$: $\mathrm{LR} = -2\left[x\log p + (n-
 rate} = p$.
 
 **Why it is here.** `distributions.kupiec_test` implements exactly this, and it is the
-first (and, in notebook 4, only) coverage test applied — notebook 5's Phase 4 extends it
-to all six quantile levels for every model, per Gate B.
+first (and, in notebook 4, only) coverage test applied — notebook 005's tail-calibration
+battery extends it to all six quantile levels for every model.
 
 **Worked example.** Notebook 4 found GARCH-t's 5% VaR never rejected by Kupiec at any
 interval (p=0.18-0.84); every normal-density rung's 5% VaR was rejected at 1h and often
@@ -560,10 +561,10 @@ should be equal (whether you just had a violation shouldn't change your odds of 
 another one next bar). A likelihood-ratio statistic, $\chi^2(1)$ under the null of
 independence.
 
-**Why it is here.** `distributions.christoffersen_independence_test` implements this, and
-`NEXT_RUN_PROMPT.md`'s own coverage battery singles it out as "precisely the test
-notebook 4 ran for exactly one model at exactly one level" — Phase 4 of notebook 5
-extends it to the full 6-quantile x 10-model grid, motivated directly by Phase 1's own
+**Why it is here.** `distributions.christoffersen_independence_test` implements this. It is
+precisely the test notebook 004 ran for exactly one model at exactly one level, and
+notebook 005's coverage battery
+extends it to the full 6-quantile × 10-model grid, motivated directly by the earlier
 finding that waiting times between extreme events are gamma-shaped (over-dispersed,
 i.e. genuinely clustered), not exponential (memoryless) — a model whose exceedances still
 cluster despite a correct overall rate would be exactly the failure this test is built to
@@ -575,9 +576,9 @@ specifically at times when real clustering (which GARCH's variance recursion onl
 partially captures) still shows through in the standardized residuals' extreme tail.
 
 **Pitfalls.** Needs a reasonably large number of *both* hit and no-hit transitions to be
-well-powered — at a 1% VaR level with only ~14 expected violations at 1d,
-`NEXT_RUN_PROMPT.md` §9 explicitly flags this test as "thin" (underpowered) even though
-Kupiec alone remains reasonably usable at that same sample size.
+well-powered — at a 1% VaR level with only ~14 expected violations at 1d, this test is
+thin (underpowered) even though Kupiec alone remains reasonably usable at that same
+sample size.
 
 ---
 
@@ -621,7 +622,8 @@ genuinely clustered violations, not just a right-on-average rate.
 **Pitfalls.** A model can pass Kupiec and Christoffersen independence (both individually
 weak against clustering beyond lag 1) while still failing this test — read literally, that
 means the practical risk statement "this model's 1% VaR is trustworthy" can be weaker than
-notebook 5's Gate B implied, since Gate B never ran this test. Needs at least a handful of
+notebook 005's coverage battery implied, since that battery never ran this test. Needs at
+least a handful of
 violations to fit at all (`dist_lib6.fit_geometric_durations` requires 10+ gaps); at very
 low violation counts (thin symbols/intervals) this test is itself underpowered, same
 caveat as Christoffersen independence.
@@ -640,12 +642,11 @@ joint null (correct rate *and* independence) — simply the sum of the two compo
 statistics, since they test complementary, roughly separable aspects of calibration.
 
 **Why it is here.** `distributions.christoffersen_conditional_coverage_test` implements
-exactly this combined test, and it's the third of the three tests in notebook 5's Phase 4
-coverage battery (Gate B requires passing all three, at all six quantile levels, for
-every model) — `NEXT_RUN_PROMPT.md` flags this function as "currently unused anywhere in
-the repo," meaning its integration path (as opposed to its unit tests) had never actually
-been exercised before notebook 5, a specific, named risk ("treat first use as a place
-bugs live").
+exactly this combined test, and it's the third of the three tests in notebook 005's
+coverage battery, which requires passing all three at all six quantile levels for every
+model. This function had been unused anywhere in the repo until then, meaning its
+integration path (as opposed to its unit tests) had never actually been exercised — a
+specific, named risk, on the principle that first use is a place bugs live.
 
 **Worked example.** A model could individually pass Kupiec (right rate) and fail
 independence (clustered violations), or the reverse — the conditional coverage test
@@ -654,8 +655,8 @@ even though the individual component tests carry more diagnostic detail about *w
 kind of miscalibration is present.
 
 **Pitfalls.** Passing the combined test doesn't tell you *which* of the two component
-failures (if any) is close to the boundary — `NEXT_RUN_PROMPT.md` explicitly asks for
-"the full grid, not just pass/fail" in Phase 4's reporting, specifically so a model
+failures (if any) is close to the boundary — which is why the coverage battery reports the
+full grid rather than just pass/fail, specifically so a model
 narrowly failing one component isn't indistinguishable from one failing badly on both.
 
 ---

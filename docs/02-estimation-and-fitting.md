@@ -476,8 +476,8 @@ would do 24x more expensive MLE fits at 1h than at 1d for the same wall-clock hi
 `mle_refit_every = 30` bars — very different bar counts, same real-world refit
 frequency, which is the entire point.
 
-**Pitfalls.** `NEXT_RUN_PROMPT.md` §9's own tripwire: "any refit count that differs by
-more than ~20% across intervals" signals the calendar-day-to-bars conversion is wrong
+**Pitfalls.** A standing tripwire in this programme: any refit count that differs by
+more than about 20% across intervals signals the calendar-day-to-bars conversion is wrong
 somewhere — refit *count* (not bar-count cadence) is the invariant that should hold
 roughly steady across intervals if this conversion is implemented correctly.
 
@@ -496,7 +496,7 @@ step function in time, flat between refit points, jumping only at a refit.
 **Why it is here.** This is the causal backbone of every rolling forecast in this repo:
 `rolling_garch_forecast`'s between-refit loop explicitly re-rolls the *last-fitted*
 model's own variance recursion forward on realized returns, rather than re-fitting or
-looking ahead — and `NEXT_RUN_PROMPT.md`'s §1a fix (`nu_path_from_fits`) exists
+looking ahead — and notebook 005's causal-parameter-path fix exists
 specifically to apply this exact same discipline to the GARCH-t degrees-of-freedom
 parameter, which an earlier version of the code had *not* forward-filled correctly (it
 used the single *final* fit's $\nu$ to score the *entire* evaluation period instead — a
@@ -511,7 +511,7 @@ before $t$.
 
 **Pitfalls.** Confusing "the parameter that was last estimated overall" (which could be
 from data *after* the bar being scored) with "the parameter that was in force *at* that
-bar" is the exact bug notebook 5's §1a fix corrects — `NEXT_RUN_PROMPT.md`'s own tripwire
+bar" is the exact bug notebook 005's correction addresses. The standing tripwire
 for this class of bug is a parameter path that comes back **constant across the whole
 sample** when it should visibly step between refits; checking this directly (plotting or
 printing the path) is the mechanical way to catch it before it contaminates a scored

@@ -80,9 +80,9 @@ was used to formally refit anything.
 
 **Why it is here.** `HOLDOUT_START = research.HOLDOUT_START` (2025-07-01 in this repo)
 is explicitly described as "spent once by notebook 3" — every notebook after it (4 and 5)
-runs entirely on the pre-holdout rolling out-of-sample sample instead, and 5's own
-runbook repeats the rule explicitly: "the holdout stays frozen... only a certified
-Phase 6 application would touch the holdout, and only once."
+runs entirely on the pre-holdout rolling out-of-sample sample instead. The rule is
+repeated in every notebook: the holdout stays frozen, and only a certified application
+touches it, once.
 
 **Worked example.** Notebook 4's own write-up notes explicitly that its numbers don't
 depend on holdout purity "the way a return-prediction backtest's does" precisely because
@@ -316,10 +316,10 @@ asset but doesn't replicate is reported as unstable, not as a headline win.
 **The maths.** No formula; a reporting convention, stated explicitly and applied
 consistently: "stability outranks magnitude."
 
-**Why it is here.** Established in notebook 3 and repeated verbatim in every subsequent
-notebook's own gating language (Gate C in `NEXT_RUN_PROMPT.md` requires a winner to
-"reproduce on the frozen transfer symbols... a model that wins on BTC and 2 of 5 transfer
-symbols is reported as 'not stable,' not as 'wins on BTC'").
+**Why it is here.** Established in notebook 3 and repeated in every subsequent notebook's
+own criteria: a winner must reproduce on the frozen transfer symbols, and a model that
+wins on BTC and 2 of 5 transfer symbols is reported as "not stable", never as "wins on
+BTC".
 
 **Worked example.** Notebook 4's Phase 4 regime finding ("regimes predict volatility, not
 direction") is reported as the headline result specifically *because* it replicated at
@@ -343,21 +343,18 @@ which numbers came out favorably.
 level, and the exact decision rule in advance, then applying it mechanically once results
 are in.
 
-**Why it is here.** `NEXT_RUN_PROMPT.md` §3 writes down Gates A through E — the *exact*
-criteria for a density winner, a tail-calibration winner, stability, and the Phase 6
-trigger — before a single model in notebook 5 is fit, explicitly "before you see the
-numbers."
+**Why it is here.** Notebook 005 writes down the *exact* criteria for a density winner, a
+tail-calibration winner, stability, and the trading-application trigger before a single
+model is fit — explicitly, before seeing any numbers.
 
-**Worked example.** Gate B's "all six quantile levels, never rejected by any of three
-tests" is a deliberately strict, pre-committed bar — `NEXT_RUN_PROMPT.md` explicitly
-anticipates the likely honest outcome is that nothing clears it, and states in advance
-that this is "a fine result," precisely so a disappointing outcome can't retroactively
-tempt a loosening of the bar.
+**Worked example.** The tail-calibration bar ("all six quantile levels, never rejected by
+any of three tests") is deliberately strict and pre-committed. The likely honest outcome —
+that nothing clears it — was anticipated in advance and declared a fine result, precisely
+so a disappointing outcome couldn't retroactively tempt a loosening of the bar.
 
-**Pitfalls.** The entire value of a pre-declared gate evaporates the moment it's
-adjusted after seeing results ("well, it almost passed, let's call that close enough") —
-`NEXT_RUN_PROMPT.md`'s own closing line makes this explicit: "do not break that record
-now by relaxing a gate written down in §3 before the run."
+**Pitfalls.** The entire value of a pre-declared criterion evaporates the moment it's
+adjusted after seeing results ("well, it almost passed, let's call that close enough").
+The rule is absolute: a criterion written down before the run is never relaxed after it.
 
 ---
 
@@ -610,7 +607,7 @@ the identical model's predictions fixed and rebalancing only every 6th 12h bar i
 of every bar cut turnover 71% and moved net Sharpe from roughly flat/negative to
 consistently positive across all four origin offsets — but the bootstrap 95% CI on
 excess return over basket still included zero at every offset, so the point-estimate
-improvement did not clear the pre-declared bar for a genuine edge (Gate TC, see
+improvement did not clear the pre-declared bar for a genuine edge (see
 `src/results/007_alpha_generation.md`).
 
 **Pitfalls.** A turnover-budgeting change that also happens to alter *which* predictions
@@ -688,11 +685,11 @@ which equals $\text{equity} \times \text{risk\_pct}$ by construction — constan
 
 **The maths.** Entry conditions (all evaluated at bar $t$ close, entry fills bar $t+1$ open): cumulative return $\geq +25\%$ over a trailing 40-bar window; a 10-bar rolling high/low range $\leq 15\%$ of price; today's close breaks above yesterday's base-high. Stop-loss: entry price $-2.0 \times \mathrm{ATR}(14)$. Checked before the trail exit each bar. Exit: close drops below a 20-bar SMA, exit fills bar $t+1$ open. Position sizing: fixed-fractional, 2% of equity risked per trade against stop distance, capped at 20% notional and 3× leverage. Regime gate (fail-closed): for crypto, BTC's 10-day SMA $>$ 20-day SMA; for equities, at least 2 of {SPY, QQQ, IWM} in the same SMA configuration. A reference symbol missing data does not vote — absence is never treated as a negative signal.
 
-**Why it is here.** Notebook 11d applies this fixed rule (parameters frozen once, not swept) to two universes: 30 crypto perpetuals and 69 commodity-equity tickers, comparing one regime-gate variant each per universe against pre-declared trials. Gate MB (crypto) delivered positive Sharpe at every offset but insufficient sample size (42 trades over 3.5 years) and a wide noise floor ($\pm 76.4$pp CI) to clear deflated Sharpe at $n_{\mathrm{trials}}=12$. Gate MB-E (equities) failed outright: net Sharpe negative, returning −19.6% fixed-notional — consistent with the mechanism's fixed thresholds (25% prior run, 15% base range) being calibrated implicitly to crypto's volatility regime, not equities'. The entry illustrates how single-rule, pre-registered backtest design (rigid parameters, no within-universe tuning) differs from a full search: it prevents parameters from being silently re-optimized under the guise of "testing a strategy," but at the cost that unfitting parameters on a new asset class fail cleanly rather than getting tuned to success.
+**Why it is here.** Notebook 11d applies this fixed rule (parameters frozen once, not swept) to two universes: 30 crypto perpetuals and 69 commodity-equity tickers, comparing one regime-gate variant each per universe against pre-declared trials. The crypto test delivered positive Sharpe at every offset but had insufficient sample size (42 trades over 3.5 years) and too wide a noise floor ($\pm 76.4$pp CI) to clear deflation at $n_{\mathrm{trials}}=12$. The equity test failed outright: net Sharpe negative, returning −19.6% fixed-notional — consistent with the mechanism's fixed thresholds (25% prior run, 15% base range) being calibrated implicitly to crypto's volatility regime, not equities'. The entry illustrates how single-rule, pre-registered backtest design (rigid parameters, no within-universe tuning) differs from a full search: it prevents parameters from being silently re-optimized under the guise of "testing a strategy," but at the cost that unfitting parameters on a new asset class fail cleanly rather than getting tuned to success.
 
 **Worked example.** Offset 0, 1× cost, crypto universe: 42 trades, 24 stop-exits, 18 trail-exits, max drawdown −35.5%, fixed-notional return +9.30% (equity-path $1,000,000 → $1,088,852$). Regime gate open 54.1% of the time, raw breakout signals 71 across the 30 symbols — plausible base rates, not vacuous. Paired block bootstrap on fixed-notional return (quarterly blocks, 2,000 draws): 95% CI $[−52.7\%, +100.1\%]$, containing zero by a wide margin — the permutation CI, not the parameter noise, is the binding constraint on any verdict.
 
-**Pitfalls.** A single rule applied to a second asset class (equities) with different volatility, trend persistence, and microstructure can fail for two distinct reasons: the mechanism itself is broken (real null), or the parameters happen to be miscalibrated (fixable by re-tuning). Gate MB-E's negative return cannot distinguish between these — it only shows that the frozen crypto parameters do not work on equities. Extending the work requires either accepting the frozen-parameter discipline and calling it a null (as notebook 11d does) or re-tuning thresholds per universe (which increases trial count and must be pre-registered to stay honest). Additionally, any regime gate introduces a conditioning variable that is itself a free parameter — declaring *which* regime definition (raw SMA sign, magnitude deadbands, persistence requirements) to use before seeing results is essential to avoid the [regime-conditional backtesting](#regime-conditional-backtesting-and-its-multiple-testing-cost) trap of reporting whichever gate variant happens to look best afterward.
+**Pitfalls.** A single rule applied to a second asset class (equities) with different volatility, trend persistence, and microstructure can fail for two distinct reasons: the mechanism itself is broken (real null), or the parameters happen to be miscalibrated (fixable by re-tuning). The equity test's negative return cannot distinguish between these — it only shows that the frozen crypto parameters do not work on equities. Extending the work requires either accepting the frozen-parameter discipline and calling it a null (as notebook 11d does) or re-tuning thresholds per universe (which increases trial count and must be pre-registered to stay honest). Additionally, any regime gate introduces a conditioning variable that is itself a free parameter — declaring *which* regime definition (raw SMA sign, magnitude deadbands, persistence requirements) to use before seeing results is essential to avoid the [regime-conditional backtesting](#regime-conditional-backtesting-and-its-multiple-testing-cost) trap of reporting whichever gate variant happens to look best afterward.
 
 ---
 
@@ -795,7 +792,7 @@ Sharpe](#deflated-sharpe) threshold (>0.95) is defensible.
 
 **Worked example.** Notebook 8's own commodity carry result (net Sharpe 0.90-0.95 at
 every origin offset, deflated Sharpe probability 0.997, excess-return-vs-basket CI
-including zero — does not fire Gate AC) is exactly the kind of result this literature's
+including zero, so it does not clear the bar) is exactly the kind of result this literature's
 own findings help contextualize: strong on an absolute-Sharpe basis (comparable to Man
 AHL's disclosed 0.86 institutional track record) but not shown, by this repo's own
 stricter excess-vs-passive-basket criterion, to beat simply holding the underlying asset
@@ -843,7 +840,7 @@ three term-structure regime-definition variants (raw sign, a magnitude deadband,
 persistence requirement) and states which is primary and why — a structural argument (does
 the definition actually create a no-trade zone distinct from unconditional trading?), not
 a look at which variant's backtest Sharpe was highest. All three variants that are run
-still enter the deflated-Sharpe count for Gate SPR, whether or not they end up being the
+still enter the deflated-Sharpe trial count, whether or not they end up being the
 one reported as primary.
 
 **Pitfalls.** Declaring a regime definition "in advance" is only a real safeguard if

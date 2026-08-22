@@ -1,7 +1,8 @@
 # Glossary
 
-Flat, alphabetical, one line per term — every term used across notebooks 1-5, linking to
-its full entry (one sentence, the maths, why it's here, a worked example, and pitfalls).
+Flat, alphabetical, one line per term — every term used across this repo's research
+programme, linking to its full entry (one sentence, the maths, why it's here, a worked
+example, and pitfalls).
 Use this once you already know roughly what a term means and just want to jump to its
 full entry or check whether a word you hit in a notebook is defined here at all. To
 actually *learn* the material, read [README.md](README.md)'s numbered reading order
