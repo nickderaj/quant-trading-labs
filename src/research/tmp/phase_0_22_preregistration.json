@@ -1,0 +1,152 @@
+{
+  "notebook": "022_hyperliquid_cex_dex_funding_spread",
+  "committed_before_phase_4_runs": true,
+  "editable_after_commit": false,
+  "candidate": "NEXT_PROMPT.md (2026-08-23 planning pass) Candidate 1: the CEX/DEX funding spread, Hyperliquid vs Binance",
+  "hypothesis": "A funding-rate spread between an on-chain perp venue (Hyperliquid) and a large CEX (Binance) is a structurally different, more one-signed return driver than a funding LEVEL (018) or a CEX-vs-CEX funding SPREAD (020's Binance/Bybit, which found none worth having). The mechanism offered is structural, not a data artefact: an on-chain venue's flow skews retail/directional, a large CEX's is institutional/two-sided, and institutions find a DEX hard to onboard to, so the gap should not be competed away the way 020's CEX-vs-CEX spread was. This notebook tests that against real Hyperliquid data for the first time in this repo.",
+  "constants": {
+    "inherited_from_018_20": {
+      "PERP_TAKER_BP": 5.0,
+      "SLIPPAGE_BP": 1.0,
+      "LIQUIDITY_FLOOR_USD": 5000000.0,
+      "LIQUIDITY_WINDOW_BARS": 90,
+      "CARRY_EWMA_HALF_LIFE": 21,
+      "TARGET_HOLD_PERIODS": 45,
+      "TARGET_HOLD_SLOW": 90,
+      "INTERVAL": "8h"
+    },
+    "hyperliquid_new": {
+      "HL_TAKER_BP": 4.5,
+      "HL_MAKER_BP": 1.5,
+      "ROUND_TURN_BP_HL": 23.0,
+      "round_turn_derivation": "2 * ((PERP_TAKER_BP+SLIPPAGE_BP) + (HL_TAKER_BP+SLIPPAGE_BP)) = 2*((5.0+1.0)+(4.5+1.0)) = 23.0 -- same fully-costed convention as bl20.ROUND_TURN_BP_XV (25.0bp for Binance/Bybit), so the two are directly comparable. The 19bp bare-fee figure from the planning survey is NOT used as a book's cost -- it excludes slippage and would be inconsistent with every other book in the repo.",
+      "THETA_IN_HL_FAST": 5.111111111111111e-05,
+      "THETA_OUT_HL_FAST": 2.5555555555555554e-05,
+      "THETA_IN_HL_SLOW": 2.5555555555555554e-05,
+      "THETA_OUT_HL_SLOW": 1.2777777777777777e-05,
+      "N_MIN_HL": 3,
+      "MAX_POSITIONS_HL": 10,
+      "DEV_START": "2023-07-01",
+      "DEV_END": "2025-06-30",
+      "dev_start_derivation": "matches Probe P1/P2's own window exactly (Hyperliquid's BTC history begins mid-2023, well after 018/020's 2021-07-01 start) -- so pre-registered gates are computed on the identical dev window the planning-time probe numbers came from, not a superset that would silently re-run the probe under new conditions."
+    },
+    "configurations": {
+      "HL_ALWAYSON": "timed=False: every liquid symbol held every bar, direction=sign(carry), no floor, no position cap. The pre-registered HEADLINE -- NEXT_PROMPT.md's design implication that always-on is a live candidate for the first time in this programme, because the spread is 72% one-signed with a structural story, unlike every previous always-on variant (A_alwayson -0.415, cross-venue always-on -1.869).",
+      "HL_TIMED_FAST": "timed=True, bl20's own THETA_IN_XV/THETA_OUT_XV (45-period/~15-day target hold), N_MIN_HL floor, MAX_POSITIONS_HL cap. Falsification comparator: if this is needed to clear HD-2 while HL_ALWAYSON does not, that is evidence against the structural story and is reported as such regardless of which way HD-2 goes.",
+      "HL_TIMED_SLOW": "timed=True, THETA_IN_HL_SLOW/THETA_OUT_HL_SLOW (90-period/~30-day target hold), same floor/cap. A middle ground between the two, at the programme's own already-adopted 'slow carry' cadence (020's TARGET_HOLD_SLOW)."
+    }
+  },
+  "gates": {
+    "HD-1": {
+      "claim": "a Hyperliquid-Binance funding spread exists net of cross-venue basis drift, before costs, on the FULL mapped universe (not just BTC/ETH, which were seen first -- see trial log)",
+      "fires_iff": "pooled mean gross hlvenue_paired_log_return (fixed w=+1 direction: short HL/long Binance) across all liquid symbol-bars > 0 with Newey-West |t| > 3, lag=CARRY_EWMA_HALF_LIFE"
+    },
+    "HD-2": {
+      "claim": "the headline book (HL_ALWAYSON) is tradeable -- restates FA-2's three legs verbatim, as RC-2/XD-2 did in 020",
+      "fires_iff": "net Sharpe > 0.5 at every origin offset in [0,1,2,3] AND the 95% block-bootstrap CI on mean net per-bar return excludes zero AND deflated_sharpe_prob(...) > 0.95 at n_trials=12 (see n_trials_itemisation)"
+    },
+    "HD-3": {
+      "claim": "the dev window is adequately powered to detect an effect of the size the planning probe suggested -- written before Phase 4 runs, per 021's lesson that the power calculation goes first, not last",
+      "fires_iff": "the pooled gross spread series' own annualized Sharpe exceeds the closed-form MDE at 80% power / 5% two-sided, computed via power_lib21.bootstrap_se_from_ci + power_lib21.mde from that series' own 95% block-bootstrap CI. Planning-time estimate: MDE (annualized Sharpe) approx 1.98 over 2,190 8h bars / 2.0 years -- this notebook recomputes it from its own data rather than reusing the estimate."
+    },
+    "HD-4": {
+      "claim": "genuinely neutral, not a disguised directional bet -- restates RC-4/XD-4",
+      "fires_iff": "|beta| to the equal-weight crypto basket and to BTC both < 0.10, at every origin offset, for HL_ALWAYSON"
+    },
+    "HD-5": {
+      "claim": "the result is not solely episodic / carried by one or two symbols -- mandatory per NEXT_PROMPT.md's 'the mean exceeds the median' flag, mirroring 020's own drop-top-2 fragility finding",
+      "fires_iff": "after dropping the 2 symbols with the largest total net PnL contribution to HL_ALWAYSON over the dev window, net Sharpe remains > 0 AND the 95% block-bootstrap CI on mean net per-bar return still excludes zero"
+    },
+    "HD-6": {
+      "claim": "fast timing is not required to make the numbers work (falsification check on the structural story) -- DESCRIPTIVE, no pass/fail bar",
+      "fires_iff": "not applicable -- reports net Sharpe(HL_TIMED_FAST) vs net Sharpe(HL_ALWAYSON) side by side and states the comparison plainly"
+    },
+    "HD-7": {
+      "claim": "the result survives a long-tail slippage stress, not just the flat 23bp cost -- a proxy for the un-modelled per-symbol slippage NEXT_PROMPT.md flags as the highest-risk piece of engineering here",
+      "fires_iff": "net Sharpe of HL_ALWAYSON remains > 0 at a stress round-turn cost of 40bp (roughly 1.7x the pre-registered 23bp), applied flat across all symbols -- explicitly disclosed as a stress-cost proxy, not a modelled slippage curve calibrated to each symbol's own book depth"
+    },
+    "FUND-HL": {
+      "claim": "institutionally fundable absolute performance, restated verbatim from 018/020's FUND gate",
+      "fires_iff": "net Sharpe > 0.5 AND DSR > 0.95, evaluated on HL_ALWAYSON"
+    },
+    "JELLY": {
+      "claim": "descriptive only, NOT a pass/fail gate -- what did HL_ALWAYSON's realized net return do through the 2025-03-26 Hyperliquid JELLY force-settlement event (validator-voted administrative settlement of a perpetual to protect the platform's own vault; vault TVL fell ~$540M to ~$150M). JELLY itself is not in this notebook's universe (not Binance-listed), so this reports the BOOK's realized return in the surrounding window as a platform-risk characterisation, not a JELLY-specific trade outcome.",
+      "fires_iff": "not applicable -- report only"
+    }
+  },
+  "implementation_notes": {
+    "sign_convention": "A=Hyperliquid, B=Binance throughout (basis_lib22.py module docstring). carry = EWMA(hl_funding_rate - binance_funding_rate); carry>0 means Hyperliquid funding is the more expensive side (the structural prior), and w=+1 is short Hyperliquid perp / long Binance perp.",
+    "dsr_call_shape": "identical to 020's own (basis_lib18.book_metrics -> research._series_metrics -> per-period, non-annualized Sharpe; skew=scipy.stats.skew(returns, nan_policy='omit'); kurtosis=scipy.stats.kurtosis(returns, fisher=False, nan_policy='omit')). fisher=False, non-excess kurtosis -- the single easiest way to produce a plausible-looking wrong number, per 020's own note, repeated here verbatim because the risk is identical.",
+    "bootstrap": "research.block_bootstrap_ci(values), block_length=None (auto), n_boot=2000, default seed.",
+    "newey_west": "research.newey_west_tstat(x, lag=CARRY_EWMA_HALF_LIFE) for HD-1.",
+    "beta": "basis_lib22.ols_beta (thin re-export of bl20.ols_beta / bl18.ols_beta).",
+    "top2_symbol_selection": "ranked by each symbol's own summed net_log_return contribution (weight * fwd_hlvenue_paired_return_1, net of that symbol's own share of turnover cost) over the full dev window on HL_ALWAYSON, computed once before HD-5 is scored, not re-tuned to find the worst pair.",
+    "gate_json": "every gate verdict is written to JSON as a boolean per leg, not just the conjunction."
+  },
+  "n_trials_itemisation": {
+    "convention": "as in 020/021, n_trials for deflated_sharpe_prob counts BOOK/BACKTEST CONFIGURATIONS scored, not every descriptive statistic computed along the way. The pre-registration-preceding probes (below) are disclosed separately because NEXT_PROMPT.md's own planning pass explicitly charges them to whichever notebook picks up Candidate 1, but they are not Sharpe draws over comparable book configurations and are not folded into this number -- exactly 021's own treatment of its non-Sharpe trials ('no DSR consumer').",
+    "hl_phase4": {
+      "count": 6,
+      "cells": [
+        "HL_ALWAYSON (headline)",
+        "HL_TIMED_FAST",
+        "HL_TIMED_SLOW",
+        "HL_ALWAYSON at offset 1",
+        "HL_ALWAYSON at offset 2",
+        "HL_ALWAYSON at offset 3"
+      ]
+    },
+    "hl_phase5": {
+      "count": 6,
+      "cells": [
+        "HL_ALWAYSON cost @ 0bp",
+        "HL_ALWAYSON cost @ 19bp (bare-fee, no-slippage comparator)",
+        "HL_ALWAYSON cost @ 40bp (long-tail slippage stress proxy)",
+        "HL_ALWAYSON excluding its top-2 net-PnL-contributing symbols",
+        "HL_ALWAYSON BTC-only",
+        "HL_ALWAYSON ETH-only"
+      ]
+    },
+    "total": 12,
+    "revision_rule": "revised upward only, and used for every DSR computed anywhere in this notebook",
+    "offset_policy": "origin offsets run for the headline (HL_ALWAYSON) only, mirroring 018/020's own established practice for fixed-parameter, non-refit constructions"
+  },
+  "trial_log_inherited_from_next_prompt": {
+    "note": "verbatim from NEXT_PROMPT.md's 'Trials already spent' table, itemised there specifically so whoever picks up Candidate 1 inherits and carries them -- reproduced here so this notebook's own record is self-contained.",
+    "rows": [
+      {"n": 1, "what": "web survey: does a CEX/DEX funding spread exist", "outcome": "positive claim found (+7.17% ann, BTC)", "charge": "Candidate 1 -- selection, not a hypothesis test"},
+      {"n": 2, "what": "P1: HL-Binance 8h funding spread, BTC, 2023-07..2025-06", "outcome": "+9.41% ann, t=21.4", "charge": "Candidate 1 -- BTC seen before pre-registration"},
+      {"n": 3, "what": "P1: same, ETH", "outcome": "+8.01% ann, t=19.5", "charge": "Candidate 1 -- ETH seen before pre-registration"},
+      {"n": 4, "what": "P1: same, SOL", "outcome": "not obtained (HTTP 429)", "charge": "not chargeable -- no number seen"},
+      {"n": 5, "what": "P2: HL-Binance BTC 8h price divergence", "outcome": "4.81bp/8h, implied gross Sharpe ~5.9", "charge": "Candidate 1"},
+      {"n": 6, "what": "P3/P4: universe size, API limits, history depth", "outcome": "232 perps, 49 naive intersection (93-symbol seed), 500 records/call funding cap", "charge": "feasibility, not a hypothesis test"},
+      {"n": 7, "what": "by-year decomposition of A0/A3/B0/B1 (020's books)", "outcome": "table in NEXT_PROMPT.md Finding 1", "charge": "not applicable to this notebook -- Mechanism A/B territory"}
+    ],
+    "new_this_notebook": [
+      {"what": "Phase 1a: universe mapping, 128-symbol Binance seed against HL's 232-perp meta list", "outcome": "55 mapped (higher than P3's naive 49, which was against the smaller 93-symbol Binance-intersect-Bybit seed, not the full 128-symbol seed)", "charge": "feasibility, not a hypothesis test"},
+      {"what": "ad-hoc API-limit checks before writing the Phase 1b fetcher (fundingHistory record cap, candleSnapshot truncation behaviour)", "outcome": "fundingHistory caps at exactly 500 records from startTime regardless of endTime width; candleSnapshot returned a full ~2-year 8h window with no truncation", "charge": "feasibility, not a hypothesis test. One of these ad-hoc checks used a window with endTime past 2025-07-01 specifically to see whether the API silently truncates independent of the requested end date -- it does not (the cap is a flat 500 records from startTime); no response from that check was written to disk or used in any analysis; every actual fetch performed by run_phase_1b_22_fetch_hyperliquid.py is hard-guarded to refuse endTime > HOLDOUT_START unconditionally, so nothing in this notebook's own data rests on that observation"}
+    ]
+  },
+  "holdout_policy": {
+    "1": "the Hyperliquid dev-window holdout (2025-07-01+) is NOT pre-fetched anywhere in this repo, unlike basis18/holdout and bybit20/holdout -- it is freely fetchable from the same public, unauthenticated endpoint Phase 1b already used. The fence here is a matter of discipline, not of what is on disk (NEXT_PROMPT.md's own warning, taken literally): no script in this notebook other than a dedicated, not-yet-written run_phase_6_22_holdout.py may ever pass an end date past research.HOLDOUT_START to any Hyperliquid fetch function, and run_phase_1b_22_fetch_hyperliquid.py's own _assert_within_dev_window has no override parameter at all -- it refuses unconditionally.",
+    "2": "HL_ALWAYSON unlocks holdout access iff HD-2 AND HD-4 AND HD-5 all fire. No partial credit.",
+    "3": "at most one holdout pass, ever, running HL_ALWAYSON only (the headline; HL_TIMED_FAST/SLOW do not get holdout access even if HD-6's comparison is favourable to them, since they were never gated on their own terms).",
+    "4": "if built, run_phase_6_22_holdout.py must itself fetch the 2025-07-01+ Hyperliquid data it needs (nothing is cached) -- and is the only file in this notebook permitted to do so.",
+    "5": "after a holdout run, the notebook closes. No dev-side re-runs, no parameter changes, no one more variant.",
+    "6": "if no gate fires, run_phase_6_22_holdout.py is not built at all this round -- unlike 020 (which had pre-cached holdout data to prove refusal against), there is nothing to refuse against here, so a placebo refusal run is not applicable."
+  },
+  "fallback_policy": {
+    "hl_api_unreachable": "retry with the existing 3x exponential backoff (5s/10s/15s); if still unreachable after that, the symbol/window is recorded as a fetch error in the Phase 1b manifest, not silently skipped.",
+    "thin_universe": "if fewer than 20 symbols have >=1 year of usable, liquid, jointly-available Binance+Hyperliquid dev-window overlap, the notebook is recorded as 'not runnable at pre-registered scope -- data blocker' (009's idiom) and ships with whatever descriptive Phase 2/3 work (HD-1, HD-3) completed.",
+    "no_substitution": "a thin universe or missing symbol is a clean, reportable outcome. An improvised replacement (different venue, different fee assumption, different window) is an unregistered trial."
+  },
+  "scope_discipline": [
+    "src/research.py, basis_lib18.py, basis_lib20.py, power_lib21.py are import-only -- never edited.",
+    "src/research/01{7,8,9}_*.ipynb, 020_*.ipynb, 021_*.ipynb and their src/results/*.md are frozen texts.",
+    "src/risk/ and src/regime/ are import-only, never used to time entries/exits/size.",
+    "no constant in this file is swept to improve a headline after Phase 0.",
+    "no configuration beyond the 12 declared here without revising n_trials upward and recomputing every DSR.",
+    "the Hyperliquid 2025-07-01+ holdout is read only through a dedicated, single gated pass, per holdout_policy.",
+    "no subagents, no broad web search -- NEXT_PROMPT.md's 2026-08-23 survey is carried forward as Tier 3/4 priors, re-derived from data here, never cited as fact."
+  ]
+}

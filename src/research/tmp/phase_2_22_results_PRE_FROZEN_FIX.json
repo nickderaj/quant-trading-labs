@@ -1,0 +1,172 @@
+{
+  "n_symbols_joined": 50,
+  "n_symbols_liquid_scored": 13,
+  "join_manifest": {
+    "1000SHIBUSDT": "ok",
+    "AAVEUSDT": "ok",
+    "ADAUSDT": "ok",
+    "ALGOUSDT": "ok",
+    "APEUSDT": "ok",
+    "ARUSDT": "ok",
+    "ATOMUSDT": "ok",
+    "AVAXUSDT": "ok",
+    "BCHUSDT": "ok",
+    "BLZUSDT": "ok",
+    "BNBUSDT": "ok",
+    "BTCUSDT": "ok",
+    "CELOUSDT": "ok",
+    "COMPUSDT": "ok",
+    "CRVUSDT": "ok",
+    "DOGEUSDT": "ok",
+    "DOTUSDT": "ok",
+    "DYDXUSDT": "ok",
+    "ENSUSDT": "ok",
+    "ETCUSDT": "ok",
+    "ETHUSDT": "ok",
+    "FILUSDT": "ok",
+    "FTMUSDT": "ok",
+    "FTTUSDT": "ok",
+    "GALAUSDT": "ok",
+    "GMTUSDT": "ok",
+    "HBARUSDT": "ok",
+    "IMXUSDT": "ok",
+    "IOTAUSDT": "ok",
+    "LINKUSDT": "ok",
+    "LTCUSDT": "ok",
+    "MATICUSDT": "ok",
+    "MKRUSDT": "ok",
+    "NEARUSDT": "ok",
+    "NEOUSDT": "ok",
+    "OGNUSDT": "ok",
+    "OPUSDT": "ok",
+    "PEOPLEUSDT": "ok",
+    "RSRUSDT": "ok",
+    "RUNEUSDT": "ok",
+    "SANDUSDT": "ok",
+    "SNXUSDT": "ok",
+    "SOLUSDT": "ok",
+    "SUSHIUSDT": "ok",
+    "TRBUSDT": "ok",
+    "TRXUSDT": "ok",
+    "UNIUSDT": "ok",
+    "XLMUSDT": "ok",
+    "XRPUSDT": "ok",
+    "ZENUSDT": "ok"
+  },
+  "gate_HD1": {
+    "fires": true,
+    "pooled_mean_gross_per_bar": 0.00010481048931974224,
+    "pooled_mean_gross_annualized": 0.11476748580511775,
+    "pooled_gross_sharpe_annualized": 1.7093916100155824,
+    "newey_west_t": 6.152180954040331,
+    "n_bars": 8105
+  },
+  "gate_HD3": {
+    "fires": true,
+    "n_obs": 8105,
+    "mde_annualized_sharpe": 1.0297561332211178,
+    "observed_gross_sharpe_annualized": 1.7093916100155824
+  },
+  "per_symbol_spread": {
+    "1000SHIBUSDT": {
+      "n_bars": 64,
+      "mean_ann": 0.21919872431343798,
+      "median_ann": 0.07727832920988247,
+      "frac_positive": 0.546875,
+      "newey_west_t": 1.5116654726480756
+    },
+    "AAVEUSDT": {
+      "n_bars": 439,
+      "mean_ann": 0.08980826762496101,
+      "median_ann": 0.03420284217700188,
+      "frac_positive": 0.5193621867881549,
+      "newey_west_t": 4.906461391590678
+    },
+    "ADAUSDT": {
+      "n_bars": 53,
+      "mean_ann": -0.04844948119608751,
+      "median_ann": -0.0030052453549839144,
+      "frac_positive": 0.49056603773584906,
+      "newey_west_t": -0.7615728646510369
+    },
+    "AVAXUSDT": {
+      "n_bars": 254,
+      "mean_ann": 0.15710164102767266,
+      "median_ann": 0.046643544726104526,
+      "frac_positive": 0.531496062992126,
+      "newey_west_t": 3.0112659414492153
+    },
+    "BNBUSDT": {
+      "n_bars": 174,
+      "mean_ann": 0.0031492629316004117,
+      "median_ann": -0.05154284448646889,
+      "frac_positive": 0.4540229885057471,
+      "newey_west_t": 0.1155977865295629
+    },
+    "BTCUSDT": {
+      "n_bars": 1735,
+      "mean_ann": 0.10621470010547371,
+      "median_ann": 0.0727230082291703,
+      "frac_positive": 0.5682997118155619,
+      "newey_west_t": 8.229529567473444
+    },
+    "DOGEUSDT": {
+      "n_bars": 796,
+      "mean_ann": 0.14922195064110938,
+      "median_ann": 0.08856162052345828,
+      "frac_positive": 0.5628140703517588,
+      "newey_west_t": 4.823146402944635
+    },
+    "ETHUSDT": {
+      "n_bars": 1727,
+      "mean_ann": 0.078128860117266,
+      "median_ann": 0.04703013545546776,
+      "frac_positive": 0.535031847133758,
+      "newey_west_t": 6.303624572663968
+    },
+    "FTMUSDT": {
+      "n_bars": 160,
+      "mean_ann": 0.867986458199381,
+      "median_ann": 0.29375592364843306,
+      "frac_positive": 0.61875,
+      "newey_west_t": 1.0610818976928105
+    },
+    "LINKUSDT": {
+      "n_bars": 263,
+      "mean_ann": 0.0808620094615942,
+      "median_ann": 0.05628469571989751,
+      "frac_positive": 0.5171102661596958,
+      "newey_west_t": 3.322311187760859
+    },
+    "LTCUSDT": {
+      "n_bars": 114,
+      "mean_ann": 0.047457227565874865,
+      "median_ann": -0.032547951314817726,
+      "frac_positive": 0.45614035087719296,
+      "newey_west_t": 1.6815173135174084
+    },
+    "SOLUSDT": {
+      "n_bars": 1669,
+      "mean_ann": 0.11879613013229451,
+      "median_ann": 0.10228763157543141,
+      "frac_positive": 0.5739964050329539,
+      "newey_west_t": 6.3432114661915335
+    },
+    "XRPUSDT": {
+      "n_bars": 644,
+      "mean_ann": 0.053974671313296876,
+      "median_ann": 0.052310555645215695,
+      "frac_positive": 0.5403726708074534,
+      "newey_west_t": 2.265431565371157
+    }
+  },
+  "btc_price_divergence": {
+    "n_bars": 2191,
+    "mean_log_gap_bp": 4.047656589461822,
+    "sd_log_gap_bp": 4.974722740555123,
+    "sd_of_change_bp": 4.811344526221889,
+    "sd_of_change_ann_pct": 1.5921116350386944,
+    "p99_abs_change_bp": 15.665097276336992,
+    "implied_gross_sharpe": 5.303235674096359
+  }
+}
