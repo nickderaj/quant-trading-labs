@@ -1,0 +1,43 @@
+{
+  "BZ": {
+    "product": "BZ",
+    "n_days": 1362,
+    "median_rmse": 1.0654603702080188,
+    "mean_rmse": 1.384758691826756,
+    "median_beta": 0.6054754977897004,
+    "days_retained_hygiene": 3751,
+    "median_price_level": 68.95,
+    "relative_rmse_pct": 1.5452652214764593
+  },
+  "HO": {
+    "product": "HO",
+    "n_days": 1079,
+    "median_rmse": 0.03304273127426226,
+    "mean_rmse": 0.042440562293181106,
+    "median_beta": 0.6630381229455549,
+    "days_retained_hygiene": 4318,
+    "median_price_level": 2.0115,
+    "relative_rmse_pct": 1.642691089945924
+  },
+  "RB": {
+    "product": "RB",
+    "n_days": 357,
+    "median_rmse": 0.0973492532876632,
+    "mean_rmse": 0.11503564209327773,
+    "median_beta": 2.180998224203725,
+    "days_retained_hygiene": 4274,
+    "median_price_level": 1.905,
+    "relative_rmse_pct": 5.110197022974446
+  },
+  "NG": {
+    "product": "NG",
+    "n_days": 2867,
+    "median_rmse": 0.21465767018511825,
+    "mean_rmse": 0.4124022445986688,
+    "median_beta": 0.5604756867041977,
+    "days_retained_hygiene": 4875,
+    "median_price_level": 3.18,
+    "relative_rmse_pct": 6.750241200789882
+  },
+  "wall_time_seconds": 78.43323493003845
+}

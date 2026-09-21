@@ -1,0 +1,38 @@
+{
+  "config": {
+    "variant": "all",
+    "L_estimator": "kalman",
+    "beta_median": 0.40673240891172663,
+    "nu_median": 0.07351942766114877,
+    "sigma_S": 0.2313745614770217,
+    "sigma_L": 0.031746368302519416,
+    "rho": 0.10699690582590073
+  },
+  "by_bucket": {
+    "0-1y": {
+      "n_obs": 40202,
+      "realised_vol_annualised": 0.29695551721928826,
+      "predicted_vol_annualised": 0.18951097819762272,
+      "abs_gap": 0.10744453902166554
+    },
+    "1-2y": {
+      "n_obs": 22261,
+      "realised_vol_annualised": 0.29294636377785777,
+      "predicted_vol_annualised": 0.12807035906130376,
+      "abs_gap": 0.164876004716554
+    },
+    "2-4y": {
+      "n_obs": 10914,
+      "realised_vol_annualised": 0.3602050980602529,
+      "predicted_vol_annualised": 0.07410758819885477,
+      "abs_gap": 0.28609750986139815
+    },
+    "4-9y": {
+      "n_obs": 5753,
+      "realised_vol_annualised": 0.2740402232153032,
+      "predicted_vol_annualised": 0.03527045920259712,
+      "abs_gap": 0.23876976401270608
+    }
+  },
+  "wall_time_seconds": 0.022589921951293945
+}

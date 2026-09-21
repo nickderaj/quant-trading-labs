@@ -1,0 +1,41 @@
+{
+  "2014_15_collapse": {
+    "label": "2014_15_collapse",
+    "n_days": 487,
+    "median_rmse26": 1.1417796350702634,
+    "median_rmse28": 0.5951926801280057,
+    "pct_days_28_better": 0.9917864476386037,
+    "median_theta": 0.01959489241183936,
+    "median_eta": 0.33747799409499435
+  },
+  "2020_covid": {
+    "label": "2020_covid",
+    "n_days": 311,
+    "median_rmse26": 0.9276754763421624,
+    "median_rmse28": 0.451487063050615,
+    "pct_days_28_better": 0.9453376205787781,
+    "median_theta": 0.21673822391029796,
+    "median_eta": 0.09546339872122428
+  },
+  "2020_covid_acute": {
+    "label": "2020_covid_acute",
+    "n_days": 78,
+    "median_rmse26": 5.347861339742523,
+    "median_rmse28": 4.368016415240526,
+    "pct_days_28_better": 0.8333333333333334,
+    "median_theta": 0.42651532399177566,
+    "median_eta": 2.2570108019637047e-08
+  },
+  "2022_russia_ukraine": {
+    "label": "2022_russia_ukraine",
+    "n_days": 0
+  },
+  "calm_control": {
+    "label": "calm_control",
+    "n_days": 150,
+    "median_rmse26": 0.9390352707499332,
+    "median_rmse28": 0.6138546240079661,
+    "pct_days_28_better": 0.94
+  },
+  "wall_time_seconds": 11.746340990066528
+}

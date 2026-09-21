@@ -1,0 +1,87 @@
+{
+  "certified_config": {
+    "variant": "all",
+    "L_estimator": "kalman",
+    "model": "model26"
+  },
+  "holdout_start": "2022-01-01",
+  "overall": {
+    "n_days": 1364,
+    "median_gabillon26": 11.350927663987278,
+    "median_flat": 19.11205112048215,
+    "median_spline": 58.18044284468688,
+    "median_ns": 2.8778290171162366,
+    "median_pca": 25.1087665559391
+  },
+  "by_year": {
+    "2022": {
+      "n_days": 288,
+      "median_gabillon26": 2.6687485754270743,
+      "median_flat": 22.51442543890662,
+      "median_spline": 69.397594076014,
+      "median_ns": 2.484804054300941,
+      "median_pca": 21.53845943883848
+    },
+    "2023": {
+      "n_days": 297,
+      "median_gabillon26": 7.774039443974681,
+      "median_flat": 12.000997159090575,
+      "median_spline": 56.37348281489579,
+      "median_ns": 1.2476371850978796,
+      "median_pca": 9.62976439983216
+    },
+    "2024": {
+      "n_days": 304,
+      "median_gabillon26": 11.032345727445296,
+      "median_flat": 11.835303030303024,
+      "median_spline": 57.75403377059037,
+      "median_ns": 1.1598677964582809,
+      "median_pca": 8.056822677576143
+    },
+    "2025": {
+      "n_days": 298,
+      "median_gabillon26": 60.55533446580988,
+      "median_flat": 31.489375942197313,
+      "median_spline": 50.36639213808305,
+      "median_ns": 32.93255931898164,
+      "median_pca": 30.025601045894767
+    },
+    "2026": {
+      "n_days": 177,
+      "median_gabillon26": 31.88015380913557,
+      "median_flat": 55.23490724573044,
+      "median_spline": 52.853730657524984,
+      "median_ns": 543.0980850689738,
+      "median_pca": 39.79618594082046
+    }
+  },
+  "by_curve_state": {
+    "backwardation": {
+      "n_days": 1158,
+      "median_gabillon26": 16.555762833479307,
+      "median_flat": 23.050388304722333,
+      "median_spline": 59.331378837998756,
+      "median_ns": 4.174775170162237,
+      "median_pca": 27.544909485283114
+    },
+    "contango": {
+      "n_days": 206,
+      "median_gabillon26": 9.313656870020548,
+      "median_flat": 9.616790375199862,
+      "median_spline": 53.297187550943555,
+      "median_ns": 1.755775418079232,
+      "median_pca": 5.002222031154222
+    }
+  },
+  "paired_gap_gabillon_minus_best_bench": {
+    "point_estimate": 24.89496034971872,
+    "bootstrap_95ci": [
+      22.01177541102976,
+      27.956474741044094
+    ],
+    "gabillon_wins_pct_days": 0.25146627565982405
+  },
+  "pct_improvement_median_vs_best_bench": -3.646478002888851,
+  "PRE_REGISTERED_GATE_PASS": false,
+  "wall_time_seconds": 16.9695405960083
+}

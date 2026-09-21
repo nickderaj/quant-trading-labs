@@ -1,0 +1,57 @@
+{
+  "written": "2026-09-21",
+  "primary_metric": "held-out-maturity RMSE in $/bbl (Phase 6: fit on tau<=2y, predict tau in (2y, 9y], score against actual settlement)",
+  "benchmark_set": [
+    "flat_forward",
+    "previous_curve_carried_forward",
+    "cubic_spline",
+    "nelson_siegel",
+    "pca_2factor"
+  ],
+  "pass_threshold": "Median held-out RMSE (model 26 or 28, best-performing pre-registered configuration on the train/validation sample) beats the best of the five Phase-4 benchmarks by >= 10% on a paired day-by-day comparison, with a bootstrap 95% CI on the paired RMSE gap excluding zero, after the multiple-testing deflation below. Anchored on Gabillon's own reported in-sample RMSE range of ~0.1-0.5 $/bbl calm / ~1.5 $/bbl crisis.",
+  "train_start": "2010-06-06",
+  "train_end": "2021-12-31",
+  "holdout_start": "2022-01-01",
+  "holdout_rule": "Holdout (2022-01-01 onward) is touched exactly once, in Phase 9, after every other phase and every configuration choice is frozen.",
+  "liquidity_variants": [
+    "all",
+    "vol_gt_0",
+    "vol_gt_100"
+  ],
+  "L_estimators": [
+    "joint_ls_monthly",
+    "joint_ls_daily",
+    "longend",
+    "kalman"
+  ],
+  "models": [
+    "model26",
+    "model28"
+  ],
+  "n_configs": 24,
+  "bonferroni_alpha": 0.0020833333333333333,
+  "min_contracts_per_day": 8,
+  "negative_price_event": {
+    "ticker": "CL202005",
+    "date": "2020-04-20 00:00:00",
+    "close": -2.67
+  },
+  "declared_windows_for_phase5": {
+    "2014_15_collapse": [
+      "2014-06-01",
+      "2015-12-31"
+    ],
+    "2020_covid": [
+      "2020-01-01",
+      "2020-12-31"
+    ],
+    "2020_covid_acute": [
+      "2020-03-01",
+      "2020-05-31"
+    ],
+    "2022_russia_ukraine": [
+      "2022-01-01",
+      "2022-12-31"
+    ]
+  }
+}
