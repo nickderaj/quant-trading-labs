@@ -24,3 +24,6 @@ NEXT_PROMPT.md
 
 # Local-only Claude instructions
 CLAUDE.md
+
+# Copyrighted reference papers (kept locally, not redistributed)
+src/research/reference/papers/
