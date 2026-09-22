@@ -1,0 +1,194 @@
+{
+  "E_negative_prices": {
+    "valuation_date": "2020-04-06",
+    "ticker": "CL202005",
+    "expiry": "2020-04-21",
+    "F": 26.98,
+    "T": 0.04106776180698152,
+    "sigma_lognormal": 0.27983810746402343,
+    "vol_model": "rolling 756-day realised MAD vol to date",
+    "strike": 10.0,
+    "models": {
+      "black76": {
+        "put_price": 3.681053857742661e-70,
+        "log_density_at_negative_2_67": -Infinity,
+        "note": "Lognormal has zero support below 0; logpdf is -Infinity"
+      },
+      "bachelier": {
+        "sigma_normal": 7.550032139379352,
+        "put_price": 8.719725575838361e-30,
+        "log_density_at_negative_2_67": -189.11187168610155,
+        "note": "Normal admits negative values; finite logpdf at -2.67"
+      },
+      "displaced_black": {
+        "shift": 15.0,
+        "put_price": 6.140775927856446e-21,
+        "log_density_at_negative_2_67": -233.31599496924662,
+        "note": "-2.67+shift=12.33>0, so finite logpdf exists"
+      }
+    },
+    "displacement_analysis": {
+      "actual_settlement": -2.67,
+      "min_shift_for_support": 2.77,
+      "note": "Shift of 15.0 comfortably admits -2.67; min would be ~2.77"
+    },
+    "zero_strike_floor": {
+      "black76_price": 0.0,
+      "bachelier_price": 5.856287956400385e-71,
+      "note": "Black-76 assigns zero prob below 0, so K=0 put is ~0; Bachelier is positive"
+    },
+    "rolling_var_kupiec_pof": {
+      "window_days": 60,
+      "alpha": 0.01,
+      "lognormal_returns": {
+        "n": 4168,
+        "n_exceed": 0,
+        "observed_rate": 0.0,
+        "expected_rate": 0.01,
+        "lr_stat": 83.77959967478809,
+        "pvalue": 5.531265541922943e-20,
+        "reject_5pct": true
+      },
+      "bachelier_level_changes": {
+        "n": 4168,
+        "n_exceed": 86,
+        "observed_rate": 0.020633397312859885,
+        "expected_rate": 0.01,
+        "lr_stat": 36.4218006253285,
+        "pvalue": 1.5891574790368423e-09,
+        "reject_5pct": true
+      },
+      "displaced_level_changes": {
+        "n": 4168,
+        "n_exceed": 86,
+        "observed_rate": 0.020633397312859885,
+        "expected_rate": 0.01,
+        "lr_stat": 36.4218006253285,
+        "pvalue": 1.5891574790368423e-09,
+        "reject_5pct": true
+      }
+    }
+  },
+  "F_european_buyer": {
+    "valuation_date": "2017-06-04",
+    "T": 1.0,
+    "F": 48.6965665390503,
+    "sigma": 0.24955302680973024,
+    "df": 0.9872815715902905,
+    "K": 48.6965665390503,
+    "sigma_fx": 0.07577390309894398,
+    "fx_rolling_corr_with_CL": {
+      "mean": 0.09972060113482745,
+      "std": 0.19345116324566874,
+      "window": 126
+    },
+    "structures": {
+      "unhedged_fx": {
+        "structure": "unhedged FX",
+        "premium": 0.0,
+        "note": "Exposure = CL * EUR/USD (both random), not priced"
+      },
+      "fx_forward": {
+        "structure": "FX forward",
+        "premium": 0.0,
+        "note": "Locks EUR/USD rate, converts the FX spot exposure to forward at zero cost"
+      },
+      "quanto_call": {
+        "price": 4.724397251279806,
+        "unadjusted_vanilla_call": 4.774045062374195,
+        "quanto_adjustment": -0.049647811094389205
+      },
+      "composite_call": {
+        "price": 5.123693471340571
+      }
+    },
+    "rho_sensitivity_quanto": {
+      "rho_lo": -0.0937305621108413,
+      "rho_mean": 0.09972060113482745,
+      "rho_hi": 0.2931717643804962,
+      "price_at_rho_lo": 4.82104349206377,
+      "price_at_rho_mean": 4.724397251279806,
+      "price_at_rho_hi": 4.62912153418342,
+      "price_range": 0.19192195788034994
+    },
+    "teaching_point": "Rho's std (0.193) creates price range $0.192, which is LARGER than adjustment magnitude $0.050"
+  },
+  "G_structured_note": {
+    "valuation_date": "2017-06-04",
+    "T": 1.0,
+    "F": 48.6965665390503,
+    "sigma": 0.24955302680973024,
+    "df": 0.9872815715902905,
+    "r": 0.012800000000000011,
+    "simulation": {
+      "n_paths": 100000,
+      "n_steps": 252,
+      "seed": 25,
+      "antithetic": true
+    },
+    "structure": {
+      "coupon": 0.08,
+      "autocall_level": 1.0,
+      "barrier": 0.7,
+      "obs_indices": [
+        63,
+        126,
+        189,
+        252
+      ],
+      "note": "Quarterly observations; early redemption if level >= 1.0"
+    },
+    "model_pricing": {
+      "note_fair_value": 1.0010860287442984,
+      "note_face_value": 1.0,
+      "implied_issuer_margin": -0.0010860287442984173,
+      "price_se": 0.00037381736092064144,
+      "autocall_frequency_by_obs": [
+        0.47462,
+        0.11878,
+        0.06012,
+        0.0
+      ],
+      "never_autocalled_frequency": 0.34648
+    },
+    "historical_resampling": {
+      "n_windows": 238,
+      "downsample_every_n_days": 20,
+      "payoff_distribution": {
+        "n": 238,
+        "mean": 0.9941310841216299,
+        "std": 0.13244908752214785,
+        "min": 0.30425658495549834,
+        "p25": 1.0167412168338936,
+        "median": 1.0167412168338936,
+        "p75": 1.049872688871049,
+        "max": 1.066264097317514
+      },
+      "realized_autocall_frequency": 0.7226890756302521,
+      "model_expected_autocall_frequency": 0.16337999999999997,
+      "note": "Model uses risk-neutral GBM; historical has actual drift. Autocall rates compared for sanity check."
+    }
+  },
+  "variance_swap_aside": {
+    "replication_note": "The replication leg is untestable here -- replicating a variance swap needs a strip of options, and there are none in this repo.",
+    "valuation_date": "2017-06-04",
+    "varswap_strike": {
+      "strike_vol": 0.3199751995545092,
+      "strike_variance": 0.102384128329948,
+      "T": 1.0,
+      "n_strikes": 50
+    },
+    "forecast_quality_qlike": {
+      "varswap_strike_forecast": 1.1574521893980767,
+      "naive_trailing_baseline": 0.022537563508412208,
+      "note": "Lower QLIKE is better; varswap is a constant forecast, naive is yesterday's realized"
+    },
+    "intraday_vs_closeclose": {
+      "n_common_dates": 170,
+      "intraday_realized_var_mean": 0.5330468961737296,
+      "closeclose_realized_var_mean": 0.6413146846918996,
+      "ratio_intraday_over_closeclose": 48.249686697310736,
+      "note": "Jan-Jul 2026 only; intraday captures moves daily close misses"
+    }
+  }
+}
