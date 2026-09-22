@@ -230,7 +230,13 @@ def fig_B5(data: dict):
 
     fig, ax = vz.new_fig(figsize=(9, 5.5))
 
-    for date_str, crisis_name in dates_to_plot:
+    # One distinct colour per date (fixed categorical order) -- a shared
+    # grey/red pair for all 5 lines made 3 "calm" dates indistinguishable
+    # from each other. Crisis dates keep a solid line, calm dates a dashed
+    # one, so the crisis/calm grouping is still visible alongside identity.
+    date_colors = [vz.RED, vz.ORANGE, vz.MAGENTA, vz.BLUE, vz.AQUA]
+
+    for (date_str, crisis_name), color in zip(dates_to_plot, date_colors):
         date_obj = pd.Timestamp(date_str)
         year_str = str(date_obj.year)
 
@@ -246,20 +252,20 @@ def fig_B5(data: dict):
         years_arr = vz.days_to_years([b["dte_mid"] for b in bucket_list])
         vols = [b["vol"] for b in bucket_list]
 
-        # Color: crisis years in red/orange, calm in gray
         is_calm = "calm" in crisis_name
-        color = vz.GRAY if is_calm else vz.RED
         ax.loglog(
             years_arr,
             vols,
             marker="o",
             label=f"{date_str} ({crisis_name})",
             color=color,
+            linestyle="--" if is_calm else "-",
             linewidth=1.5,
             markersize=3,
         )
 
     vz.style_years_axis(ax)
+    vz.style_log_axis_plain(ax, axis="y")
     vz.style_ax(
         ax,
         title="CL: Term structure by date (annual aggregates)",
@@ -397,6 +403,7 @@ def fig_B8(data: dict):
                 years_arr, vols, marker="o", color=vz.BLUE, linewidth=1, markersize=2
             )
             vz.style_years_axis(ax)
+            vz.style_log_axis_plain(ax, axis="y")
 
         ax.set_title(str(year), fontsize=9, fontweight="bold", color=vz.TEXT_PRIMARY)
         ax.tick_params(labelsize=7)

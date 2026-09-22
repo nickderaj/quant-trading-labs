@@ -114,6 +114,7 @@ def fig_A2(data: dict) -> tuple:
     ax.set_xscale("log")
     ax.set_yscale("log")
     vz.style_years_axis(ax)
+    vz.style_log_axis_plain(ax, axis="y")
     vz.style_ax(
         ax,
         title="CL: Estimator comparison (gap1, vol0)",

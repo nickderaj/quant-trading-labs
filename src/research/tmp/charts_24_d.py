@@ -121,6 +121,7 @@ def fig_D2(data: dict) -> tuple:
     ax.set_xscale("log")
     ax.set_yscale("log")
     vz.style_years_axis(ax)
+    vz.style_log_axis_plain(ax, axis="y")
 
     # Compact legend: one entry per sector
     sector_order = ["energy", "metals", "ags", "control"]
@@ -329,6 +330,7 @@ def fig_D5(data: dict) -> tuple:
                 )
 
         ax.set_yscale("log")
+        vz.style_log_axis_plain(ax, axis="y")
         vz.style_ax(
             ax,
             title=f"{product} — Return Density Distribution",

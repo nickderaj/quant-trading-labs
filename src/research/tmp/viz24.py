@@ -131,6 +131,22 @@ def style_years_axis(ax, axis: str = "x") -> None:
     which.set_minor_formatter(mticker.NullFormatter())
 
 
+def style_log_axis_plain(ax, axis: str = "y") -> None:
+    """On ANY log-scaled axis whose values are not years (volatility, return
+    density, kurtosis, ...), replace matplotlib's default power-of-ten +
+    2x/5x-multiple tick labels (10^-1, 2x10^-1, ...) with plain decimal
+    numbers (0.1, 0.2, ...). Forces major ticks at 1/2/5 x each decade so a
+    range spanning less than one decade (common here) still gets more than a
+    single labelled gridline, instead of relying on matplotlib's default
+    "auto" choice of what counts as major vs. minor. Call AFTER
+    set_xscale/set_yscale("log"); safe to call on both axes of a loglog plot.
+    """
+    which = ax.xaxis if axis == "x" else ax.yaxis
+    which.set_major_locator(mticker.LogLocator(base=10, subs=(1.0, 2.0, 5.0)))
+    which.set_major_formatter(mticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    which.set_minor_formatter(mticker.NullFormatter())
+
+
 def min_contracts_filter(buckets: list[dict], min_contracts: int = 5) -> list[dict]:
     """Drop bucket records backed by fewer than `min_contracts` distinct
     contracts -- a bucket with n_contracts=1 or 2 is one contract's history,
