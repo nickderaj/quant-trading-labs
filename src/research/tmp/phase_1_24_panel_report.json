@@ -1,0 +1,1126 @@
+{
+  "products": {
+    "CL": {
+      "raw_rows": 109758,
+      "close_le_0_count": 391,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-28"
+      ],
+      "n_contracts": 244,
+      "expected_raw_rows": 109758,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 66.0,
+        "25": 166.0,
+        "50": 347.0,
+        "75": 651.0,
+        "90": 1210.0,
+        "100": 7351.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 94,
+        "tickers": [
+          "CL202707",
+          "CL202802",
+          "CL202804",
+          "CL202805",
+          "CL202807",
+          "CL202808",
+          "CL202809",
+          "CL202810",
+          "CL202811",
+          "CL202901",
+          "CL202902",
+          "CL202903",
+          "CL202905",
+          "CL203112",
+          "CL203210",
+          "CL203212",
+          "CL203305",
+          "CL203306",
+          "CL203311"
+        ],
+        "max_abs_r": 6.19498831155254,
+        "sample_dates": [
+          "2025-10-08",
+          "2023-12-14",
+          "2024-09-03",
+          "2024-09-23",
+          "2024-10-01",
+          "2024-10-07",
+          "2024-10-25",
+          "2024-11-04",
+          "2024-11-21",
+          "2025-04-03"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 81895,
+          "retained_fraction": 0.7461
+        },
+        "gap1_vol100": {
+          "n": 63808,
+          "retained_fraction": 0.5814
+        },
+        "gap1_vol1000": {
+          "n": 42359,
+          "retained_fraction": 0.3859
+        },
+        "gap3_vol0": {
+          "n": 102165,
+          "retained_fraction": 0.9308
+        },
+        "gap3_vol100": {
+          "n": 71990,
+          "retained_fraction": 0.6559
+        },
+        "gap3_vol1000": {
+          "n": 45199,
+          "retained_fraction": 0.4118
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 80405,
+        "metrics_realised_vol_20d_mean": 0.2635735517050885,
+        "our_full_sample_mad_vol": 0.19748124847270296,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "BZ": {
+      "raw_rows": 49702,
+      "close_le_0_count": 1,
+      "date_range": [
+        "2010-06-07",
+        "2026-07-28"
+      ],
+      "n_contracts": 217,
+      "expected_raw_rows": 49702,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": -18.0,
+        "10": 26.0,
+        "25": 74.0,
+        "50": 169.0,
+        "75": 317.0,
+        "90": 553.0,
+        "100": 2216.0
+      },
+      "negative_dte_count": 782,
+      "junk_prints_gt_1_log_return": {
+        "count": 13,
+        "tickers": [
+          "BZ202704",
+          "BZ202705",
+          "BZ202707",
+          "BZ202708",
+          "BZ202709",
+          "BZ202710",
+          "BZ202711",
+          "BZ202712",
+          "BZ202801",
+          "BZ202806"
+        ],
+        "max_abs_r": 5.4589595360329515,
+        "sample_dates": [
+          "2026-07-20",
+          "2026-07-20",
+          "2026-07-21",
+          "2026-07-28",
+          "2026-07-20",
+          "2026-07-21",
+          "2026-07-20",
+          "2026-07-22",
+          "2026-07-21",
+          "2026-07-20"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 35880,
+          "retained_fraction": 0.7219
+        },
+        "gap1_vol100": {
+          "n": 19949,
+          "retained_fraction": 0.4014
+        },
+        "gap1_vol1000": {
+          "n": 11082,
+          "retained_fraction": 0.223
+        },
+        "gap3_vol0": {
+          "n": 45650,
+          "retained_fraction": 0.9185
+        },
+        "gap3_vol100": {
+          "n": 22357,
+          "retained_fraction": 0.4498
+        },
+        "gap3_vol1000": {
+          "n": 11748,
+          "retained_fraction": 0.2364
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 34365,
+        "metrics_realised_vol_20d_mean": 0.2748896235695962,
+        "our_full_sample_mad_vol": 0.21400959865249028,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "NG": {
+      "raw_rows": 144449,
+      "close_le_0_count": 14373,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-22"
+      ],
+      "n_contracts": 233,
+      "expected_raw_rows": 144449,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": -1.0,
+        "10": 83.0,
+        "25": 211.0,
+        "50": 446.0,
+        "75": 723.0,
+        "90": 1230.0,
+        "100": 7508.0
+      },
+      "negative_dte_count": 1,
+      "junk_prints_gt_1_log_return": {
+        "count": 58,
+        "tickers": [
+          "NG202508",
+          "NG202603",
+          "NG202604",
+          "NG202701",
+          "NG202703",
+          "NG202704",
+          "NG202804",
+          "NG202808",
+          "NG202904",
+          "NG202908",
+          "NG203101",
+          "NG203301",
+          "NG203302"
+        ],
+        "max_abs_r": 4.1085291972140565,
+        "sample_dates": [
+          "2023-03-29",
+          "2025-06-24",
+          "2026-01-19",
+          "2026-01-20",
+          "2026-01-21",
+          "2026-02-01",
+          "2023-12-22",
+          "2023-12-29",
+          "2024-01-11",
+          "2024-01-17"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 93612,
+          "retained_fraction": 0.6481
+        },
+        "gap1_vol100": {
+          "n": 67158,
+          "retained_fraction": 0.4649
+        },
+        "gap1_vol1000": {
+          "n": 42507,
+          "retained_fraction": 0.2943
+        },
+        "gap3_vol0": {
+          "n": 117677,
+          "retained_fraction": 0.8147
+        },
+        "gap3_vol100": {
+          "n": 75340,
+          "retained_fraction": 0.5216
+        },
+        "gap3_vol1000": {
+          "n": 44619,
+          "retained_fraction": 0.3089
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 92558,
+        "metrics_realised_vol_20d_mean": 0.27807062610891753,
+        "our_full_sample_mad_vol": 0.18491835926197545,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "HO": {
+      "raw_rows": 80196,
+      "close_le_0_count": 1,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-28"
+      ],
+      "n_contracts": 224,
+      "expected_raw_rows": 80196,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": -1.0,
+        "10": 48.0,
+        "25": 123.0,
+        "50": 260.0,
+        "75": 420.0,
+        "90": 590.0,
+        "100": 1428.0
+      },
+      "negative_dte_count": 2,
+      "junk_prints_gt_1_log_return": {
+        "count": 20,
+        "tickers": [
+          "HO202708",
+          "HO202709",
+          "HO202710",
+          "HO202711",
+          "HO202801",
+          "HO202802",
+          "HO202803",
+          "HO202804",
+          "HO202805"
+        ],
+        "max_abs_r": 5.19613650380759,
+        "sample_dates": [
+          "2026-07-20",
+          "2026-07-22",
+          "2026-07-28",
+          "2026-07-20",
+          "2026-07-21",
+          "2026-07-28",
+          "2026-07-23",
+          "2026-07-20",
+          "2026-07-22",
+          "2026-07-28"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 57803,
+          "retained_fraction": 0.7208
+        },
+        "gap1_vol100": {
+          "n": 38323,
+          "retained_fraction": 0.4779
+        },
+        "gap1_vol1000": {
+          "n": 23162,
+          "retained_fraction": 0.2888
+        },
+        "gap3_vol0": {
+          "n": 73006,
+          "retained_fraction": 0.9103
+        },
+        "gap3_vol100": {
+          "n": 42955,
+          "retained_fraction": 0.5356
+        },
+        "gap3_vol1000": {
+          "n": 24148,
+          "retained_fraction": 0.3011
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 56689,
+        "metrics_realised_vol_20d_mean": 0.24484104560026346,
+        "our_full_sample_mad_vol": 0.20755991979898913,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "RB": {
+      "raw_rows": 64983,
+      "close_le_0_count": 92,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-28"
+      ],
+      "n_contracts": 225,
+      "expected_raw_rows": 64983,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": -1.0,
+        "10": 39.0,
+        "25": 98.0,
+        "50": 207.0,
+        "75": 327.0,
+        "90": 452.0,
+        "100": 7367.0
+      },
+      "negative_dte_count": 2,
+      "junk_prints_gt_1_log_return": {
+        "count": 20,
+        "tickers": [
+          "RB202707",
+          "RB202708",
+          "RB202709",
+          "RB202710",
+          "RB202711",
+          "RB202801",
+          "RB203009",
+          "RB203011"
+        ],
+        "max_abs_r": 6.295749103844791,
+        "sample_dates": [
+          "2026-07-28",
+          "2026-07-20",
+          "2026-07-21",
+          "2026-07-28",
+          "2026-07-20",
+          "2026-07-23",
+          "2026-07-28",
+          "2026-07-20",
+          "2026-07-23",
+          "2026-07-28"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 48459,
+          "retained_fraction": 0.7457
+        },
+        "gap1_vol100": {
+          "n": 35555,
+          "retained_fraction": 0.5471
+        },
+        "gap1_vol1000": {
+          "n": 23169,
+          "retained_fraction": 0.3565
+        },
+        "gap3_vol0": {
+          "n": 60438,
+          "retained_fraction": 0.9301
+        },
+        "gap3_vol100": {
+          "n": 39814,
+          "retained_fraction": 0.6127
+        },
+        "gap3_vol1000": {
+          "n": 24114,
+          "retained_fraction": 0.3711
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 47225,
+        "metrics_realised_vol_20d_mean": 0.2703060803188414,
+        "our_full_sample_mad_vol": 0.22713009204820997,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "GC": {
+      "raw_rows": 52734,
+      "close_le_0_count": 739,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-22"
+      ],
+      "n_contracts": 220,
+      "expected_raw_rows": 52734,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": -1.0,
+        "10": 35.0,
+        "25": 84.0,
+        "50": 232.0,
+        "75": 414.0,
+        "90": 684.0,
+        "100": 3739.0
+      },
+      "negative_dte_count": 2,
+      "junk_prints_gt_1_log_return": {
+        "count": 9,
+        "tickers": [
+          "GC201511"
+        ],
+        "max_abs_r": 1.3862943611198904,
+        "sample_dates": [
+          "2015-09-16",
+          "2015-09-17",
+          "2015-09-18",
+          "2015-09-21",
+          "2015-09-22",
+          "2015-09-23",
+          "2015-09-29",
+          "2015-11-04",
+          "2015-11-18"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 38484,
+          "retained_fraction": 0.7298
+        },
+        "gap1_vol100": {
+          "n": 24659,
+          "retained_fraction": 0.4676
+        },
+        "gap1_vol1000": {
+          "n": 11349,
+          "retained_fraction": 0.2152
+        },
+        "gap3_vol0": {
+          "n": 48383,
+          "retained_fraction": 0.9175
+        },
+        "gap3_vol100": {
+          "n": 27143,
+          "retained_fraction": 0.5147
+        },
+        "gap3_vol1000": {
+          "n": 12276,
+          "retained_fraction": 0.2328
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 36291,
+        "metrics_realised_vol_20d_mean": 0.1580881061151278,
+        "our_full_sample_mad_vol": 0.12769311883575968,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "SI": {
+      "raw_rows": 39466,
+      "close_le_0_count": 261,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-20"
+      ],
+      "n_contracts": 213,
+      "expected_raw_rows": 39466,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": -1.0,
+        "10": 31.0,
+        "25": 69.0,
+        "50": 169.0,
+        "75": 315.0,
+        "90": 466.0,
+        "100": 1821.0
+      },
+      "negative_dte_count": 2,
+      "junk_prints_gt_1_log_return": {
+        "count": 1,
+        "tickers": [
+          "SI202204"
+        ],
+        "max_abs_r": 1.3862943611198908,
+        "sample_dates": [
+          "2022-04-26"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 28277,
+          "retained_fraction": 0.7165
+        },
+        "gap1_vol100": {
+          "n": 13330,
+          "retained_fraction": 0.3378
+        },
+        "gap1_vol1000": {
+          "n": 6208,
+          "retained_fraction": 0.1573
+        },
+        "gap3_vol0": {
+          "n": 35977,
+          "retained_fraction": 0.9116
+        },
+        "gap3_vol100": {
+          "n": 14646,
+          "retained_fraction": 0.3711
+        },
+        "gap3_vol1000": {
+          "n": 6619,
+          "retained_fraction": 0.1677
+        }
+      },
+      "metrics_cross_check": null
+    },
+    "PL": {
+      "raw_rows": 23521,
+      "close_le_0_count": 185,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-20"
+      ],
+      "n_contracts": 204,
+      "expected_raw_rows": 23521,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 36.0,
+        "25": 64.0,
+        "50": 146.0,
+        "75": 265.0,
+        "90": 448.0,
+        "100": 3115.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 3,
+        "tickers": [
+          "PL201601",
+          "PL201709"
+        ],
+        "max_abs_r": 1.6094379124341,
+        "sample_dates": [
+          "2015-12-18",
+          "2017-07-07",
+          "2017-08-25"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 17081,
+          "retained_fraction": 0.7262
+        },
+        "gap1_vol100": {
+          "n": 8409,
+          "retained_fraction": 0.3575
+        },
+        "gap1_vol1000": {
+          "n": 5224,
+          "retained_fraction": 0.2221
+        },
+        "gap3_vol0": {
+          "n": 21589,
+          "retained_fraction": 0.9179
+        },
+        "gap3_vol100": {
+          "n": 9407,
+          "retained_fraction": 0.3999
+        },
+        "gap3_vol1000": {
+          "n": 5323,
+          "retained_fraction": 0.2263
+        }
+      },
+      "metrics_cross_check": null
+    },
+    "PA": {
+      "raw_rows": 16716,
+      "close_le_0_count": 158,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-20"
+      ],
+      "n_contracts": 187,
+      "expected_raw_rows": 16716,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 35.0,
+        "25": 63.0,
+        "50": 130.0,
+        "75": 218.0,
+        "90": 1195.300000000001,
+        "100": 3909.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 11,
+        "tickers": [
+          "PA202203",
+          "PA202610",
+          "PA202701",
+          "PA203009"
+        ],
+        "max_abs_r": 1.7917594692280552,
+        "sample_dates": [
+          "2021-11-01",
+          "2021-12-15",
+          "2021-12-20",
+          "2021-12-21",
+          "2021-12-22",
+          "2022-03-04",
+          "2022-03-17",
+          "2022-03-22",
+          "2021-05-26",
+          "2021-12-10"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 11953,
+          "retained_fraction": 0.7151
+        },
+        "gap1_vol100": {
+          "n": 5843,
+          "retained_fraction": 0.3495
+        },
+        "gap1_vol1000": {
+          "n": 4332,
+          "retained_fraction": 0.2592
+        },
+        "gap3_vol0": {
+          "n": 15077,
+          "retained_fraction": 0.902
+        },
+        "gap3_vol100": {
+          "n": 6155,
+          "retained_fraction": 0.3682
+        },
+        "gap3_vol1000": {
+          "n": 4342,
+          "retained_fraction": 0.2598
+        }
+      },
+      "metrics_cross_check": null
+    },
+    "ZC": {
+      "raw_rows": 51413,
+      "close_le_0_count": 2,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-28"
+      ],
+      "n_contracts": 96,
+      "expected_raw_rows": 51413,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 88.0,
+        "25": 222.0,
+        "50": 444.0,
+        "75": 681.0,
+        "90": 972.0,
+        "100": 3122.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 0,
+        "tickers": [],
+        "max_abs_r": 0.19099744387314477,
+        "sample_dates": []
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 38170,
+          "retained_fraction": 0.7424
+        },
+        "gap1_vol100": {
+          "n": 28368,
+          "retained_fraction": 0.5518
+        },
+        "gap1_vol1000": {
+          "n": 21700,
+          "retained_fraction": 0.4221
+        },
+        "gap3_vol0": {
+          "n": 48215,
+          "retained_fraction": 0.9378
+        },
+        "gap3_vol100": {
+          "n": 34776,
+          "retained_fraction": 0.6764
+        },
+        "gap3_vol1000": {
+          "n": 26386,
+          "retained_fraction": 0.5132
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 37441,
+        "metrics_realised_vol_20d_mean": 0.17954671834274605,
+        "our_full_sample_mad_vol": 0.14606027074428296,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "ZS": {
+      "raw_rows": 52880,
+      "close_le_0_count": 8,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-28"
+      ],
+      "n_contracts": 131,
+      "expected_raw_rows": 52880,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 64.0,
+        "25": 162.0,
+        "50": 328.0,
+        "75": 510.0,
+        "90": 737.0,
+        "100": 3115.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 4,
+        "tickers": [
+          "ZS202709",
+          "ZS202801",
+          "ZS202807"
+        ],
+        "max_abs_r": 6.377152027607472,
+        "sample_dates": [
+          "2026-07-20",
+          "2026-07-21",
+          "2026-07-28",
+          "2026-07-22"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 38845,
+          "retained_fraction": 0.7346
+        },
+        "gap1_vol100": {
+          "n": 29692,
+          "retained_fraction": 0.5615
+        },
+        "gap1_vol1000": {
+          "n": 20982,
+          "retained_fraction": 0.3968
+        },
+        "gap3_vol0": {
+          "n": 49136,
+          "retained_fraction": 0.9292
+        },
+        "gap3_vol100": {
+          "n": 36289,
+          "retained_fraction": 0.6863
+        },
+        "gap3_vol1000": {
+          "n": 25356,
+          "retained_fraction": 0.4795
+        }
+      },
+      "metrics_cross_check": null
+    },
+    "ZW": {
+      "raw_rows": 40667,
+      "close_le_0_count": 3,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-28"
+      ],
+      "n_contracts": 95,
+      "expected_raw_rows": 40667,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 70.0,
+        "25": 177.0,
+        "50": 353.0,
+        "75": 538.0,
+        "90": 718.0,
+        "100": 3122.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 0,
+        "tickers": [],
+        "max_abs_r": 0.22887970470973418,
+        "sample_dates": []
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 30176,
+          "retained_fraction": 0.742
+        },
+        "gap1_vol100": {
+          "n": 21949,
+          "retained_fraction": 0.5397
+        },
+        "gap1_vol1000": {
+          "n": 15502,
+          "retained_fraction": 0.3812
+        },
+        "gap3_vol0": {
+          "n": 38084,
+          "retained_fraction": 0.9365
+        },
+        "gap3_vol100": {
+          "n": 26847,
+          "retained_fraction": 0.6602
+        },
+        "gap3_vol1000": {
+          "n": 18737,
+          "retained_fraction": 0.4607
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 29460,
+        "metrics_realised_vol_20d_mean": 0.24183032356691458,
+        "our_full_sample_mad_vol": 0.21113804404775563,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "KE": {
+      "raw_rows": 24540,
+      "close_le_0_count": 0,
+      "date_range": [
+        "2013-12-16",
+        "2026-07-28"
+      ],
+      "n_contracts": 74,
+      "expected_raw_rows": 24540,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 58.0,
+        "25": 143.0,
+        "50": 284.0,
+        "75": 427.0,
+        "90": 540.0,
+        "100": 1084.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 0,
+        "tickers": [],
+        "max_abs_r": 0.5240708505160114,
+        "sample_dates": []
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 17794,
+          "retained_fraction": 0.7251
+        },
+        "gap1_vol100": {
+          "n": 12463,
+          "retained_fraction": 0.5079
+        },
+        "gap1_vol1000": {
+          "n": 7526,
+          "retained_fraction": 0.3067
+        },
+        "gap3_vol0": {
+          "n": 22628,
+          "retained_fraction": 0.9221
+        },
+        "gap3_vol100": {
+          "n": 15480,
+          "retained_fraction": 0.6308
+        },
+        "gap3_vol1000": {
+          "n": 9300,
+          "retained_fraction": 0.379
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 17311,
+        "metrics_realised_vol_20d_mean": 0.24603011737528002,
+        "our_full_sample_mad_vol": 0.22757821942843792,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "ZL": {
+      "raw_rows": 52581,
+      "close_le_0_count": 1,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-22"
+      ],
+      "n_contracts": 146,
+      "expected_raw_rows": 52581,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 57.0,
+        "25": 143.0,
+        "50": 287.0,
+        "75": 436.0,
+        "90": 575.0,
+        "100": 3115.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 6,
+        "tickers": [
+          "ZL202709",
+          "ZL202710",
+          "ZL202801",
+          "ZL202803",
+          "ZL202805",
+          "ZL202807"
+        ],
+        "max_abs_r": 4.695767081340318,
+        "sample_dates": [
+          "2026-07-21",
+          "2026-07-20",
+          "2026-07-20",
+          "2026-07-20",
+          "2026-05-27",
+          "2026-07-20"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 38689,
+          "retained_fraction": 0.7358
+        },
+        "gap1_vol100": {
+          "n": 29691,
+          "retained_fraction": 0.5647
+        },
+        "gap1_vol1000": {
+          "n": 19077,
+          "retained_fraction": 0.3628
+        },
+        "gap3_vol0": {
+          "n": 48877,
+          "retained_fraction": 0.9296
+        },
+        "gap3_vol100": {
+          "n": 36259,
+          "retained_fraction": 0.6896
+        },
+        "gap3_vol1000": {
+          "n": 22985,
+          "retained_fraction": 0.4371
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 37741,
+        "metrics_realised_vol_20d_mean": 0.21262021287840221,
+        "our_full_sample_mad_vol": 0.19260384996271276,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "ZM": {
+      "raw_rows": 54764,
+      "close_le_0_count": 168,
+      "date_range": [
+        "2010-06-06",
+        "2026-07-22"
+      ],
+      "n_contracts": 151,
+      "expected_raw_rows": 54764,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 59.0,
+        "25": 148.0,
+        "50": 297.0,
+        "75": 450.0,
+        "90": 585.0,
+        "100": 4265.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 14,
+        "tickers": [
+          "ZM202801",
+          "ZM202803",
+          "ZM203203"
+        ],
+        "max_abs_r": 6.703494814669429,
+        "sample_dates": [
+          "2026-07-21",
+          "2026-07-21",
+          "2020-08-03",
+          "2020-08-05",
+          "2021-06-25",
+          "2021-06-28",
+          "2021-06-30",
+          "2021-07-06",
+          "2021-07-26",
+          "2021-11-18"
+        ]
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 40437,
+          "retained_fraction": 0.7384
+        },
+        "gap1_vol100": {
+          "n": 30569,
+          "retained_fraction": 0.5582
+        },
+        "gap1_vol1000": {
+          "n": 18799,
+          "retained_fraction": 0.3433
+        },
+        "gap3_vol0": {
+          "n": 50968,
+          "retained_fraction": 0.9307
+        },
+        "gap3_vol100": {
+          "n": 37268,
+          "retained_fraction": 0.6805
+        },
+        "gap3_vol1000": {
+          "n": 22631,
+          "retained_fraction": 0.4132
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 39388,
+        "metrics_realised_vol_20d_mean": 0.20636754507519892,
+        "our_full_sample_mad_vol": 0.1611264731939858,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    },
+    "ES": {
+      "raw_rows": 8846,
+      "close_le_0_count": 0,
+      "date_range": [
+        "2018-01-01",
+        "2026-07-21"
+      ],
+      "n_contracts": 38,
+      "expected_raw_rows": 8846,
+      "raw_rows_diff_pct": 0.0,
+      "dte_quantiles": {
+        "0": 0.0,
+        "10": 30.0,
+        "25": 74.0,
+        "50": 151.0,
+        "75": 229.0,
+        "90": 290.0,
+        "100": 701.0
+      },
+      "negative_dte_count": 0,
+      "junk_prints_gt_1_log_return": {
+        "count": 0,
+        "tickers": [],
+        "max_abs_r": 0.17267150662914155,
+        "sample_dates": []
+      },
+      "usable_returns_variants": {
+        "gap1_vol0": {
+          "n": 6797,
+          "retained_fraction": 0.7684
+        },
+        "gap1_vol100": {
+          "n": 4889,
+          "retained_fraction": 0.5527
+        },
+        "gap1_vol1000": {
+          "n": 3591,
+          "retained_fraction": 0.4059
+        },
+        "gap3_vol0": {
+          "n": 8387,
+          "retained_fraction": 0.9481
+        },
+        "gap3_vol100": {
+          "n": 5497,
+          "retained_fraction": 0.6214
+        },
+        "gap3_vol1000": {
+          "n": 4078,
+          "retained_fraction": 0.461
+        }
+      },
+      "metrics_cross_check": {
+        "n_matched_rows": 6541,
+        "metrics_realised_vol_20d_mean": 0.15760138835895865,
+        "our_full_sample_mad_vol": 0.1241899823393049,
+        "note": "metrics parquet only from 2018 for 12/16 products; used as a directional sanity check (overall MAD vol vs. metrics' mean rolling 20d realised vol) only, per NEXT_PROMPT.md."
+      }
+    }
+  },
+  "total_rows_all_products": 850833,
+  "total_contracts_all_products": 2698
+}
