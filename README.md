@@ -33,10 +33,17 @@ from the current `src/risk/data/` ingest; run `risk.ingest.refresh()` first if t
 
 **No tradeable edge.** Across more than thirty pre-registered tests — this repo's own constructions
 and four independently published outside designs, on crypto perpetuals, commodity futures and
-equities — nothing cleared the bar set at the outset. The closest was a crypto funding basis trade
-(notebooks 018, 020): a real, statistically significant, genuinely market-neutral carry mechanism
-that still could not be shown to beat its own benchmark once costs and multiple testing were charged
-honestly.
+equities — nothing cleared the bar set at the outset.
+
+**The closest it came: a CEX/DEX funding spread (notebook 022).** Shorting the perpetual on an
+on-chain venue (Hyperliquid) against Binance earned **net Sharpe 5.90** in development, market-neutral,
+surviving a 40bp cost stress. Then the holdout was spent: **net Sharpe 2.19**, and the decomposition is
+what kills it — a full, fully-invested **2026 H1 ran at Sharpe −0.05**, indistinguishable from noise,
+with the blended figure propped up by a 93-bar tail window too short to trust. Deflated Sharpe
+probability lands at **0.70**, against the 0.95 bar every other book here was held to. The mechanism is
+real and was correctly measured; it is intermittent, concentrated in 3–4 names, and only pays levered —
+which [018 priced](src/results/018_funding_basis_trade.md) at 42–70% expected shortfall of capital at
+3–5×. Near-tradeable, not tradeable.
 
 **Risk modelling is a different story.** Crypto and commodity returns are extremely fat-tailed;
 models that ignore that don't merely score worse on an abstract metric, they **measurably
@@ -75,8 +82,10 @@ after them. Where a fix was tried, controlling turnover was necessary but never 
 | [019](src/research/019_dsr_correlation_switch.ipynb) | [A Correlation-Triggered Deflation Switch](src/results/019_dsr_correlation_switch.md) | Routed the repair through a cheap correlation estimate. The switch mechanism and its prediction machinery both check out cleanly; the claimed validated regime missed one out-of-sample cell by a modest margin. |
 | [020](src/research/020_basis_refinement_and_cross_venue.ipynb) | [Basis Refinement and Cross-Venue Spread](src/results/020_basis_refinement_and_cross_venue.md) | A diversification floor and slower carry lift net Sharpe from 0.58 to 3.89 and clear deflation decisively — but not the paired comparison against the original book. A cross-venue funding spread loses to the plain single-venue trade. |
 | [021](src/research/021_rc3_power_and_data_quality.ipynb) | [Power or Data Quality?](src/results/021_rc3_power_and_data_quality.md) | Asked whether that paired comparison was blocked by frozen-feed artefacts or by sample size. A mechanical exclusion rule nominally clears the interval and then fails its own placebo control: the answer is power — roughly 27.6 years of history would be needed, against the 3.50 available. |
-| [022](src/research/022_hyperliquid_cex_dex_funding_spread.ipynb) | [A CEX/DEX Funding Spread](src/results/022_hyperliquid_cex_dex_funding_spread.md) | Tested a funding spread against an on-chain exchange (Hyperliquid) instead of another CEX. A tripwire caught a frozen-feed contamination before it could inflate the headline; after the fix, every pre-registered gate fires — net Sharpe 5.90, β≈0, survives a 40bp cost stress and dropping its top-2 symbols. Holdout access is unlocked and not yet spent. |
+| [022](src/research/022_hyperliquid_cex_dex_funding_spread.ipynb) | [A CEX/DEX Funding Spread](src/results/022_hyperliquid_cex_dex_funding_spread.md) | Tested a funding spread against an on-chain exchange (Hyperliquid) instead of another CEX. A tripwire caught a frozen-feed contamination before it could inflate the headline; after the fix, every pre-registered gate fires — net Sharpe 5.90, β≈0, survives a 40bp cost stress and dropping its top-2 symbols. |
+| — | [022 addendum — audit and holdout](src/results/022_addendum_audit_and_holdout_preregistration.md) | Audited that headline, corrected two of its claims (13 symbols ever held, not 47; top-2 concentration 52.7%, not a third), pre-registered a three-way verdict, and spent the holdout: **net Sharpe 2.19**, with a dead 2026 H1 (−0.05) and DSR 0.70. The nearest thing to a tradeable result in the programme, and still not one. |
 | [023](src/research/023_gabillon_two_factor_oil_curve.ipynb) | [The Gabillon Two-Factor Curve Model](src/results/023_gabillon_two_factor_oil_curve.md) | Tested a 1991 academic curve-pricing model — not a returns backtest — against 16 years of per-contract WTI, on the held-out-maturity test the original paper never ran. Beats flat forward easily, but loses the paired comparison to Nelson-Siegel/PCA on both train and holdout; the paper's own noisy-`L` and seasonality limitations both reproduce cleanly. |
+| [024](src/research/024_samuelson_effect_across_futures.ipynb) | [The Samuelson Effect Across 16 Futures Markets](src/results/024_samuelson_effect_across_futures.md) | A descriptive, no-holdout atlas of the maturity-volatility effect across every futures market in this repo. Strong and clean in energy and grains, absent or genuinely inverted in platinum and palladium (survives every liquidity check), and the negative control (`ES`) lands near but not at the bottom — a scoping prediction that turned out half right, reported as such. |
 
 ## Documentation
 
