@@ -576,15 +576,24 @@ def main() -> None:
         payoff_anti = np.maximum(paths_anti[:, -1] - K, 0.0) * df
         se_anti = float(payoff_anti.std(ddof=1) / np.sqrt(n_p))
 
+        # The control variate must be measured on a payoff it does NOT
+        # reproduce exactly. Passing a single averaging index (the terminal
+        # point) makes the geometric and arithmetic averages the same number,
+        # so beta = Cov/Var = 1, the adjusted payoff collapses to its own mean,
+        # and the reported "standard error" is floating-point noise that
+        # scales like 1/n instead of 1/sqrt(n) -- an impossible convergence
+        # rate that made the chart claim a ~1000x variance reduction.
+        # Average over the whole path, which is the payoff the geometric
+        # control variate is actually a control for.
+        avg_idx_cv = np.arange(1, paths_plain.shape[1])
         cv_out = pas.asian_mc(
-            paths_plain,
-            K,
-            "call",
-            df,
-            np.array([paths_plain.shape[1] - 1]),
-            control_variate=True,
+            paths_plain, K, "call", df, avg_idx_cv, control_variate=True
+        )
+        plain_asian = pas.asian_mc(
+            paths_plain, K, "call", df, avg_idx_cv, control_variate=False
         )
         se_cv = cv_out["se"]
+        se_plain_asian = plain_asian["se"]
 
         z = lib25.sobol_normals(n_p, n_steps_path, seed=SEED)
         dt = T / n_steps_path
@@ -599,6 +608,13 @@ def main() -> None:
                 "se_plain": se_plain,
                 "se_antithetic": se_anti,
                 "se_control_variate": se_cv,
+                # The control variate prices an ARITHMETIC ASIAN, not the
+                # European the other three legs price, so its SE is only
+                # meaningful against the plain Asian on the same payoff.
+                "se_plain_asian": se_plain_asian,
+                "cv_variance_reduction_x": float((se_plain_asian / se_cv) ** 2)
+                if se_cv > 0
+                else float("nan"),
                 "se_sobol": se_sobol,
             }
         )

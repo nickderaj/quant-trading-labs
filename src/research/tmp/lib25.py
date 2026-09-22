@@ -21,7 +21,7 @@ Binding constraints from 023/024, reused rather than re-derived here:
 from __future__ import annotations
 
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Literal
 
@@ -107,16 +107,40 @@ def _ns_forward_fn(curve: pd.DataFrame) -> Callable[[float | np.ndarray], np.nda
     return fn
 
 
+def delivery_month(panel: pd.DataFrame) -> pd.Series:
+    """Delivery month (1-12) parsed from the panel's `contract_month` strings
+    ("2010-07" -> 7). NaN where the string is missing or malformed.
+    """
+
+    def _month(s: object) -> float:
+        if not isinstance(s, str) or "-" not in s:
+            return float("nan")
+        try:
+            return float(int(s.split("-")[1]))
+        except (ValueError, IndexError):
+            return float("nan")
+
+    return panel["contract_month"].apply(_month)
+
+
 def vol_term_structure(
     product: str,
     asof: pd.Timestamp,
     window: int = 756,
     by_state: bool = False,
+    delivery_months: Sequence[int] | None = None,
 ) -> dict:
     """Fit sigma(tau) = sigma_1 * tau^(-k) to trailing realised (MAD) vol by
     dte bucket, using only data strictly before `asof` (causal). Mirrors
     024 Phase 3 (`lib24.samuelson_slope`) but restricted to a trailing window
     and exposed as a callable. `window` is in trading-panel calendar days.
+
+    `delivery_months` restricts the fit to contracts whose *delivery* month is
+    in the given set, which is how 024 Phase 5 measures seasonality: NG winter
+    (12, 1, 2, 3) contracts are more volatile at every tenor than summer ones,
+    and that is a separate effect from the Samuelson decay in tau. Passing it
+    gives a delivery-month-conditional term structure; leaving it None gives
+    the unconditional one.
 
     Returns {'sigma_1', 'k', 'r2', 'fn': callable(tau)->sigma, 'buckets': DataFrame}
     plus, if by_state, {'contango': {...}, 'backwardation': {...}} sub-dicts
@@ -127,6 +151,9 @@ def vol_term_structure(
     cutoff = pd.Timestamp(asof) - pd.Timedelta(days=window)
     train = train[train["date"] >= cutoff]
     train = lib24.usable_returns(train)
+    if delivery_months is not None:
+        months = train.pipe(delivery_month)
+        train = train[months.isin([float(m) for m in delivery_months])]
 
     def _fit(sub: pd.DataFrame) -> dict:
         fit = lib24.samuelson_slope(sub, lib24.mad_vol, n_boot=0)

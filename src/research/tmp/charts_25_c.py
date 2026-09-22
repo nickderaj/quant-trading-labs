@@ -45,11 +45,11 @@ CAPTIONS = {
     },
     "c2": {
         "what": "Binomial convergence to the Black-76 closed form vs step count, with Richardson extrapolation overlay showing rapid convergence.",
-        "intuition": "O(n) convergence rate; the tree oscillates about the true value.",
+        "intuition": "The tree oscillates about the closed form and converges as O(1/n), so doubling the steps roughly halves the error -- slow, which is why the smooth European cases are priced in closed form and the tree is kept for the American ones.",
     },
     "c3": {
-        "what": "Monte Carlo standard error vs sample size (log-log) for plain, antithetic, control-variate, and Sobol methods, against the 1/sqrt(N) reference slope.",
-        "intuition": "Variance reduction cuts SE by 1000x; Sobol matches plain on this payoff.",
+        "what": "Monte Carlo standard error vs sample size (log-log). Plain, antithetic and Sobol price a European call; the control variate prices an arithmetic Asian against its geometric twin, so the plain Asian is drawn alongside it as the like-for-like comparison.",
+        "intuition": "Every leg tracks the 1/sqrt(N) reference slope, because a variance reduction technique moves the level of the error, never its rate -- a line steeper than -1/2 would mean a bug, not a better estimator. The geometric control variate earns a ~700x variance reduction on the Asian, where the control is nearly perfectly correlated with the payoff; antithetic and Sobol earn ~1x on a smooth one-dimensional European, which is the honest result at this scale rather than a failure.",
     },
     "c4": {
         "what": "Kirk spread option error surface over correlation and spread/strike ratio, marking the high-error corner where approximations fail.",
@@ -61,14 +61,14 @@ CAPTIONS = {
     },
     "c6": {
         "what": "Longstaff-Schwartz exercise boundary vs maturity for an American put, with the duality gap (lower bound gap) shaded as a confidence band.",
-        "intuition": "Boundary moves down as maturity lengthens; gap tightens with more paths.",
+        "intuition": "The boundary moves down as maturity lengthens. The duality gap is wide here (~4.8 against a ~7.1 price) and it is the degree-3 polynomial basis that sets it, not the path count -- more paths tighten the standard error, a richer basis is what tightens the gap.",
     },
     "c7": {
         "what": "Markov functional model: left panel shows repricing errors at T1 and T2 (exact by construction); right panel compares MF vs GBM prices (joint-dynamics error visible).",
         "intuition": "One-factor MF assumption creates a path-dependence error vs the true joint dynamics.",
     },
     "c8": {
-        "what": "Method comparison summary: a table of speed, accuracy, supported payoffs, and failure regions for all nine methods.",
+        "what": "Method comparison summary: a table of speed, accuracy, supported payoffs, and failure regions across the pricing methods built here.",
         "intuition": "Trade-offs: fast=inaccurate (Black-76), accurate=slow (MC, PDE), flexible=complex (LSM, MF).",
     },
 }
@@ -206,7 +206,9 @@ def fig_c3(data=None) -> tuple:
     se_plain = np.array([d["se_plain"] for d in chart_data])
     se_antithetic = np.array([d["se_antithetic"] for d in chart_data])
     se_control_variate = np.array([d["se_control_variate"] for d in chart_data])
+    se_plain_asian = np.array([d["se_plain_asian"] for d in chart_data])
     se_sobol = np.array([d["se_sobol"] for d in chart_data])
+    cv_x = float(np.mean([d["cv_variance_reduction_x"] for d in chart_data]))
 
     # Log-log plot
     ax.loglog(
@@ -216,7 +218,7 @@ def fig_c3(data=None) -> tuple:
         linewidth=2,
         markersize=6,
         color=viz.BLUE,
-        label="Plain",
+        label="Plain (European)",
         zorder=3,
     )
     ax.loglog(
@@ -226,7 +228,7 @@ def fig_c3(data=None) -> tuple:
         linewidth=2,
         markersize=5,
         color=viz.ORANGE,
-        label="Antithetic",
+        label="Antithetic (European)",
         zorder=3,
     )
     ax.loglog(
@@ -236,7 +238,7 @@ def fig_c3(data=None) -> tuple:
         linewidth=2,
         markersize=5,
         color=viz.RED,
-        label="Control variate",
+        label="Control variate (Asian)",
         zorder=3,
     )
     ax.loglog(
@@ -246,8 +248,22 @@ def fig_c3(data=None) -> tuple:
         linewidth=2,
         markersize=5,
         color=viz.GREEN,
-        label="Sobol",
+        label="Sobol (European)",
         zorder=3,
+    )
+
+    # The control variate prices an arithmetic Asian, so the honest
+    # comparison for it is the plain Asian on the same payoff -- not the
+    # European legs above, which are a different option.
+    ax.loglog(
+        n_paths_arr,
+        se_plain_asian,
+        "v--",
+        linewidth=1.5,
+        markersize=5,
+        color=viz.AQUA,
+        label="Plain (Asian)",
+        zorder=2,
     )
 
     # Reference line: 1/sqrt(N), anchored to first plain point
@@ -270,6 +286,16 @@ def fig_c3(data=None) -> tuple:
     viz.style_log_axis_plain(ax, axis="x")
     viz.style_log_axis_plain(ax, axis="y")
     viz.style_ax(ax, title="MC error vs paths: convergence rate comparison")
+    ax.annotate(
+        f"Geometric-Asian control variate: {cv_x:.0f}x variance reduction\n"
+        f"on the arithmetic Asian. Every leg tracks 1/\u221aN (slope -1/2);\n"
+        f"a control variate moves the level, never the rate.",
+        xy=(0.02, 0.06),
+        xycoords="axes fraction",
+        fontsize=8,
+        color=viz.TEXT_SECONDARY,
+        va="bottom",
+    )
     viz.legend(ax, loc="upper right")
     fig.tight_layout()
 

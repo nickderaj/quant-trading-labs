@@ -367,6 +367,7 @@ def case_g_structured_note() -> dict[str, Any]:
     # Downsample start dates every 20 trading days
     start_idx = np.arange(0, len(front) - n_steps, 20)
 
+    historical_autocall_obs: list[int] = []
     historical_payoffs = []
     historical_autocalls = []
 
@@ -394,13 +395,20 @@ def case_g_structured_note() -> dict[str, Any]:
         )
 
         payoff = result_hist["price"]
-        did_autocall = (
-            result_hist["autocall_frequency_by_obs"].sum() > 0
-        )  # Any obs triggered it
+        freq_by_obs = np.asarray(result_hist["autocall_frequency_by_obs"], dtype=float)
+        did_autocall = bool(freq_by_obs.sum() > 0)  # Any obs triggered it
 
         historical_payoffs.append(payoff)
         historical_autocalls.append(1.0 if did_autocall else 0.0)
+        # Which observation it redeemed at, so the chart can show the real
+        # (front-loaded) timing instead of spreading the total evenly.
+        if did_autocall:
+            historical_autocall_obs.append(int(np.argmax(freq_by_obs > 0)))
 
+    hist_obs_counts = [
+        int(sum(1 for o in historical_autocall_obs if o == i))
+        for i in range(len(obs_idx))
+    ]
     historical_payoffs = np.array(historical_payoffs, dtype=float)  # type: ignore
     historical_autocalls = np.array(historical_autocalls, dtype=float)  # type: ignore
 
@@ -454,10 +462,33 @@ def case_g_structured_note() -> dict[str, Any]:
                 "max": float(np.max(historical_payoffs)),
             },
             "realized_autocall_frequency": realized_autocall_freq,
+            # The actual payoff values, not just their moments. The
+            # distribution has a large point mass at the autocall payoff and
+            # a long left tail, so a chart that redraws it from (mean, std)
+            # as if it were Gaussian shows a shape the data does not have.
+            "payoff_values": [float(x) for x in historical_payoffs],
+            "realized_autocall_count_by_obs": hist_obs_counts,
+            "realized_autocall_frequency_by_obs": [
+                float(c / max(1, n_historical)) for c in hist_obs_counts
+            ],
+            # The probability the note autocalls AT ALL: the per-observation
+            # frequencies are disjoint events (a path redeems at most once),
+            # so they sum. Dividing that sum by the number of observation
+            # dates -- as this line used to -- turns a probability into a
+            # per-date average and understates it fourfold, which made the
+            # model look wildly inconsistent with history when it is not.
+            # Equivalently: 1 - never_autocalled_frequency.
             "model_expected_autocall_frequency": float(
-                result["autocall_frequency_by_obs"][:-1].sum() / len(obs_idx)
+                result["autocall_frequency_by_obs"].sum()
             ),
-            "note": "Model uses risk-neutral GBM; historical has actual drift. Autocall rates compared for sanity check.",
+            "model_never_autocalled_frequency": float(
+                result["never_autocalled_frequency"]
+            ),
+            "note": (
+                "Model uses risk-neutral GBM (zero drift); history carries CL's "
+                "actual 2010-2026 drift, so the realised rate should sit above "
+                "the model's. Both are 'did it autocall at any observation'."
+            ),
         },
     }
 
@@ -557,21 +588,41 @@ def variance_swap_aside() -> dict[str, Any]:
                 close_close_var_by_day.loc[common_dates_list].values, dtype=float
             )
 
-            # Avoid division by zero
+            # A MEAN OF PER-DAY RATIOS is the wrong estimator here: a day
+            # that closes almost exactly where it opened has a near-zero
+            # close-to-close variance in the denominator, and a handful of
+            # those days dominate the average (this is what produced the
+            # implausible 48x reported by an earlier version of this script).
+            # The ratio of means is the estimator that answers the question
+            # actually being asked -- over this sample, how much variance does
+            # each proxy see -- so report that, with the median of the per-day
+            # ratios alongside it as a distribution-robust cross-check.
             valid = closeclose_subset > 0
-            if valid.sum() > 0:
-                ratio = float(
-                    np.mean(intraday_subset[valid] / closeclose_subset[valid])
-                )
-            else:
-                ratio = float("nan")
+            intraday_mean = float(np.nanmean(intraday_subset))
+            closeclose_mean = float(np.nanmean(closeclose_subset))
+            ratio_of_means = (
+                intraday_mean / closeclose_mean if closeclose_mean > 0 else float("nan")
+            )
+            per_day = (
+                intraday_subset[valid] / closeclose_subset[valid]
+                if valid.sum() > 0
+                else np.array([np.nan])
+            )
 
             intraday_ratio = {
                 "n_common_dates": len(common_dates_list),
-                "intraday_realized_var_mean": float(np.nanmean(intraday_subset)),
-                "closeclose_realized_var_mean": float(np.nanmean(closeclose_subset)),
-                "ratio_intraday_over_closeclose": ratio,
-                "note": "Jan-Jul 2026 only; intraday captures moves daily close misses",
+                "intraday_realized_var_mean": intraday_mean,
+                "closeclose_realized_var_mean": closeclose_mean,
+                "ratio_intraday_over_closeclose": float(ratio_of_means),
+                "ratio_estimator": "ratio of sample means",
+                "median_per_day_ratio": float(np.nanmedian(per_day)),
+                "mean_per_day_ratio_DO_NOT_USE": float(np.nanmean(per_day)),
+                "note": (
+                    "Jan-Jul 2026 only -- a seven-month window, not a "
+                    "representative sample of either proxy. The mean of per-day "
+                    "ratios is retained only to show how far a near-zero "
+                    "denominator can throw it."
+                ),
             }
         else:
             intraday_ratio = {
@@ -591,7 +642,16 @@ def variance_swap_aside() -> dict[str, Any]:
         "forecast_quality_qlike": {
             "varswap_strike_forecast": qlike_varswap,
             "naive_trailing_baseline": qlike_naive,
-            "note": "Lower QLIKE is better; varswap is a constant forecast, naive is yesterday's realized",
+            "note": (
+                "Lower QLIKE is better, but these two are NOT comparable and "
+                "the gap between them is not a finding. The varswap strike is "
+                "one constant fixed on the valuation date and scored over the "
+                "whole sample; the naive baseline re-reads yesterday's realised "
+                "variance every day. A daily-updating forecast beating a "
+                "static one says nothing about either. The strike is reported "
+                "here as a forecast of average variance, never as a replicated "
+                "price -- there is no option strip in this repo to replicate one."
+            ),
         },
         "intraday_vs_closeclose": intraday_ratio,
     }

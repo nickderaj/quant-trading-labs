@@ -271,3 +271,58 @@ def test_corr_rolling_bounded():
     corr = lib25.corr_rolling("CL", "HO", window=126).dropna()
     assert len(corr) > 0
     assert corr.between(-1.0001, 1.0001).all()
+
+
+# --------------------------------------------------------------------------- #
+# Delivery-month conditioning (seasonality, 024 Phase 5)
+# --------------------------------------------------------------------------- #
+
+
+def test_delivery_month_parses_contract_month_strings():
+    panel = pd.DataFrame(
+        {"contract_month": ["2010-07", "2011-12", "2012-01", None, "garbage"]}
+    )
+    got = lib25.delivery_month(panel)
+    assert got.iloc[0] == 7.0
+    assert got.iloc[1] == 12.0
+    assert got.iloc[2] == 1.0
+    assert np.isnan(got.iloc[3])
+    assert np.isnan(got.iloc[4])
+
+
+def test_vol_term_structure_delivery_months_actually_restricts_the_fit():
+    """Winter- and summer-delivery fits must differ from each other.
+
+    If `delivery_months` silently failed to filter, both calls would fit the
+    same rows and return identical coefficients -- which is exactly the failure
+    that let case study D report a maturity effect as a seasonal one.
+    """
+    asof = pd.Timestamp("2017-06-02")
+    winter = lib25.vol_term_structure("NG", asof, delivery_months=(12, 1, 2, 3))
+    summer = lib25.vol_term_structure(
+        "NG", asof, delivery_months=(4, 5, 6, 7, 8, 9, 10, 11)
+    )
+    unconditional = lib25.vol_term_structure("NG", asof)
+
+    for fit in (winter, summer, unconditional):
+        assert np.isfinite(fit["sigma_1"])
+        assert np.isfinite(fit["k"])
+
+    # Different row sets give different fits; identical coefficients would mean
+    # the filter did nothing.
+    assert winter["sigma_1"] != summer["sigma_1"]
+    assert winter["r2"] != summer["r2"]
+
+    # And each conditional fit must differ from the pooled one.
+    assert winter["sigma_1"] != unconditional["sigma_1"]
+
+
+def test_vol_term_structure_delivery_months_is_causal():
+    """The filter must not reach past `asof` for data."""
+    early = lib25.vol_term_structure(
+        "NG", pd.Timestamp("2015-01-05"), delivery_months=(12, 1, 2, 3)
+    )
+    late = lib25.vol_term_structure(
+        "NG", pd.Timestamp("2020-01-06"), delivery_months=(12, 1, 2, 3)
+    )
+    assert early["sigma_1"] != late["sigma_1"]

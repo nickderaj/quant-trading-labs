@@ -32,35 +32,35 @@ CAPTIONS = {
     },
     "d2": {
         "what": "Correlation gap in hedging dollars: hedging the margin directly vs hedging inputs & outputs separately.",
-        "intuition": "CL/HO/RB returns are correlated but not perfectly; the gap illustrates the benefit of marginal hedging.",
+        "intuition": "CL/HO/RB returns are correlated but not perfectly (rho about 0.87 and 0.89), and the roughly 2% gap between the Kirk and bivariate-Monte-Carlo crack-spread prices is the correlation term that two separate hedges cannot see.",
     },
     "d3": {
-        "what": "Farmer's realised payoff distributions: plain put vs zero-cost collar vs knock-out put over historical harvests.",
-        "intuition": "KO put zeros out when price spikes (barrier < 30% of forward), trading downside protection for lower premium.",
+        "what": "Farmer's realised payoff distributions: plain put vs zero-cost collar vs knock-out put, each re-struck at every historical start date's own forward, so the comparison is about the structures and not about where wheat happened to trade in 2017.",
+        "intuition": "The knock-out put pays exactly what the plain put pays until the barrier (85% of the forward, i.e. 15% out of the money) is touched, and nothing afterwards. The collar's short call caps the good years, which is what pays for its floor.",
     },
     "d4": {
-        "what": "Chicago wheat price history with annotation of knock-out frequency and mean shortfall when barrier is breached.",
-        "intuition": "28.6% historical knock-out rate; when KO triggers, farmer loses ~$4.74/bu of protection.",
+        "what": "Chicago wheat price history annotated with how often the barrier was touched and what the knock-out cost when it was.",
+        "intuition": "The barrier was touched on 28.6% of the 49 historical harvest windows (26.0% on KE), but only 24.5% of windows were knock-outs that actually cost anything -- on the rest the plain put would have expired worthless anyway. Averaged over the costly ones the farmer gave up about 116 cents/bushel of protection. ZW is quoted in cents, so that is roughly $1.16/bu, not $116.",
     },
     "d5": {
-        "what": "Airline's realised payoff distributions: strip of monthly futures vs Asian call & collar (premium difference annotated).",
-        "intuition": "Strip is static hedge; Asian averages reduce payoff volatility; premium trades off upside capture vs cost.",
+        "what": "Airline's realised payoff distributions: long strip of futures vs the Asian cap and the Asian collar.",
+        "intuition": "The airline buys diesel, so its hedge is long futures and pays when diesel rallies. The Asian cap keeps that upside protection and drops the downside, which is what its premium buys; the collar gives back the good outcomes to pay for it.",
     },
     "d6": {
-        "what": "Winter gas strip: seasonal vol cap pricing vs flat-vol cap pricing, by delivery month.",
-        "intuition": "Seasonal vol profile (higher in winter) makes near-term protection more expensive than flat-vol assumption.",
+        "what": "Winter gas cap strip priced three ways: one flat front-month vol for all four months, the unconditional Samuelson term structure, and a term structure fitted only to winter-delivery contracts.",
+        "intuition": "Almost the whole gap is the Samuelson effect, not seasonality: quoting the strip off a single front-month vol overprices it by about 15.5% against the maturity-aware curve, while conditioning on winter delivery moves it by about -0.5%. NG's winter vol premium is real at the front of the curve but is not measurable at the 6-12 month tenors this strip spans.",
     },
     "d7": {
         "what": "April 2020 CL negative price: predictive densities from Black-76 (lognormal), Bachelier (normal), and displaced-diffusion.",
         "intuition": "Lognormal has zero density below 0; normal admits negatives; actual settlement -2.67 sits in lognormal's forbidden zone.",
     },
     "d8": {
-        "what": "16-year rolling Kupiec PoF coverage: observed vs expected exceedance rate (1%) for lognormal, Bachelier, and displaced models.",
-        "intuition": "Lognormal rejects badly (0% observed); Bachelier and displaced both over-reject (2.06%>1%) due to left-tail clustering.",
+        "what": "Rolling 1% left-tail Kupiec coverage over the full 16-year sample: observed vs expected exceedance rate for the lognormal-return and level-change models.",
+        "intuition": "Both fail, in opposite directions. The lognormal model never once breaches its own 1% VaR (0 exceedances in 4168 days), so its left tail is far too wide -- too conservative. The level-change models breach on 2.06% of days against a 1% target, roughly twice too often, so theirs is too narrow. Failing a coverage test by being too cautious and failing it by being too aggressive are different diagnoses.",
     },
     "d9": {
-        "what": "Structured autocall note: realised payoff distribution and early redemption frequency by quarterly observation date.",
-        "intuition": "Early exit at level >= 100%; barrier at 70% gives downside protection; issuer's earned margin visible in payoff skew.",
+        "what": "Structured autocall note: realised payoff distribution and cumulative early-redemption probability by quarterly observation date.",
+        "intuition": "The note autocalls at any observation where CL is back at or above its starting level. The model puts that at 65.4% and CL's own 2010-2026 history at 72.3% -- the gap runs the right way, since the model prices under a driftless risk-neutral measure while history carries oil's actual drift.",
     },
 }
 
@@ -207,69 +207,103 @@ def fig_d2(data) -> tuple:
 
 
 def fig_d3(data) -> tuple:
-    """Farmer: overlaid realised payoff distributions for put, collar, and KO put."""
+    """Farmer: realised payoff distributions for put, collar, and KO put."""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
     fig.set_facecolor(viz.SURFACE)
 
     with open(Path(__file__).resolve().parent / "phase_5_25_cases_abcd.json") as f:
         phase5_data = json.load(f)
 
-    payoffs = phase5_data["B_farmer"]["realised_payoffs"]
+    case = phase5_data["B_farmer"]
+    payoffs = case["realised_payoffs"]
+    trade_off = case["trade_off_numbers"]
     structure_names = ["Plain put", "Zero-cost collar", "Knock-out put"]
     structure_colors = [viz.ORANGE, viz.AQUA, viz.BLUE]
 
-    # Left: histogram overlay
+    # Left: the three distributions on ONE shared set of bins.
+    #
+    # The collar's short call gives it a long left tail that the two put
+    # structures do not have, so a histogram with per-series bins squashes
+    # the puts into a single invisible spike. Shared bins over the pooled
+    # range, plus step outlines rather than filled bars, keeps all three
+    # readable at once.
     ax1.set_facecolor(viz.SURFACE)
-    ax1.figure.set_facecolor(viz.SURFACE)
+    all_values = np.concatenate(
+        [np.asarray(payoffs[n]["values"], dtype=float) for n in structure_names]
+    )
+    bins = np.linspace(np.min(all_values), np.max(all_values), 36)
 
     for name, color in zip(structure_names, structure_colors):
-        values = np.array(payoffs[name]["values"])
-        ax1.hist(values, bins=20, alpha=0.5, density=True, color=color, label=name)
+        values = np.asarray(payoffs[name]["values"], dtype=float)
+        ax1.hist(
+            values,
+            bins=bins,
+            histtype="step",
+            linewidth=2,
+            color=color,
+            label=f"{name} (mean {values.mean():+.0f})",
+        )
+        ax1.axvline(values.mean(), color=color, linestyle=":", linewidth=1.2, alpha=0.8)
 
+    ax1.axvline(0, color=viz.GRAY, linewidth=1.0, alpha=0.7)
     viz.style_ax(
         ax1,
-        title="Farmer: realised payoff distributions (historical)",
-        ylabel="Density",
+        title=f"Farmer: realised payoffs, n={payoffs['Plain put']['n']} harvest windows",
+        ylabel="Windows",
         xlabel="Payoff (cents/bu)",
     )
-    viz.legend(ax1, loc="upper right")
+    viz.legend(ax1, loc="upper left")
 
-    # Right: KO failure annotation
+    # Right: what the knock-out actually costs. Separating the knock-outs
+    # that cost something from the ones that did not is the whole decision:
+    # a barrier touched in a year the price recovered above the strike costs
+    # the farmer nothing at all.
     ax2.set_facecolor(viz.SURFACE)
-    ax2.figure.set_facecolor(viz.SURFACE)
 
-    # Show plain put vs KO put; KO failures are where KO_payoff ~ 0 and plain_put > 0
-    plain_put_values = np.array(payoffs["Plain put"]["values"])
-    ko_put_values = np.array(payoffs["Knock-out put"]["values"])
+    n_obs = trade_off["n_observations"]
+    n_ko = trade_off["n_knockouts"]
+    n_costly = trade_off["n_costly_knockouts"]
+    n_free = n_ko - n_costly
 
-    ko_failures = (ko_put_values == 0) & (plain_put_values > 0)
-    n_ko_failures = np.sum(ko_failures)
-    total_obs = len(ko_put_values)
-
-    x_pos = np.arange(2)
-    bar_heights = [
-        payoffs["Plain put"]["mean"],
-        payoffs["Knock-out put"]["mean"],
+    categories = [
+        "Never\nknocked out",
+        "Knocked out,\ncost nothing",
+        "Knocked out,\ncost the floor",
     ]
-    ax2.bar(x_pos, bar_heights, color=[viz.ORANGE, viz.BLUE], alpha=0.7, width=0.5)
+    counts = [n_obs - n_ko, n_free, n_costly]
+    colors = [viz.BLUE, viz.GRAY, viz.RED]
+    bars = ax2.bar(categories, counts, color=colors, alpha=0.8, width=0.6)
+    for bar, c in zip(bars, counts):
+        ax2.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.4,
+            f"{c}  ({c / n_obs:.1%})",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+            color=viz.TEXT_PRIMARY,
+            fontweight="bold",
+        )
 
-    # Annotate KO failures
-    ax2.text(
-        1,
-        payoffs["Knock-out put"]["mean"] * 1.1,
-        f"{n_ko_failures}/{total_obs} KO\nfailures",
-        ha="center",
-        va="bottom",
+    ax2.annotate(
+        f"When it cost something, it cost "
+        f"{trade_off['mean_shortfall_when_costly_cents']:.0f} cents/bu on average\n"
+        f"(about ${trade_off['mean_shortfall_when_costly_cents'] / 100:.2f}/bu -- ZW is quoted in cents)",
+        xy=(0.5, 0.95),
+        xycoords="axes fraction",
         fontsize=9,
-        color=viz.RED,
-        fontweight="bold",
+        color=viz.TEXT_SECONDARY,
+        ha="center",
+        va="top",
+    )
+    ax2.set_ylim(0, max(counts) * 1.28)
+    viz.style_ax(
+        ax2,
+        title=f"Farmer: what the {trade_off['ko_barrier_pct_of_forward']:.0%} barrier cost",
+        ylabel="Harvest windows",
     )
 
-    ax2.set_xticks(x_pos)
-    ax2.set_xticklabels(["Plain put", "Knock-out put"])
-    ax2.set_ylabel("Mean payoff (cents/bu)", color=viz.TEXT_SECONDARY, fontsize=10)
-
-    viz.style_ax(ax2, title="Farmer: KO put vs plain put (mean payoff)")
+    fig.tight_layout()
 
     return fig, ax1
 
@@ -299,13 +333,18 @@ def fig_d4(data) -> tuple:
 
     # Annotate summary statistics
     ko_freq = trade_off["ko_knockout_frequency_zw"]
-    mean_shortfall = trade_off["mean_shortfall_when_ko"]
+    mean_shortfall_cents = trade_off["mean_shortfall_when_costly_cents"]
     n_obs = trade_off["n_observations"]
 
+    # ZW is quoted in CENTS per bushel, so the shortfall is in cents too --
+    # printing it with a dollar sign overstates it a hundredfold.
     annotation_text = (
-        f"KO barrier: {trade_off['ko_barrier_pct_of_forward']:.1%} of forward\n"
-        f"KO frequency: {ko_freq:.1%} ({int(ko_freq * n_obs)}/{n_obs} obs)\n"
-        f"Mean shortfall when KO: ${mean_shortfall:.2f}/bu"
+        f"KO barrier: {trade_off['ko_barrier_pct_of_forward']:.0%} of forward\n"
+        f"Barrier touched: {ko_freq:.1%} ({trade_off['n_knockouts']}/{n_obs} windows)\n"
+        f"Cost something: {trade_off['costly_knockout_frequency_zw']:.1%} "
+        f"({trade_off['n_costly_knockouts']}/{n_obs})\n"
+        f"Mean shortfall when costly: {mean_shortfall_cents:.0f} cents/bu "
+        f"(${mean_shortfall_cents / 100:.2f}/bu)"
     )
 
     ax.text(
@@ -378,59 +417,97 @@ def fig_d5(data) -> tuple:
 
 
 def fig_d6(data) -> tuple:
-    """Gas utility: seasonal vs flat vol cap pricing by delivery month."""
-    fig, ax = viz.new_fig(figsize=(10, 5))
+    """Gas utility: flat vs maturity vs seasonal vol cap pricing."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.set_facecolor(viz.SURFACE)
 
     with open(Path(__file__).resolve().parent / "phase_5_25_cases_abcd.json") as f:
         phase5_data = json.load(f)
 
-    trade_off = phase5_data["D_gas_utility"]["trade_off_numbers"]
+    case = phase5_data["D_gas_utility"]
+    trade_off = case["trade_off_numbers"]
 
-    seasonal_premium = trade_off.get("seasonal_cap_premium", 0)
-    flat_premium = trade_off.get("flat_vol_cap_premium", 0)
-    advantage_pct = trade_off.get("seasonal_advantage_pct", 0)
+    flat_premium = trade_off["flat_vol_cap_premium"]
+    maturity_premium = trade_off["maturity_vol_cap_premium"]
+    seasonal_premium = trade_off["seasonal_cap_premium"]
+    flat_gap = trade_off["flat_overprices_vs_maturity_pct"]
+    seasonal_gap = trade_off["seasonal_vs_maturity_pct"]
 
-    # Create a simple comparison chart
-    methods = ["Flat vol", "Seasonal vol"]
-    premiums = [flat_premium, seasonal_premium]
-    colors = [viz.ORANGE, viz.AQUA]
-
-    bars = ax.bar(methods, premiums, color=colors, alpha=0.7, width=0.5)
-
-    # Annotate with premium difference
+    # Left: the three prices for the whole strip, so the two effects that get
+    # conflated -- maturity decay and delivery-month seasonality -- are
+    # visibly different sizes.
+    ax1.set_facecolor(viz.SURFACE)
+    methods = [
+        "Flat\n(front-month vol)",
+        "Maturity\n(Samuelson)",
+        "Seasonal\n(winter delivery)",
+    ]
+    premiums = [flat_premium, maturity_premium, seasonal_premium]
+    bars = ax1.bar(
+        methods, premiums, color=[viz.ORANGE, viz.BLUE, viz.AQUA], alpha=0.8, width=0.55
+    )
     for bar, prem in zip(bars, premiums):
-        height = bar.get_height()
-        ax.text(
+        ax1.text(
             bar.get_x() + bar.get_width() / 2,
-            height / 2,
-            f"${prem:.2f}",
+            bar.get_height() / 2,
+            f"${prem:.3f}",
             ha="center",
             va="center",
             color=viz.TEXT_PRIMARY,
             fontsize=10,
             fontweight="bold",
         )
-
-    # Annotate advantage
-    ax.text(
-        0.5,
-        0.95,
-        f"Seasonal advantage: {advantage_pct:.1%}",
-        transform=ax.transAxes,
+    ax1.annotate(
+        f"flat overprices by {flat_gap:+.1f}%\nseasonality adds {seasonal_gap:+.1f}%",
+        xy=(0.5, 0.95),
+        xycoords="axes fraction",
         fontsize=9,
         color=viz.TEXT_SECONDARY,
         ha="center",
         va="top",
     )
-
     viz.style_ax(
-        ax,
-        title="Gas utility: winter cap pricing (seasonal vs flat vol)",
-        ylabel="Cap premium ($)",
+        ax1,
+        title="Winter cap strip: three vol inputs",
+        ylabel="Strip premium ($)",
     )
-    viz.price_caption(ax)
 
-    return fig, ax
+    # Right: the evidence for the seasonality claim -- winter/summer realised
+    # vol by dte bucket. The winter premium is a front-end effect; at the
+    # tenors this strip spans it is noise around 1.
+    ax2.set_facecolor(viz.SURFACE)
+    buckets = trade_off.get("seasonal_buckets", [])
+    if buckets:
+        dte = np.array([b["dte_mid"] for b in buckets])
+        ratio = np.array([b["ratio"] for b in buckets])
+        ax2.plot(dte, ratio, "o-", color=viz.AQUA, linewidth=2, markersize=6)
+        ax2.axhline(1.0, color=viz.GRAY, linestyle="--", linewidth=1.2, alpha=0.8)
+
+        # Shade the tenors the winter strip actually spans (T = 0.5 to 1.0).
+        ax2.axvspan(
+            182,
+            365,
+            color=viz.BLUE,
+            alpha=0.12,
+            label="tenors this strip spans",
+        )
+        ax2.set_xscale("log")
+        viz.style_log_axis_plain(ax2, axis="x")
+        ax2.set_xlabel(
+            "Days to expiry (bucket midpoint)", color=viz.TEXT_SECONDARY, fontsize=9
+        )
+        viz.style_ax(
+            ax2,
+            title="NG winter / summer realised vol, by tenor",
+            ylabel="vol(winter delivery) / vol(summer delivery)",
+        )
+        ax2.set_ylim(min(0.75, ratio.min() * 0.97), max(ratio.max() * 1.12, 1.35))
+        viz.legend(ax2, loc="lower right")
+
+    fig.tight_layout()
+    viz.price_caption(ax1)
+
+    return fig, ax1
 
 
 def fig_d7(data) -> tuple:
@@ -598,104 +675,113 @@ def fig_d9(data) -> tuple:
         phase6_data = json.load(f)
 
     g_data = phase6_data["G_structured_note"]
-    payoff_dist = g_data["historical_resampling"]["payoff_distribution"]
-    realized_ac_freq = g_data["historical_resampling"]["realized_autocall_frequency"]
+    hist = g_data["historical_resampling"]
+    payoff_dist = hist["payoff_distribution"]
 
-    # Left: payoff distribution histogram
+    # Left: the ACTUAL realised payoffs.
+    #
+    # An earlier version of this panel drew np.random.normal(mean, std) and
+    # labelled it the realised distribution. The real one is nothing like a
+    # normal: p25, median and p75 are all the same number, because most
+    # windows autocall and pay exactly the same redemption amount, and the
+    # rest form a long left tail down to 0.30. Plotting a Gaussian here
+    # invented a shape the data does not have.
     ax1.set_facecolor(viz.SURFACE)
-    ax1.figure.set_facecolor(viz.SURFACE)
+    values = np.asarray(hist["payoff_values"], dtype=float)
 
-    n_windows = g_data["historical_resampling"]["n_windows"]
-
-    # Reconstruct approximate payoff values from statistics
-    mean_payoff = payoff_dist["mean"]
-    std_payoff = payoff_dist["std"]
-    synthetic_payoffs = np.random.normal(mean_payoff, std_payoff, max(100, n_windows))
-    synthetic_payoffs = np.clip(
-        synthetic_payoffs, payoff_dist["min"], payoff_dist["max"]
-    )
-
-    ax1.hist(synthetic_payoffs, bins=20, color=viz.RED, alpha=0.6, edgecolor="black")
-
-    # Annotate mean and barrier
+    ax1.hist(values, bins=40, color=viz.RED, alpha=0.7, edgecolor=viz.SURFACE)
     ax1.axvline(
-        mean_payoff,
+        1.0,
+        color=viz.GRAY,
+        linestyle="-",
+        linewidth=1.2,
+        label="Face value (1.00)",
+    )
+    ax1.axvline(
+        float(values.mean()),
         color=viz.BLUE,
         linestyle="--",
         linewidth=2,
-        label=f"Mean: {mean_payoff:.2f}",
+        label=f"Mean: {values.mean():.3f}",
     )
     ax1.axvline(
-        g_data["structure"]["barrier"],
-        color=viz.ORANGE,
-        linestyle="--",
+        float(np.median(values)),
+        color=viz.AQUA,
+        linestyle=":",
         linewidth=2,
-        label=f"Barrier: {g_data['structure']['barrier']:.1%}",
+        label=f"Median: {np.median(values):.3f}",
     )
-
-    ax1.text(
-        mean_payoff,
-        ax1.get_ylim()[1] * 0.95,
-        f"  Mean\n  {mean_payoff:.3f}",
-        color=viz.BLUE,
-        fontsize=9,
+    ax1.annotate(
+        f"n={len(values)} windows; min {payoff_dist['min']:.2f}\n"
+        f"the spike is the autocall redemption amount",
+        xy=(0.03, 0.62),
+        xycoords="axes fraction",
+        fontsize=8,
+        color=viz.TEXT_SECONDARY,
         va="top",
     )
-
     viz.style_ax(
         ax1,
         title="Structured note: realised payoff distribution",
-        ylabel="Frequency",
-        xlabel="Payoff",
+        ylabel="Windows",
+        xlabel="Payoff per 1.00 of face",
     )
-    viz.legend(ax1, loc="upper right")
+    viz.legend(ax1, loc="upper left")
 
-    # Right: autocall frequency by observation date
+    # Right: autocall timing, model vs history, observation by observation.
+    #
+    # The total autocall probability is the SUM of these disjoint per-date
+    # frequencies (a path redeems at most once), not their average -- which
+    # is the arithmetic an earlier version of this chart and of Phase 6 both
+    # got wrong, in the same direction, by dividing by the number of dates.
     ax2.set_facecolor(viz.SURFACE)
-    ax2.figure.set_facecolor(viz.SURFACE)
 
     obs_indices = g_data["structure"]["obs_indices"]
+    model_by_obs = g_data["model_pricing"]["autocall_frequency_by_obs"]
+    hist_by_obs = hist["realized_autocall_frequency_by_obs"]
     obs_labels = [f"Obs {i + 1}\n({idx}d)" for i, idx in enumerate(obs_indices)]
 
-    # Assume autocall frequency is distributed across observation dates
-    # If realized_autocall_frequency is per-obs, use that; otherwise allocate uniformly
-    if isinstance(realized_ac_freq, dict):
-        ac_freqs = [realized_ac_freq.get(str(idx), 0) for idx in obs_indices]
-    else:
-        # Allocate uniformly across observation dates as a fraction
-        ac_freqs = [realized_ac_freq / len(obs_indices)] * len(obs_indices)
+    x = np.arange(len(obs_indices))
+    width = 0.38
+    ax2.bar(
+        x - width / 2,
+        model_by_obs,
+        width,
+        color=viz.BLUE,
+        alpha=0.85,
+        label=f"Model (total {sum(model_by_obs):.1%})",
+    )
+    ax2.bar(
+        x + width / 2,
+        hist_by_obs,
+        width,
+        color=viz.ORANGE,
+        alpha=0.85,
+        label=f"Historical (total {sum(hist_by_obs):.1%})",
+    )
+    for xi, (m, h) in enumerate(zip(model_by_obs, hist_by_obs)):
+        for off, v in ((-width / 2, m), (width / 2, h)):
+            if v > 0.01:
+                ax2.text(
+                    xi + off,
+                    v + 0.012,
+                    f"{v:.1%}",
+                    ha="center",
+                    va="bottom",
+                    fontsize=8,
+                    color=viz.TEXT_PRIMARY,
+                )
 
-    colors_ac = [viz.AQUA if freq > 0 else viz.GRAY for freq in ac_freqs]
-    bars = ax2.bar(obs_labels, ac_freqs, color=colors_ac, alpha=0.7, width=0.6)
-
-    # Annotate frequencies
-    for bar, freq in zip(bars, ac_freqs):
-        height = bar.get_height()
-        if height > 0:
-            ax2.text(
-                bar.get_x() + bar.get_width() / 2,
-                height / 2,
-                f"{freq:.1%}",
-                ha="center",
-                va="center",
-                fontsize=9,
-            )
-
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(obs_labels)
     viz.style_ax(
-        ax2, title="Structured note: realised autocall frequency", ylabel="Frequency"
+        ax2,
+        title="Autocall probability by observation: model vs history",
+        ylabel="Probability of redeeming at this observation",
     )
+    viz.legend(ax2, loc="upper right")
 
-    # Annotate issuer margin (coupon)
-    coupon = g_data["structure"]["coupon"]
-    ax2.text(
-        0.5,
-        0.95,
-        f"Issuer coupon: {coupon:.1%}",
-        transform=ax2.transAxes,
-        fontsize=9,
-        color=viz.TEXT_SECONDARY,
-        ha="center",
-        va="top",
-    )
+    fig.tight_layout()
+    viz.price_caption(ax1)
 
     return fig, ax1

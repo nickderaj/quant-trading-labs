@@ -829,7 +829,7 @@ CAPTIONS = {
         "intuition": "Barriers reduce premium by restricting payoff; knock-out kills the contract if hit, knock-in activates only if hit, double-barrier is alive only between two levels.",
     },
     "a3": {
-        "what": "Crude oil front-month price path over 16 years with a barrier level marked, showing a real breach during the 2020 crash with date annotated.",
+        "what": "A real CL front-month path across the COVID window with an illustrative barrier drawn on it, and the date the barrier was breached annotated.",
         "intuition": "Barriers activate and cancel options in real market conditions; the 2020 oil crash shows how quickly thresholds can be breached.",
     },
     "a4": {
