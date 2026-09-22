@@ -1,0 +1,300 @@
+{
+  "products": {
+    "CL": {
+      "n_rows": 109367,
+      "n_usable_returns": 81895,
+      "representative_dates": {
+        "calm": "2017-06-04 00:00:00",
+        "crisis": "2020-04-21 00:00:00",
+        "backwardated": "2026-04-06 00:00:00",
+        "steep_contango": "2020-04-19 00:00:00"
+      },
+      "samuelson_fit_full_sample": {
+        "slope": -0.15273230862559234,
+        "ci_lo": -0.1850643491875204,
+        "ci_hi": -0.10973787074549098,
+        "r2": 0.5249312045848563
+      },
+      "published_024": {
+        "slope": -0.174,
+        "ci": [
+          -0.197,
+          -0.15
+        ]
+      },
+      "within_widened_band_of_024": true,
+      "curve_state_vol": {
+        "contango": {
+          "sigma_1": 0.48958115983271494,
+          "k": 0.1496429656359046,
+          "r2": 0.8319408888150639
+        },
+        "backwardation": {
+          "sigma_1": 0.3810281753152051,
+          "k": 0.12916508571038865,
+          "r2": 0.06265177558039725
+        }
+      }
+    },
+    "HO": {
+      "n_rows": 80195,
+      "n_usable_returns": 57803,
+      "representative_dates": {
+        "calm": "2017-06-04 00:00:00",
+        "crisis": "2020-04-21 00:00:00",
+        "backwardated": "2022-04-28 00:00:00",
+        "steep_contango": "2013-03-28 00:00:00"
+      },
+      "samuelson_fit_full_sample": {
+        "slope": -0.11204355014553696,
+        "ci_lo": -0.13764208221101637,
+        "ci_hi": -0.08762500973685565,
+        "r2": 0.8915254766598288
+      },
+      "published_024": {
+        "slope": -0.112,
+        "ci": [
+          -0.134,
+          -0.089
+        ]
+      },
+      "within_widened_band_of_024": true,
+      "curve_state_vol": {
+        "contango": {
+          "sigma_1": 0.313870104625239,
+          "k": 0.08161576224047497,
+          "r2": 0.8628537731475814
+        },
+        "backwardation": {
+          "sigma_1": 0.4416368790667195,
+          "k": 0.14538259485097754,
+          "r2": 0.8994753117857772
+        }
+      }
+    },
+    "RB": {
+      "n_rows": 64891,
+      "n_usable_returns": 48459,
+      "representative_dates": {
+        "calm": "2017-06-04 00:00:00",
+        "crisis": "2020-04-21 00:00:00",
+        "backwardated": "2012-09-28 00:00:00",
+        "steep_contango": "2016-02-28 00:00:00"
+      },
+      "samuelson_fit_full_sample": {
+        "slope": -0.09745617606772172,
+        "ci_lo": -0.1147713453787429,
+        "ci_hi": -0.05936834088248705,
+        "r2": 0.8227971393530167
+      },
+      "published_024": {
+        "slope": -0.098,
+        "ci": [
+          -0.12,
+          -0.058
+        ]
+      },
+      "within_widened_band_of_024": true,
+      "curve_state_vol": {
+        "contango": {
+          "sigma_1": 0.33604023265455135,
+          "k": 0.07129091348223136,
+          "r2": 0.6450553732607831
+        },
+        "backwardation": {
+          "sigma_1": 0.38500329396050265,
+          "k": 0.11125986069788826,
+          "r2": 0.845759260193588
+        }
+      }
+    },
+    "NG": {
+      "n_rows": 130076,
+      "n_usable_returns": 93612,
+      "representative_dates": {
+        "calm": "2017-06-04 00:00:00",
+        "crisis": "2020-04-21 00:00:00",
+        "backwardated": "2025-05-09 00:00:00",
+        "steep_contango": "2026-07-22 00:00:00"
+      },
+      "samuelson_fit_full_sample": {
+        "slope": -0.281527616597173,
+        "ci_lo": -0.3280750376086914,
+        "ci_hi": -0.24103722017493742,
+        "r2": 0.685943770641853
+      },
+      "published_024": {
+        "slope": -0.284,
+        "ci": [
+          -0.33,
+          -0.242
+        ]
+      },
+      "within_widened_band_of_024": true,
+      "curve_state_vol": {
+        "contango": {
+          "sigma_1": 0.9545885555053804,
+          "k": 0.28472230454125297,
+          "r2": 0.7211989139080146
+        },
+        "backwardation": {
+          "sigma_1": 0.955834941341723,
+          "k": 0.2774405069252777,
+          "r2": 0.5768920659712382
+        }
+      }
+    },
+    "ZW": {
+      "n_rows": 40664,
+      "n_usable_returns": 30176,
+      "representative_dates": {
+        "calm": "2017-06-04 00:00:00",
+        "crisis": "2020-04-21 00:00:00",
+        "backwardated": "2022-03-09 00:00:00",
+        "steep_contango": "2014-05-25 00:00:00"
+      },
+      "samuelson_fit_full_sample": {
+        "slope": -0.12148099826592822,
+        "ci_lo": -0.1570456167967327,
+        "ci_hi": -0.01899346366155796,
+        "r2": 0.7623201821953375
+      },
+      "published_024": {
+        "slope": -0.122,
+        "ci": [
+          -0.156,
+          -0.02
+        ]
+      },
+      "within_widened_band_of_024": true,
+      "curve_state_vol": {
+        "contango": {
+          "sigma_1": 0.4081152678653148,
+          "k": 0.11974920123148369,
+          "r2": 0.7354493166930001
+        },
+        "backwardation": {
+          "sigma_1": 0.45742702687839415,
+          "k": 0.15146966466445388,
+          "r2": 0.8885614799746769
+        }
+      }
+    },
+    "KE": {
+      "n_rows": 24540,
+      "n_usable_returns": 17794,
+      "representative_dates": {
+        "calm": "2017-06-04 00:00:00",
+        "crisis": "2020-04-21 00:00:00",
+        "backwardated": "2023-05-10 00:00:00",
+        "steep_contango": "2017-07-05 00:00:00"
+      },
+      "samuelson_fit_full_sample": {
+        "slope": -0.11535770182268683,
+        "ci_lo": -0.1442947136517304,
+        "ci_hi": -0.08764947026249646,
+        "r2": 0.839166092895323
+      },
+      "published_024": {
+        "slope": -0.115,
+        "ci": [
+          -0.146,
+          -0.082
+        ]
+      },
+      "within_widened_band_of_024": true,
+      "curve_state_vol": {
+        "contango": {
+          "sigma_1": 0.4053957111952037,
+          "k": 0.11388878859040673,
+          "r2": 0.8600924752692161
+        },
+        "backwardation": {
+          "sigma_1": 0.45041472966426316,
+          "k": 0.10463726146227213,
+          "r2": 0.6166882393574209
+        }
+      }
+    },
+    "BZ": {
+      "n_rows": 49701,
+      "n_usable_returns": 35880,
+      "representative_dates": {
+        "calm": "2017-06-04 00:00:00",
+        "crisis": "2020-04-21 00:00:00",
+        "backwardated": "2026-03-31 00:00:00",
+        "steep_contango": "2020-04-20 00:00:00"
+      },
+      "samuelson_fit_full_sample": {
+        "slope": -0.10665302915802549,
+        "ci_lo": -0.14196977077470319,
+        "ci_hi": -0.07807182260435348,
+        "r2": 0.8195471561741102
+      },
+      "published_024": {
+        "slope": -0.107,
+        "ci": [
+          -0.131,
+          -0.076
+        ]
+      },
+      "within_widened_band_of_024": true,
+      "curve_state_vol": {
+        "contango": {
+          "sigma_1": 0.49598420552974926,
+          "k": 0.1361625223815129,
+          "r2": 0.8159325705214071
+        },
+        "backwardation": {
+          "sigma_1": 0.32933737944058555,
+          "k": 0.11124556628815538,
+          "r2": 0.857007540017812
+        }
+      }
+    }
+  },
+  "rates": {
+    "series": "DGS2",
+    "convention": "DGS2 (2-year Treasury constant maturity, FRED), forward-filled over non-trading days: the most recent published observation on or before the valuation date is used flat across the curve. Sensible default for the <=2y tenors used throughout this notebook; DFF is not used here since no instrument in scope has a tenor short enough to need it.",
+    "date_range": [
+      "1976-06-01 00:00:00",
+      "2026-07-14 00:00:00"
+    ]
+  },
+  "fx": {
+    "pair": "6E",
+    "date_range": [
+      "2000-09-12 00:00:00",
+      "2026-07-31 00:00:00"
+    ],
+    "annualised_mad_vol": 0.07577390309894398,
+    "rolling_corr_with_CL": {
+      "window": 126,
+      "mean": 0.09972060113482745,
+      "std": 0.19345116324566874,
+      "min": -0.30044498976393924,
+      "max": 0.5553009254207921,
+      "n": 3930
+    }
+  },
+  "correlations": {
+    "CL_HO": {
+      "window": 126,
+      "mean": 0.8113932421854221,
+      "std": 0.10655762522174113,
+      "n": 4886
+    },
+    "CL_RB": {
+      "window": 126,
+      "mean": 0.7747647307999251,
+      "std": 0.10921033542181419,
+      "n": 4886
+    },
+    "CL_BZ": {
+      "window": 126,
+      "mean": 0.9132947462954139,
+      "std": 0.08846940507006364,
+      "n": 4735
+    }
+  }
+}
