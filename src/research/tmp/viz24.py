@@ -9,7 +9,10 @@ viz23.py; SERIES_COLOR/SERIES_LABEL replaced with SECTOR_COLOR/PRODUCT_COLOR.
 from __future__ import annotations
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
+
+DAYS_PER_YEAR = 365.25
 
 SURFACE = "#fcfcfb"
 TEXT_PRIMARY = "#0b0b0b"
@@ -27,7 +30,10 @@ VIOLET = "#4a3aa7"
 RED = "#e34948"
 GRAY = "#9a988f"
 
-SECTOR_COLOR = {"energy": ORANGE, "metals": YELLOW, "ags": AQUA, "control": VIOLET}
+# energy/metals were both ORANGE/YELLOW originally -- too close in hue and
+# lightness to tell apart at a glance (reported as illegible). BLUE gives
+# metals a hue clearly separated from energy's orange and ags' teal-green.
+SECTOR_COLOR = {"energy": ORANGE, "metals": BLUE, "ags": AQUA, "control": VIOLET}
 
 # Per-product colours, assigned once in PRODUCTS order, never reassigned per
 # chart -- the same product is the same colour in every figure in the notebook.
@@ -107,6 +113,30 @@ def legend(ax, **kwargs) -> None:
 def clip_for_display(arr, cap):
     a = np.asarray(arr, dtype=float)
     return np.clip(a, None, cap)
+
+
+def days_to_years(days) -> np.ndarray:
+    """Convert a days-to-expiry array/scalar to years, for the x-axis."""
+    return np.asarray(days, dtype=float) / DAYS_PER_YEAR
+
+
+def style_years_axis(ax, axis: str = "x") -> None:
+    """On a log-scaled years-to-expiry axis, show plain numbers (0.5, 1, 5, 10)
+    instead of matplotlib's default power-of-ten tick labels (10^0, 10^1) --
+    reported as hard to read at a glance for a non-technical audience."""
+    which = ax.xaxis if axis == "x" else ax.yaxis
+    ticks = [t for t in (0.1, 0.25, 0.5, 1, 2, 3, 5, 7, 10) if t > 0]
+    which.set_major_locator(mticker.FixedLocator(ticks))
+    which.set_major_formatter(mticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    which.set_minor_formatter(mticker.NullFormatter())
+
+
+def min_contracts_filter(buckets: list[dict], min_contracts: int = 5) -> list[dict]:
+    """Drop bucket records backed by fewer than `min_contracts` distinct
+    contracts -- a bucket with n_contracts=1 or 2 is one contract's history,
+    not a maturity-effect estimate, and previously showed up as a spurious
+    volatility spike at the far-dated end of several products' profiles."""
+    return [b for b in buckets if b.get("n_contracts", 0) >= min_contracts]
 
 
 def shade_crisis(

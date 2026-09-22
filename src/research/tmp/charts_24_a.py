@@ -2,6 +2,14 @@
 
 Seven figures (A1-A7) visualizing volatility term structure and maturity effects.
 Data sources: phase_2_24_profiles.json (vol buckets) and phase_3_24_slopes.json (slopes).
+
+Every bucket list pulled straight from phase_2_24_profiles.json is passed through
+vz.min_contracts_filter(..., min_contracts=5) before plotting: a bucket backed by
+fewer than 5 distinct contracts is one or two contracts' history, not a maturity
+estimate, and several products' longest bucket is exactly that (see NEXT_PROMPT.md
+follow-up: the "spike" originally visible at the far-dated end of several profiles).
+Every log-scaled days-to-expiry axis is shown in years (vz.style_years_axis), not
+raw days -- matplotlib's default power-of-ten day labels were reported illegible.
 """
 
 from __future__ import annotations
@@ -17,35 +25,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 import viz24 as vz
 
+MIN_CONTRACTS = 5
+
+
+def _clean_buckets(product_buckets: list[dict]) -> list[dict]:
+    return vz.min_contracts_filter(product_buckets, min_contracts=MIN_CONTRACTS)
+
 
 def fig_A1(data: dict) -> tuple:
-    """CL hero chart: dte_mid vs vol with power-law fit and n_obs-weighted confidence band.
+    """CL hero chart: years-to-expiry vs vol with power-law fit and n_obs-weighted band.
 
     data = {"profiles": {...}, "slopes": {...}}
     """
     fig, ax = vz.new_fig(figsize=(8, 5))
 
-    # Extract CL mad/gap1_vol0 bucket data
-    buckets = data["profiles"]["products"]["CL"]["mad"]["gap1_vol0"]
+    buckets = _clean_buckets(data["profiles"]["products"]["CL"]["mad"]["gap1_vol0"])
 
-    dte_mid = np.array([b["dte_mid"] for b in buckets])
+    years = vz.days_to_years([b["dte_mid"] for b in buckets])
     vol = np.array([b["vol"] for b in buckets])
     n_obs = np.array([b["n_obs"] for b in buckets])
 
-    # Plot bucket points, sized by n_obs
     sizes = np.clip(n_obs / n_obs.max() * 100, 20, 150)
     ax.scatter(
-        dte_mid, vol, s=sizes, alpha=0.6, color=vz.BLUE, zorder=3, label="Observations"
+        years, vol, s=sizes, alpha=0.6, color=vz.BLUE, zorder=3, label="Observations"
     )
 
-    # Fit power law: log(vol) ~ log(dte_mid)
-    log_x = np.log(dte_mid)
+    log_x = np.log(years)
     log_y = np.log(vol)
     coef = np.polyfit(log_x, log_y, 1)
     slope, intercept = coef[0], coef[1]
 
-    # Plot fitted line
-    x_smooth = np.logspace(np.log10(dte_mid.min()), np.log10(dte_mid.max()), 200)
+    x_smooth = np.logspace(np.log10(years.min()), np.log10(years.max()), 200)
     y_smooth = np.exp(intercept) * (x_smooth**slope)
     ax.plot(
         x_smooth,
@@ -56,12 +66,11 @@ def fig_A1(data: dict) -> tuple:
         zorder=2,
     )
 
-    # Simple confidence band: ±1/sqrt(n_obs) relative
     rel_err = 1 / np.sqrt(n_obs)
     vol_lo = vol * (1 - rel_err)
     vol_hi = vol * (1 + rel_err)
     ax.fill_between(
-        dte_mid,
+        years,
         vol_lo,
         vol_hi,
         alpha=0.15,
@@ -70,10 +79,11 @@ def fig_A1(data: dict) -> tuple:
     )
 
     ax.set_xscale("log")
+    vz.style_years_axis(ax)
     vz.style_ax(
         ax,
         title="CL: Volatility term structure",
-        xlabel="Days to expiry",
+        xlabel="Years to expiry",
         ylabel="Annualised vol",
     )
     vz.legend(ax, loc="upper right")
@@ -94,19 +104,20 @@ def fig_A2(data: dict) -> tuple:
         ("winsor", vz.ORANGE, "Winsorized (robust)"),
         ("std", vz.RED, "Std dev (unstable)"),
     ]:
-        buckets = product_data[estimator]["gap1_vol0"]
-        dte_mid = np.array([b["dte_mid"] for b in buckets])
+        buckets = _clean_buckets(product_data[estimator]["gap1_vol0"])
+        years = vz.days_to_years([b["dte_mid"] for b in buckets])
         vol = np.array([b["vol"] for b in buckets])
         ax.plot(
-            dte_mid, vol, marker="o", linewidth=1.5, color=color, label=label, zorder=2
+            years, vol, marker="o", linewidth=1.5, color=color, label=label, zorder=2
         )
 
     ax.set_xscale("log")
     ax.set_yscale("log")
+    vz.style_years_axis(ax)
     vz.style_ax(
         ax,
         title="CL: Estimator comparison (gap1, vol0)",
-        xlabel="Days to expiry (log)",
+        xlabel="Years to expiry (log)",
         ylabel="Annualised vol (log)",
     )
     vz.legend(ax, loc="upper right")
@@ -125,12 +136,9 @@ def fig_A3(data: dict) -> tuple:
     for idx, product in enumerate(lib24.PRODUCTS):
         ax = axes[idx]
 
-        # Style the axis
         ax.set_facecolor(vz.SURFACE)
         for spine in ("top", "right"):
             ax.spines[spine].set_visible(False)
-        for spine in ("left", "bottom"):
-            ax.spines[spine].set_color(vz.GRID)
         for spine in ("left", "right", "top", "bottom"):
             color = vz.SECTOR_COLOR[lib24.SECTOR[product]]
             ax.spines[spine].set_color(color)
@@ -139,13 +147,14 @@ def fig_A3(data: dict) -> tuple:
         ax.grid(axis="y", color=vz.GRID, linewidth=0.6, zorder=0)
         ax.set_axisbelow(True)
 
-        # Plot data
-        buckets = data["profiles"]["products"][product]["mad"]["gap1_vol0"]
+        buckets = _clean_buckets(
+            data["profiles"]["products"][product]["mad"]["gap1_vol0"]
+        )
         if buckets:
-            dte_mid = np.array([b["dte_mid"] for b in buckets])
+            years = vz.days_to_years([b["dte_mid"] for b in buckets])
             vol = np.array([b["vol"] for b in buckets])
             ax.plot(
-                dte_mid,
+                years,
                 vol,
                 marker="o",
                 linewidth=1.5,
@@ -153,8 +162,8 @@ def fig_A3(data: dict) -> tuple:
                 zorder=2,
             )
             ax.set_xscale("log")
+            vz.style_years_axis(ax)
 
-        # Panel title: "TICKER - full name"
         title = f"{product} — {lib24.FULL_NAME[product]}"
         ax.set_title(
             title,
@@ -164,12 +173,11 @@ def fig_A3(data: dict) -> tuple:
             loc="left",
             pad=6,
         )
-
         ax.set_xlabel("", fontsize=8)
         ax.set_ylabel("", fontsize=8)
 
     fig.text(
-        0.5, 0.02, "Days to expiry", ha="center", fontsize=10, color=vz.TEXT_SECONDARY
+        0.5, 0.02, "Years to expiry", ha="center", fontsize=10, color=vz.TEXT_SECONDARY
     )
     fig.text(
         0.02,
@@ -193,18 +201,17 @@ def fig_A4(data: dict) -> tuple:
     fig, ax = vz.new_fig(figsize=(10, 5))
 
     product_color = vz.build_product_color(lib24.PRODUCTS)
-    sector_handles = {}
-    plotted_sectors = set()
 
     for product in lib24.PRODUCTS:
-        buckets = data["profiles"]["products"][product]["mad"]["gap1_vol0"]
+        buckets = _clean_buckets(
+            data["profiles"]["products"][product]["mad"]["gap1_vol0"]
+        )
         if not buckets:
             continue
 
-        dte_mid = np.array([b["dte_mid"] for b in buckets])
+        years = vz.days_to_years([b["dte_mid"] for b in buckets])
         vol = np.array([b["vol"] for b in buckets])
 
-        # Find 365-day bucket or nearest
         ref_vol = None
         for b in buckets:
             if b["dte_lo"] == 365.0 or (b["dte_lo"] < 365.0 <= b["dte_hi"]):
@@ -215,10 +222,9 @@ def fig_A4(data: dict) -> tuple:
 
         vol_normalized = vol / ref_vol
         color = product_color[product]
-        sector = lib24.SECTOR[product]
 
-        line = ax.plot(
-            dte_mid,
+        ax.plot(
+            years,
             vol_normalized,
             marker="o",
             linewidth=1.5,
@@ -227,23 +233,18 @@ def fig_A4(data: dict) -> tuple:
             zorder=2,
         )
 
-        # Track sector for legend
-        if sector not in plotted_sectors:
-            sector_handles[sector] = line[0]
-            plotted_sectors.add(sector)
-
     ax.axhline(y=1.0, color=vz.GRID, linewidth=0.8, linestyle="--", zorder=1)
     ax.set_xscale("log")
     ax.set_ylim(bottom=0)
+    vz.style_years_axis(ax)
 
     vz.style_ax(
         ax,
         title="Volatility term structure: all 16 products (normalized)",
-        xlabel="Days to expiry",
+        xlabel="Years to expiry",
         ylabel="Vol / 365-day bucket",
     )
 
-    # Create proxy legend for sectors
     from matplotlib.lines import Line2D
 
     legend_elements = [
@@ -265,15 +266,13 @@ def fig_A5(data: dict) -> tuple:
 
     product_color = vz.build_product_color(lib24.PRODUCTS)
 
-    # ES reference data (same for all panels)
-    es_buckets = data["profiles"]["products"]["ES"]["mad"]["gap1_vol0"]
-    es_dte = np.array([b["dte_mid"] for b in es_buckets])
+    es_buckets = _clean_buckets(data["profiles"]["products"]["ES"]["mad"]["gap1_vol0"])
+    es_years = vz.days_to_years([b["dte_mid"] for b in es_buckets])
     es_vol = np.array([b["vol"] for b in es_buckets])
 
     for ax_idx, sector in enumerate(["energy", "metals", "ags"]):
         ax = axes[ax_idx]
 
-        # Style
         ax.set_facecolor(vz.SURFACE)
         for spine in ("top", "right"):
             ax.spines[spine].set_visible(False)
@@ -283,9 +282,8 @@ def fig_A5(data: dict) -> tuple:
         ax.grid(axis="y", color=vz.GRID, linewidth=0.8, zorder=0)
         ax.set_axisbelow(True)
 
-        # Plot ES reference
         ax.plot(
-            es_dte,
+            es_years,
             es_vol,
             linestyle="--",
             linewidth=1.5,
@@ -294,16 +292,17 @@ def fig_A5(data: dict) -> tuple:
             zorder=1,
         )
 
-        # Plot sector products
         sector_products = [p for p in lib24.PRODUCTS if lib24.SECTOR[p] == sector]
         for product in sector_products:
-            buckets = data["profiles"]["products"][product]["mad"]["gap1_vol0"]
+            buckets = _clean_buckets(
+                data["profiles"]["products"][product]["mad"]["gap1_vol0"]
+            )
             if buckets:
-                dte_mid = np.array([b["dte_mid"] for b in buckets])
+                years = vz.days_to_years([b["dte_mid"] for b in buckets])
                 vol = np.array([b["vol"] for b in buckets])
                 color = product_color[product]
                 ax.plot(
-                    dte_mid,
+                    years,
                     vol,
                     marker="o",
                     linewidth=1.5,
@@ -313,10 +312,11 @@ def fig_A5(data: dict) -> tuple:
                 )
 
         ax.set_xscale("log")
+        vz.style_years_axis(ax)
         vz.style_ax(
             ax,
             title=sector.capitalize(),
-            xlabel="Days to expiry",
+            xlabel="Years to expiry",
             ylabel="Annualised vol",
         )
         vz.legend(ax, loc="best")
@@ -338,12 +338,10 @@ def fig_A6(data: dict) -> tuple:
     ci_lo = np.array([r["ci_lo"] for r in ranking])
     ci_hi = np.array([r["ci_hi"] for r in ranking])
 
-    # Determine colors
     colors = [vz.SECTOR_COLOR[lib24.SECTOR[p]] for p in products]
 
     y_pos = np.arange(len(products))
 
-    # Plot bars with error whiskers
     ax.barh(y_pos, slopes, color=colors, alpha=0.7, zorder=2)
     errors = [slopes - ci_lo, ci_hi - slopes]
     ax.errorbar(
@@ -357,7 +355,6 @@ def fig_A6(data: dict) -> tuple:
         zorder=3,
     )
 
-    # Vertical line at x=0
     ax.axvline(x=0, color=vz.GRID, linewidth=0.8, linestyle="-", zorder=1)
 
     ax.set_yticks(y_pos)
@@ -367,7 +364,7 @@ def fig_A6(data: dict) -> tuple:
     vz.style_ax(
         ax,
         title="Samuelson effect: ranked slopes",
-        xlabel="Slope (log vol vs log dte)",
+        xlabel="Slope (log vol vs log days-to-expiry)",
         ylabel="Product",
     )
 
@@ -377,9 +374,11 @@ def fig_A6(data: dict) -> tuple:
 def fig_A7(data: dict) -> tuple:
     """Heatmap: products (rows) x maturity buckets (columns), normalized to 365-day bucket.
 
+    Cells backed by fewer than MIN_CONTRACTS distinct contracts are masked
+    (shown blank) rather than plotted as if they were reliable estimates.
+
     data = {"profiles": {...}, "slopes": {...}}
     """
-    # Build matrix: rows = products, columns = dte_mid values, cell = normalized vol
     dte_mids_all = set()
     for product in lib24.PRODUCTS:
         buckets = data["profiles"]["products"][product]["mad"]["gap1_vol0"]
@@ -396,53 +395,50 @@ def fig_A7(data: dict) -> tuple:
     for p_idx, product in enumerate(lib24.PRODUCTS):
         buckets = data["profiles"]["products"][product]["mad"]["gap1_vol0"]
 
-        # Find reference vol (365-day bucket)
+        clean = _clean_buckets(buckets)
         ref_vol = None
-        for b in buckets:
+        for b in clean:
             if b["dte_lo"] == 365.0 or (b["dte_lo"] < 365.0 <= b["dte_hi"]):
                 ref_vol = b["vol"]
                 break
         if ref_vol is None or ref_vol == 0:
-            # Use median vol as fallback
-            vols = [b["vol"] for b in buckets if b["vol"] > 0]
+            vols = [b["vol"] for b in clean if b["vol"] > 0]
             ref_vol = np.median(vols) if vols else 1.0
 
-        for b in buckets:
+        for b in clean:
             col = dte_to_col[b["dte_mid"]]
             matrix[p_idx, col] = b["vol"] / ref_vol
 
-    # Create heatmap with diverging colormap
     fig, ax = vz.new_fig(figsize=(12, 6))
 
-    # Use RdBu_r or build a custom 2-slope colormap
     norm = matplotlib.colors.TwoSlopeNorm(vmin=0.5, vcenter=1.0, vmax=2.0)
     cmap = plt.cm.RdBu_r
+    cmap.set_bad(vz.GRID)
 
     im = ax.imshow(
         matrix, aspect="auto", cmap=cmap, norm=norm, interpolation="nearest", zorder=2
     )
 
-    # Set ticks
     ax.set_xticks(np.arange(n_dte))
     ax.set_yticks(np.arange(n_products))
-    ax.set_xticklabels([f"{int(d)}" for d in dte_mids_sorted], fontsize=8, rotation=45)
+    year_labels = [f"{d / vz.DAYS_PER_YEAR:.1f}y" for d in dte_mids_sorted]
+    ax.set_xticklabels(year_labels, fontsize=8, rotation=45)
     ax.set_yticklabels(lib24.PRODUCTS, fontsize=9)
 
-    # Style
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
     for spine in ("left", "bottom"):
         ax.spines[spine].set_color(vz.GRID)
 
-    # Colorbar
     cbar = plt.colorbar(im, ax=ax, pad=0.02)
     cbar.set_label("Vol / 365-day bucket", color=vz.TEXT_SECONDARY, fontsize=9)
     cbar.ax.tick_params(labelsize=8, colors=vz.TEXT_SECONDARY)
 
-    ax.set_xlabel("Days to expiry", color=vz.TEXT_SECONDARY, fontsize=10)
+    ax.set_xlabel("Years to expiry", color=vz.TEXT_SECONDARY, fontsize=10)
     ax.set_ylabel("Product", color=vz.TEXT_SECONDARY, fontsize=10)
     ax.set_title(
-        "Volatility heatmap: term structure across all products",
+        "Volatility heatmap: term structure across all products "
+        "(blank = fewer than 5 contracts backing that cell)",
         color=vz.TEXT_PRIMARY,
         fontsize=12,
         fontweight="bold",

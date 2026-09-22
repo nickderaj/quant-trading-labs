@@ -23,12 +23,12 @@ def fig_C1(data: dict):
     fig, ax = vz.new_fig(figsize=(9, 5.5))
 
     # Winter
-    winter_data = seasonality["ng_seasonality"]["winter"]
+    winter_data = vz.min_contracts_filter(seasonality["ng_seasonality"]["winter"])
     if winter_data:
-        winter_dte = [b["dte_mid"] for b in winter_data]
+        winter_years = vz.days_to_years([b["dte_mid"] for b in winter_data])
         winter_vol = [b["vol"] for b in winter_data]
         ax.plot(
-            winter_dte,
+            winter_years,
             winter_vol,
             marker="o",
             label="Winter",
@@ -38,12 +38,12 @@ def fig_C1(data: dict):
         )
 
     # Summer
-    summer_data = seasonality["ng_seasonality"]["summer"]
+    summer_data = vz.min_contracts_filter(seasonality["ng_seasonality"]["summer"])
     if summer_data:
-        summer_dte = [b["dte_mid"] for b in summer_data]
+        summer_years = vz.days_to_years([b["dte_mid"] for b in summer_data])
         summer_vol = [b["vol"] for b in summer_data]
         ax.plot(
-            summer_dte,
+            summer_years,
             summer_vol,
             marker="o",
             label="Summer",
@@ -53,8 +53,12 @@ def fig_C1(data: dict):
         )
 
     ax.set_xscale("log")
+    vz.style_years_axis(ax)
     vz.style_ax(
-        ax, title="NG: Winter vs Summer volatility", xlabel="DTE (log)", ylabel="Vol"
+        ax,
+        title="NG: Winter vs Summer volatility",
+        xlabel="Years to expiry (log)",
+        ylabel="Annualised vol",
     )
     vz.legend(ax, loc="best")
 
@@ -201,12 +205,12 @@ def fig_C4(data: dict):
     fig, ax = vz.new_fig(figsize=(9, 5.5))
 
     # Winter
-    winter_data = seasonality["gc_control"]["winter"]
+    winter_data = vz.min_contracts_filter(seasonality["gc_control"]["winter"])
     if winter_data:
-        winter_dte = [b["dte_mid"] for b in winter_data]
+        winter_years = vz.days_to_years([b["dte_mid"] for b in winter_data])
         winter_vol = [b["vol"] for b in winter_data]
         ax.plot(
-            winter_dte,
+            winter_years,
             winter_vol,
             marker="o",
             label="Winter",
@@ -216,12 +220,12 @@ def fig_C4(data: dict):
         )
 
     # Summer
-    summer_data = seasonality["gc_control"]["summer"]
+    summer_data = vz.min_contracts_filter(seasonality["gc_control"]["summer"])
     if summer_data:
-        summer_dte = [b["dte_mid"] for b in summer_data]
+        summer_years = vz.days_to_years([b["dte_mid"] for b in summer_data])
         summer_vol = [b["vol"] for b in summer_data]
         ax.plot(
-            summer_dte,
+            summer_years,
             summer_vol,
             marker="o",
             label="Summer",
@@ -231,11 +235,12 @@ def fig_C4(data: dict):
         )
 
     ax.set_xscale("log")
+    vz.style_years_axis(ax)
     vz.style_ax(
         ax,
         title="GC (Gold): Winter vs Summer volatility - control",
-        xlabel="DTE (log)",
-        ylabel="Vol",
+        xlabel="Years to expiry (log)",
+        ylabel="Annualised vol",
     )
     vz.legend(ax, loc="best")
 

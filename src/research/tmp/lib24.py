@@ -210,14 +210,22 @@ def vol_by_bucket(
     estimator,
     bins: list[int] | None = None,
     min_obs: int = 50,
+    min_contracts: int = 1,
 ) -> pd.DataFrame:
-    """One row per dte bucket: dte_lo, dte_hi, dte_mid, vol, n_obs, n_contracts."""
+    """One row per dte bucket: dte_lo, dte_hi, dte_mid, vol, n_obs, n_contracts.
+
+    `min_contracts` guards against a bucket backed by a single contract's
+    history masquerading as a "maturity effect" estimate -- observed in
+    several products' longest bucket (e.g. one soybean-oil contract supplying
+    every observation 6-10 years out). `min_obs` alone does not catch this,
+    since one contract's multi-year history alone easily clears any obs floor.
+    """
     bins = bins if bins is not None else DTE_BINS
     d = df.copy()
     d["bucket"] = pd.cut(d["dte"], bins=bins, right=False)
     rows = []
     for key, g in d.groupby("bucket", observed=True):
-        if len(g) < min_obs:
+        if len(g) < min_obs or g["contract_id"].nunique() < min_contracts:
             continue
         interval = cast(pd.Interval, key)
         rows.append(
@@ -243,15 +251,21 @@ def samuelson_slope(
     seed: int = 24,
     bins: list[int] | None = None,
     min_obs: int = 50,
+    min_contracts: int = 5,
 ) -> dict:
     """OLS of log(bucket vol) on log(bucket dte_mid), weighted by sqrt(n_obs).
 
     A negative slope means vol rises as maturity shortens: the Samuelson effect.
     The bootstrap CI resamples at the CONTRACT level, since returns within one
     contract are serially dependent and a row-level bootstrap understates the
-    true sampling uncertainty.
+    true sampling uncertainty. `min_contracts` (default 5) excludes buckets
+    backed by too few distinct contracts from the fit -- several products have
+    their longest-maturity bucket supplied by exactly one contract, which is
+    not a maturity-effect estimate at all, just that one contract's history.
     """
-    bucket = vol_by_bucket(df, estimator, bins=bins, min_obs=min_obs)
+    bucket = vol_by_bucket(
+        df, estimator, bins=bins, min_obs=min_obs, min_contracts=min_contracts
+    )
     if len(bucket) < 2:
         return {
             "slope": float("nan"),
@@ -286,6 +300,7 @@ def samuelson_slope(
     contracts = df["contract_id"].unique()
     boot_slopes = []
     boot_min_obs = max(5, min_obs // 5)
+    boot_min_contracts = max(2, min_contracts // 2)
     if len(contracts) >= 2:
         by_contract = {
             cid: (g["dte"].to_numpy(), g["r"].to_numpy())
@@ -297,15 +312,24 @@ def samuelson_slope(
             sampled = rng.choice(contracts, size=len(contracts), replace=True)
             dte_all = np.concatenate([by_contract[c][0] for c in sampled])
             r_all = np.concatenate([by_contract[c][1] for c in sampled])
+            # Draw-slot index per row, to count how many distinct resample
+            # slots (not raw contract ids, which can repeat under
+            # with-replacement sampling) contribute to each bin.
+            slot_all = np.concatenate(
+                [np.full(len(by_contract[c][0]), i) for i, c in enumerate(sampled)]
+            )
             idx = np.searchsorted(bins_arr, dte_all, side="right") - 1
             valid = (idx >= 0) & (idx < n_bin)
-            idx, r_valid = idx[valid], r_all[valid]
+            idx, r_valid, slot_valid = idx[valid], r_all[valid], slot_all[valid]
 
             xs, ys, ws = [], [], []
             for b_idx in range(n_bin):
                 mask = idx == b_idx
                 n = int(mask.sum())
-                if n < boot_min_obs:
+                if (
+                    n < boot_min_obs
+                    or len(np.unique(slot_valid[mask])) < boot_min_contracts
+                ):
                     continue
                 vol = estimator(r_valid[mask])
                 if not (np.isfinite(vol) and vol > 0):

@@ -239,18 +239,18 @@ def fig_B5(data: dict):
         if year_str not in annual_data:
             continue
 
-        bucket_list = annual_data[year_str]
+        bucket_list = vz.min_contracts_filter(annual_data[year_str], min_contracts=5)
         if not bucket_list:
             continue
 
-        dte_mids = [b["dte_mid"] for b in bucket_list]
+        years_arr = vz.days_to_years([b["dte_mid"] for b in bucket_list])
         vols = [b["vol"] for b in bucket_list]
 
         # Color: crisis years in red/orange, calm in gray
         is_calm = "calm" in crisis_name
         color = vz.GRAY if is_calm else vz.RED
         ax.loglog(
-            dte_mids,
+            years_arr,
             vols,
             marker="o",
             label=f"{date_str} ({crisis_name})",
@@ -259,11 +259,12 @@ def fig_B5(data: dict):
             markersize=3,
         )
 
+    vz.style_years_axis(ax)
     vz.style_ax(
         ax,
         title="CL: Term structure by date (annual aggregates)",
-        xlabel="DTE (log)",
-        ylabel="Vol (log)",
+        xlabel="Years to expiry (log)",
+        ylabel="Annualised vol (log)",
     )
     vz.legend(ax, loc="best")
 
@@ -277,7 +278,12 @@ def fig_B6(data: dict):
     # Compute sector-level vol-of-vol
     buckets = ["0_60", "60_180", "180_365", "365_730", "730_3650"]
     bucket_labels = ["0-60d", "60-180d", "180-365d", "365-730d", "730-3650d"]
-    sectors = sorted(lib24.SECTOR.values())
+    # BUG FIX: lib24.SECTOR.values() yields one entry PER PRODUCT (16, with
+    # repeats), not the 4 unique sector names -- this previously produced 16
+    # overlapping offset-bar calls per bucket (bar-width math assumed 4 groups
+    # but got 16, spilling clusters into their neighbours) and a legend with
+    # 16 duplicate-labelled entries (6x "ags", 5x "energy", ...).
+    sectors = sorted(set(lib24.SECTOR.values()))
 
     # Build a 5 x len(sectors) matrix
     vol_of_vol_matrix = np.zeros((len(buckets), len(sectors)))
@@ -382,14 +388,15 @@ def fig_B8(data: dict):
 
     for i, year in enumerate(years):
         ax = axes_flat[i]
-        bucket_list = annual_data[str(year)]
+        bucket_list = vz.min_contracts_filter(annual_data[str(year)], min_contracts=5)
 
         if bucket_list:
-            dte_mids = [b["dte_mid"] for b in bucket_list]
+            years_arr = vz.days_to_years([b["dte_mid"] for b in bucket_list])
             vols = [b["vol"] for b in bucket_list]
             ax.loglog(
-                dte_mids, vols, marker="o", color=vz.BLUE, linewidth=1, markersize=2
+                years_arr, vols, marker="o", color=vz.BLUE, linewidth=1, markersize=2
             )
+            vz.style_years_axis(ax)
 
         ax.set_title(str(year), fontsize=9, fontweight="bold", color=vz.TEXT_PRIMARY)
         ax.tick_params(labelsize=7)
@@ -407,11 +414,18 @@ def fig_B8(data: dict):
         color=vz.TEXT_PRIMARY,
         y=0.98,
     )
-    fig.text(0.5, 0.01, "DTE (log)", ha="center", fontsize=9, color=vz.TEXT_SECONDARY)
+    fig.text(
+        0.5,
+        0.01,
+        "Years to expiry (log)",
+        ha="center",
+        fontsize=9,
+        color=vz.TEXT_SECONDARY,
+    )
     fig.text(
         0.01,
         0.5,
-        "Vol (log)",
+        "Annualised vol (log)",
         va="center",
         rotation="vertical",
         fontsize=9,

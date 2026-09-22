@@ -42,10 +42,14 @@ def fig_D1(data: dict) -> tuple:
         if not data_points:
             continue
 
-        dte_mid = np.array([d["dte_mid"] for d in data_points])
+        # realised_moments_by_bucket does not track n_contracts, so this
+        # cannot be filtered by the same min_contracts>=5 rule as the other
+        # sections' bucket data; read with that caveat for the sparsest
+        # far-dated points.
+        years = vz.days_to_years([d["dte_mid"] for d in data_points])
         skew = np.array([d["skew"] for d in data_points])
 
-        (line,) = ax.plot(dte_mid, skew, color=color, linewidth=1.2, alpha=0.8)
+        (line,) = ax.plot(years, skew, color=color, linewidth=1.2, alpha=0.8)
 
         if sector not in sector_lines:
             sector_lines[sector] = []
@@ -67,10 +71,12 @@ def fig_D1(data: dict) -> tuple:
         loc="upper left",
     )
 
+    ax.set_xscale("log")
+    vz.style_years_axis(ax)
     vz.style_ax(
         ax,
         title="Realised Skewness by Maturity",
-        xlabel="Days to Expiry",
+        xlabel="Years to expiry (log)",
         ylabel="Skewness",
     )
     fig.tight_layout()
@@ -100,19 +106,21 @@ def fig_D2(data: dict) -> tuple:
         if not data_points:
             continue
 
-        dte_mid = np.array([d["dte_mid"] for d in data_points])
+        years = vz.days_to_years([d["dte_mid"] for d in data_points])
         kurtosis = np.array([d["excess_kurtosis"] for d in data_points])
 
         # Floor negative or zero kurtosis at a small epsilon for log-y display
         kurtosis = np.where(kurtosis > 0.01, kurtosis, 0.01)
 
-        (line,) = ax.plot(dte_mid, kurtosis, color=color, linewidth=1.2, alpha=0.8)
+        (line,) = ax.plot(years, kurtosis, color=color, linewidth=1.2, alpha=0.8)
 
         if sector not in sector_lines:
             sector_lines[sector] = []
         sector_lines[sector].append(line)
 
+    ax.set_xscale("log")
     ax.set_yscale("log")
+    vz.style_years_axis(ax)
 
     # Compact legend: one entry per sector
     sector_order = ["energy", "metals", "ags", "control"]
@@ -130,7 +138,7 @@ def fig_D2(data: dict) -> tuple:
     vz.style_ax(
         ax,
         title="Realised Excess Kurtosis by Maturity",
-        xlabel="Days to Expiry",
+        xlabel="Years to expiry (log)",
         ylabel="Excess Kurtosis (log scale)",
     )
     fig.tight_layout()
@@ -228,12 +236,12 @@ def fig_D4(data: dict) -> tuple:
 
         # Contango
         if "contango" in product_skew:
-            contango_data = product_skew["contango"]
+            contango_data = vz.min_contracts_filter(product_skew["contango"])
             if contango_data:
-                dte = np.array([d["dte_mid"] for d in contango_data])
+                years = vz.days_to_years([d["dte_mid"] for d in contango_data])
                 vol = np.array([d["vol"] for d in contango_data])
                 ax.plot(
-                    dte,
+                    years,
                     vol,
                     color=vz.BLUE,
                     linewidth=1.5,
@@ -243,12 +251,12 @@ def fig_D4(data: dict) -> tuple:
 
         # Backwardation
         if "backwardation" in product_skew:
-            backwardation_data = product_skew["backwardation"]
+            backwardation_data = vz.min_contracts_filter(product_skew["backwardation"])
             if backwardation_data:
-                dte = np.array([d["dte_mid"] for d in backwardation_data])
+                years = vz.days_to_years([d["dte_mid"] for d in backwardation_data])
                 vol = np.array([d["vol"] for d in backwardation_data])
                 ax.plot(
-                    dte,
+                    years,
                     vol,
                     color=vz.RED,
                     linewidth=1.5,
@@ -257,10 +265,11 @@ def fig_D4(data: dict) -> tuple:
                 )
 
         ax.set_xscale("log")
+        vz.style_years_axis(ax)
         vz.style_ax(
             ax,
-            title=f"{product} — Vol vs. DTE by Curve State",
-            xlabel="Days to Expiry (log scale)",
+            title=f"{product} — Vol vs. Time to Expiry by Curve State",
+            xlabel="Years to expiry (log)",
             ylabel="Realised Volatility",
         )
         vz.legend(ax, loc="best")

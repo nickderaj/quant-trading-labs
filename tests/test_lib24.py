@@ -190,6 +190,32 @@ def test_vol_by_bucket_drops_buckets_under_min_obs():
     assert out.iloc[0]["dte_mid"] == pytest.approx((30 + 500) / 2)
 
 
+def test_vol_by_bucket_drops_buckets_under_min_contracts():
+    # One bucket backed by a single contract's long history should not pass
+    # as a "maturity effect" estimate even though it clears any obs floor.
+    df = pd.DataFrame(
+        {
+            "contract_id": [1] * 5 + [2] * 500,
+            "dte": [10] * 5 + [400] * 500,
+            "r": np.concatenate(
+                [
+                    np.random.default_rng(1).normal(0, 0.02, 5),
+                    np.random.default_rng(2).normal(0, 0.01, 500),
+                ]
+            ),
+        }
+    )
+    out = lib24.vol_by_bucket(
+        df, lib24.mad_vol, bins=[0, 30, 500], min_obs=5, min_contracts=2
+    )
+    assert len(out) == 0
+
+    out_relaxed = lib24.vol_by_bucket(
+        df, lib24.mad_vol, bins=[0, 30, 500], min_obs=5, min_contracts=1
+    )
+    assert len(out_relaxed) == 2
+
+
 def test_usable_returns_applies_volume_floor():
     df = pd.DataFrame(
         {

@@ -52,9 +52,37 @@ def main() -> None:
         panel = lib24.load_panel(product)
         nonpositive = int((raw["close"] <= 0).sum())
 
+        # Data-quality fix: a contract that ever printed a non-positive close
+        # (other than the documented genuine negative-WTI event) has
+        # demonstrated unreliable settlement data for its ENTIRE life, not just
+        # on the bad-print day -- e.g. CL203212/CL203305/CL203311 print daily
+        # log returns as large as 1.4-2.5 (a multi-hundred-percent one-day
+        # move) on days their close is nominally positive. A single |r|>1.0
+        # filter does not catch this (their non-outlier days are still ~30-60%
+        # annualised noisier than clean contracts), and because these
+        # contracts cluster at the far-dated end, they previously produced a
+        # spurious volatility SPIKE in the longest maturity bucket for CL, GC,
+        # and (mildly) other products -- mirroring notebook 023's own
+        # discovery of exactly these tickers. Excluded here, entirely, from
+        # every downstream phase; counted and named so the exclusion is
+        # visible rather than absorbed into a different filter's numbers.
+        event_ticker = lib24.NEGATIVE_PRICE_EVENT["ticker"]
+        bad_tickers = sorted(
+            t
+            for t in raw.loc[raw["close"] <= 0, "ticker"].unique()
+            if t != event_ticker
+        )
+        rows_before_ticker_exclusion = len(panel)
+        panel = panel[~panel["ticker"].isin(bad_tickers)].reset_index(drop=True)
+
         prod_report: dict = {
             "raw_rows": raw_rows,
             "close_le_0_count": nonpositive,
+            "unreliable_tickers_excluded": {
+                "count": len(bad_tickers),
+                "tickers": bad_tickers[:30],
+                "rows_removed": rows_before_ticker_exclusion - len(panel),
+            },
             "date_range": [
                 str(panel["date"].min().date()),
                 str(panel["date"].max().date()),
